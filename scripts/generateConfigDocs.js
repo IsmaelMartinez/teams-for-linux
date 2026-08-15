@@ -127,6 +127,12 @@ function buildSchema() {
       description: normaliseDescription(def.describe),
       applyMode: def.applyMode ?? null,
     };
+    // yargs accepts `deprecated` as a message or a bare true; surface it so the
+    // reference tells readers which name to move to (ADR-025 renames, #2842).
+    if (def.deprecated) {
+      entry.deprecated =
+        typeof def.deprecated === "string" ? def.deprecated : true;
+    }
     if (def.fields) {
       // Keep fields in source order so the output stays deterministic.
       entry.fields = Object.keys(def.fields).map((fieldPath) => {
@@ -173,6 +179,15 @@ function renderApplyCell(applyMode) {
   return applyMode ? "`" + applyMode + "`" : "";
 }
 
+// Appended to the description cell so a deprecated option reads as such in the
+// reference, with the replacement name where the declaration supplies one.
+function renderDeprecatedSuffix(deprecated) {
+  if (!deprecated) return "";
+  return typeof deprecated === "string"
+    ? ` **Deprecated:** ${renderDescriptionCell(deprecated)}`
+    : " **Deprecated.**";
+}
+
 function generateMarkdown(schema) {
   let md = `# Configuration Options Reference (Auto-Generated)
 
@@ -189,7 +204,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 `;
   for (const opt of schema) {
     const type = opt.type ? "`" + opt.type + "`" : "";
-    md += `| \`${opt.name}\` | ${type} | ${renderDefaultCell(opt.default)} | ${renderDescriptionCell(opt.description)} | ${renderApplyCell(opt.applyMode)} |\n`;
+    md += `| \`${opt.name}\` | ${type} | ${renderDefaultCell(opt.default)} | ${renderDescriptionCell(opt.description)}${renderDeprecatedSuffix(opt.deprecated)} | ${renderApplyCell(opt.applyMode)} |\n`;
   }
 
   const objectOptions = schema.filter((opt) => opt.fields && opt.fields.length > 0);

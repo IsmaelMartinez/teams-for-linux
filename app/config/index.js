@@ -6,6 +6,7 @@ const logger = require("./logger");
 const configOptions = require("./options");
 const { validateConfigFile } = require("./validator");
 const { buildDeprecationWarning } = require("./deprecation");
+const { applyRenamedOptions } = require("./renames");
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
@@ -133,6 +134,11 @@ function argv(configPath, appVersion) {
   if (configObject.configError) {
     config["error"] = configObject.configError;
   }
+
+  // ADR-025: project any nested value the user supplied onto the flat key that
+  // modules still read. Must run before anything consumes the config, and
+  // `parsed.defaulted` tells us which namespaces the user did not set.
+  applyRenamedOptions(config, yargsInstance.parsed?.defaulted);
 
   if (configObject.isConfigFile && config.watchConfigFile) {
     fs.watch(getConfigFilePath(configPath), (event, filename) => {

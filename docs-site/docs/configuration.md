@@ -516,8 +516,10 @@ A floating sticker panel that lists image files from a local folder and pastes t
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `disableGlobalShortcuts` | `array` | `[]` | Array of global shortcuts to disable while app is in focus |
-| `globalShortcuts` | `array` | `[]` | Global keyboard shortcuts that work system-wide (opt-in, disabled by default). See [Global Shortcuts](#global-shortcuts) |
+| `shortcuts.global` | `array` | `[]` | Global keyboard shortcuts that work system-wide (opt-in, disabled by default). See [Global Shortcuts](#global-shortcuts) |
+| `shortcuts.disableWhileFocused` | `array` | `[]` | Array of global shortcuts to disable while app is in focus |
+| `globalShortcuts` | `array` | `[]` | Deprecated, use `shortcuts.global` |
+| `disableGlobalShortcuts` | `array` | `[]` | Deprecated, use `shortcuts.disableWhileFocused` |
 
 ### MQTT Integration
 
@@ -646,7 +648,8 @@ Wayland display server settings are organized under the `wayland` configuration 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `cacheManagement` | `object` | `{ enabled: false, maxCacheSizeMB: 600, cacheCheckIntervalMs: 3600000 }` | Cache management configuration |
-| `clearStorageData` | `boolean` | `null` | Flag to clear storage data |
+| `storage.clearData` | `boolean` | `null` | Flag to clear storage data |
+| `clearStorageData` | `boolean` | `null` | Deprecated, use `storage.clearData` |
 
 > [!NOTE]
 > See [Cache Management](#cache-management) for detailed configuration and usage examples.
@@ -1022,10 +1025,12 @@ System-wide keyboard shortcuts that work even when Teams is not focused. When tr
 
 ```json
 {
-  "globalShortcuts": [
-    "Control+Shift+M",
-    "Control+Shift+O"
-  ]
+  "shortcuts": {
+    "global": [
+      "Control+Shift+M",
+      "Control+Shift+O"
+    ]
+  }
 }
 ```
 

@@ -1,7 +1,7 @@
 {
   "$generatedBy": "scripts/generateConfigDocs.js",
   "source": "app/config/options.js",
-  "optionCount": 72,
+  "optionCount": 74,
   "options": [
     {
       "name": "appActiveCheckInterval",
@@ -295,7 +295,8 @@
       "type": "boolean",
       "default": null,
       "description": "Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "deprecated": "use storage.clearData instead"
     },
     {
       "name": "clientCertPath",
@@ -455,14 +456,16 @@
       "type": "array",
       "default": [],
       "description": "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "deprecated": "use shortcuts.disableWhileFocused instead"
     },
     {
       "name": "globalShortcuts",
       "type": "array",
       "default": [],
       "description": "Global keyboard shortcuts that work system-wide. Disabled by default (opt-in). See configuration docs for details and limitations",
-      "applyMode": "restart"
+      "applyMode": "restart",
+      "deprecated": "use shortcuts.global instead"
     },
     {
       "name": "electronCLIFlags",
@@ -1184,6 +1187,47 @@
           "type": "boolean",
           "default": false,
           "description": "Keep GPU enabled and skip the fake media UI flag under XWayland; may fix camera issues but can break screen sharing."
+        }
+      ]
+    },
+    {
+      "name": "shortcuts",
+      "type": "object",
+      "default": {
+        "global": [],
+        "disableWhileFocused": []
+      },
+      "description": "Keyboard shortcut configuration. global: global keyboard shortcuts that work system-wide, disabled by default (opt-in). disableWhileFocused: global shortcuts to disable while the app is in focus. Replaces the deprecated globalShortcuts and disableGlobalShortcuts options.",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "global",
+          "type": "array",
+          "default": [],
+          "description": "Global keyboard shortcuts that work system-wide. Disabled by default (opt-in). See configuration docs for details and limitations"
+        },
+        {
+          "path": "disableWhileFocused",
+          "type": "array",
+          "default": [],
+          "description": "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use"
+        }
+      ]
+    },
+    {
+      "name": "storage",
+      "type": "object",
+      "default": {
+        "clearData": null
+      },
+      "description": "Storage configuration. clearData: flag to clear storage data, expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions. Replaces the deprecated clearStorageData option.",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "clearData",
+          "type": "boolean",
+          "default": null,
+          "description": "Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions"
         }
       ]
     }
