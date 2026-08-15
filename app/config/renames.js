@@ -29,10 +29,7 @@ const RENAMES = [
   { flat: "clearStorageData", nested: "storage.clearData" },
 ];
 
-// Reads a dotted path, tolerating a missing intermediate object. yargs replaces
-// object options wholesale rather than deep merging, so a user who sets one
-// leaf of a namespace leaves its siblings undefined; those correctly read as
-// "not supplied" and fall back to the flat default.
+// Reads a dotted path, tolerating a missing intermediate object.
 function readPath(source, path) {
   let node = source;
   for (const part of path.split(".")) {
@@ -53,30 +50,28 @@ function coerce(value, inverted, type) {
 /**
  * Projects nested values onto their flat counterparts, in place.
  *
- * @param {Record<string, unknown>} config the parsed yargs config.
- * @param {Record<string, boolean>} defaulted yargs `parsed.defaulted`, listing
- *   the top-level options that fell back to their declared default. A
- *   namespace in here was not supplied by the user, so the flat value stands.
+ * Presence is decided against the raw config file rather than the resolved
+ * config. Asking the resolved config whether a leaf is `undefined` would only
+ * work by accident: it relies on yargs replacing object options wholesale
+ * instead of deep merging their defaults. Once that is fixed (gate A in
+ * issue #2842) every unset leaf would resolve to its declared default, stop
+ * being undefined, and be projected over the value the user actually set.
+ *
+ * @param {Record<string, unknown>} config the parsed yargs config, mutated.
+ * @param {Record<string, unknown>} configFile the merged system and user
+ *   config file contents; a nested path present here was set by the user.
  * @param {typeof RENAMES} renames override for tests.
- * @returns {string[]} the flat keys that were overwritten from a nested value.
  */
-function applyRenamedOptions(config, defaulted, renames = RENAMES) {
-  const applied = [];
-  if (!config || typeof config !== "object") return applied;
+function applyRenamedOptions(config, configFile, renames = RENAMES) {
+  if (!config || typeof config !== "object") return;
 
   for (const { flat, nested, inverted, type } of renames) {
-    const namespace = nested.split(".")[0];
-    if (defaulted && Object.hasOwn(defaulted, namespace)) continue;
-
-    const value = readPath(config, nested);
+    const value = readPath(configFile, nested);
     if (value === undefined) continue;
 
     // The new name wins when both are supplied; it is the canonical one.
     config[flat] = coerce(value, inverted, type);
-    applied.push(flat);
   }
-
-  return applied;
 }
 
 module.exports = { RENAMES, applyRenamedOptions };

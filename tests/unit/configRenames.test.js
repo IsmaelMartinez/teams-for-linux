@@ -51,47 +51,51 @@ describe('applyRenamedOptions - precedence', () => {
 		{ flat: 'clearStorageData', nested: 'storage.clearData' },
 	];
 
-	it('leaves the flat value alone when the namespace was not supplied', () => {
+	it('leaves the flat value alone when the config file has no nested key', () => {
 		const config = { globalShortcuts: ['Ctrl+1'], shortcuts: { global: [] } };
-		// `shortcuts` fell back to its default, so the user did not set it.
-		const applied = applyRenamedOptions(config, { shortcuts: true }, table);
+		applyRenamedOptions(config, { globalShortcuts: ['Ctrl+1'] }, table);
 		assert.deepStrictEqual(config.globalShortcuts, ['Ctrl+1']);
-		assert.deepStrictEqual(applied, []);
 	});
 
 	it('projects the nested value onto the flat key when the user supplied it', () => {
-		const config = { globalShortcuts: [], shortcuts: { global: ['Ctrl+2'] } };
-		const applied = applyRenamedOptions(config, {}, table);
+		const config = { globalShortcuts: [] };
+		applyRenamedOptions(config, { shortcuts: { global: ['Ctrl+2'] } }, table);
 		assert.deepStrictEqual(config.globalShortcuts, ['Ctrl+2']);
-		assert.deepStrictEqual(applied, ['globalShortcuts']);
 	});
 
 	it('lets the nested name win when both are supplied', () => {
-		const config = { globalShortcuts: ['old'], shortcuts: { global: ['new'] } };
-		applyRenamedOptions(config, {}, table);
+		const config = { globalShortcuts: ['old'] };
+		applyRenamedOptions(
+			config,
+			{ globalShortcuts: ['old'], shortcuts: { global: ['new'] } },
+			table
+		);
 		assert.deepStrictEqual(config.globalShortcuts, ['new']);
 	});
 
-	// yargs replaces object options wholesale, so setting one leaf leaves its
-	// siblings undefined; those must fall back to the flat value, not clobber it.
-	it('keeps the flat value when a sibling leaf was dropped by wholesale replacement', () => {
-		const config = {
-			globalShortcuts: ['Ctrl+1'],
-			clearStorageData: true,
-			shortcuts: { global: ['Ctrl+2'] },
-			storage: {},
-		};
-		applyRenamedOptions(config, {}, table);
+	it('keeps the flat value for a sibling leaf the user did not set', () => {
+		const config = { globalShortcuts: ['Ctrl+1'], clearStorageData: true };
+		applyRenamedOptions(config, { shortcuts: { global: ['Ctrl+2'] } }, table);
 		assert.deepStrictEqual(config.globalShortcuts, ['Ctrl+2']);
 		assert.strictEqual(config.clearStorageData, true);
+	});
+
+	// Presence must come from the config file, not from the resolved config.
+	// Reading the resolved config would only work while yargs replaces object
+	// options wholesale; once defaults deep merge (gate A in #2842) every unset
+	// leaf would resolve to its default and overwrite what the user set.
+	it('ignores a nested default present only in the resolved config', () => {
+		const config = { globalShortcuts: ['Ctrl+1'], shortcuts: { global: [] } };
+		applyRenamedOptions(config, { globalShortcuts: ['Ctrl+1'] }, table);
+		assert.deepStrictEqual(config.globalShortcuts, ['Ctrl+1']);
 	});
 
 	it('negates an inverted rename rather than copying it', () => {
 		const inverted = [
 			{ flat: 'disableNotifications', nested: 'notifications.enabled', inverted: true },
 		];
-		const config = { disableNotifications: false, notifications: { enabled: false } };
-		applyRenamedOptions(config, {}, inverted);
+		const config = { disableNotifications: false };
+		applyRenamedOptions(config, { notifications: { enabled: false } }, inverted);
 		assert.strictEqual(config.disableNotifications, true);
 	});
 
@@ -100,15 +104,15 @@ describe('applyRenamedOptions - precedence', () => {
 	// for..of loops that expect a list.
 	it('wraps a scalar into an array for array-typed renames', () => {
 		const arrayTable = [{ flat: 'globalShortcuts', nested: 'shortcuts.global', type: 'array' }];
-		const config = { globalShortcuts: [], shortcuts: { global: 'Control+Shift+M' } };
-		applyRenamedOptions(config, {}, arrayTable);
+		const config = { globalShortcuts: [] };
+		applyRenamedOptions(config, { shortcuts: { global: 'Control+Shift+M' } }, arrayTable);
 		assert.deepStrictEqual(config.globalShortcuts, ['Control+Shift+M']);
 	});
 
 	it('leaves an array untouched for array-typed renames', () => {
 		const arrayTable = [{ flat: 'globalShortcuts', nested: 'shortcuts.global', type: 'array' }];
-		const config = { globalShortcuts: [], shortcuts: { global: ['A', 'B'] } };
-		applyRenamedOptions(config, {}, arrayTable);
+		const config = { globalShortcuts: [] };
+		applyRenamedOptions(config, { shortcuts: { global: ['A', 'B'] } }, arrayTable);
 		assert.deepStrictEqual(config.globalShortcuts, ['A', 'B']);
 	});
 
@@ -121,15 +125,15 @@ describe('applyRenamedOptions - precedence', () => {
 	});
 
 	it('projects falsy nested values rather than skipping them', () => {
-		const config = { clearStorageData: true, storage: { clearData: false } };
-		applyRenamedOptions(config, {}, table);
+		const config = { clearStorageData: true };
+		applyRenamedOptions(config, { storage: { clearData: false } }, table);
 		assert.strictEqual(config.clearStorageData, false);
 	});
 
-	it('tolerates a missing namespace, a missing defaulted map and a bad config', () => {
+	it('tolerates a missing config file and a bad config', () => {
 		const config = { globalShortcuts: ['Ctrl+1'] };
-		assert.deepStrictEqual(applyRenamedOptions(config, undefined, table), []);
+		applyRenamedOptions(config, undefined, table);
 		assert.deepStrictEqual(config.globalShortcuts, ['Ctrl+1']);
-		assert.deepStrictEqual(applyRenamedOptions(null, {}, table), []);
+		assert.doesNotThrow(() => applyRenamedOptions(null, {}, table));
 	});
 });

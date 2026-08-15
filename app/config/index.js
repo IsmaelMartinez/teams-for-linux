@@ -136,9 +136,9 @@ function argv(configPath, appVersion) {
   }
 
   // ADR-025: project any nested value the user supplied onto the flat key that
-  // modules still read. Must run before anything consumes the config, and
-  // `parsed.defaulted` tells us which namespaces the user did not set.
-  applyRenamedOptions(config, yargsInstance.parsed?.defaulted);
+  // modules still read. Must run before anything consumes the config. The raw
+  // config file is the presence oracle; see app/config/renames.js for why.
+  applyRenamedOptions(config, configObject.configFile);
 
   if (configObject.isConfigFile && config.watchConfigFile) {
     fs.watch(getConfigFilePath(configPath), (event, filename) => {
