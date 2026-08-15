@@ -1,5 +1,60 @@
 # Changelog
 
+## [2.16.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.15.0...v2.16.0) (2026-08-14)
+
+
+### Features
+
+* **multi-account:** pin profiles + Ctrl+Alt+1…5 switch shortcuts (ADR-020 Phase 1c.2) ([#2787](https://github.com/IsmaelMartinez/teams-for-linux/issues/2787)) ([08f1db6](https://github.com/IsmaelMartinez/teams-for-linux/commit/08f1db68ac9cb2c9b291659ec1fa4e9916b4cef4))
+
+
+### Bug Fixes
+
+* **auth:** default keepMsalCacheEncryptionCookie to on ([#2850](https://github.com/IsmaelMartinez/teams-for-linux/issues/2850)) ([cc007bf](https://github.com/IsmaelMartinez/teams-for-linux/commit/cc007bf1548547953f3b85131a6f8f340c519716))
+* **deps:** bump nanoid in docs-site lockfile to clear advisory [#211](https://github.com/IsmaelMartinez/teams-for-linux/issues/211) ([#2827](https://github.com/IsmaelMartinez/teams-for-linux/issues/2827)) ([f3f5a97](https://github.com/IsmaelMartinez/teams-for-linux/commit/f3f5a971665fdd5e5ee0b0347a45670cb7c2dafb))
+* **deps:** refresh docs-site lockfile to clear http-proxy-middleware advisory ([#2823](https://github.com/IsmaelMartinez/teams-for-linux/issues/2823)) ([4c2785f](https://github.com/IsmaelMartinez/teams-for-linux/commit/4c2785fdc14981e8d13822c872068f22eb4f509c))
+* **logging:** remove [#2587](https://github.com/IsmaelMartinez/teams-for-linux/issues/2587) debug instrumentation that shipped in 2.15.0 ([#2814](https://github.com/IsmaelMartinez/teams-for-linux/issues/2814)) ([0af4c07](https://github.com/IsmaelMartinez/teams-for-linux/commit/0af4c0704d4ff9ee6ec44ac1698c0c2ac9ae9ed3))
+* **logging:** stop logging notification text and page DOM ([#2819](https://github.com/IsmaelMartinez/teams-for-linux/issues/2819)) ([2157c4f](https://github.com/IsmaelMartinez/teams-for-linux/commit/2157c4fdca715789be7b504c4a9f5a49438c9f20))
+* **menus:** limit hidden-menubar accelerators to profile switching ([#2821](https://github.com/IsmaelMartinez/teams-for-linux/issues/2821)) ([#2824](https://github.com/IsmaelMartinez/teams-for-linux/issues/2824)) ([2a5be99](https://github.com/IsmaelMartinez/teams-for-linux/commit/2a5be994b712ce07860be99a0de84c15ca1eeeb5))
+* **network:** bound the connectivity sweep so a hung probe cannot stall startup ([#2816](https://github.com/IsmaelMartinez/teams-for-linux/issues/2816)) ([ace3bb7](https://github.com/IsmaelMartinez/teams-for-linux/commit/ace3bb75dd1b98f6c0173d7142cea6954fec34f7))
+* **notifications:** load sender avatars for electron notifications ([#2809](https://github.com/IsmaelMartinez/teams-for-linux/issues/2809)) ([936ffde](https://github.com/IsmaelMartinez/teams-for-linux/commit/936ffde803b65e8aa7900e68bedcbae1ee1ca4cb))
+* **webauthn:** sign the iframe's own origin for relayed ceremonies ([#2828](https://github.com/IsmaelMartinez/teams-for-linux/issues/2828)) ([#2829](https://github.com/IsmaelMartinez/teams-for-linux/issues/2829)) ([e9db7b2](https://github.com/IsmaelMartinez/teams-for-linux/commit/e9db7b2f9cc2dd2430d6f47c56370ba3cf2ae9e8))
+
+
+### Documentation
+
+* **adr:** ADR-025 config option naming convention ([#2836](https://github.com/IsmaelMartinez/teams-for-linux/issues/2836)) ([dcafe0a](https://github.com/IsmaelMartinez/teams-for-linux/commit/dcafe0a91e87e6379f3075713301fc2791fce441))
+* **adr:** ADR-026 performance audit outcomes ([#2838](https://github.com/IsmaelMartinez/teams-for-linux/issues/2838)) ([7689e1d](https://github.com/IsmaelMartinez/teams-for-linux/commit/7689e1d5ae4ced8057cf92e8d2e7cfbc0bd5676e))
+* **adr:** leave the rename mechanism undecided in ADR-025 ([#2843](https://github.com/IsmaelMartinez/teams-for-linux/issues/2843)) ([9c3fb70](https://github.com/IsmaelMartinez/teams-for-linux/commit/9c3fb7010b814d57584acf4cd33b04b6caa955ad))
+
+
+### CI/CD
+
+* **docs:** bound the docs build with timeout-minutes ([#2852](https://github.com/IsmaelMartinez/teams-for-linux/issues/2852)) ([d6d4cb9](https://github.com/IsmaelMartinez/teams-for-linux/commit/d6d4cb9938d6e2fec1977fc328f1f470e5bd86c9))
+* **flatpak:** smoke build on release tags, document the beta remote ([#2853](https://github.com/IsmaelMartinez/teams-for-linux/issues/2853)) ([ed9a1da](https://github.com/IsmaelMartinez/teams-for-linux/commit/ed9a1da9a763a04f05fb17d5dcb9d7a87131c255))
+
+
+### Maintenance
+
+* add osv-scanner configuration ([#2846](https://github.com/IsmaelMartinez/teams-for-linux/issues/2846)) ([a314095](https://github.com/IsmaelMartinez/teams-for-linux/commit/a3140958267d89e454d2986e0e9069028af430d8))
+* **deps-dev:** bump the minor-and-patch group with 2 updates ([#2820](https://github.com/IsmaelMartinez/teams-for-linux/issues/2820)) ([a00ba0a](https://github.com/IsmaelMartinez/teams-for-linux/commit/a00ba0a0aad8173706af3819c957a10c5b286a57))
+* **deps:** bump brace-expansion from 5.0.8 to 5.0.9 in /docs-site ([#2802](https://github.com/IsmaelMartinez/teams-for-linux/issues/2802)) ([3d443af](https://github.com/IsmaelMartinez/teams-for-linux/commit/3d443af4a531df03040701248ba8f771730d5683))
+* **deps:** bump dompurify from 3.4.12 to 3.4.13 in /docs-site ([#2805](https://github.com/IsmaelMartinez/teams-for-linux/issues/2805)) ([690e820](https://github.com/IsmaelMartinez/teams-for-linux/commit/690e820f4078db636ff0124ce8d3ac301e7cd4fc))
+* **deps:** bump fast-uri from 3.1.4 to 3.1.5 ([#2800](https://github.com/IsmaelMartinez/teams-for-linux/issues/2800)) ([55708f5](https://github.com/IsmaelMartinez/teams-for-linux/commit/55708f54fd1c72f7f59102643c5c31440734639f))
+* **deps:** bump fast-uri from 3.1.4 to 3.1.5 in /docs-site ([#2804](https://github.com/IsmaelMartinez/teams-for-linux/issues/2804)) ([46a25e9](https://github.com/IsmaelMartinez/teams-for-linux/commit/46a25e9368b983c3c39e030345a9706c04e6ab0e))
+* **deps:** bump js-yaml from 4.3.0 to 4.3.1 ([#2808](https://github.com/IsmaelMartinez/teams-for-linux/issues/2808)) ([be4ee33](https://github.com/IsmaelMartinez/teams-for-linux/commit/be4ee33bf87065b53756236742d201ef748c669b))
+* **deps:** bump js-yaml from 4.3.0 to 4.3.1 in /docs-site ([#2807](https://github.com/IsmaelMartinez/teams-for-linux/issues/2807)) ([8466a9f](https://github.com/IsmaelMartinez/teams-for-linux/commit/8466a9f939bc64a59e3a82b2907e880149cb8337))
+* **deps:** bump mermaid from 11.15.0 to 11.16.1 in /docs-site ([#2806](https://github.com/IsmaelMartinez/teams-for-linux/issues/2806)) ([a5446b5](https://github.com/IsmaelMartinez/teams-for-linux/commit/a5446b58ee755251fca0aa2c4a08e701e0144bd9))
+* **deps:** bump undici from 7.28.0 to 7.29.0 ([#2799](https://github.com/IsmaelMartinez/teams-for-linux/issues/2799)) ([1cea4dd](https://github.com/IsmaelMartinez/teams-for-linux/commit/1cea4ddb116f435268c0596d64816fb4984b89f1))
+* **deps:** bump undici from 7.28.0 to 7.29.0 in /docs-site ([#2801](https://github.com/IsmaelMartinez/teams-for-linux/issues/2801)) ([e271012](https://github.com/IsmaelMartinez/teams-for-linux/commit/e27101263499c014493ae606f4916989e2d5b7fb))
+* **deps:** refresh brace-expansion in the lockfile ([#2847](https://github.com/IsmaelMartinez/teams-for-linux/issues/2847)) ([fe70fb9](https://github.com/IsmaelMartinez/teams-for-linux/commit/fe70fb99e6eddb3bbd5f460da9eb0468d5cbc2e9))
+* **sonar:** clear docker and String.raw findings ([#2818](https://github.com/IsmaelMartinez/teams-for-linux/issues/2818)) ([#2825](https://github.com/IsmaelMartinez/teams-for-linux/issues/2825)) ([b82434b](https://github.com/IsmaelMartinez/teams-for-linux/commit/b82434b01a0118fae2bf901d44495ef11b85151d))
+* **sonar:** clear the code-smell tail ([#2813](https://github.com/IsmaelMartinez/teams-for-linux/issues/2813)) ([894dc4e](https://github.com/IsmaelMartinez/teams-for-linux/commit/894dc4e4c556698bae8d3321f1b9b8e885227197))
+
+### Thanks
+
+Big thanks to @app/dependabot, @app/repo-butler-app, @jochimvd, @jpenberthy for contributing to this release.
+
 ## [2.15.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.14.1...v2.15.0) (2026-08-07)
 
 
