@@ -111,7 +111,10 @@ function checkUsedDeprecatedValues(yargsInstance, configObject, config) {
 
   console.warn(message);
   // Single entry on purpose; see app/config/deprecation.js for why.
-  config["warnings"] = [...(config["warnings"] || []), message];
+  // `warnings` is not a declared option, so a config file containing that key
+  // lands here verbatim; only extend it when it is already a list.
+  const existing = Array.isArray(config["warnings"]) ? config["warnings"] : [];
+  config["warnings"] = [...existing, message];
 }
 
 function argv(configPath, appVersion) {
@@ -131,9 +134,6 @@ function argv(configPath, appVersion) {
     config["error"] = configObject.configError;
   }
 
-  // Pass yargs instance to access getDeprecatedOptions() in v18
-  checkUsedDeprecatedValues(yargsInstance, configObject, config);
-
   if (configObject.isConfigFile && config.watchConfigFile) {
     fs.watch(getConfigFilePath(configPath), (event, filename) => {
       console.info(
@@ -150,6 +150,11 @@ function argv(configPath, appVersion) {
   config.disableGpuExplicitlySet = wasSetInCli || wasSetInFile;
 
   logger.init(config.logConfig);
+
+  // Runs after logger.init so the warning reaches the log file and not just
+  // stdout; users attaching a log to a bug report need to see it.
+  // Pass yargs instance to access getDeprecatedOptions() in v18
+  checkUsedDeprecatedValues(yargsInstance, configObject, config);
 
   // Warn-only schema validation of the merged (system + user) config file
   // contents (issue #2597). Runs after logger.init so warnings reach the log.

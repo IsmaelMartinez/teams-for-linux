@@ -8,6 +8,12 @@
 //
 // PII safety (see CLAUDE.md): the message contains option NAMES and the
 // author-written deprecation text only, never config values.
+//
+// Known limitation: only the config file is inspected. A deprecated option
+// passed as a CLI flag or environment variable (yargs runs with .env(true))
+// produces no warning, so those users would be silently ignored once a
+// renamed option stops being read. Widening this needs the parsed argv and
+// the env prefix, not just the config file.
 
 /**
  * @param {Record<string, string|boolean>} deprecatedOptions yargs
