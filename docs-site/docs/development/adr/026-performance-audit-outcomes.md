@@ -18,12 +18,12 @@ Each finding is closed as fixed, fixed differently, or not planned with a record
 
 | # | Finding | Outcome | Notes |
 |---|---------|---------|-------|
-| 1 | `timestampCopyOverride` polled every second, indefinitely | Fixed in `perf/renderer-io-cheap-wins` (in review) | Bounded to 120 consecutive one-second attempts, with errors charged to the same budget |
+| 1 | `timestampCopyOverride` polled every second, indefinitely | Fixed ([#2837](https://github.com/IsmaelMartinez/teams-for-linux/pull/2837)) | Bounded to 120 consecutive one-second attempts, with errors charged to the same budget |
 | 2 | Two full-subtree MutationObservers on `document.body` | Not planned | See rationale below |
 | 3 | Full button scan on every mutation in `injectedScreenSharing` | Fixed differently | A fast path of CSS, `data-tid` and aria selectors runs first; the full sweep fires only when the fast path finds nothing. Residual cost: one full `document.querySelectorAll("button")` sweep per mutation whenever the fast-path selectors match nothing, which is persistently the case on non-English locales |
-| 4 | Tray icon canvas and dataURL re-creation per update | Fixed in `perf/renderer-io-cheap-wins` (in review) | The base-icon `toDataURL()` result is cached. The resize path deliberately remains, costing two canvas creations plus `getContext("2d")` plus a `toDataURL()` per tray update |
+| 4 | Tray icon canvas and dataURL re-creation per update | Fixed ([#2837](https://github.com/IsmaelMartinez/teams-for-linux/pull/2837)) | The base-icon `toDataURL()` result is cached. The resize path deliberately remains, costing two canvas creations plus `getContext("2d")` plus a `toDataURL()` per tray update |
 | 5 | `shortcuts.js` ready-polling had no retry limit | Fixed | `MAX_READY_RETRIES = 30` caps both ready loops |
-| 6 | Sequential recursive directory walk in `cacheManager` | Fixed in `perf/renderer-io-cheap-wins` (in review) | `readdir` with `withFileTypes` dirents, processed in sequential chunks of 32 with `allSettled` isolation per entry |
+| 6 | Sequential recursive directory walk in `cacheManager` | Fixed ([#2837](https://github.com/IsmaelMartinez/teams-for-linux/pull/2837)) | `readdir` with `withFileTypes` dirents, processed in sequential chunks of 32 with `allSettled` isolation per entry. The chunk bounds concurrency per directory, not across the recursion, so the worst case is exponential in tree depth. Accepted because Chromium cache trees are wide and shallow, which keeps in-flight operations near the chunk size; a shared semaphore is the pre-scoped lever if this ever runs over a deep tree |
 | 7 | Listeners never removed on window close | Not planned | `app.quit()` follows window close immediately, so cleanup is moot, and multiple windows was rejected in ADR-010. Revisit only if crash-recovery window recreation is ever built |
 | 8 | Offline detection probes could block indefinitely | Fixed differently | See rationale below |
 | 9 | 150 ms WebRTC stats polling in `speakingIndicator` | Not planned | Roughly 6.7 `getStats()` calls per second per peer connection during calls. Acceptable at 150 ms; relaxing to 200 to 250 ms would add no perceptible delay and is the pre-scoped lever if a CPU-during-calls report lands |
@@ -45,7 +45,7 @@ Of the three proposals, the periodic memory logger, a five-minute `process.memor
 
 ### Positive
 
-Six of the ten findings are fixed or have fixes in review, and the rest carry an explicit reason, a stated magnitude where a residual cost is accepted, and a reopen trigger that works without instrumentation. The catalogue no longer lingers as untracked open work.
+Six of the ten findings are fixed, and the rest carry an explicit reason, a stated magnitude where a residual cost is accepted, and a reopen trigger that works without instrumentation. The catalogue no longer lingers as untracked open work.
 
 ### Negative
 
