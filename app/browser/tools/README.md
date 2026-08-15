@@ -150,7 +150,7 @@ Implements custom keyboard shortcuts for in-app actions like zoom control and na
 Ensures proper functionality of the top bar in frameless mode (i.e. without native window title bar).
 
 #### Global Shortcuts System (Main Process)
-System-wide keyboard shortcuts that work even when Teams is not focused. When triggered, the keyboard event is forwarded to Teams, which handles it with its built-in shortcuts. Configured via the `globalShortcuts` array in `config.json`.
+System-wide keyboard shortcuts that work even when Teams is not focused. When triggered, the keyboard event is forwarded to Teams, which handles it with its built-in shortcuts. Configured via the `shortcuts.global` array in `config.json` (the flat `globalShortcuts` is deprecated but still accepted).
 
 **Disabled by default** - opt-in by adding shortcuts to your config.
 
@@ -169,10 +169,12 @@ System-wide keyboard shortcuts that work even when Teams is not focused. When tr
 **Configuration Example** (add to config.json to enable):
 ```json
 {
-  "globalShortcuts": [
-    "Control+Shift+M",
-    "Control+Shift+O"
-  ]
+  "shortcuts": {
+    "global": [
+      "Control+Shift+M",
+      "Control+Shift+O"
+    ]
+  }
 }
 ```
 
