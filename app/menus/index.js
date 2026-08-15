@@ -99,9 +99,14 @@ class Menus {
       // is always undefined and silently clears everything (#2860).
       const clearOptions = this.configGroup.startupConfig.clearStorageData;
       if (clearOptions) {
-        // The value is a clearStorageDataOptions object which can carry an
-        // origin, so log that it is configured rather than what it contains.
-        console.debug("Clearing storage data on quit using configured options");
+        // Log the storage names only. They are a fixed Electron enum, unlike
+        // the sibling `origin`, which is a URL. Naming them makes a typo
+        // visible, since Electron ignores an unknown storage silently and the
+        // clear would then quietly keep data the user expected to lose.
+        console.debug(
+          "Clearing storage data on quit using configured options",
+          { storages: clearOptions?.storages ?? "all" }
+        );
         await defSession.clearStorageData(clearOptions);
       } else {
         console.debug("Clearing all storage data on quit");

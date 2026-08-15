@@ -44,7 +44,9 @@ describe('AppConfiguration access', () => {
 		for (const file of jsFiles(APP_DIR)) {
 			const lines = fs.readFileSync(file, 'utf8').split('\n');
 			lines.forEach((line, index) => {
-				for (const match of line.matchAll(/\b(?:configGroup|appConfig)\??\.([a-zA-Z_$]+)/g)) {
+				// Digits belong in the identifier class: without them a member such
+				// as `oauth2Config` would truncate to `oauth` and misreport.
+				for (const match of line.matchAll(/\b(?:configGroup|appConfig)\??\.([\w$]+)/g)) {
 					if (!ALLOWED.has(match[1])) {
 						offenders.push(
 							`${path.relative(APP_DIR, file)}:${index + 1} reads .${match[1]}, ` +
