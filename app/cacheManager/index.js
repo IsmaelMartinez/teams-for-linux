@@ -14,9 +14,14 @@ const electron = require("electron");
  * tokens and prevent 24-hour forced re-authentication cycles.
  */
 
-// Directory scans and cleans process entries in fixed-size chunks, bounding
-// in-flight fs operations to roughly chunk size times tree depth instead of
-// fanning out over the whole tree at once (libuv threadpool starvation).
+// Directory scans and cleans process entries in fixed-size chunks rather than
+// fanning out over a whole directory at once (libuv threadpool starvation).
+// The chunk bounds concurrency per directory, not across the recursion: each
+// subdirectory worker opens its own chunk, so the worst case is exponential in
+// tree depth. Chromium cache trees are wide and shallow (the volume is files at
+// the leaves, which is exactly what chunking parallelises), so in practice
+// in-flight operations stay near the chunk size. Revisit with a shared
+// semaphore if this ever runs over a deep tree.
 const SCAN_CHUNK_SIZE = 32;
 
 class CacheManager {
