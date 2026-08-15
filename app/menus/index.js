@@ -94,17 +94,17 @@ class Menus {
       const defSession = session.fromPartition(
         this.configGroup.startupConfig.partition
       );
-      if (this.configGroup.clearStorageData) {
-        console.debug(
-          "Clearing storage data on quit",
-          this.config.clearStorageData
-        );
-        await defSession.clearStorageData(this.configGroup.clearStorageData);
+      // startupConfig, not configGroup: AppConfiguration keeps the parsed
+      // config behind a getter, so reading an option straight off the instance
+      // is always undefined and silently clears everything (#2860).
+      const clearOptions = this.configGroup.startupConfig.clearStorageData;
+      if (clearOptions) {
+        // The value is a clearStorageDataOptions object which can carry an
+        // origin, so log that it is configured rather than what it contains.
+        console.debug("Clearing storage data on quit using configured options");
+        await defSession.clearStorageData(clearOptions);
       } else {
-        console.debug(
-          "Clearing storage on quit",
-          this.configGroup.clearStorageData
-        );
+        console.debug("Clearing all storage data on quit");
         await defSession.clearStorageData();
       }
     }
