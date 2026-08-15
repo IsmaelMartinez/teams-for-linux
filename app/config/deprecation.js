@@ -23,8 +23,10 @@
  * @returns {string|null} a single warning, or null when nothing is deprecated.
  */
 function buildDeprecationWarning(deprecatedOptions, configFile) {
+  // Object.hasOwn, matching validator.js, so an inherited key (a config file
+  // literally naming "__proto__" or "constructor") cannot trigger a warning.
   const used = Object.keys(deprecatedOptions || {}).filter(
-    (option) => configFile && option in configFile
+    (option) => configFile && Object.hasOwn(configFile, option)
   );
 
   if (used.length === 0) return null;

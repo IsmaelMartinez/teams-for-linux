@@ -21,6 +21,11 @@ describe('buildDeprecationWarning - nothing to report', () => {
 		assert.strictEqual(buildDeprecationWarning(undefined, undefined), null);
 		assert.strictEqual(buildDeprecationWarning({ webDebug: true }, null), null);
 	});
+
+	it('ignores inherited keys so a polluted prototype cannot trigger a warning', () => {
+		const polluted = Object.create({ webDebug: true });
+		assert.strictEqual(buildDeprecationWarning({ webDebug: true }, polluted), null);
+	});
 });
 
 describe('buildDeprecationWarning - aggregation', () => {
