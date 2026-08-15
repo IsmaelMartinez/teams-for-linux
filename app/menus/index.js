@@ -94,17 +94,22 @@ class Menus {
       const defSession = session.fromPartition(
         this.configGroup.startupConfig.partition
       );
-      if (this.configGroup.clearStorageData) {
+      // startupConfig, not configGroup: AppConfiguration keeps the parsed
+      // config behind a getter, so reading an option straight off the instance
+      // is always undefined and silently clears everything (#2860).
+      const clearOptions = this.configGroup.startupConfig.clearStorageData;
+      if (clearOptions) {
+        // Log the storage names only. They are a fixed Electron enum, unlike
+        // the sibling `origin`, which is a URL. Naming them makes a typo
+        // visible, since Electron ignores an unknown storage silently and the
+        // clear would then quietly keep data the user expected to lose.
         console.debug(
-          "Clearing storage data on quit",
-          this.config.clearStorageData
+          "Clearing storage data on quit using configured options",
+          { storages: clearOptions?.storages ?? "all" }
         );
-        await defSession.clearStorageData(this.configGroup.clearStorageData);
+        await defSession.clearStorageData(clearOptions);
       } else {
-        console.debug(
-          "Clearing storage on quit",
-          this.configGroup.clearStorageData
-        );
+        console.debug("Clearing all storage data on quit");
         await defSession.clearStorageData();
       }
     }
