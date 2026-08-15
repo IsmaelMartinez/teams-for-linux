@@ -84,8 +84,13 @@ jobs:
           sudo apt-get update
           # python3-yaml is not guaranteed on the runner image and the manifest
           # rewrite below depends on it, so install it here rather than assume.
+          #
+          # elfutils is required, not optional: flatpak-builder's post-build
+          # debuginfo stage shells out to eu-strip, and --no-install-recommends
+          # drops it, so the build gets all the way through every build-command
+          # and then dies with "Failed to execute child process eu-strip".
           sudo apt-get install -y --no-install-recommends \
-            flatpak flatpak-builder python3-yaml
+            flatpak flatpak-builder python3-yaml elfutils
           flatpak remote-add --if-not-exists --user \
             flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
