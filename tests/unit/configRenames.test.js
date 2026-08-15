@@ -92,6 +92,31 @@ describe('applyRenamedOptions - precedence', () => {
 		assert.strictEqual(config.disableNotifications, true);
 	});
 
+	// Nested leaves are not yargs options, so they miss the array coercion the
+	// flat names get. Without this a scalar would reach Array.isArray checks and
+	// for..of loops that expect a list.
+	it('wraps a scalar into an array for array-typed renames', () => {
+		const arrayTable = [{ flat: 'globalShortcuts', nested: 'shortcuts.global', type: 'array' }];
+		const config = { globalShortcuts: [], shortcuts: { global: 'Control+Shift+M' } };
+		applyRenamedOptions(config, {}, arrayTable);
+		assert.deepStrictEqual(config.globalShortcuts, ['Control+Shift+M']);
+	});
+
+	it('leaves an array untouched for array-typed renames', () => {
+		const arrayTable = [{ flat: 'globalShortcuts', nested: 'shortcuts.global', type: 'array' }];
+		const config = { globalShortcuts: [], shortcuts: { global: ['A', 'B'] } };
+		applyRenamedOptions(config, {}, arrayTable);
+		assert.deepStrictEqual(config.globalShortcuts, ['A', 'B']);
+	});
+
+	it('every array-typed option in the real table declares type: array', () => {
+		for (const { flat, type } of RENAMES) {
+			if (options[flat]?.type === 'array') {
+				assert.strictEqual(type, 'array', `${flat} must declare type: "array" to keep coercion`);
+			}
+		}
+	});
+
 	it('projects falsy nested values rather than skipping them', () => {
 		const config = { clearStorageData: true, storage: { clearData: false } };
 		applyRenamedOptions(config, {}, table);

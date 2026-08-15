@@ -262,7 +262,7 @@ Object options group several related settings. The tables below list each nested
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `storage.clearData` | `boolean` | `null` | Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions |
+| `storage.clearData` | `boolean|object` | `null` | Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions |
 
 ---
 

@@ -1225,7 +1225,7 @@
       "fields": [
         {
           "path": "clearData",
-          "type": "boolean",
+          "type": "boolean|object",
           "default": null,
           "description": "Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions"
         }

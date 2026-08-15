@@ -11,11 +11,21 @@
 // `disableNotifications: true` becoming `notifications.enabled: false`. A plain
 // copy would silently reverse user intent, so those must be negated.
 
-/** @type {{flat: string, nested: string, inverted?: boolean}[]} */
+// `type: "array"` restores the coercion the flat name gets for free. Nested
+// leaves are not yargs options, so yargs never wraps a scalar into an array
+// for them: `globalShortcuts: "Control+Shift+M"` arrives as ["Control+Shift+M"]
+// while `shortcuts.global: "Control+Shift+M"` would arrive as a bare string,
+// which fails the Array.isArray check in app/globalShortcuts/index.js and makes
+// a for..of over disableGlobalShortcuts iterate characters or throw.
+/** @type {{flat: string, nested: string, inverted?: boolean, type?: string}[]} */
 const RENAMES = [
   // Batch 1 (2.17.0)
-  { flat: "globalShortcuts", nested: "shortcuts.global" },
-  { flat: "disableGlobalShortcuts", nested: "shortcuts.disableWhileFocused" },
+  { flat: "globalShortcuts", nested: "shortcuts.global", type: "array" },
+  {
+    flat: "disableGlobalShortcuts",
+    nested: "shortcuts.disableWhileFocused",
+    type: "array",
+  },
   { flat: "clearStorageData", nested: "storage.clearData" },
 ];
 
@@ -32,6 +42,14 @@ function readPath(source, path) {
   return node;
 }
 
+// Mirrors the coercion yargs would have applied to the flat option: an array
+// option given a scalar is wrapped, and an inverted boolean is negated.
+function coerce(value, inverted, type) {
+  if (inverted) return !value;
+  if (type === "array" && !Array.isArray(value)) return [value];
+  return value;
+}
+
 /**
  * Projects nested values onto their flat counterparts, in place.
  *
@@ -46,7 +64,7 @@ function applyRenamedOptions(config, defaulted, renames = RENAMES) {
   const applied = [];
   if (!config || typeof config !== "object") return applied;
 
-  for (const { flat, nested, inverted } of renames) {
+  for (const { flat, nested, inverted, type } of renames) {
     const namespace = nested.split(".")[0];
     if (defaulted && Object.hasOwn(defaulted, namespace)) continue;
 
@@ -54,7 +72,7 @@ function applyRenamedOptions(config, defaulted, renames = RENAMES) {
     if (value === undefined) continue;
 
     // The new name wins when both are supplied; it is the canonical one.
-    config[flat] = inverted ? !value : value;
+    config[flat] = coerce(value, inverted, type);
     applied.push(flat);
   }
 
