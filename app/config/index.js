@@ -5,6 +5,7 @@ const { ipcMain } = require("electron");
 const logger = require("./logger");
 const configOptions = require("./options");
 const { validateConfigFile } = require("./validator");
+const { buildDeprecationWarning } = require("./deprecation");
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
@@ -102,23 +103,15 @@ function extractYargConfig(configObject, appVersion) {
 
 function checkUsedDeprecatedValues(yargsInstance, configObject, config) {
   // yargs v18: getDeprecatedOptions() must be called on the instance
-  const deprecatedOptions = yargsInstance.getDeprecatedOptions();
-  const warnings = [];
+  const message = buildDeprecationWarning(
+    yargsInstance.getDeprecatedOptions(),
+    configObject.configFile
+  );
+  if (!message) return;
 
-  for (const option in deprecatedOptions) {
-    if (option in configObject.configFile) {
-      const deprecatedWarningMessage = `Option \`${option}\` is deprecated and will be removed in future version. \n ${deprecatedOptions[option]}.`;
-      console.warn(deprecatedWarningMessage);
-      warnings.push(deprecatedWarningMessage);
-    } else {
-      console.debug(`all good with ${option} you aren't using them`);
-    }
-  }
-
-  // Accumulate all warnings instead of overwriting
-  if (warnings.length > 0) {
-    config["warnings"] = warnings;
-  }
+  console.warn(message);
+  // Single entry on purpose; see app/config/deprecation.js for why.
+  config["warnings"] = [...(config["warnings"] || []), message];
 }
 
 function argv(configPath, appVersion) {
