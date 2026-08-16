@@ -95,6 +95,16 @@ class ProfilesManager {
     return list.find((p) => p.id === activeId) || null;
   }
 
+  // The profile living on the ROOT window's webContents (Profile 0, bound to
+  // the legacy partition), or null before first-run bootstrap registers it.
+  // Main-process consumers (SenderProfileMap) use this to attribute IPC from
+  // the root window to a profile without duplicating the partition constant.
+  getLegacyProfile() {
+    return (
+      this.#read().list.find((p) => p.partition === LEGACY_PARTITION) || null
+    );
+  }
+
   switch(id) {
     const state = this.#read();
     const profile = state.list.find((p) => p.id === id);
