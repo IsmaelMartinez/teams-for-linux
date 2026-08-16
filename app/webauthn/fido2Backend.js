@@ -371,6 +371,52 @@ async function createCredential(options) {
 }
 
 /**
+ * Try each credential the relying party allowed, until one is on the key.
+ *
+ * The server lists every credential it has registered for the account, but only
+ * one of them lives on the key that is plugged in (marcovr's bug: the first
+ * credential is not necessarily the right one). FIDO_ERR_NO_CREDENTIALS is the
+ * device saying "not this one"; every other outcome — a cancel, a bad PIN, a
+ * timeout — is final and stops the loop rather than being retried against the
+ * remaining credentials.
+ *
+ * Lives outside getAssertion() so the retry decision is not three levels deep
+ * (SonarCloud javascript:S3776).
+ *
+ * @param {object} options - Same options object getAssertion received
+ * @param {string[]} args - fido2-assert args, device included
+ * @param {string[]} inputLines - Stdin lines shared by every attempt
+ * @param {number} timeoutMs - Per-attempt timeout
+ * @param {Buffer} clientDataJSON - clientDataJSON for the result
+ * @returns {Promise<object>} Assertion result
+ */
+async function tryAllowCredentials(options, args, inputLines, timeoutMs, clientDataJSON) {
+  const total = options.allowCredentials.length;
+  let lastError;
+
+  for (const [i, cred] of options.allowCredentials.entries()) {
+    const credInputLines = [...inputLines, base64urlDecode(cred.id).toString("base64")];
+    const index = i + 1;
+    log.debug("[WEBAUTHN] getAssertion cred-try", { index, total });
+    try {
+      const { stdout } = await spawnFido2(
+        "fido2-assert", args, credInputLines, timeoutMs,
+        options.preCollectedPin || null, options.abortSignal,
+      );
+      return parseAssertionOutput(stdout, options, clientDataJSON, cred.id);
+    } catch (err) {
+      const errClass = log.classifyError(err);
+      log.debug("[WEBAUTHN] getAssertion cred-try failed", { index, total, errClass });
+      lastError = err;
+      // Only "this credential is not on this device" is worth another attempt.
+      if (errClass !== "NO_CREDENTIALS") throw err;
+    }
+  }
+
+  throw lastError;
+}
+
+/**
  * Get an assertion from a hardware security key.
  *
  * @param {object} options - WebAuthn get options (serialized from renderer)
@@ -420,36 +466,8 @@ async function getAssertion(options) {
 
   const timeoutMs = (options.timeout || 60) * 1000;
 
-  // When multiple allowCredentials are provided, try each one until fido2-assert
-  // succeeds. The server lists all registered credentials, but only one will
-  // match the key that's plugged in (marcovr's bug: first credential may not
-  // be the one on the device).
   if (hasAllowCredentials) {
-    let lastError;
-    for (const cred of options.allowCredentials) {
-      const credInputLines = [...inputLines, base64urlDecode(cred.id).toString("base64")];
-      const index = options.allowCredentials.indexOf(cred) + 1;
-      const total = options.allowCredentials.length;
-      log.debug("[WEBAUTHN] getAssertion cred-try", { index, total });
-      try {
-        const { stdout } = await spawnFido2(
-          "fido2-assert", args, credInputLines, timeoutMs,
-          options.preCollectedPin || null, options.abortSignal,
-        );
-        return parseAssertionOutput(stdout, options, clientDataJSON, cred.id);
-      } catch (err) {
-        const errClass = log.classifyError(err);
-        log.debug("[WEBAUTHN] getAssertion cred-try failed", { index, total, errClass });
-        lastError = err;
-        // A cancel is not a "wrong credential" — stop trying the rest.
-        if (err.message === CANCELLED_MESSAGE) throw err;
-        // FIDO_ERR_NO_CREDENTIALS means this credential isn't on the device — try next
-        if (errClass !== "NO_CREDENTIALS") {
-          throw err; // Other errors (bad PIN, timeout) should not be retried
-        }
-      }
-    }
-    throw lastError;
+    return tryAllowCredentials(options, args, inputLines, timeoutMs, clientDataJSON);
   }
 
   // No allowCredentials — use resident key mode

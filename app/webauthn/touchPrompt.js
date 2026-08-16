@@ -49,7 +49,9 @@ function showTouchPrompt(onCancel) {
     modal: false,
     alwaysOnTop: true,
     autoHideMenuBar: true,
-    title: "Touch your security key",
+    // Matches the heading: the prompt spans the whole call and does not claim
+    // to know when the key's LED actually started blinking.
+    title: "Waiting for your security key",
     webPreferences: {
       preload: path.join(__dirname, "touchPromptPreload.js"),
       contextIsolation: true,

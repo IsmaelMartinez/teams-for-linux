@@ -1,6 +1,6 @@
 'use strict';
 
-const { describe, it } = require('node:test');
+const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert');
 const { readFileSync } = require('node:fs');
 const path = require('node:path');
@@ -617,19 +617,180 @@ describe('Security key cancellation', () => {
 		assert.strictEqual(stdout.trim(), 'ok');
 	});
 
-	it('stops trying further credentials once cancelled', () => {
-		// Replicates the retry decision in getAssertion()'s allowCredentials loop:
-		// NO_CREDENTIALS means "not this key, try the next one", but a cancel has
-		// to break out rather than walk the whole list killing a child each time.
-		const shouldKeepTrying = (message, errClass) =>
-			message !== fido2Backend.CANCELLED_MESSAGE && errClass === 'NO_CREDENTIALS';
-
-		assert.strictEqual(shouldKeepTrying('some error', 'NO_CREDENTIALS'), true);
-		assert.strictEqual(shouldKeepTrying(fido2Backend.CANCELLED_MESSAGE, 'NO_CREDENTIALS'), false);
-		assert.strictEqual(shouldKeepTrying('bad PIN', 'PIN_INVALID'), false);
-	});
-
 	it('marks a cancellation as NotAllowedError so the page offers another method', () => {
 		assert.match(fido2Backend.CANCELLED_MESSAGE, /^NotAllowedError:/);
+	});
+});
+
+// ─── The allowCredentials retry loop, driven for real ─────────────────────────
+//
+// getAssertion() walks the credentials the server allowed until one is on the
+// key. Asserting a copy of that decision proves nothing, so these tests put
+// stub `fido2-token` / `fido2-assert` executables on PATH and run the real
+// function against them, counting how many times the stub was spawned.
+//
+// The stubs are shebang scripts, which Windows cannot execute directly. The
+// backend is Linux-only anyway (Chromium handles WebAuthn natively elsewhere).
+
+describe('getAssertion allowCredentials loop', () => {
+	const fs = require('node:fs');
+	const os = require('node:os');
+	const fido2Backend = require('../../app/webauthn/fido2Backend');
+
+	const posixOnly = { skip: process.platform === 'win32' && 'stub binaries need a POSIX shebang' };
+
+	let stubDir;
+	let logPath;
+	let originalPath;
+
+	// Two lines is what fido2-assert emits without echoing input back:
+	// CBOR-wrapped authenticator data, then the signature.
+	const successStdout = [
+		cborEncode(Buffer.from('authenticator-data')).toString('base64'),
+		Buffer.from('signature-bytes').toString('base64'),
+	].join('\n') + '\n';
+
+	// In resident-key mode the tool also reports which credential it used,
+	// because the caller never told it.
+	const RESIDENT_CREDENTIAL = Buffer.from('resident-cred');
+	const residentStdout = successStdout.trimEnd() + '\n' + RESIDENT_CREDENTIAL.toString('base64') + '\n';
+
+	const credential = (name) => ({ id: base64urlEncode(Buffer.from(name)), type: 'public-key' });
+	const THREE_CREDENTIALS = [credential('cred-one'), credential('cred-two'), credential('cred-three')];
+
+	function writeStub(name, body) {
+		const file = path.join(stubDir, name);
+		fs.writeFileSync(file, `#!${process.execPath}\n${body}`, { mode: 0o755 });
+	}
+
+	before(() => {
+		if (process.platform === 'win32') return;
+		stubDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fido2-stub-'));
+		logPath = path.join(stubDir, 'calls.log');
+
+		writeStub('fido2-token', 'process.stdout.write("/dev/hidraw9: vendor=0x1050, product=0x0407 (Stub)\\n");\n');
+
+		// Reads stdin to completion first, exactly like the real tool, so the
+		// backend's parameter write never lands on a closed pipe. Each behaviour
+		// is consumed in order, one per spawn.
+		writeStub('fido2-assert', `
+			const fs = require("node:fs");
+			// Safety net: a stalled test must not leave this running forever.
+			setTimeout(() => process.exit(9), 20000);
+			const chunks = [];
+			process.stdin.on("data", (c) => chunks.push(c));
+			process.stdin.on("end", run);
+			let started = false;
+			function run() {
+				if (started) return;
+				started = true;
+				fs.appendFileSync(process.env.FIDO2_STUB_LOG, "call\\n");
+				const calls = fs.readFileSync(process.env.FIDO2_STUB_LOG, "utf8").split("\\n").filter(Boolean).length;
+				const script = JSON.parse(process.env.FIDO2_STUB_SCRIPT);
+				const behaviour = script[calls - 1] || script[script.length - 1];
+				if (behaviour === "success" || behaviour === "success-resident") {
+					process.stdout.write(behaviour === "success" ? process.env.FIDO2_STUB_STDOUT : process.env.FIDO2_STUB_STDOUT_RESIDENT);
+					process.exit(0);
+				}
+				if (behaviour === "hang") return;
+				process.stderr.write(behaviour === "bad-pin" ? "FIDO_ERR_PIN_INVALID" : "FIDO_ERR_NO_CREDENTIALS");
+				process.exit(1);
+			}
+		`);
+
+		originalPath = process.env.PATH;
+		process.env.PATH = `${stubDir}${path.delimiter}${originalPath}`;
+		process.env.FIDO2_STUB_LOG = logPath;
+		process.env.FIDO2_STUB_STDOUT = successStdout;
+		process.env.FIDO2_STUB_STDOUT_RESIDENT = residentStdout;
+	});
+
+	after(() => {
+		if (process.platform === 'win32') return;
+		process.env.PATH = originalPath;
+		delete process.env.FIDO2_STUB_LOG;
+		delete process.env.FIDO2_STUB_SCRIPT;
+		delete process.env.FIDO2_STUB_STDOUT;
+		delete process.env.FIDO2_STUB_STDOUT_RESIDENT;
+		fs.rmSync(stubDir, { recursive: true, force: true });
+	});
+
+	/** Arm the stub with one behaviour per expected spawn and reset the counter. */
+	function arm(...behaviours) {
+		fs.writeFileSync(logPath, '');
+		process.env.FIDO2_STUB_SCRIPT = JSON.stringify(behaviours);
+	}
+
+	const spawnCount = () => fs.readFileSync(logPath, 'utf8').split('\n').filter(Boolean).length;
+
+	async function waitForSpawns(count) {
+		const deadline = Date.now() + 5000;
+		while (spawnCount() < count) {
+			if (Date.now() > deadline) throw new Error(`stub spawned ${spawnCount()} times, expected ${count}`);
+			await new Promise((resolve) => setTimeout(resolve, 20));
+		}
+	}
+
+	const assertionOptions = (extra) => ({
+		challenge: base64urlEncode(Buffer.from('challenge')),
+		rpId: 'login.microsoft.com',
+		origin: 'https://login.microsoft.com',
+		timeout: 30,
+		...extra,
+	});
+
+	it('moves on to the next credential when the key does not hold this one', posixOnly, async () => {
+		arm('no-credentials', 'success');
+
+		const result = await fido2Backend.getAssertion(assertionOptions({ allowCredentials: THREE_CREDENTIALS }));
+
+		assert.strictEqual(result.credentialId, THREE_CREDENTIALS[1].id);
+		assert.strictEqual(spawnCount(), 2);
+	});
+
+	it('stops trying further credentials once cancelled', posixOnly, async () => {
+		arm('hang');
+		const controller = new AbortController();
+
+		const pending = fido2Backend.getAssertion(assertionOptions({
+			allowCredentials: THREE_CREDENTIALS,
+			abortSignal: controller.signal,
+		}));
+
+		await waitForSpawns(1);
+		controller.abort();
+
+		await assert.rejects(pending, (err) => err.message === fido2Backend.CANCELLED_MESSAGE);
+		// The whole point: one child, not one per allowed credential.
+		assert.strictEqual(spawnCount(), 1);
+	});
+
+	it('does not retry an error that is not "wrong credential"', posixOnly, async () => {
+		arm('bad-pin');
+
+		await assert.rejects(
+			() => fido2Backend.getAssertion(assertionOptions({ allowCredentials: THREE_CREDENTIALS })),
+			/FIDO_ERR_PIN_INVALID/,
+		);
+		assert.strictEqual(spawnCount(), 1);
+	});
+
+	it('tries every allowed credential before giving up', posixOnly, async () => {
+		arm('no-credentials', 'no-credentials', 'no-credentials');
+
+		await assert.rejects(
+			() => fido2Backend.getAssertion(assertionOptions({ allowCredentials: THREE_CREDENTIALS })),
+			/FIDO_ERR_NO_CREDENTIALS/,
+		);
+		assert.strictEqual(spawnCount(), 3);
+	});
+
+	it('spawns once in resident-key mode when no credentials are listed', posixOnly, async () => {
+		arm('success-resident');
+
+		const result = await fido2Backend.getAssertion(assertionOptions({}));
+
+		assert.strictEqual(result.credentialId, base64urlEncode(RESIDENT_CREDENTIAL));
+		assert.strictEqual(spawnCount(), 1);
 	});
 });

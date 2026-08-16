@@ -53,6 +53,11 @@ button rather than the informational-only v1 this note recommended, because
 `spawnFido2` an `AbortSignal` that reuses the very same detached-process-group kill as the timeout,
 so a cancel cannot leave a `fido2` child holding the device.
 
+Validated on real hardware by [@spthiel](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779#issuecomment-5163132960):
+the prompt appears with no visible gap after the PIN dialog closes, touching the key completes the
+sign-in, Cancel and the 60s timeout both land on Microsoft's "We couldn't sign you in" page, and no
+`fido2-assert` process is left behind.
+
 Still open: the `auth.webauthn.enabled` **off** path, where Electron's native WebAuthn draws no UI
 on Linux at all. That needs interception for users who did not opt into the beta, and it is not
 obvious what Cancel should mean when the underlying Chromium call cannot be aborted.
