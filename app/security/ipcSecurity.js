@@ -33,10 +33,22 @@ function installIpcSecurity(ipcMain, logger = console) {
   const originalOn = ipcMain.on.bind(ipcMain);
   const originalOnce = ipcMain.once.bind(ipcMain);
   const originalRemoveListener = ipcMain.removeListener.bind(ipcMain);
+  const originalRemoveAllListeners = ipcMain.removeAllListeners.bind(ipcMain);
 
   // handler -> channel -> wrappers registered for it. Weak on the handler so a
   // listener that goes out of scope takes its bookkeeping with it.
   const wrappers = new WeakMap();
+
+  // `removeAllListeners` empties the emitter without naming the handlers it
+  // dropped, and a WeakMap cannot be walked to find them. So every wrapper is
+  // stamped with a registration number, and a clear records the number it
+  // happened at: anything stamped at or below that is gone from the emitter.
+  let registrations = 0;
+  let clearedAll = 0;
+  const clearedByChannel = new Map();
+
+  const isLive = (channel, entry) =>
+    entry.at > clearedAll && entry.at > (clearedByChannel.get(channel) ?? 0);
 
   function remember(channel, handler, wrapper) {
     let byChannel = wrappers.get(handler);
@@ -44,10 +56,11 @@ function installIpcSecurity(ipcMain, logger = console) {
       byChannel = new Map();
       wrappers.set(handler, byChannel);
     }
+    const entry = { wrapper, at: ++registrations };
     const existing = byChannel.get(channel);
-    if (existing) existing.push(wrapper);
-    else byChannel.set(channel, [wrapper]);
-    return wrapper;
+    if (existing) existing.push(entry);
+    else byChannel.set(channel, [entry]);
+    return entry;
   }
 
   // EventEmitter.removeListener drops the most recently added match, so pop to
@@ -55,7 +68,20 @@ function installIpcSecurity(ipcMain, logger = console) {
   // listeners that were registered before this wrapping was installed.
   function forget(channel, handler) {
     const registered = wrappers.get(handler)?.get(channel);
-    return registered?.length ? registered.pop() : handler;
+    if (!registered) return handler;
+    // Drop anything a removeAllListeners already took off the emitter, so the
+    // pop below returns a wrapper that is really still registered.
+    while (registered.length && !isLive(channel, registered.at(-1))) registered.pop();
+    return registered.length ? registered.pop().wrapper : handler;
+  }
+
+  // A fired `once` has to drop its own record, not the newest one: registering
+  // the same function with `on` after the `once` would otherwise make the
+  // `once` consume the `on`'s record, and the `on` could never be removed.
+  function forgetEntry(channel, handler, entry) {
+    const registered = wrappers.get(handler)?.get(channel);
+    const index = registered ? registered.indexOf(entry) : -1;
+    if (index !== -1) registered.splice(index, 1);
   }
 
   function isAllowed(channel, args, kind) {
@@ -74,20 +100,22 @@ function installIpcSecurity(ipcMain, logger = console) {
   };
 
   ipcMain.on = (channel, handler) => {
-    return originalOn(channel, remember(channel, handler, (event, ...args) => {
+    const entry = remember(channel, handler, (event, ...args) => {
       if (!isAllowed(channel, args, "event")) return;
       return handler(event, ...args);
-    }));
+    });
+    return originalOn(channel, entry.wrapper);
   };
 
   ipcMain.once = (channel, handler) => {
-    return originalOnce(channel, remember(channel, handler, (event, ...args) => {
+    const entry = remember(channel, handler, (event, ...args) => {
       // The emitter has already dropped this wrapper by the time it runs, so
       // drop our record of it too rather than leave a stale entry behind.
-      forget(channel, handler);
+      forgetEntry(channel, handler, entry);
       if (!isAllowed(channel, args, "event")) return;
       return handler(event, ...args);
-    }));
+    });
+    return originalOnce(channel, entry.wrapper);
   };
 
   ipcMain.removeListener = (channel, handler) => {
@@ -96,6 +124,19 @@ function installIpcSecurity(ipcMain, logger = console) {
 
   // `off` is EventEmitter's alias for removeListener; keep them the same.
   ipcMain.off = ipcMain.removeListener;
+
+  // Rest args rather than a named one: EventEmitter branches on
+  // `arguments.length`, so forwarding an explicit `undefined` would clear
+  // nothing instead of clearing everything.
+  ipcMain.removeAllListeners = (...args) => {
+    if (args.length === 0) {
+      clearedAll = registrations;
+      clearedByChannel.clear();
+    } else {
+      clearedByChannel.set(args[0], registrations);
+    }
+    return originalRemoveAllListeners(...args);
+  };
 }
 
 module.exports = { installIpcSecurity };

@@ -7,6 +7,7 @@ const { EventEmitter } = require('node:events');
 const { installIpcSecurity } = require('../../app/security/ipcSecurity');
 
 const ALLOWED = 'webauthn:touch-cancel';
+const OTHER_ALLOWED = 'webauthn:pin-cancel';
 const BLOCKED = 'not-an-allowlisted-channel';
 
 /**
@@ -100,6 +101,53 @@ describe('IPC security - listener removal', () => {
     ipcMain.removeListener(ALLOWED, handler);
 
     assert.strictEqual(ipcMain.listenerCount(ALLOWED), 0);
+  });
+
+  // A fired once() has to drop its own record. Popping the newest instead makes
+  // it consume a later on()'s record, and that on() can then never be removed.
+  it('lets a fired once() drop its own registration, not a later on()', () => {
+    const ipcMain = fakeIpcMain();
+    installIpcSecurity(ipcMain, silent);
+    let calls = 0;
+    const handler = () => { calls++; };
+
+    ipcMain.once(ALLOWED, handler);
+    ipcMain.on(ALLOWED, handler);
+    ipcMain.emit(ALLOWED, {});
+    assert.strictEqual(calls, 2);
+    assert.strictEqual(ipcMain.listenerCount(ALLOWED), 1);
+
+    ipcMain.removeListener(ALLOWED, handler);
+
+    assert.strictEqual(ipcMain.listenerCount(ALLOWED), 0);
+  });
+
+  it('clears only the channel removeAllListeners was given', () => {
+    const ipcMain = fakeIpcMain();
+    installIpcSecurity(ipcMain, silent);
+    const handler = () => {};
+
+    ipcMain.on(ALLOWED, handler);
+    ipcMain.on(OTHER_ALLOWED, handler);
+    ipcMain.removeAllListeners(OTHER_ALLOWED);
+
+    assert.strictEqual(ipcMain.listenerCount(OTHER_ALLOWED), 0);
+    assert.strictEqual(ipcMain.listenerCount(ALLOWED), 1);
+  });
+
+  // EventEmitter branches on arguments.length, so a wrapper that forwards an
+  // explicit `undefined` clears nothing at all.
+  it('clears every channel when removeAllListeners is called with no arguments', () => {
+    const ipcMain = fakeIpcMain();
+    installIpcSecurity(ipcMain, silent);
+    const handler = () => {};
+
+    ipcMain.on(ALLOWED, handler);
+    ipcMain.on(OTHER_ALLOWED, handler);
+    ipcMain.removeAllListeners();
+
+    assert.strictEqual(ipcMain.listenerCount(ALLOWED), 0);
+    assert.strictEqual(ipcMain.listenerCount(OTHER_ALLOWED), 0);
   });
 
   it('does not resurrect a once() listener that already fired', () => {
