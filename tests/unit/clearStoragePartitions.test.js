@@ -59,6 +59,22 @@ describe("collectPartitionsToClear", () => {
     assert.deepStrictEqual(partitions, [LEGACY]);
   });
 
+  // The list comes off disk, so a hand-edited or corrupted record can hold a
+  // non-string. session.fromPartition throws on those, and quit() is
+  // fire-and-forget, so letting one through would skip window.close() and the
+  // menu item would appear to do nothing at all.
+  test("skips profile records whose partition is not a string", () => {
+    const partitions = collectPartitionsToClear(LEGACY, {
+      list: () => [
+        { id: "a", partition: 42 },
+        { id: "b", partition: { toString: () => "persist:nope" } },
+        { id: "c", partition: ["persist:nope"] },
+      ],
+    });
+
+    assert.deepStrictEqual(partitions, [LEGACY]);
+  });
+
   // Deliberate, and the one behavioural difference when multiAccount.enabled is
   // false. Profiles outlive the flag: it can be turned off after they are
   // created, and app/index.js force-disables multi-account under

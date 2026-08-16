@@ -35,7 +35,9 @@ function collectPartitionsToClear(startupPartition, profilesManager) {
   }
 
   for (const profile of profilesManager?.list?.() ?? []) {
-    if (profile?.partition) {
+    // Type-checked, not just truthy: these come from the settings file, and
+    // `session.fromPartition` throws on a non-string.
+    if (typeof profile?.partition === "string" && profile.partition) {
       partitions.add(profile.partition);
     }
   }

@@ -112,30 +112,35 @@ class Menus {
         partitions: partitions.length,
         storages: clearOptions?.storages ?? "all",
       });
-      let failed = 0;
-      for (const partition of partitions) {
-        const partitionSession = session.fromPartition(partition);
-        try {
-          if (clearOptions) {
-            await partitionSession.clearStorageData(clearOptions);
-          } else {
-            await partitionSession.clearStorageData();
-          }
-        } catch (error) {
-          // `quit` is fire-and-forget from the menu, so letting this reject
-          // would skip window.close() below and hang the quit. Keep clearing
-          // the rest instead.
-          failed += 1;
-          console.error("Failed to clear storage data for a partition", {
-            error: error.message,
-          });
-        }
+      // Started together rather than in sequence: the profile views are still
+      // live at this point, so a partition cleared early is exposed until the
+      // last one finishes and its renderer can write fresh auth cookies back
+      // in the meantime. Overlapping the clears keeps that window from growing
+      // with the number of profiles.
+      const results = await Promise.allSettled(
+        partitions.map(async (partition) => {
+          // `async` so that a synchronous throw from `fromPartition` becomes a
+          // rejection this settles over rather than escaping the whole call.
+          const partitionSession = session.fromPartition(partition);
+          return clearOptions
+            ? partitionSession.clearStorageData(clearOptions)
+            : partitionSession.clearStorageData();
+        })
+      );
+
+      // `quit` is fire-and-forget from the menu, so letting any of this reject
+      // would skip window.close() below and hang the quit.
+      const failures = results.filter((r) => r.status === "rejected");
+      for (const failure of failures) {
+        console.error("Failed to clear storage data for a partition", {
+          error: failure.reason?.message,
+        });
       }
-      if (failed > 0) {
+      if (failures.length > 0) {
         // The user confirmed a dialog promising removal, so a swallowed
         // failure must not read as success in the log.
         console.error("Storage data was not fully cleared on quit", {
-          failed,
+          failed: failures.length,
           of: partitions.length,
         });
       }
