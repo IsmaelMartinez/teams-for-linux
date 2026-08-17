@@ -63,6 +63,7 @@ exports = module.exports = (Menus) => ({
       type: "separator",
     },
     getSettingsMenu(Menus),
+    getAppIconMenu(Menus),
     getPreferencesMenu(),
     getNotificationsMenu(Menus),
     ...(Menus.configGroup.startupConfig.multiAccount?.enabled
@@ -110,6 +111,24 @@ function getSettingsMenu(Menus) {
       {
         label: "Restore",
         click: () => Menus.restoreSettings(),
+      },
+    ],
+  };
+}
+
+function getAppIconMenu(Menus) {
+  const hasCustomIcon = !!Menus.configGroup.startupConfig.appIcon;
+  return {
+    label: "App Icon",
+    submenu: [
+      {
+        label: "Choose App Icon...",
+        click: () => Menus.chooseAppIcon(),
+      },
+      {
+        label: "Reset to default",
+        enabled: hasCustomIcon,
+        click: () => Menus.resetAppIcon(),
       },
     ],
   };

@@ -18,6 +18,13 @@ class TrayIconRenderer {
       "unread-count",
       this.updateActivityCount.bind(this),
     );
+    ipcRenderer.on('config-changed', (_event, changes) => {
+      if ('appIcon' in changes) {
+        this.baseIcon = nativeImage.createFromPath(new TrayIconChooser(this.config).getFile());
+        this.iconSize = this.baseIcon.getSize();
+        this.#lastRequestedCount = undefined;
+      }
+    });
   }
 
   async updateActivityCount(event) {

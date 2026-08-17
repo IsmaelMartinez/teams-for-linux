@@ -4,6 +4,7 @@ const {
   MenuItem,
   clipboard,
   dialog,
+  nativeImage,
   session,
   ipcMain,
 } = require("electron");
@@ -339,6 +340,39 @@ class Menus {
     }
   }
 
+  chooseAppIcon() {
+    const result = dialog.showOpenDialogSync(this.window, {
+      title: 'Choose App Icon',
+      filters: [{ name: 'Images', extensions: ['png'] }],
+      properties: ['openFile'],
+    });
+    if (result && result.length > 0) {
+      const selectedPath = result[0];
+      this.configGroup.startupConfig.appIcon = selectedPath;
+      this.configGroup.legacyConfigStore.set('appIcon', selectedPath);
+      this.tray?.setBaseIconPath(selectedPath);
+      this.#updateWindowIcon(selectedPath);
+      this.updateMenu();
+    }
+  }
+
+  resetAppIcon() {
+    this.configGroup.startupConfig.appIcon = '';
+    this.configGroup.legacyConfigStore.set('appIcon', '');
+    const TrayIconChooser = require('../browser/tools/trayIconChooser');
+    const iconChooser = new TrayIconChooser(this.configGroup.startupConfig);
+    const iconPath = iconChooser.getFile();
+    this.tray?.setBaseIconPath(iconPath);
+    this.#updateWindowIcon(iconPath);
+    this.updateMenu();
+  }
+
+  #updateWindowIcon(iconPath) {
+    const icon = nativeImage.createFromPath(iconPath);
+    this.window.setIcon(icon);
+    app.dock?.setIcon(icon);
+  }
+
   saveSettings() {
     // Receive Teams settings from renderer to save to file
     ipcMain.once("get-teams-settings", saveSettingsInternal);
@@ -414,6 +448,7 @@ class Menus {
       disableNotificationWindowFlash: this.configGroup.startupConfig.disableNotificationWindowFlash,
       disableBadgeCount: this.configGroup.startupConfig.disableBadgeCount,
       defaultNotificationUrgency: this.configGroup.startupConfig.defaultNotificationUrgency,
+      appIcon: this.configGroup.startupConfig.appIcon,
     });
   }
 
