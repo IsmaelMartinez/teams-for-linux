@@ -12,6 +12,7 @@ const fs = require("node:fs"),
 const { fileURLToPath } = require("node:url");
 const appMenu = require("./appMenu");
 const buildProfilesMenu = require("./profilesMenu");
+const collectPartitionsToClear = require("./storagePartitions");
 const Tray = require("./tray");
 const { SpellCheckProvider } = require("../spellCheckProvider");
 const DocumentationWindow = require("../documentationWindow");
@@ -91,26 +92,57 @@ class Menus {
       }) === 0;
 
     if (clearStorage) {
-      const defSession = session.fromPartition(
-        this.configGroup.startupConfig.partition
-      );
       // startupConfig, not configGroup: AppConfiguration keeps the parsed
       // config behind a getter, so reading an option straight off the instance
       // is always undefined and silently clears everything (#2860).
       const clearOptions = this.configGroup.startupConfig.clearStorageData;
-      if (clearOptions) {
-        // Log the storage names only. They are a fixed Electron enum, unlike
-        // the sibling `origin`, which is a URL. Naming them makes a typo
-        // visible, since Electron ignores an unknown storage silently and the
-        // clear would then quietly keep data the user expected to lose.
-        console.debug(
-          "Clearing storage data on quit using configured options",
-          { storages: clearOptions?.storages ?? "all" }
-        );
-        await defSession.clearStorageData(clearOptions);
-      } else {
-        console.debug("Clearing all storage data on quit");
-        await defSession.clearStorageData();
+      // Every profile owns its own partition, so clearing only the startup one
+      // left each profile's cookies and tokens on disk (#2862).
+      const partitions = collectPartitionsToClear(
+        this.configGroup.startupConfig.partition,
+        this.profilesManager
+      );
+      // Log the storage names and a partition count only. The storages are a
+      // fixed Electron enum, unlike the sibling `origin`, which is a URL, so
+      // naming them makes a typo visible: Electron ignores an unknown storage
+      // silently and the clear would then quietly keep data the user expected
+      // to lose. The partition strings themselves carry profile UUIDs and stay
+      // out of the log.
+      console.debug("Clearing storage data on quit", {
+        partitions: partitions.length,
+        storages: clearOptions?.storages ?? "all",
+      });
+      // Started together rather than in sequence: the profile views are still
+      // live at this point, so a partition cleared early is exposed until the
+      // last one finishes and its renderer can write fresh auth cookies back
+      // in the meantime. Overlapping the clears keeps that window from growing
+      // with the number of profiles.
+      const results = await Promise.allSettled(
+        partitions.map(async (partition) => {
+          // `async` so that a synchronous throw from `fromPartition` becomes a
+          // rejection this settles over rather than escaping the whole call.
+          const partitionSession = session.fromPartition(partition);
+          return clearOptions
+            ? partitionSession.clearStorageData(clearOptions)
+            : partitionSession.clearStorageData();
+        })
+      );
+
+      // `quit` is fire-and-forget from the menu, so letting any of this reject
+      // would skip window.close() below and hang the quit.
+      const failures = results.filter((r) => r.status === "rejected");
+      for (const failure of failures) {
+        console.error("Failed to clear storage data for a partition", {
+          error: failure.reason?.message,
+        });
+      }
+      if (failures.length > 0) {
+        // The user confirmed a dialog promising removal, so a swallowed
+        // failure must not read as success in the log.
+        console.error("Storage data was not fully cleared on quit", {
+          failed: failures.length,
+          of: partitions.length,
+        });
       }
     }
 
