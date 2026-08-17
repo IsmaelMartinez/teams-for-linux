@@ -181,6 +181,15 @@ describe("clearStorageForPartitions", () => {
     assert.deepStrictEqual(sessions.get(LEGACY).cleared, [[]]);
   });
 
+  // storage.clearData is a union: an options object, or `true` for "clear
+  // everything". The flag must reach Electron as a no-argument call, not as a
+  // bare boolean where an options object is documented.
+  test("treats the boolean flag form as clear everything", async () => {
+    await clearStorageForPartitions([LEGACY], true, "on startup");
+
+    assert.deepStrictEqual(sessions.get(LEGACY).cleared, [[]]);
+  });
+
   test("does not reject when a partition fails to clear", async () => {
     const result = await clearStorageForPartitions(
       [LEGACY, "persist:fails"],

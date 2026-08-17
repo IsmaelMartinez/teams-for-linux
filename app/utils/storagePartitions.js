@@ -59,7 +59,8 @@ function collectPartitionsToClear(startupPartition, profilesManager) {
  * must not cost the user either, so failures are logged and counted instead.
  *
  * @param {string[]} partitions - from `collectPartitionsToClear`
- * @param {Electron.ClearStorageDataOptions} [clearOptions] - omit to clear all
+ * @param {Electron.ClearStorageDataOptions|boolean} [clearOptions] - the
+ *   configured `storage.clearData`; `true` or omitted clears everything
  * @param {string} when - short log context, e.g. "on quit"
  * @returns {Promise<{total: number, failed: number}>}
  */
@@ -84,7 +85,12 @@ async function clearStorageForPartitions(partitions, clearOptions, when) {
       // `async` so that a synchronous throw from `fromPartition` becomes a
       // rejection this settles over rather than escaping the whole call.
       const partitionSession = session.fromPartition(partition);
-      return clearOptions
+      // `storage.clearData` is a union: an options object, or `true` meaning
+      // clear everything. Electron 42 does accept the bare boolean without
+      // throwing, but its documented contract is an options object or no
+      // argument, so the flag form maps to the no-argument call rather than
+      // leaning on that tolerance.
+      return typeof clearOptions === "object" && clearOptions !== null
         ? partitionSession.clearStorageData(clearOptions)
         : partitionSession.clearStorageData();
     })
