@@ -9,17 +9,18 @@ const commandLinePath = require.resolve('../../app/startup/commandLine');
 const originalElectron = require.cache[electronPath];
 const originalPlatform = process.platform;
 const originalArch = process.arch;
+const originalSessionType = process.env.XDG_SESSION_TYPE;
 
 // Run CommandLineManager.addSwitchesAfterConfigLoad under a mocked Electron
 // `app.commandLine`, forced platform and arch, returning the list of switches
 // the manager appended as [name, value] pairs.
-function appendedSwitches(config, platform = 'darwin', arch = 'arm64') {
+function appendedSwitches(config, platform = 'darwin', arch = 'arm64', existingSwitches = {}) {
   const switches = [];
   const app = {
     commandLine: {
       appendSwitch: (name, value) => switches.push([name, value]),
-      hasSwitch: () => false,
-      getSwitchValue: () => '',
+      hasSwitch: (name) => Object.hasOwn(existingSwitches, name),
+      getSwitchValue: (name) => existingSwitches[name] ?? '',
     },
     setName: () => {},
     setDesktopName: () => {},
@@ -54,6 +55,11 @@ describe('CommandLineManager macOS performance gate', () => {
   afterEach(() => {
     Object.defineProperty(process, 'platform', { value: originalPlatform, configurable: true });
     Object.defineProperty(process, 'arch', { value: originalArch, configurable: true });
+    if (originalSessionType === undefined) {
+      delete process.env.XDG_SESSION_TYPE;
+    } else {
+      process.env.XDG_SESSION_TYPE = originalSessionType;
+    }
     if (originalElectron) {
       require.cache[electronPath] = originalElectron;
     } else {
@@ -115,5 +121,58 @@ describe('CommandLineManager macOS performance gate', () => {
   it('does not apply the macOS switches on non-darwin platforms', () => {
     const switches = appendedSwitches({ authServerWhitelist: '*' }, 'linux');
     assert.ok(!hasSwitch(switches, 'use-angle'), 'mac perf path not taken off macOS');
+  });
+});
+
+describe('CommandLineManager Wayland media switches', () => {
+  afterEach(() => {
+    Object.defineProperty(process, 'platform', { value: originalPlatform, configurable: true });
+    Object.defineProperty(process, 'arch', { value: originalArch, configurable: true });
+    if (originalSessionType === undefined) {
+      delete process.env.XDG_SESSION_TYPE;
+    } else {
+      process.env.XDG_SESSION_TYPE = originalSessionType;
+    }
+    if (originalElectron) {
+      require.cache[electronPath] = originalElectron;
+    } else {
+      delete require.cache[electronPath];
+    }
+    delete require.cache[commandLinePath];
+  });
+
+  it('allows the portal picker on native Wayland', () => {
+    process.env.XDG_SESSION_TYPE = 'wayland';
+
+    const switches = appendedSwitches({ authServerWhitelist: '*' }, 'linux', 'x64');
+
+    assert.ok(!hasSwitch(switches, 'use-fake-ui-for-media-stream'));
+    assert.strictEqual(switchValue(switches, 'enable-features'), 'WebRTCPipeWireCapturer');
+  });
+
+  it('keeps fake media UI for legacy XWayland screen sharing', () => {
+    process.env.XDG_SESSION_TYPE = 'wayland';
+
+    const switches = appendedSwitches(
+      { authServerWhitelist: '*', wayland: { xwaylandOptimizations: false } },
+      'linux',
+      'x64',
+      { 'ozone-platform': 'x11' },
+    );
+
+    assert.ok(hasSwitch(switches, 'use-fake-ui-for-media-stream'));
+  });
+
+  it('skips fake media UI when XWayland optimizations are enabled', () => {
+    process.env.XDG_SESSION_TYPE = 'wayland';
+
+    const switches = appendedSwitches(
+      { authServerWhitelist: '*', wayland: { xwaylandOptimizations: true } },
+      'linux',
+      'x64',
+      { 'ozone-platform': 'x11' },
+    );
+
+    assert.ok(!hasSwitch(switches, 'use-fake-ui-for-media-stream'));
   });
 });

@@ -65,6 +65,10 @@ The picker is a modal overlay over the main Teams window. Issue #2524.
 
 ## Platform Notes
 
-**Wayland:** Requires source IDs in `screen:x:y` or `window:x:y` format from desktopCapturer. MediaStream UUIDs will fail.
+**Native Wayland:** The display-media handler calls `desktopCapturer.getSources()` once, which opens the xdg-desktop-portal picker, then passes its selected source directly to Teams. Do not open the in-app picker as well, because its enumeration would create a redundant selection stage.
+
+**X11 and XWayland:** The in-app picker requires source IDs in `screen:x:y` or `window:x:y` format from desktopCapturer. MediaStream UUIDs will fail.
+
+**Single enumeration rule:** the ID the picker returns must be passed straight to the `setDisplayMediaRequestHandler` callback. Never re-query `desktopCapturer.getSources()` to refresh the selected source: on Wayland/PipeWire every call opens a fresh portal session with new source IDs, so the share fails (#2713).
 
 See [ADR 001](../../docs-site/docs/development/adr/001-use-desktopcapturer-source-id-format.md) for technical details.
