@@ -28,7 +28,7 @@ const { session } = require("electron");
  * only behavioural difference when the flag is off, and with no profiles
  * stored there is none.
  *
- * @param {string} startupPartition - `startupConfig.partition`
+ * @param {string} [startupPartition] - `startupConfig.partition`
  * @param {{list?: () => Array<{partition?: string}>}} [profilesManager]
  * @returns {string[]} partition strings, in the order they should be cleared
  */

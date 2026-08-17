@@ -1,4 +1,4 @@
-const { test, describe, beforeEach } = require("node:test");
+const { test, describe, beforeEach, after } = require("node:test");
 const assert = require("node:assert");
 
 // #2862 / #2866: both clear-storage paths resolved a single session from
@@ -42,10 +42,19 @@ require.cache[electronPath] = {
   },
 };
 
+const modulePath = require.resolve("../../app/utils/storagePartitions");
 const {
   collectPartitionsToClear,
   clearStorageForPartitions,
-} = require("../../app/utils/storagePartitions");
+} = require(modulePath);
+
+// The stub has to outlive every test here, since the module under test binds
+// `session` at require time. Dropped at the end anyway, matching
+// profilesManager.test.js, so nothing added to this file later inherits it.
+after(() => {
+  delete require.cache[modulePath];
+  delete require.cache[electronPath];
+});
 
 const LEGACY = "persist:teams-4-linux";
 
