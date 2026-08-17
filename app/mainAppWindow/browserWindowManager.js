@@ -3,7 +3,6 @@ const {
   BrowserWindow,
   ipcMain,
   nativeImage,
-  session,
   nativeTheme,
   powerSaveBlocker,
 } = require("electron");
@@ -12,11 +11,18 @@ const { spawn } = require("node:child_process");
 const windowStateKeeper = require("electron-window-state");
 const { StreamSelector } = require("../screenSharing");
 const IncomingCallToast = require("../incomingCallToast");
+const {
+  collectPartitionsToClear,
+  clearStorageForPartitions,
+} = require("../utils/storagePartitions");
 
 class BrowserWindowManager {
   constructor(properties) {
     this.config = properties.config;
     this.iconChooser = properties.iconChooser;
+    // Optional: only the startup clear needs it, and it is null when the
+    // caller has no profiles manager to hand.
+    this.profilesManager = properties.profilesManager ?? null;
     this.isOnCall = false;
     this.blockerId = null;
     this.window = null;
@@ -39,9 +45,14 @@ class BrowserWindowManager {
     });
 
     if (this.config.clearStorageData) {
-      console.debug("Clearing storage data", this.config.clearStorageData);
-      const defSession = session.fromPartition(this.config.partition);
-      await defSession.clearStorageData(this.config.clearStorageData);
+      // Every profile owns its own partition, so clearing only the startup one
+      // left each profile's cookies and tokens on disk (#2866). Runs before the
+      // window is created, so no renderer can write anything back mid-clear.
+      await clearStorageForPartitions(
+        collectPartitionsToClear(this.config.partition, this.profilesManager),
+        this.config.clearStorageData,
+        "on startup"
+      );
     }
 
     this.window = this.createNewBrowserWindow(windowState);

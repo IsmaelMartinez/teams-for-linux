@@ -709,6 +709,9 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   const browserWindowManager = new BrowserWindowManager({
     config: config,
     iconChooser: iconChooser,
+    // Assigned just above, so the startup clear can reach every profile
+    // partition and not just the legacy one (#2866).
+    profilesManager: profilesManagerRef,
   });
 
   window = await browserWindowManager.createWindow();
