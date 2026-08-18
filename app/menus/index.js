@@ -99,9 +99,7 @@ class Menus {
       // is always undefined and silently clears everything (#2860).
       const clearOptions = this.configGroup.startupConfig.clearStorageData;
       // Every profile owns its own partition, so clearing only the startup one
-      // left each profile's cookies and tokens on disk (#2862). The helper
-      // never rejects, which matters here: `quit` is fire-and-forget from the
-      // menu, so a rejection would skip window.close() below and hang the quit.
+      // left each profile's cookies and tokens on disk (#2862).
       await clearStorageForPartitions(
         collectPartitionsToClear(
           this.configGroup.startupConfig.partition,

@@ -1,11 +1,10 @@
 const { test, describe, beforeEach, after } = require("node:test");
 const assert = require("node:assert");
 
-// #2862 / #2866: both clear-storage paths resolved a single session from
-// startupConfig.partition, so with multiAccount.enabled every profile's
-// cookies and tokens survived a clear the app promised would remove them.
-// The module pulls `session` from electron at module scope, so stub it the
-// same way profilesManager.test.js does.
+// #2862 / #2866: both clear-storage paths resolved a single session, so every
+// profile's cookies survived a clear the app promised would remove them. The
+// module binds `session` at module scope, so stub it as profilesManager.test.js
+// does.
 const electronPath = require.resolve("electron");
 const sessions = new Map();
 let fromPartitionCalls = [];
@@ -48,9 +47,7 @@ const {
   clearStorageForPartitions,
 } = require(modulePath);
 
-// The stub has to outlive every test here, since the module under test binds
-// `session` at require time. Dropped at the end anyway, matching
-// profilesManager.test.js, so nothing added to this file later inherits it.
+// The stub must outlive every test here, so drop it only at the end.
 after(() => {
   delete require.cache[modulePath];
   delete require.cache[electronPath];
@@ -107,10 +104,8 @@ describe("collectPartitionsToClear", () => {
     assert.deepStrictEqual(partitions, [LEGACY]);
   });
 
-  // The list comes off disk, so a hand-edited or corrupted record can hold a
-  // non-string. session.fromPartition throws on those, and neither caller can
-  // afford a throw: the menu item would skip window.close(), and the startup
-  // clear would take the main window down with it.
+  // The list comes off disk, so a corrupted record can hold a non-string, and
+  // session.fromPartition throws on those.
   test("skips profile records whose partition is not a string", () => {
     const partitions = collectPartitionsToClear(LEGACY, {
       list: () => [
@@ -123,12 +118,8 @@ describe("collectPartitionsToClear", () => {
     assert.deepStrictEqual(partitions, [LEGACY]);
   });
 
-  // Deliberate, and the one behavioural difference when multiAccount.enabled is
-  // false. Profiles outlive the flag: it can be turned off after they are
-  // created, and app/index.js force-disables multi-account under
-  // auth.intune.enabled. Their partitions still hold tenant cookies and tokens,
-  // and the app promises to clear the storage, so the stored list is read
-  // regardless of the flag. With no profiles stored there is no difference.
+  // Deliberate, and the only behavioural difference when the flag is off.
+  // Profiles outlive it, and their partitions still hold tenant cookies.
   test("clears stored profile partitions regardless of the multiAccount flag", () => {
     const partitions = collectPartitionsToClear(LEGACY, {
       list: () => [{ id: "a", partition: "persist:teams-profile-aaa" }],
@@ -181,8 +172,7 @@ describe("clearStorageForPartitions", () => {
     assert.deepStrictEqual(sessions.get(LEGACY).cleared, [[]]);
   });
 
-  // storage.clearData is a union: an options object, or `true` for "clear
-  // everything". The flag must reach Electron as a no-argument call, not as a
+  // The `true` flag form must reach Electron as a no-argument call, not as a
   // bare boolean where an options object is documented.
   test("treats the boolean flag form as clear everything", async () => {
     await clearStorageForPartitions([LEGACY], true, "on startup");

@@ -20,8 +20,7 @@ class BrowserWindowManager {
   constructor(properties) {
     this.config = properties.config;
     this.iconChooser = properties.iconChooser;
-    // Optional: only the startup clear needs it, and it is null when the
-    // caller has no profiles manager to hand.
+    // Optional: only the startup clear reads it.
     this.profilesManager = properties.profilesManager ?? null;
     this.isOnCall = false;
     this.blockerId = null;
@@ -46,8 +45,7 @@ class BrowserWindowManager {
 
     if (this.config.clearStorageData) {
       // Every profile owns its own partition, so clearing only the startup one
-      // left each profile's cookies and tokens on disk (#2866). Runs before the
-      // window is created, so no renderer can write anything back mid-clear.
+      // left each profile's cookies and tokens on disk (#2866).
       await clearStorageForPartitions(
         collectPartitionsToClear(this.config.partition, this.profilesManager),
         this.config.clearStorageData,
