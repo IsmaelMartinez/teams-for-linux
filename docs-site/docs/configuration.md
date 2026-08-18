@@ -205,6 +205,70 @@ rm /tmp/teams-for-linux-idle-state-$USER
 
 The state file is automatically cleaned up when the app exits.
 
+:::note Requires `awayOnSystemIdle`
+The state file only controls what the app *believes* the system idle state is. Presence is
+still only changed when `awayOnSystemIdle` is `true`, so set both:
+
+```json
+{
+  "awayOnSystemIdle": true,
+  "idleDetection": { "forceState": true }
+}
+```
+:::
+
+#### Driving the state file automatically (Wayland)
+
+Under Wayland, `powerMonitor` cannot see user input, so nothing populates the state file on its
+own. Any idle daemon that can run a command on timeout and on resume will do. On a compositor
+implementing `ext-idle-notify-v1` (KWin, sway, Hyprland, and most wlroots compositors), `swayidle`
+works well as a user service:
+
+`~/.config/systemd/user/teams-idle-watcher.service`
+
+```ini
+[Unit]
+Description=Teams for Linux presence idle watcher (swayidle -> state file)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+Environment=STATEFILE=/tmp/teams-for-linux-idle-state-%u
+ExecStartPre=/bin/sh -c 'echo active > "$STATEFILE"'
+ExecStart=/usr/bin/swayidle -w \
+  timeout 300 'echo inactive > "$STATEFILE"' \
+  resume 'echo active > "$STATEFILE"' \
+  before-sleep 'echo inactive > "$STATEFILE"'
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
+```
+
+Enable it with `systemctl --user enable --now teams-idle-watcher.service`.
+
+Three things are worth knowing before you rely on this:
+
+**The daemon's timeout is the idle delay, not `appIdleTimeout`.** When the state file says
+`inactive` the app reports idle straight away and never consults `powerMonitor`, so
+`appIdleTimeout` has no effect on this path. Set the delay you want in the `timeout` line above.
+`appIdleTimeout` still applies when the state file is absent and detection falls back to
+`powerMonitor`.
+
+**The app deletes the state file when it exits.** `swayidle` only writes on a transition, so after
+restarting Teams for Linux the file stays missing until the next idle or resume. The
+`ExecStartPre` line above re-seeds it, which means restarting the watcher alongside the app
+restores a known state.
+
+**A stale `inactive` pins you idle.** If the watcher stops while the file still reads `inactive`,
+the app keeps reporting idle indefinitely with nothing to correct it. Removing the file returns
+you to automatic detection.
+
+Content other than `active` or `inactive` is logged as a warning and ignored, falling through to
+`powerMonitor`.
+
 ### Authentication & SSO
 
 | Option | Type | Default | Description |
