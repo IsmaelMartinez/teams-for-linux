@@ -6,6 +6,7 @@ const vm = require('node:vm');
 const {
   isLoginUrl,
   codeFrom,
+  selectsNonAuthenticatorMethod,
   buildObserverScript,
   buildPasswordFillScript,
   buildTotpFillScript,
@@ -129,5 +130,33 @@ describe('ssoPasswordPrefill injected scripts', () => {
   it('only looks for the code field when a totpCommand is configured', () => {
     assert.match(buildObserverScript(1, null, null, false, true), /const WANT_OTC = true;/);
     assert.match(buildObserverScript(1, null, null, false, false), /const WANT_OTC = false;/);
+  });
+});
+
+// Microsoft serves SMS, voice and email codes through the same `otc` field as the
+// authenticator app. Filling an authenticator code into an SMS prompt burns a real
+// MFA attempt, so this predicate decides whether the code step stands down.
+describe('ssoPasswordPrefill.selectsNonAuthenticatorMethod', () => {
+  it('recognises the delivery methods that share the code field', () => {
+    for (const m of ['Text', 'Text message', 'SMS', 'Phone', 'Phone call', 'Call', 'Voice', 'Email']) {
+      assert.strictEqual(selectsNonAuthenticatorMethod(m), true, m);
+    }
+  });
+
+  it('leaves authenticator-app methods enabled', () => {
+    for (const m of ['App', 'Use verification code from app', 'Approve a request', 'Microsoft Authenticator']) {
+      assert.strictEqual(selectsNonAuthenticatorMethod(m), false, m);
+    }
+  });
+
+  it('does not match on a device name that merely mentions a phone', () => {
+    // clickVerify matches verifyMethod as a prefix, so the test is anchored too.
+    assert.strictEqual(selectsNonAuthenticatorMethod('Microsoft Authenticator on my phone'), false);
+  });
+
+  it('treats unset as no conflict', () => {
+    assert.strictEqual(selectsNonAuthenticatorMethod(''), false);
+    assert.strictEqual(selectsNonAuthenticatorMethod(undefined), false);
+    assert.strictEqual(selectsNonAuthenticatorMethod(null), false);
   });
 });

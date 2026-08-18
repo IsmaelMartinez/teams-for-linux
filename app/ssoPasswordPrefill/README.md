@@ -44,7 +44,7 @@ touches that dialog; it only fills the browser login form.
 | --- | --- | --- | --- |
 | `auth.webLogin.user` | string | `""` | Email/username pre-filled into the account field when empty. Empty disables it. |
 | `auth.webLogin.passwordCommand` | string | `""` | Shell command whose first stdout line is the password. Empty disables it. |
-| `auth.webLogin.totpCommand` | string | `""` | Shell command whose first stdout line is the one-time code. Whitespace is stripped. Empty disables it. |
+| `auth.webLogin.totpCommand` | string | `""` | Shell command whose first stdout line is the one-time code. Whitespace is stripped. Empty disables it. Ignored when `verifyMethod` selects SMS/voice/email. |
 | `auth.webLogin.extraHosts` | array | `[]` | Extra host suffixes to treat as login pages, in addition to the built-in Microsoft hosts. |
 | `auth.webLogin.autoSubmit` | boolean | `false` | Auto-advance: click Next after email, Sign in after password. |
 | `auth.webLogin.verifyMethod` | string | `""` | Click the MFA option whose label starts with this text (e.g. `Text`). Empty disables it. |
@@ -74,6 +74,12 @@ Example `config.json`:
   in its own `BrowserView`, so pre-fill does not currently apply there.
 - Fills the first visible, editable `input[type="password"]`. If your identity
   provider renders the password field differently, it may not be detected.
+- Microsoft serves SMS, voice and email one-time codes through the **same** `otc`
+  field as the authenticator app, and nothing on the page reliably distinguishes them.
+  Typing an authenticator code into an SMS prompt burns a real MFA attempt, so
+  `totpCommand` stands down (with a warning) when `verifyMethod` starts with one of
+  `text`/`sms`/`phone`/`call`/`voice`/`email`. If your tenant *defaults* to SMS and you
+  do not set `verifyMethod`, set it to your authenticator option instead.
 - The one-time-code field is matched by `input[name="otc"]`, the converged-page id
   `#idTxtBx_SAOTCC_OTC`, and `input[autocomplete="one-time-code"]`. Microsoft does not
   contract these, so the same fragility caveat as `verifyMethod` applies. Flows that

@@ -80,6 +80,25 @@ function isLoginUrl(url, extraHosts = []) {
 
 // Password managers (`pass`, `secret-tool`, KeePassXC CLI, ...) emit the secret
 // on the first line; ignore anything after it and the trailing newline.
+// AAD serves SMS, voice and email one-time codes through the same `otc` field
+// as the authenticator app. Typing an authenticator code into an SMS prompt
+// burns a real MFA attempt against the lockout counter, so when `verifyMethod`
+// deliberately picks one of those methods the code step stands down.
+// Anchored, because clickVerify matches verifyMethod as a prefix of the option
+// label, so "Text" is the shape users configure. Anchoring keeps an authenticator
+// entry like "Microsoft Authenticator on my phone" from matching on "phone".
+// Linear-time alternation, no nested quantifiers.
+const NON_AUTHENTICATOR_METHOD = /^\s*(text|sms|phone|call|voice|email)/i;
+
+/**
+ * Whether a configured `verifyMethod` selects a delivery method that is not the
+ * authenticator app. Pure; exported for testing.
+ * @param {string} verifyMethod
+ */
+function selectsNonAuthenticatorMethod(verifyMethod) {
+  return NON_AUTHENTICATOR_METHOD.test(String(verifyMethod || ""));
+}
+
 function firstLine(stdout) {
   return String(stdout).split(/\r?\n/, 1)[0];
 }
@@ -285,7 +304,7 @@ function buildFillScript({ value, autoSubmit, find, submitSel, flag }) {
       else { filled = true; stable += 1; }
       if (AUTO && !submitted && !NS[FLAG] && stable >= 2) {
         const btn = Array.from(document.querySelectorAll(SUBMIT)).find(editable)
-          || (el.form && Array.from(el.form.querySelectorAll('button, input[type=submit]')).find(editable));
+          || (el.form && Array.from(el.form.querySelectorAll('input[type=submit], button[type=submit], button:not([type])')).find(editable));
         if (btn) {
           btn.click();
           NS[FLAG] = true;
@@ -337,6 +356,15 @@ function attach(window, config) {
   const totpCommand = (webLogin.totpCommand || "").trim();
   if (!user && !command && !verifyMethod && !totpCommand) return;
 
+  const totpConflicts = !!totpCommand && selectsNonAuthenticatorMethod(verifyMethod);
+  if (totpConflicts) {
+    console.warn(
+      "[SSO_PREFILL] Ignoring totpCommand: verifyMethod selects a non-authenticator method, " +
+        "and its code arrives in the same field",
+    );
+  }
+  const totpEnabled = !!totpCommand && !totpConflicts;
+
   const extraHosts = Array.isArray(webLogin.extraHosts)
     ? webLogin.extraHosts
     : [];
@@ -377,7 +405,7 @@ function attach(window, config) {
   async function observe(frame, gen) {
     const result = await frame
       .executeJavaScript(
-        buildObserverScript(gen, user || null, verifyMethod || null, autoSubmit, !!totpCommand),
+        buildObserverScript(gen, user || null, verifyMethod || null, autoSubmit, totpEnabled),
         true,
       )
       .catch((e) => ({ __err: e.message }));
@@ -396,7 +424,20 @@ function attach(window, config) {
   // injecting so the secret is never typed into a different document. Both
   // steps go through here so neither can drift from that check.
   async function runAndFill(frame, gen, { command: cmd, build, normalise, label }) {
-    const value = normalise(await runCommand(cmd));
+    let stdout;
+    try {
+      stdout = await runCommand(cmd);
+    } catch (error) {
+      // Never log the command or its output; the exit code is enough to tell a
+      // missing binary (127) from a timeout from a refusal.
+      console.error("[SSO_PREFILL] Command failed", {
+        step: label,
+        code: error.code ?? null,
+        timedOut: error.killed === true,
+      });
+      return null;
+    }
+    const value = normalise(stdout);
     if (gen !== generation) return null;
     if (!value) {
       console.warn(`[SSO_PREFILL] ${label} command returned empty output`);
@@ -459,14 +500,16 @@ function attach(window, config) {
         // and disconnected. Re-arm it here rather than waiting for a navigation
         // that may never come. If one does come it bumps `generation` and this
         // pass abandons itself.
-        if (fill === "filled-submitted" && totpCommand && gen === generation) {
+        // "filled" as well as "filled-submitted": with autoSubmit off the user
+        // submits by hand, and that transition is often same-document too.
+        if ((fill === "filled-submitted" || fill === "filled") && totpEnabled && gen === generation) {
           const next = await observe(frame, gen);
           if (next?.otc) await runAndFill(frame, gen, totpStep());
         }
         return;
       }
 
-      if (result.otc && totpCommand) {
+      if (result.otc && totpEnabled) {
         await runAndFill(frame, gen, totpStep());
       }
     } catch (error) {
@@ -502,14 +545,28 @@ function attach(window, config) {
   wc.on("did-frame-navigate", (_e, url) => {
     if (isLoginUrl(url, extraHosts)) onNav();
   });
+  // Converged AAD advances between steps client-side, which fires neither
+  // did-navigate nor did-frame-navigate. Gated on the login host so the Teams
+  // SPA's own in-page navigations do not churn generations.
+  wc.on("did-navigate-in-page", (_e, url) => {
+    if (isLoginUrl(url, extraHosts)) onNav();
+  });
   console.info("[SSO_PREFILL] Enabled", {
     emailPrefill: !!user,
     pwPrefill: !!command,
-    totpPrefill: !!totpCommand,
+    totpPrefill: totpEnabled,
     verifyMethod: verifyMethod || null,
     autoSubmit,
     extraHosts: extraHosts.length,
   });
 }
 
-module.exports = { attach, isLoginUrl, buildObserverScript, buildPasswordFillScript, buildTotpFillScript, codeFrom };
+module.exports = {
+  attach,
+  isLoginUrl,
+  selectsNonAuthenticatorMethod,
+  buildObserverScript,
+  buildPasswordFillScript,
+  buildTotpFillScript,
+  codeFrom,
+};

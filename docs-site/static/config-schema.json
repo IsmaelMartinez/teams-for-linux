@@ -1129,7 +1129,7 @@
           "path": "webLogin.totpCommand",
           "type": "string",
           "default": "",
-          "description": "Command whose first stdout line is pre-filled into the web sign-in one-time-code field on the authenticator-app (TOTP) page. Runs in a shell (e.g. 'pass otp teams'); whitespace is stripped so grouped output like '123 456' works. Empty disables it. Runs only once the code field is on screen, so the code is fetched fresh. The app stores no secret."
+          "description": "Command whose first stdout line is pre-filled into the web sign-in one-time-code field on the authenticator-app (TOTP) page. Runs in a shell (e.g. 'pass otp teams'); whitespace is stripped so grouped output like '123 456' works. Empty disables it. Runs only once the code field is on screen, so the code is fetched fresh. The app stores no secret. Microsoft serves SMS, voice and email codes through the same field, so this is ignored (with a warning) when auth.webLogin.verifyMethod selects one of those methods."
         },
         {
           "path": "webLogin.extraHosts",

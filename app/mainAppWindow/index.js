@@ -1359,8 +1359,8 @@ function addEventHandlers() {
   window.webContents.on("did-navigate", onNavigationChanged);
   window.webContents.on("did-navigate-in-page", onNavigationChanged);
 
-  // Pre-fill/advance the Microsoft/federated web login page (no-op unless one
-  // of auth.webLogin.user / auth.webLogin.passwordCommand / auth.webLogin.verifyMethod is set).
+  // Pre-fill/advance the Microsoft/federated web login page (no-op unless one of
+  // auth.webLogin.user / .passwordCommand / .verifyMethod / .totpCommand is set).
   ssoPasswordPrefill.attach(window, config);
 }
 

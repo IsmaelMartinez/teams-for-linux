@@ -229,7 +229,7 @@ Set `auth.webLogin.passwordCommand` to a command that prints your password (firs
 |--------|------|---------|-------------|
 | `auth.webLogin.user` | `string` | `""` | Email/username pre-filled into the account field when it is empty. Empty disables it. |
 | `auth.webLogin.passwordCommand` | `string` | `""` | Command whose first stdout line is pre-filled into the web login password field. Empty disables the feature. |
-| `auth.webLogin.totpCommand` | `string` | `""` | Command whose first stdout line is pre-filled into the one-time-code field on the authenticator-app (TOTP) page. Whitespace is stripped, so grouped output like `123 456` works. Empty disables it. |
+| `auth.webLogin.totpCommand` | `string` | `""` | Command whose first stdout line is pre-filled into the one-time-code field on the authenticator-app (TOTP) page. Whitespace is stripped, so grouped output like `123 456` works. Empty disables it. Ignored when `auth.webLogin.verifyMethod` selects SMS, voice or email, since those codes arrive in the same field. |
 | `auth.webLogin.extraHosts` | `array` | `[]` | Extra host suffixes to treat as login pages, in addition to the built-in Microsoft hosts (`login.microsoftonline.com`, `login.microsoft.com`, `login.live.com`). Add your federated IdP host if sign-in happens off the Microsoft hosts. |
 | `auth.webLogin.autoSubmit` | `boolean` | `false` | Automatically advance each step: click Next after the email and Sign in after the password. Off by default so you review and submit yourself. |
 | `auth.webLogin.verifyMethod` | `string` | `""` | On the "Verify your identity" (MFA) page, click the option whose label starts with this text, e.g. `Text` for SMS. Empty disables it. Best-effort text match. |
