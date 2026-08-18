@@ -80,7 +80,13 @@ function bindDisplayMediaHandler(targetSession) {
         console.error("[SCREEN_SHARE] Wayland portal selection failed:", {
           error: error.message,
         });
-        callback({});
+        setImmediate(() => {
+          try {
+            callback({});
+          } catch {
+            console.debug("[SCREEN_SHARE] Failed to complete Wayland portal callback");
+          }
+        });
       }
     });
     return;
