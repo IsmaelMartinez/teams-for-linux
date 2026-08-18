@@ -158,7 +158,7 @@ class CommandLineManager {
   // Handles three independent concerns:
   //   1. PipeWire — always enabled for screen sharing
   //   2. GPU — auto-disabled unless user overrides or XWayland optimizations are on
-  //   3. Fake media UI — applied unless XWayland optimizations skip it
+  //   3. Fake media UI — applied only to legacy XWayland mode
   static #configureWayland(config) {
     // 1. PipeWire is always required for screen sharing on Wayland
     if (app.commandLine.hasSwitch("enable-features")) {
@@ -197,9 +197,10 @@ class CommandLineManager {
       config.disableGpu = true;
     }
 
-    // 3. Fake media UI: needed for screen sharing (#2217), but breaks camera
-    //    under XWayland (#2169). Only skip when XWayland optimizations are on.
-    if (!xwaylandOptimizations) {
+    // 3. Fake media UI: legacy XWayland needs this for the in-app picker (#2217),
+    //    but native Wayland must allow Chromium to open the PipeWire portal picker.
+    //    The flag also breaks cameras under XWayland, so its optimizations skip it (#2169).
+    if (isXWayland && !xwaylandOptimizations) {
       app.commandLine.appendSwitch("use-fake-ui-for-media-stream");
     }
   }

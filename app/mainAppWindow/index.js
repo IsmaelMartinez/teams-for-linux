@@ -50,10 +50,6 @@ let menus = null;
 
 const isMac = os.platform() === "darwin";
 
-function findSelectedSource(sources, source) {
-  return sources.find((s) => s.id === source.id);
-}
-
 function setupScreenSharing(selectedSource) {
   screenSharingService.setSelectedSource(selectedSource);
   createScreenSharePreviewWindow();
@@ -63,6 +59,39 @@ function setupScreenSharing(selectedSource) {
 // fires only for the session it is bound to, so multi-account profile views (running against
 // their own partition session) need their own binding. See #2529.
 function bindDisplayMediaHandler(targetSession) {
+  const isNativeWayland =
+    process.env.XDG_SESSION_TYPE === "wayland" &&
+    app.commandLine.getSwitchValue("ozone-platform") !== "x11";
+
+  if (isNativeWayland) {
+    targetSession.setDisplayMediaRequestHandler(async (_request, callback) => {
+      try {
+        // This single enumeration opens xdg-desktop-portal. Pass its selected
+        // source directly to Teams instead of opening the in-app picker.
+        const [source] = await desktopCapturer.getSources({
+          types: ["screen", "window"],
+        });
+        if (source) {
+          handleScreenSourceSelection(source, callback);
+        } else {
+          callback({});
+        }
+      } catch (error) {
+        console.error("[SCREEN_SHARE] Wayland portal selection failed:", {
+          error: error.message,
+        });
+        setImmediate(() => {
+          try {
+            callback({});
+          } catch {
+            console.debug("[SCREEN_SHARE] Failed to complete Wayland portal callback");
+          }
+        });
+      }
+    });
+    return;
+  }
+
   targetSession.setDisplayMediaRequestHandler((_request, callback) => {
     streamSelector.show((source) => {
       if (source) {
@@ -82,41 +111,24 @@ function bindDisplayMediaHandler(targetSession) {
 }
 
 function handleScreenSourceSelection(source, callback) {
-  desktopCapturer
-    .getSources({ types: ["window", "screen"] })
-    .then((sources) => {
-      const selectedSource = findSelectedSource(sources, source);
-      if (selectedSource) {
-        setupScreenSharing(selectedSource);
-        callback({ video: selectedSource });
-      } else {
-        // Source not found - use setImmediate and try-catch to allow retry
-        setImmediate(() => {
-          try {
-            callback({});
-          } catch {
-            console.debug("[SCREEN_SHARE] Selected source not found");
-          }
-        });
-      }
-    })
-    .catch((error) => {
-      // Handle desktopCapturer failures gracefully - can crash on certain hardware
-      // configurations (USB-C docking stations, DisplayLink drivers, etc.)
-      // See issues #2058, #2041
-      console.error("[SCREEN_SHARE] Failed to get sources for selection:", {
-        error: error.message,
-        stack: error.stack,
-        sourceId: source?.id
-      });
-      setImmediate(() => {
-        try {
-          callback({});
-        } catch {
-          console.debug("[SCREEN_SHARE] Failed to complete screen selection callback");
-        }
-      });
+  try {
+    // Every Wayland/PipeWire enumeration creates a portal session with new IDs,
+    // so the source selected by the picker must be used directly. See #2713.
+    setupScreenSharing(source);
+    callback({ video: { id: source.id, name: source.name || "" } });
+  } catch (error) {
+    console.error("[SCREEN_SHARE] Failed to setup screen sharing:", {
+      error: error.message,
+      sourceId: source?.id,
     });
+    setImmediate(() => {
+      try {
+        callback({});
+      } catch {
+        console.debug("[SCREEN_SHARE] Failed to complete screen selection callback");
+      }
+    });
+  }
 }
 
 function createScreenSharePreviewWindow() {
