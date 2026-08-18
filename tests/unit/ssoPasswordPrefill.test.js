@@ -117,6 +117,15 @@ describe('ssoPasswordPrefill injected scripts', () => {
     assert.ok(src.includes('"signIn"'));
   });
 
+  it('never lets an older generation reclaim the supersede marker', () => {
+    // The post-password re-arm re-injects with its original generation. A plain
+    // NS.gen assignment would stamp that stale number over a newer document's
+    // observer and stop it resolving, so the marker has to be monotonic.
+    const src = buildObserverScript(2, null, null, false, true);
+    assert.match(src, /if \(!\(NS\.gen > GEN\)\) NS\.gen = GEN;/);
+    assert.doesNotMatch(src, /^\s*NS\.gen = GEN;/m);
+  });
+
   it('only looks for the code field when a totpCommand is configured', () => {
     assert.match(buildObserverScript(1, null, null, false, true), /const WANT_OTC = true;/);
     assert.match(buildObserverScript(1, null, null, false, false), /const WANT_OTC = false;/);

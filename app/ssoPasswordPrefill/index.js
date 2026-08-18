@@ -116,7 +116,8 @@ const RENDERER_PRELUDE = `
     };
     const SUBMIT_SEL = '#idSIButton9, input[type=submit], button[type=submit]';
     // The converged AAD code page uses its own continue button rather than the
-    // generic primary one, so that id is tried first.
+    // generic primary one, so that id is matched too. Both selectors go in one
+    // query, so the first editable match in document order wins.
     const OTC_SUBMIT_SEL = '#idSubmit_SAOTCC_Continue, ' + SUBMIT_SEL;
     const findPwd = () => Array.from(document.querySelectorAll('input[type=password]')).find(editable);
     // name=otc has been stable across AAD generations; the id is the current
@@ -153,7 +154,10 @@ function buildObserverScript(gen, user, verifyMethod, autoSubmit, wantOtc) {
     //    first synchronous tick before a newer one can bump NS.gen, so the gen
     //    marker alone can't stop that first click (e.g. a duplicate MFA text).
     const NS = (window.__ssoPrefill = window.__ssoPrefill || {});
-    NS.gen = GEN;
+    // Monotonic. The post-password re-arm re-injects with its original
+    // generation, and if the submit did navigate, a plain assignment would
+    // stamp that stale number over the new document's observer and silence it.
+    if (!(NS.gen > GEN)) NS.gen = GEN;
     const superseded = () => NS.gen !== GEN;
     // Fire a full pointer+click sequence: some AAD tiles ignore a bare
     // .click() and only respond to the pointer/mouse event chain.
@@ -280,9 +284,9 @@ function buildFillScript({ value, autoSubmit, find, submitSel, flag }) {
       if (el.value !== VAL) { setValue(el, VAL); filled = true; stable = 0; }
       else { filled = true; stable += 1; }
       if (AUTO && !submitted && !NS[FLAG] && stable >= 2) {
-        const btn = document.querySelector(SUBMIT)
-          || (el.form && el.form.querySelector('button, input[type=submit]'));
-        if (btn && editable(btn)) {
+        const btn = Array.from(document.querySelectorAll(SUBMIT)).find(editable)
+          || (el.form && Array.from(el.form.querySelectorAll('button, input[type=submit]')).find(editable));
+        if (btn) {
           btn.click();
           NS[FLAG] = true;
           submitted = true;
@@ -455,7 +459,7 @@ function attach(window, config) {
         // and disconnected. Re-arm it here rather than waiting for a navigation
         // that may never come. If one does come it bumps `generation` and this
         // pass abandons itself.
-        if (fill === "filled-submitted" && totpCommand) {
+        if (fill === "filled-submitted" && totpCommand && gen === generation) {
           const next = await observe(frame, gen);
           if (next?.otc) await runAndFill(frame, gen, totpStep());
         }
