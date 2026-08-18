@@ -130,9 +130,9 @@ const RENDERER_PRELUDE = `
 // email field (if a value was provided and it is empty), optionally clicks the
 // Next button (autoSubmit, email step only), optionally clicks the MFA option
 // whose label matches `verifyMethod`, clicks the matching "Pick an account"
-// tile, and resolves once a visible, editable password field exists (or after
-// OBSERVER_TIMEOUT_MS).
-// Resolves { pwd, email, account, verify, next }.
+// tile, and resolves once a visible, editable password field exists, or a
+// one-time-code field when `wantOtc` is set (or after OBSERVER_TIMEOUT_MS).
+// Resolves { pwd, otc, email, account, verify, next }.
 function buildObserverScript(gen, user, verifyMethod, autoSubmit, wantOtc) {
   return `(() => new Promise((resolve) => {
     ${RENDERER_PRELUDE}
@@ -415,7 +415,7 @@ function attach(window, config) {
     }
 
     const fill = await frame.executeJavaScript(build(value, autoSubmit), true);
-    console.info("[SSO_PREFILL] Credential filled", { step: label, result: fill });
+    console.info("[SSO_PREFILL] Fill step finished", { step: label, result: fill });
     return fill;
   }
 
