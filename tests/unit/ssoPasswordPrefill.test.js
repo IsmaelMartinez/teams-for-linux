@@ -2,7 +2,14 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
-const { isLoginUrl } = require('../../app/ssoPasswordPrefill/index');
+const vm = require('node:vm');
+const {
+  isLoginUrl,
+  codeFrom,
+  buildObserverScript,
+  buildPasswordFillScript,
+  buildTotpFillScript,
+} = require('../../app/ssoPasswordPrefill/index');
 
 // isLoginUrl is the gate that decides where the pre-fill injects a password,
 // so its host- and scheme-matching is security-relevant and covered here.
@@ -49,5 +56,69 @@ describe('ssoPasswordPrefill.isLoginUrl', () => {
     assert.strictEqual(isLoginUrl(''), false);
     assert.strictEqual(isLoginUrl(undefined), false);
     assert.strictEqual(isLoginUrl(null), false);
+  });
+});
+
+// The code command's output is user-controlled, and password managers group TOTP
+// digits for readability, so normalisation is part of the contract.
+describe('ssoPasswordPrefill.codeFrom', () => {
+  it('takes the first line only', () => {
+    assert.strictEqual(codeFrom('123456\nignored\n'), '123456');
+  });
+
+  it('strips the grouping whitespace password managers emit', () => {
+    assert.strictEqual(codeFrom('123 456'), '123456');
+    assert.strictEqual(codeFrom('  123456\t'), '123456');
+  });
+
+  it('keeps non-digit codes intact, since some issuers use them', () => {
+    assert.strictEqual(codeFrom('ab12cd'), 'ab12cd');
+  });
+
+  it('returns empty for empty output', () => {
+    assert.strictEqual(codeFrom(''), '');
+  });
+});
+
+// The injected scripts are built by string concatenation, so a syntax error or a
+// broken escape would only surface at run time on a real login page.
+describe('ssoPasswordPrefill injected scripts', () => {
+  const compiles = (src) => {
+    new vm.Script(src);
+    return true;
+  };
+
+  it('produces syntactically valid scripts', () => {
+    assert.ok(compiles(buildPasswordFillScript('pw', true)));
+    assert.ok(compiles(buildTotpFillScript('123456', true)));
+    assert.ok(compiles(buildObserverScript(1, 'a@b.com', 'Text', true, true)));
+    assert.ok(compiles(buildObserverScript(1, null, null, false, false)));
+  });
+
+  it('escapes values that would otherwise break out of the string literal', () => {
+    const nasty = `'"\\</script><script>alert(1)</script>`;
+    assert.ok(compiles(buildTotpFillScript(nasty, false)));
+    assert.ok(compiles(buildPasswordFillScript(nasty, false)));
+    // The payload survives as data, not as code.
+    assert.ok(buildTotpFillScript(nasty, false).includes(JSON.stringify(nasty)));
+  });
+
+  it('targets the code field and its own submit flag', () => {
+    const src = buildTotpFillScript('123456', true);
+    assert.match(src, /const findField = findOtc;/);
+    assert.match(src, /const SUBMIT = OTC_SUBMIT_SEL;/);
+    assert.ok(src.includes('"totpSubmit"'));
+  });
+
+  it('leaves the password step targeting the password field and Sign in flag', () => {
+    const src = buildPasswordFillScript('pw', true);
+    assert.match(src, /const findField = findPwd;/);
+    assert.match(src, /const SUBMIT = SUBMIT_SEL;/);
+    assert.ok(src.includes('"signIn"'));
+  });
+
+  it('only looks for the code field when a totpCommand is configured', () => {
+    assert.match(buildObserverScript(1, null, null, false, true), /const WANT_OTC = true;/);
+    assert.match(buildObserverScript(1, null, null, false, false), /const WANT_OTC = false;/);
   });
 });

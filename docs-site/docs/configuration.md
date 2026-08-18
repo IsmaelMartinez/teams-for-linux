@@ -229,6 +229,7 @@ Set `auth.webLogin.passwordCommand` to a command that prints your password (firs
 |--------|------|---------|-------------|
 | `auth.webLogin.user` | `string` | `""` | Email/username pre-filled into the account field when it is empty. Empty disables it. |
 | `auth.webLogin.passwordCommand` | `string` | `""` | Command whose first stdout line is pre-filled into the web login password field. Empty disables the feature. |
+| `auth.webLogin.totpCommand` | `string` | `""` | Command whose first stdout line is pre-filled into the one-time-code field on the authenticator-app (TOTP) page. Whitespace is stripped, so grouped output like `123 456` works. Empty disables it. |
 | `auth.webLogin.extraHosts` | `array` | `[]` | Extra host suffixes to treat as login pages, in addition to the built-in Microsoft hosts (`login.microsoftonline.com`, `login.microsoft.com`, `login.live.com`). Add your federated IdP host if sign-in happens off the Microsoft hosts. |
 | `auth.webLogin.autoSubmit` | `boolean` | `false` | Automatically advance each step: click Next after the email and Sign in after the password. Off by default so you review and submit yourself. |
 | `auth.webLogin.verifyMethod` | `string` | `""` | On the "Verify your identity" (MFA) page, click the option whose label starts with this text, e.g. `Text` for SMS. Empty disables it. Best-effort text match. |
@@ -247,6 +248,8 @@ Set `auth.webLogin.passwordCommand` to a command that prints your password (firs
 ```
 
 With the example above, the app fills the email and clicks Next, fills the password and clicks Sign in, then on the MFA "Verify your identity" page clicks the **Text** (SMS) option — leaving you only to enter the texted code. Drop `auth.webLogin.autoSubmit`/`auth.webLogin.verifyMethod` if you prefer to click through the steps yourself.
+
+`auth.webLogin.totpCommand` covers the authenticator-app step that follows: set it to something like `pass otp work/teams` and the code is fetched only once the code field is actually on screen, so it is always fresh. Note that keeping the TOTP seed in the same vault as the password gives up part of what the second factor buys you; that is your call, and it is the same trade `passwordCommand` already makes.
 
 This is separate from **Basic Authentication** above: `ssoBasicAuthPasswordCommand` feeds the native HTTP Basic/NTLM dialog, whereas `auth.webLogin.passwordCommand` fills the browser login form. The password is passed only to the login page (never logged or persisted) and only on the configured login hosts. If your sign-in page is a company-branded `login.microsoftonline.com` page (a logo/background on the standard Microsoft page), the defaults already cover it; only add `auth.webLogin.extraHosts` if the password page is served from a different hostname.
 

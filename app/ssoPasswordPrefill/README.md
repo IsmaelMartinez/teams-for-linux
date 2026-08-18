@@ -12,7 +12,8 @@ touches that dialog; it only fills the browser login form.
 ## How it works
 
 - Attached to the main window in `app/mainAppWindow/index.js`. No-op unless at
-  least one of `auth.webLogin.user` / `auth.webLogin.passwordCommand` is configured.
+  least one of `auth.webLogin.user` / `auth.webLogin.passwordCommand` /
+  `auth.webLogin.totpCommand` is configured.
 - On `dom-ready` / `did-navigate`, if the current URL is a recognised login host
   it injects one `MutationObserver`-backed script that (a) fills the email field
   with `auth.webLogin.user` as soon as it appears empty, and (b) resolves once a
@@ -28,6 +29,12 @@ touches that dialog; it only fills the browser login form.
 - Only once a password field exists does it run `auth.webLogin.passwordCommand`, take
   the **first line** of stdout, and set it as the field value (via the native
   value setter so React/Angular register the change).
+- With `auth.webLogin.totpCommand` set, the observer also resolves on the
+  authenticator-app **one-time-code** field, and the code command is run only then,
+  so the code is always fetched fresh rather than ahead of time. Because AAD moves
+  from the password step to the code step without reliably firing a navigation
+  event, the observer is re-armed directly after a successful password submit
+  rather than waiting for one.
 - A generation counter starts a fresh attempt per navigation and lets a stale,
   still-waiting observer bail, so it never blocks the next page.
 
@@ -37,6 +44,7 @@ touches that dialog; it only fills the browser login form.
 | --- | --- | --- | --- |
 | `auth.webLogin.user` | string | `""` | Email/username pre-filled into the account field when empty. Empty disables it. |
 | `auth.webLogin.passwordCommand` | string | `""` | Shell command whose first stdout line is the password. Empty disables it. |
+| `auth.webLogin.totpCommand` | string | `""` | Shell command whose first stdout line is the one-time code. Whitespace is stripped. Empty disables it. |
 | `auth.webLogin.extraHosts` | array | `[]` | Extra host suffixes to treat as login pages, in addition to the built-in Microsoft hosts. |
 | `auth.webLogin.autoSubmit` | boolean | `false` | Auto-advance: click Next after email, Sign in after password. |
 | `auth.webLogin.verifyMethod` | string | `""` | Click the MFA option whose label starts with this text (e.g. `Text`). Empty disables it. |
@@ -66,6 +74,13 @@ Example `config.json`:
   in its own `BrowserView`, so pre-fill does not currently apply there.
 - Fills the first visible, editable `input[type="password"]`. If your identity
   provider renders the password field differently, it may not be detected.
+- The one-time-code field is matched by `input[name="otc"]`, the converged-page id
+  `#idTxtBx_SAOTCC_OTC`, and `input[autocomplete="one-time-code"]`. Microsoft does not
+  contract these, so the same fragility caveat as `verifyMethod` applies. Flows that
+  split the code across six single-character boxes (some B2C / External ID tenants)
+  are not supported: one value cannot fill six inputs.
+- A rejected or expired code is not retried. The outcome is logged and the step
+  stops, because re-running the command and resubmitting risks the lockout counter.
 - `auth.webLogin.verifyMethod` is a best-effort text match: it clicks the first
   visible element (searched within `#idDiv_SAOTCS_Proofs`, else the page) whose
   text starts with the configured label. Microsoft DOM/label changes or an

@@ -84,7 +84,13 @@ function firstLine(stdout) {
   return String(stdout).split(/\r?\n/, 1)[0];
 }
 
-function runPasswordCommand(command) {
+// `pass otp` and friends print codes grouped as "123 456". Strip whitespace
+// rather than non-digits: some issuers use alphanumeric codes.
+function codeFrom(stdout) {
+  return firstLine(stdout).replace(/\s+/g, "");
+}
+
+function runCommand(command) {
   return new Promise((resolve, reject) => {
     // Shell execution is intended: the command comes from the user's own config
     // and may use pipes/expansion, exactly like ssoBasicAuthPasswordCommand.
@@ -109,7 +115,14 @@ const RENDERER_PRELUDE = `
       el.dispatchEvent(new Event('change', { bubbles: true }));
     };
     const SUBMIT_SEL = '#idSIButton9, input[type=submit], button[type=submit]';
+    // The converged AAD code page uses its own continue button rather than the
+    // generic primary one, so that id is tried first.
+    const OTC_SUBMIT_SEL = '#idSubmit_SAOTCC_Continue, ' + SUBMIT_SEL;
     const findPwd = () => Array.from(document.querySelectorAll('input[type=password]')).find(editable);
+    // name=otc has been stable across AAD generations; the id is the current
+    // converged page; autocomplete is an unverified fallback. One query matches
+    // all three, so the first in document order wins, not the first listed.
+    const findOtc = () => Array.from(document.querySelectorAll('input[name="otc"], #idTxtBx_SAOTCC_OTC, input[autocomplete="one-time-code"]')).find(editable);
 `;
 
 // Runs in the login page's own context. Handles the current page: fills the
@@ -119,13 +132,17 @@ const RENDERER_PRELUDE = `
 // tile, and resolves once a visible, editable password field exists (or after
 // OBSERVER_TIMEOUT_MS).
 // Resolves { pwd, email, account, verify, next }.
-function buildObserverScript(gen, user, verifyMethod, autoSubmit) {
+function buildObserverScript(gen, user, verifyMethod, autoSubmit, wantOtc) {
   return `(() => new Promise((resolve) => {
     ${RENDERER_PRELUDE}
     const GEN = ${JSON.stringify(gen)};
     const USER = ${JSON.stringify(user)};
     const VERIFY = ${JSON.stringify(verifyMethod)};
     const AUTO = ${JSON.stringify(!!autoSubmit)};
+    const WANT_OTC = ${JSON.stringify(!!wantOtc)};
+    // Only look for the code field when a totpCommand is configured, so an
+    // existing password-only setup keeps the exact behaviour it had.
+    const otcNow = () => WANT_OTC && !!findOtc();
     // A single login navigation fires dom-ready + did-navigate (+
     // did-frame-navigate), so several observer scripts can be live in the same
     // document at once. Coordinate through one window-scoped object:
@@ -196,7 +213,7 @@ function buildObserverScript(gen, user, verifyMethod, autoSubmit) {
     let nextAttempts = 0;
     const clickNext = () => {
       // Email step only: advance once the email is in and no password field yet.
-      if (!AUTO || !emailFilled || findPwd() || NS.next || nextAttempts >= 6) return;
+      if (!AUTO || !emailFilled || findPwd() || otcNow() || NS.next || nextAttempts >= 6) return;
       const btn = Array.from(document.querySelectorAll(SUBMIT_SEL)).find(editable);
       if (btn) { activate(btn); NS.next = true; nextAttempts += 1; next = 'clicked'; }
     };
@@ -204,7 +221,7 @@ function buildObserverScript(gen, user, verifyMethod, autoSubmit) {
     let verify = VERIFY ? 'no-match' : 'skipped';
     let verifyAttempts = 0;
     const clickVerify = () => {
-      if (!VERIFY || NS.verify || verifyAttempts >= 10) return;
+      if (!VERIFY || otcNow() || NS.verify || verifyAttempts >= 10) return;
       verifyAttempts += 1;
       const want = VERIFY.trim().toLowerCase();
       const scope = document.querySelector('#idDiv_SAOTCS_Proofs') || document.body;
@@ -214,57 +231,61 @@ function buildObserverScript(gen, user, verifyMethod, autoSubmit) {
     };
 
     const tick = () => { if (superseded()) return; fillEmail(); clickAccount(); clickNext(); clickVerify(); };
-    const state = (pwdFound) => ({ pwd: pwdFound, email, account, verify, next });
+    const state = (pwdFound, otcFound) => ({ pwd: pwdFound, otc: otcFound, email, account, verify, next });
     tick();
-    if (findPwd()) return resolve(state(true));
-    const finish = (pwdFound) => { obs.disconnect(); clearTimeout(t); clearInterval(iv); resolve(state(pwdFound)); };
+    if (findPwd() || otcNow()) return resolve(state(!!findPwd(), otcNow()));
+    const finish = (pwdFound, otcFound) => { obs.disconnect(); clearTimeout(t); clearInterval(iv); resolve(state(pwdFound, otcFound)); };
     // Bail as soon as a newer-generation script has taken over, so this one
     // stops looping instead of running until OBSERVER_TIMEOUT_MS.
-    const step = () => { if (superseded()) return finish(false); tick(); if (findPwd()) finish(true); };
+    const step = () => { if (superseded()) return finish(false, false); tick(); if (findPwd() || otcNow()) finish(!!findPwd(), otcNow()); };
     const obs = new MutationObserver(step);
     obs.observe(document.documentElement, { childList: true, subtree: true });
     // Timer retries cover the case where AAD enables the button late and fires
     // no further mutations for the observer to react to.
     const iv = setInterval(step, 500);
-    const t = setTimeout(() => finish(false), ${OBSERVER_TIMEOUT_MS});
+    const t = setTimeout(() => finish(false, false), ${OBSERVER_TIMEOUT_MS});
   }))()`;
 }
 
-function buildPasswordFillScript(password, autoSubmit) {
-  // JSON.stringify safely encodes the password (quotes, backslashes, unicode,
-  // newlines, `</script>`) as a JS string literal for embedding.
-  //
-  // Resilient fill: the AAD password page often mounts a beat after the field
-  // appears and resets the input to empty during hydration, so a one-shot fill
-  // gets wiped and Sign in submits blank ("Please enter your password"). We
-  // re-apply the value whenever it drifts from PWD, and only click Sign in once
-  // the value has held for two consecutive ticks (~0.5s) — i.e. after AAD has
-  // stopped resetting it.
+// Resilient fill shared by the password and one-time-code steps. AAD mounts the
+// form a beat after the field appears and resets the input during hydration, so
+// a one-shot fill gets wiped and the submit sends blank ("Please enter your
+// password"). We re-apply the value whenever it drifts, and only submit once it
+// has held for two consecutive ticks (~0.5s), i.e. after AAD stopped resetting it.
+//
+// `find`, `submitSel` and `flag` are identifiers/keys from our own code, not user
+// input. The value itself goes through JSON.stringify, which safely encodes
+// quotes, backslashes, unicode, newlines and `</script>` as a JS string literal.
+function buildFillScript({ value, autoSubmit, find, submitSel, flag }) {
   return `(() => new Promise((resolve) => {
     ${RENDERER_PRELUDE}
-    const PWD = ${JSON.stringify(password)};
+    const VAL = ${JSON.stringify(value)};
     const AUTO = ${JSON.stringify(!!autoSubmit)};
-    // Shared with any concurrent script in this document so Sign in is clicked
-    // at most once even if more than one fill script is injected.
+    const findField = ${find};
+    const SUBMIT = ${submitSel};
+    // Shared with any concurrent script in this document so the submit is
+    // clicked at most once even if more than one fill script is injected. The
+    // password and code steps use different keys so one cannot suppress the other.
     const NS = (window.__ssoPrefill = window.__ssoPrefill || {});
+    const FLAG = ${JSON.stringify(flag)};
     let filled = false;
-    let signedIn = false;
+    let submitted = false;
     let stable = 0;
     let ticks = 0;
-    const done = () => { obs.disconnect(); clearInterval(iv); clearTimeout(t); resolve(!filled ? 'no-field' : (signedIn ? 'filled-submitted' : 'filled')); };
+    const done = () => { obs.disconnect(); clearInterval(iv); clearTimeout(t); resolve(!filled ? 'no-field' : (submitted ? 'filled-submitted' : 'filled')); };
     const tick = () => {
       ticks += 1;
-      const el = findPwd();
+      const el = findField();
       if (!el) { if (filled) return done(); return; } // field gone after submit -> done
-      if (el.value !== PWD) { setValue(el, PWD); filled = true; stable = 0; }
+      if (el.value !== VAL) { setValue(el, VAL); filled = true; stable = 0; }
       else { filled = true; stable += 1; }
-      if (AUTO && !signedIn && !NS.signIn && stable >= 2) {
-        const btn = document.querySelector(SUBMIT_SEL)
+      if (AUTO && !submitted && !NS[FLAG] && stable >= 2) {
+        const btn = document.querySelector(SUBMIT)
           || (el.form && el.form.querySelector('button, input[type=submit]'));
         if (btn && editable(btn)) {
           btn.click();
-          NS.signIn = true;
-          signedIn = true;
+          NS[FLAG] = true;
+          submitted = true;
         }
       }
       if (ticks > 40) done(); // ~10s safety cap
@@ -277,10 +298,30 @@ function buildPasswordFillScript(password, autoSubmit) {
   }))()`;
 }
 
+function buildPasswordFillScript(password, autoSubmit) {
+  return buildFillScript({
+    value: password,
+    autoSubmit,
+    find: "findPwd",
+    submitSel: "SUBMIT_SEL",
+    flag: "signIn",
+  });
+}
+
+function buildTotpFillScript(code, autoSubmit) {
+  return buildFillScript({
+    value: code,
+    autoSubmit,
+    find: "findOtc",
+    submitSel: "OTC_SUBMIT_SEL",
+    flag: "totpSubmit",
+  });
+}
+
 /**
  * Attach the pre-fill behaviour to the main window. No-op unless at least one
  * of `auth.webLogin.user` / `auth.webLogin.passwordCommand` /
- * `auth.webLogin.verifyMethod` is set.
+ * `auth.webLogin.verifyMethod` / `auth.webLogin.totpCommand` is set.
  * @param {Electron.BrowserWindow} window
  * @param {object} config startup config
  */
@@ -289,7 +330,8 @@ function attach(window, config) {
   const user = (webLogin.user || "").trim();
   const command = (webLogin.passwordCommand || "").trim();
   const verifyMethod = (webLogin.verifyMethod || "").trim();
-  if (!user && !command && !verifyMethod) return;
+  const totpCommand = (webLogin.totpCommand || "").trim();
+  if (!user && !command && !verifyMethod && !totpCommand) return;
 
   const extraHosts = Array.isArray(webLogin.extraHosts)
     ? webLogin.extraHosts
@@ -326,19 +368,71 @@ function attach(window, config) {
       }
     });
 
+  // Injects the observer and returns its structured result, or null when this
+  // frame is not an actionable login page.
+  async function observe(frame, gen) {
+    const result = await frame
+      .executeJavaScript(
+        buildObserverScript(gen, user || null, verifyMethod || null, autoSubmit, !!totpCommand),
+        true,
+      )
+      .catch((e) => ({ __err: e.message }));
+    if (gen !== generation) return null; // navigated away; abandon this attempt
+    // Skip hidden MSAL auth iframes (script failed) and frames mid-navigation
+    // (no structured result) — neither is an actionable login page.
+    if (!result || result.__err || typeof result.pwd !== "boolean") return null;
+    return result;
+  }
+
+  // Runs the user's command and injects the matching fill script.
+  //
+  // The command can block for seconds (e.g. a pinentry prompt), during which
+  // the frame may have navigated away — and a navigation to a non-login URL
+  // does not bump `generation`. Re-check the frame's current URL right before
+  // injecting so the secret is never typed into a different document. Both
+  // steps go through here so neither can drift from that check.
+  async function runAndFill(frame, gen, { command: cmd, build, normalise, label }) {
+    const value = normalise(await runCommand(cmd));
+    if (gen !== generation) return null;
+    if (!value) {
+      console.warn(`[SSO_PREFILL] ${label} command returned empty output`);
+      return null;
+    }
+
+    let currentUrl = null;
+    try {
+      currentUrl = frame.url;
+    } catch {
+      return null; // frame gone
+    }
+    if (!isLoginUrl(currentUrl, extraHosts)) {
+      console.debug("[SSO_PREFILL] Frame left the login page before fill; skipping");
+      return null;
+    }
+
+    const fill = await frame.executeJavaScript(build(value, autoSubmit), true);
+    console.info("[SSO_PREFILL] Credential filled", { step: label, result: fill });
+    return fill;
+  }
+
+  const passwordStep = () => ({
+    command,
+    build: buildPasswordFillScript,
+    normalise: firstLine,
+    label: "password",
+  });
+  const totpStep = () => ({
+    command: totpCommand,
+    build: buildTotpFillScript,
+    normalise: codeFrom,
+    label: "totp",
+  });
+
   async function handleFrame(frame, gen) {
     const origin = originOf(frame.url);
     try {
-      const result = await frame
-        .executeJavaScript(
-          buildObserverScript(gen, user || null, verifyMethod || null, autoSubmit),
-          true,
-        )
-        .catch((e) => ({ __err: e.message }));
-      if (gen !== generation) return; // navigated away; abandon this attempt
-      // Skip hidden MSAL auth iframes (script failed) and frames mid-navigation
-      // (no structured result) — neither is an actionable login page.
-      if (!result || result.__err || typeof result.pwd !== "boolean") {
+      const result = await observe(frame, gen);
+      if (!result) {
         console.debug("[SSO_PREFILL] Frame not actionable", { frame: origin });
         return;
       }
@@ -347,40 +441,30 @@ function attach(window, config) {
         email: result.email,
         account: result.account,
         pwField: result.pwd,
+        otcField: result.otc,
         verify: result.verify,
         next: result.next,
       });
 
-      if (!command || !result.pwd) return;
-
-      const password = firstLine(await runPasswordCommand(command));
-      if (gen !== generation) return;
-      if (!password) {
-        console.warn("[SSO_PREFILL] Password command returned empty output");
+      // Password wins if a page ever offers both fields, since the code step
+      // always follows it.
+      if (result.pwd && command) {
+        const fill = await runAndFill(frame, gen, passwordStep());
+        // AAD advances from the password step to the code step without reliably
+        // firing a navigation event, and the observer above has already resolved
+        // and disconnected. Re-arm it here rather than waiting for a navigation
+        // that may never come. If one does come it bumps `generation` and this
+        // pass abandons itself.
+        if (fill === "filled-submitted" && totpCommand) {
+          const next = await observe(frame, gen);
+          if (next?.otc) await runAndFill(frame, gen, totpStep());
+        }
         return;
       }
 
-      // The password command can block for seconds (e.g. a pinentry prompt),
-      // during which this frame may have navigated away — and a navigation to a
-      // non-login URL does not bump `generation`. Re-check the frame's current
-      // URL right before injecting so the password is never typed into a
-      // different document.
-      let currentUrl = null;
-      try {
-        currentUrl = frame.url;
-      } catch {
-        return; // frame gone
+      if (result.otc && totpCommand) {
+        await runAndFill(frame, gen, totpStep());
       }
-      if (!isLoginUrl(currentUrl, extraHosts)) {
-        console.debug("[SSO_PREFILL] Frame left the login page before fill; skipping");
-        return;
-      }
-
-      const fill = await frame.executeJavaScript(
-        buildPasswordFillScript(password, autoSubmit),
-        true,
-      );
-      console.info("[SSO_PREFILL] Credential filled", { result: fill });
     } catch (error) {
       console.error("[SSO_PREFILL] Prefill failed", { code: error.code });
     }
@@ -417,10 +501,11 @@ function attach(window, config) {
   console.info("[SSO_PREFILL] Enabled", {
     emailPrefill: !!user,
     pwPrefill: !!command,
+    totpPrefill: !!totpCommand,
     verifyMethod: verifyMethod || null,
     autoSubmit,
     extraHosts: extraHosts.length,
   });
 }
 
-module.exports = { attach, isLoginUrl };
+module.exports = { attach, isLoginUrl, buildObserverScript, buildPasswordFillScript, buildTotpFillScript, codeFrom };
