@@ -121,10 +121,25 @@ function runCommand(command) {
   });
 }
 
+// Built-in one-time-code field selectors. `name=otc` has been stable across AAD
+// generations; the id is the current converged page; autocomplete is an
+// unverified fallback. Okta's Identity Engine widget names its field
+// `credentials.totp` and gives it a generated id (#2869), so the name is the
+// only stable half. Anything else goes in `auth.webLogin.totpSelector`.
+const OTC_SELECTORS = [
+  'input[name="otc"]',
+  "#idTxtBx_SAOTCC_OTC",
+  'input[autocomplete="one-time-code"]',
+  'input[name="credentials.totp"]',
+].join(", ");
+
 // Renderer-side helpers shared by both injected scripts (embedded verbatim in
 // each script string). Kept in one place so the two scripts don't duplicate
-// them. Runs in the login page's own context.
-const RENDERER_PRELUDE = `
+// them. Runs in the login page's own context. `totpSelector` is an optional
+// CSS selector from config, added to the built-in list.
+function rendererPrelude(totpSelector) {
+  const withExtra = totpSelector ? `${OTC_SELECTORS}, ${totpSelector}` : OTC_SELECTORS;
+  return `
     const editable = (el) => (el.offsetParent !== null || el.getClientRects().length) && !el.disabled && !el.readOnly;
     const setValue = (el, v) => {
       try { el.focus(); } catch (e) { void e; }
@@ -139,11 +154,19 @@ const RENDERER_PRELUDE = `
     // query, so the first editable match in document order wins.
     const OTC_SUBMIT_SEL = '#idSubmit_SAOTCC_Continue, ' + SUBMIT_SEL;
     const findPwd = () => Array.from(document.querySelectorAll('input[type=password]')).find(editable);
-    // name=otc has been stable across AAD generations; the id is the current
-    // converged page; autocomplete is an unverified fallback. One query matches
-    // all three, so the first in document order wins, not the first listed.
-    const findOtc = () => Array.from(document.querySelectorAll('input[name="otc"], #idTxtBx_SAOTCC_OTC, input[autocomplete="one-time-code"]')).find(editable);
+    const OTC_SEL = ${JSON.stringify(OTC_SELECTORS)};
+    const OTC_SEL_ALL = ${JSON.stringify(withExtra)};
+    // One query matches every selector, so the first in document order wins,
+    // not the first listed. A malformed totpSelector makes querySelectorAll
+    // throw, which would take the built-ins down with it, so fall back to them.
+    const findOtc = () => {
+      let nodes;
+      try { nodes = document.querySelectorAll(OTC_SEL_ALL); }
+      catch (e) { void e; nodes = document.querySelectorAll(OTC_SEL); }
+      return Array.from(nodes).find(editable);
+    };
 `;
+}
 
 // Runs in the login page's own context. Handles the current page: fills the
 // email field (if a value was provided and it is empty), optionally clicks the
@@ -152,9 +175,9 @@ const RENDERER_PRELUDE = `
 // tile, and resolves once a visible, editable password field exists, or a
 // one-time-code field when `wantOtc` is set (or after OBSERVER_TIMEOUT_MS).
 // Resolves { pwd, otc, email, account, verify, next }.
-function buildObserverScript(gen, user, verifyMethod, autoSubmit, wantOtc) {
+function buildObserverScript(gen, user, verifyMethod, autoSubmit, wantOtc, totpSelector) {
   return `(() => new Promise((resolve) => {
-    ${RENDERER_PRELUDE}
+    ${rendererPrelude(totpSelector)}
     const GEN = ${JSON.stringify(gen)};
     const USER = ${JSON.stringify(user)};
     const VERIFY = ${JSON.stringify(verifyMethod)};
@@ -279,9 +302,9 @@ function buildObserverScript(gen, user, verifyMethod, autoSubmit, wantOtc) {
 // `find`, `submitSel` and `flag` are identifiers/keys from our own code, not user
 // input. The value itself goes through JSON.stringify, which safely encodes
 // quotes, backslashes, unicode, newlines and `</script>` as a JS string literal.
-function buildFillScript({ value, autoSubmit, find, submitSel, flag }) {
+function buildFillScript({ value, autoSubmit, find, submitSel, flag, totpSelector }) {
   return `(() => new Promise((resolve) => {
-    ${RENDERER_PRELUDE}
+    ${rendererPrelude(totpSelector)}
     const VAL = ${JSON.stringify(value)};
     const AUTO = ${JSON.stringify(!!autoSubmit)};
     const findField = ${find};
@@ -331,13 +354,14 @@ function buildPasswordFillScript(password, autoSubmit) {
   });
 }
 
-function buildTotpFillScript(code, autoSubmit) {
+function buildTotpFillScript(code, autoSubmit, totpSelector) {
   return buildFillScript({
     value: code,
     autoSubmit,
     find: "findOtc",
     submitSel: "OTC_SUBMIT_SEL",
     flag: "totpSubmit",
+    totpSelector,
   });
 }
 
@@ -354,6 +378,7 @@ function attach(window, config) {
   const command = (webLogin.passwordCommand || "").trim();
   const verifyMethod = (webLogin.verifyMethod || "").trim();
   const totpCommand = (webLogin.totpCommand || "").trim();
+  const totpSelector = (webLogin.totpSelector || "").trim();
   if (!user && !command && !verifyMethod && !totpCommand) return;
 
   const totpConflicts = !!totpCommand && selectsNonAuthenticatorMethod(verifyMethod);
@@ -405,7 +430,14 @@ function attach(window, config) {
   async function observe(frame, gen) {
     const result = await frame
       .executeJavaScript(
-        buildObserverScript(gen, user || null, verifyMethod || null, autoSubmit, totpEnabled),
+        buildObserverScript(
+          gen,
+          user || null,
+          verifyMethod || null,
+          autoSubmit,
+          totpEnabled,
+          totpSelector,
+        ),
         true,
       )
       .catch((e) => ({ __err: e.message }));
@@ -468,7 +500,7 @@ function attach(window, config) {
   });
   const totpStep = () => ({
     command: totpCommand,
-    build: buildTotpFillScript,
+    build: (code, auto) => buildTotpFillScript(code, auto, totpSelector),
     normalise: codeFrom,
     label: "totp",
   });
@@ -555,6 +587,7 @@ function attach(window, config) {
     emailPrefill: !!user,
     pwPrefill: !!command,
     totpPrefill: totpEnabled,
+    totpSelector: totpSelector || null,
     verifyMethod: verifyMethod || null,
     autoSubmit,
     extraHosts: extraHosts.length,

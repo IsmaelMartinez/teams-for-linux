@@ -45,6 +45,7 @@ touches that dialog; it only fills the browser login form.
 | `auth.webLogin.user` | string | `""` | Email/username pre-filled into the account field when empty. Empty disables it. |
 | `auth.webLogin.passwordCommand` | string | `""` | Shell command whose first stdout line is the password. Empty disables it. |
 | `auth.webLogin.totpCommand` | string | `""` | Shell command whose first stdout line is the one-time code. Whitespace is stripped. Empty disables it. Ignored when `verifyMethod` selects SMS/voice/email. |
+| `auth.webLogin.totpSelector` | string | `""` | Extra CSS selector for the one-time-code field, added to the built-in list for identity providers it does not cover. Empty uses the built-ins alone. |
 | `auth.webLogin.extraHosts` | array | `[]` | Extra host suffixes to treat as login pages, in addition to the built-in Microsoft hosts. |
 | `auth.webLogin.autoSubmit` | boolean | `false` | Auto-advance: click Next after email, Sign in after password. |
 | `auth.webLogin.verifyMethod` | string | `""` | Click the MFA option whose label starts with this text (e.g. `Text`). Empty disables it. |
@@ -81,8 +82,13 @@ Example `config.json`:
   `text`/`sms`/`phone`/`call`/`voice`/`email`. If your tenant *defaults* to SMS and you
   do not set `verifyMethod`, set it to your authenticator option instead.
 - The one-time-code field is matched by `input[name="otc"]`, the converged-page id
-  `#idTxtBx_SAOTCC_OTC`, and `input[autocomplete="one-time-code"]`. Microsoft does not
-  contract these, so the same fragility caveat as `verifyMethod` applies. Flows that
+  `#idTxtBx_SAOTCC_OTC`, `input[autocomplete="one-time-code"]`, and Okta Identity
+  Engine's `input[name="credentials.totp"]` (#2869 — Okta's `id` is generated per
+  render, so only the name is worth matching). Neither vendor contracts these, so the
+  same fragility caveat as `verifyMethod` applies. For anything else, add a selector
+  with `auth.webLogin.totpSelector`; it is appended to the built-in list rather than
+  replacing it, and an invalid selector is ignored so it cannot break the built-ins.
+  Flows that
   split the code across six single-character boxes (some B2C / External ID tenants)
   are not supported: one value cannot fill six inputs.
 - A rejected or expired code is not retried. The outcome is logged and the step

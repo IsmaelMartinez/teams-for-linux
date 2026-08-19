@@ -111,6 +111,30 @@ describe('ssoPasswordPrefill injected scripts', () => {
     assert.ok(src.includes('"totpSubmit"'));
   });
 
+  it('matches the Okta Identity Engine code field out of the box (#2869)', () => {
+    // Okta's generated id changes between renders, so the name is the only
+    // half worth matching on.
+    const src = buildTotpFillScript('123456', true);
+    assert.ok(src.includes('input[name=\\"credentials.totp\\"]'));
+  });
+
+  it('adds a configured totpSelector to the built-ins rather than replacing them', () => {
+    const src = buildTotpFillScript('123456', true, 'input#my-otp');
+    assert.ok(src.includes('input#my-otp'));
+    // The built-ins are still there, and are kept separately so a malformed
+    // custom selector cannot take them down with it.
+    assert.ok(src.includes('input[name=\\"otc\\"]'));
+    assert.match(src, /const OTC_SEL = /);
+    assert.match(src, /const OTC_SEL_ALL = /);
+    assert.match(src, /catch \(e\) \{ void e; nodes = document\.querySelectorAll\(OTC_SEL\); \}/);
+  });
+
+  it('passes a totpSelector through as data, not code', () => {
+    const nasty = `'"\\</script><script>alert(1)</script>`;
+    assert.ok(compiles(buildTotpFillScript('123456', true, nasty)));
+    assert.ok(compiles(buildObserverScript(1, null, null, false, true, nasty)));
+  });
+
   it('leaves the password step targeting the password field and Sign in flag', () => {
     const src = buildPasswordFillScript('pw', true);
     assert.match(src, /const findField = findPwd;/);
