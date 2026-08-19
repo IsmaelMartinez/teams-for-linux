@@ -1,5 +1,39 @@
 # Changelog
 
+## [2.17.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.16.0...v2.17.0) (2026-08-19)
+
+
+### Features
+
+* **config:** add shortcuts and storage namespaces, deprecate their flat names ([#2859](https://github.com/IsmaelMartinez/teams-for-linux/issues/2859)) ([15e1b7f](https://github.com/IsmaelMartinez/teams-for-linux/commit/15e1b7f4cc05235b3cecc8c5d846b34307a36a98))
+* **linux:** background portal integration for Flatpak ([#2815](https://github.com/IsmaelMartinez/teams-for-linux/issues/2815)) ([#2826](https://github.com/IsmaelMartinez/teams-for-linux/issues/2826)) ([fe6d1df](https://github.com/IsmaelMartinez/teams-for-linux/commit/fe6d1df53923f144a0b2388a7a6b05764751b20e))
+
+
+### Bug Fixes
+
+* **ci:** install elfutils for the flatpak smoke build ([#2856](https://github.com/IsmaelMartinez/teams-for-linux/issues/2856)) ([e2e125c](https://github.com/IsmaelMartinez/teams-for-linux/commit/e2e125cb3e8326173218c7225484f6f797f07234))
+* **mainAppWindow:** clear every profile partition on startup ([#2868](https://github.com/IsmaelMartinez/teams-for-linux/issues/2868)) ([ba6e029](https://github.com/IsmaelMartinez/teams-for-linux/commit/ba6e029bebe204d34a9a93f91657534cc0164070))
+* **menus:** clear every profile partition on Quit (Clear Storage) ([#2864](https://github.com/IsmaelMartinez/teams-for-linux/issues/2864)) ([689c140](https://github.com/IsmaelMartinez/teams-for-linux/commit/689c14026ef445a679af3f21cfda51f5e6a92e3a))
+* **menus:** honour clearStorageData when quitting with clear storage ([#2861](https://github.com/IsmaelMartinez/teams-for-linux/issues/2861)) ([210e331](https://github.com/IsmaelMartinez/teams-for-linux/commit/210e331ca2e7298de27457825498f51b0ee563af))
+* **network:** treat ERR_TIMED_OUT as recoverable so the retry loop survives ([#2876](https://github.com/IsmaelMartinez/teams-for-linux/issues/2876)) ([21a8ed2](https://github.com/IsmaelMartinez/teams-for-linux/commit/21a8ed297183195a4f01ecbd16427c2e2af827a6)), closes [#2875](https://github.com/IsmaelMartinez/teams-for-linux/issues/2875)
+* **screen-sharing:** pass picker source directly to avoid Wayland ID mismatch ([#2755](https://github.com/IsmaelMartinez/teams-for-linux/issues/2755)) ([82d2950](https://github.com/IsmaelMartinez/teams-for-linux/commit/82d295022cff2089281118da1a218d33fd3072e9))
+
+
+### Performance
+
+* bound timestamp polling, cache tray base icon, parallelise cache scans ([#2837](https://github.com/IsmaelMartinez/teams-for-linux/issues/2837)) ([d623daf](https://github.com/IsmaelMartinez/teams-for-linux/commit/d623dafadc008a7c257424664c5c5af120769091))
+
+
+### Code Improvements
+
+* **config:** aggregate deprecation warnings into one message ([#2858](https://github.com/IsmaelMartinez/teams-for-linux/issues/2858)) ([3992d37](https://github.com/IsmaelMartinez/teams-for-linux/commit/3992d37f5e61d3ab5415b7274a3eadda0ca328c4))
+
+
+### Documentation
+
+* **idle:** document driving the idle state file on Wayland ([#2873](https://github.com/IsmaelMartinez/teams-for-linux/issues/2873)) ([d57d352](https://github.com/IsmaelMartinez/teams-for-linux/commit/d57d352ce5f31eb21e36c27450e6fc431ce07acd)), closes [#2851](https://github.com/IsmaelMartinez/teams-for-linux/issues/2851)
+* update ADR-026 and roadmap for merged portal and perf work ([#2857](https://github.com/IsmaelMartinez/teams-for-linux/issues/2857)) ([a9704bf](https://github.com/IsmaelMartinez/teams-for-linux/commit/a9704bf2ae5918cc0e254622f00c2c25a7938ac9))
+
 ## [2.16.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.15.0...v2.16.0) (2026-08-14)
 
 

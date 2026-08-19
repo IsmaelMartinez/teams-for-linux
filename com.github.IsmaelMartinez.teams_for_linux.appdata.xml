@@ -14,6 +14,24 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.17.0" date="2026-08-19">
+      <description>
+        <ul>
+          <li>config: add shortcuts and storage namespaces, deprecate their flat names (#2859)</li>
+          <li>linux: background portal integration for Flatpak (#2815) (#2826)</li>
+          <li>ci: install elfutils for the flatpak smoke build (#2856)</li>
+          <li>mainAppWindow: clear every profile partition on startup (#2868)</li>
+          <li>menus: clear every profile partition on Quit (Clear Storage) (#2864)</li>
+          <li>menus: honour clearStorageData when quitting with clear storage (#2861)</li>
+          <li>network: treat ERR_TIMED_OUT as recoverable so the retry loop survives (#2876) (21a8ed2), closes #2875</li>
+          <li>screen-sharing: pass picker source directly to avoid Wayland ID mismatch (#2755)</li>
+          <li>bound timestamp polling, cache tray base icon, parallelise cache scans (#2837)</li>
+          <li>config: aggregate deprecation warnings into one message (#2858)</li>
+          <li>idle: document driving the idle state file on Wayland (#2873) (d57d352), closes #2851</li>
+          <li>update ADR-026 and roadmap for merged portal and perf work (#2857)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.16.0" date="2026-08-14">
       <description>
         <ul>
