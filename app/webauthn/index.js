@@ -206,7 +206,7 @@ function injectIntoFrame(wf) {
         const CHUNK = 8192;
         let bin = "";
         for (let i = 0; i < bytes.length; i += CHUNK) bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
-        return btoa(bin).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/, "");
+        return btoa(bin).replaceAll("+", "-").replaceAll("/", "_").replace(/={1,2}$/, "");
       }
 
       function b64urlToBuf(s) {
