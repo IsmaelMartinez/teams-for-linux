@@ -230,13 +230,20 @@ function serializeGetOptions(publicKey) {
 }
 
 /**
- * Reconstruct a PublicKeyCredential-shaped object from IPC response.
- * We cannot create real PublicKeyCredential instances, but the shape
- * is sufficient for login.microsoftonline.com's JavaScript to process.
+ * The native PublicKeyCredential constructor cannot be called directly. Start
+ * with its prototype so instanceof checks pass, then add the response fields as
+ * properties of the new object.
  */
+function createPublicKeyCredential(properties) {
+  return Object.create(
+    PublicKeyCredential.prototype,
+    Object.getOwnPropertyDescriptors(properties),
+  );
+}
+
 function reconstructCreateResponse(data) {
   const rawId = base64urlToBuffer(data.rawId);
-  return {
+  return createPublicKeyCredential({
     id: data.credentialId,
     rawId: rawId,
     type: data.type,
@@ -259,7 +266,7 @@ function reconstructCreateResponse(data) {
         clientDataJSON: data.clientDataJson,
       },
     }),
-  };
+  });
 }
 
 function reconstructGetResponse(data) {
@@ -278,7 +285,7 @@ function reconstructGetResponse(data) {
     getAuthenticatorData: () => authDataBuf,
   };
 
-  const credential = {
+  const credential = createPublicKeyCredential({
     id: data.credentialId,
     rawId: rawId,
     type: data.type,
@@ -298,7 +305,7 @@ function reconstructGetResponse(data) {
         userHandle: data.userHandle || null,
       },
     }),
-  };
+  });
 
   console.info("[WEBAUTHN] Reconstructed get response", {
     authDataBytes: authDataBuf.byteLength,
