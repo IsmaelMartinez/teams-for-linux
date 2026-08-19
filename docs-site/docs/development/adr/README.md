@@ -49,6 +49,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [024](024-smartcard-pkcs11-pin-dialog.md) | Smartcard PKCS#11 PIN Dialog | ✅ Implemented | 2026-06-09 | v2.14.0 |
 | [025](025-config-option-naming-convention.md) | Configuration Option Naming Convention | ✅ Accepted | 2026-08-11 | N/A |
 | [026](026-performance-audit-outcomes.md) | Performance Audit Outcomes | ✅ Accepted | 2026-08-11 | N/A |
+| [028](028-third-party-idp-otc-prefill.md) | One-Time-Code Pre-fill on Third-Party IdPs | ❌ Rejected | 2026-08-19 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -68,6 +69,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [013](013-pii-log-sanitization.md) | PII Log Sanitization | Custom regex sanitizer to redact sensitive data from logs |
 | [021](021-webauthn-fido2-linux.md) | WebAuthn / FIDO2 Hardware Security Keys | FIDO2 hardware key support on Linux via fido2-tools interception |
 | [024](024-smartcard-pkcs11-pin-dialog.md) | Smartcard PKCS#11 PIN Dialog | PIN collected in a hardened main-process window, never injected into the Teams page |
+| [028](028-third-party-idp-otc-prefill.md) | One-Time-Code Pre-fill on Third-Party IdPs | Rejected DOM-based OTC pre-fill for Okta and similar; Electron cannot host a password-manager extension, so contract-backed factors are the answer |
 
 **Key Outcomes:**
 - Eliminated daily re-authentication issues
@@ -362,11 +364,11 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 21
+- **Total ADRs**: 22
 - **Implemented**: 12
 - **Accepted**: 3
 - **Proposed**: 2
-- **Rejected**: 4
+- **Rejected**: 5
 - **Average length**: ~500 words
 - **Topics covered**: 9 (Authentication & Security, Screen Sharing, Testing & Quality, Documentation & Standards, Release Process & Automation, Community & Metrics, MQTT & Integration, UI Features, Distribution & Packaging)
 
