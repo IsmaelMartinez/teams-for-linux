@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Development:**
 - `npm start` - Run application in development mode with trace warnings
 - `npm run lint` - Run ESLint validation (mandatory before commits)
-- `npm run test:unit` - Fast unit suite (`node --test tests/unit/*.test.js`); run before every commit
+- `npm run test:unit` - Fast unit suite (`node --test 'tests/unit/*.test.js'`); run before every commit
 - `npm run test:e2e` - Run end-to-end tests with Playwright
 
 **Building:**
