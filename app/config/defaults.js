@@ -14,6 +14,12 @@ const NETWORK_ERROR_PATTERNS = [
   'ERR_CONNECTION_RESET',
   'ERR_CONNECTION_REFUSED',
   'ERR_CONNECTION_TIMED_OUT',
+  // Distinct from ERR_CONNECTION_TIMED_OUT (-118): Chromium reports the generic
+  // ERR_TIMED_OUT (-7) when a host is black-holed rather than refusing, which is
+  // what a firewall that drops packets for an unallowed domain looks like. It was
+  // missing here, so did-fail-load scheduled no retry and the window sat on
+  // "Waiting for network..." with nothing left to recover it (#2875).
+  'ERR_TIMED_OUT',
   'ERR_NAME_NOT_RESOLVED',
 ];
 

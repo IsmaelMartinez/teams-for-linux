@@ -167,3 +167,71 @@ describe('ConnectionManager connectivity sweep', () => {
 		assert.strictEqual(requestsCreated, 1, 'a healthy network needs one probe');
 	});
 });
+
+// did-fail-load is the only thing that restarts the retry loop once a load has
+// failed: refresh() takes the reload() branch from then on, and reload() cannot
+// reject, so nothing else schedules another attempt. A network error missing
+// from the recoverable set therefore wedges the window permanently (#2875).
+describe('ConnectionManager did-fail-load retry scheduling', () => {
+	before(() => {
+		installElectronMock();
+	});
+
+	after(() => {
+		delete require.cache[electronPath];
+		delete require.cache[require.resolve('../../app/connectionManager')];
+	});
+
+	beforeEach(() => {
+		installElectronMock();
+		delete require.cache[require.resolve('../../app/connectionManager')];
+	});
+
+	// Drives start() far enough to capture the registered did-fail-load handler.
+	// refresh() is stubbed out because start() kicks one off and the sweep is
+	// covered by the tests above.
+	function managerWithFakeWindow() {
+		const ConnectionManager = require('../../app/connectionManager');
+		const manager = new ConnectionManager();
+		const listeners = {};
+		const window = {
+			isDestroyed: () => false,
+			setTitle() {},
+			webContents: {
+				on(event, fn) { listeners[event] = fn; },
+				removeListener() {},
+				getURL: () => '',
+			},
+		};
+		manager.refresh = () => {};
+		manager.start('https://teams.cloud.microsoft', {
+			window,
+			config: { url: 'https://teams.cloud.microsoft' },
+		});
+		let scheduled = 0;
+		manager.debouncedRefresh = () => { scheduled += 1; };
+		return { didFailLoad: listeners['did-fail-load'], scheduledCount: () => scheduled };
+	}
+
+	// -7 is what a firewall dropping packets for an unallowed domain produces,
+	// -118 what a host that refuses does. Both must schedule a retry.
+	for (const [code, description] of [[-7, 'ERR_TIMED_OUT'], [-118, 'ERR_CONNECTION_TIMED_OUT']]) {
+		it(`schedules a retry after a main-frame ${description}`, () => {
+			const { didFailLoad, scheduledCount } = managerWithFakeWindow();
+			didFailLoad({}, code, description, 'https://teams.cloud.microsoft/', true);
+			assert.strictEqual(scheduledCount(), 1, `${description} should be recoverable`);
+		});
+	}
+
+	it('ignores a non-network failure', () => {
+		const { didFailLoad, scheduledCount } = managerWithFakeWindow();
+		didFailLoad({}, -3, 'ERR_ABORTED', 'https://teams.cloud.microsoft/', true);
+		assert.strictEqual(scheduledCount(), 0);
+	});
+
+	it('ignores sub-frame failures, which are routine on restricted networks', () => {
+		const { didFailLoad, scheduledCount } = managerWithFakeWindow();
+		didFailLoad({}, -7, 'ERR_TIMED_OUT', 'https://telemetry.example/', false);
+		assert.strictEqual(scheduledCount(), 0);
+	});
+});
