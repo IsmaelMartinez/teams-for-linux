@@ -12,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Development:**
 - `npm start` - Run application in development mode with trace warnings
 - `npm run lint` - Run ESLint validation (mandatory before commits)
+- `npm run test:unit` - Fast unit suite (`node --test 'tests/unit/*.test.js'`); run before every commit
 - `npm run test:e2e` - Run end-to-end tests with Playwright
 
 **Building:**
@@ -22,6 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Utility:**
 - `npm run generate-release-info` - Generate release information file
 - `npm run generate-ipc-docs` - Generate IPC API documentation from code comments
+- `npm run generate-config-docs` - Regenerate `configuration-generated.md` and `config-schema.json`; mandatory after editing `app/config/options.js` (CI has a drift guard)
 
 **Release:**
 - Releases are managed by [release-please](https://github.com/googleapis/release-please) — merge the auto-generated Release PR to trigger a release
@@ -137,6 +139,8 @@ The project uses Playwright for end-to-end testing:
 - Each test creates a unique temp directory via `E2E_USER_DATA_DIR`
 - Tests start with completely clean state (no cookies, cache, storage)
 - Validates complete app launch flow and Microsoft login redirect
+
+**Unit tests have no DOM** (`node:test` plus `node:vm`, no jsdom), so tests for injected browser scripts assert on the generated source text rather than behaviour. To verify what a renderer actually does, run a throwaway main script with `node_modules/.bin/electron probe.js` using a hidden `BrowserWindow` and `executeJavaScript`. Create every window up front and run the cases in parallel; destroying and reloading windows in a loop produces spurious `ERR_FAILED`.
 
 **For full testing strategy**, see `docs-site/docs/development/adr/009-automated-testing-strategy.md` ([web version](https://ismaelmartinez.github.io/teams-for-linux/development/adr/009-automated-testing-strategy)).
 
@@ -266,6 +270,9 @@ When a PR has review comments, address them proactively:
 - Follow single responsibility principle for new modules
 - Update module-specific README.md files when making changes
 - Cross-platform compatibility is essential (Linux primary, Windows/macOS supported)
+- A PR showing `BLOCKED` with every check green usually means the `block develop` ruleset's CodeQL requirement is unmet: runs from bots and first-time contributors sit in `action_required` and need "Approve and run workflows", so CodeQL never reports
+- `gh run list` is often refused by the permission classifier; `gh api repos/{owner}/{repo}/actions/runs` works
+- A merged release-please PR produces a **draft** release (`releaseType: draft` in `package.json`). It is published by hand, ships as a pre-release, and `releases/latest` keeps pointing at the previous version until it is promoted
 
 ## Additional Resources
 
