@@ -216,6 +216,13 @@ function injectIntoFrame(wf) {
         return Uint8Array.from(d, c => c.charCodeAt(0)).buffer;
       }
 
+      function createPublicKeyCredential(properties) {
+        return Object.create(
+          PublicKeyCredential.prototype,
+          Object.getOwnPropertyDescriptors(properties)
+        );
+      }
+
       function serCreate(pk) {
         return {
           challenge: bufToB64url(pk.challenge), rpId: pk.rp?.id || "", rpName: pk.rp?.name || "",
@@ -258,13 +265,13 @@ function injectIntoFrame(wf) {
         console.info("[WEBAUTHN:frame] Intercepting credentials.create()");
         const r = await ipcInvoke("webauthn:create", serCreate(opts.publicKey));
         const raw = b64urlToBuf(r.rawId);
-        return { id: r.credentialId, rawId: raw, type: r.type, authenticatorAttachment: "cross-platform",
+        return createPublicKeyCredential({ id: r.credentialId, rawId: raw, type: r.type, authenticatorAttachment: "cross-platform",
           response: { attestationObject: b64urlToBuf(r.attestationObject), clientDataJSON: b64urlToBuf(r.clientDataJson),
             getAuthenticatorData: () => b64urlToBuf(r.authenticatorData), getTransports: () => r.transports || ["usb"],
             getPublicKey: () => null, getPublicKeyAlgorithm: () => r.publicKeyAlgorithm || -7 },
           getClientExtensionResults: () => ({}),
           toJSON: () => ({ id: r.credentialId, rawId: r.rawId, type: r.type,
-            response: { attestationObject: r.attestationObject, clientDataJSON: r.clientDataJson } }) };
+            response: { attestationObject: r.attestationObject, clientDataJSON: r.clientDataJson } }) });
       };
 
       navigator.credentials.get = async function(opts) {
@@ -274,7 +281,7 @@ function injectIntoFrame(wf) {
         const r = await ipcInvoke("webauthn:get", serGet(opts.publicKey));
         const raw = b64urlToBuf(r.rawId);
         const authData = b64urlToBuf(r.authenticatorData);
-        return { id: r.credentialId, rawId: raw, type: r.type, authenticatorAttachment: "cross-platform",
+        return createPublicKeyCredential({ id: r.credentialId, rawId: raw, type: r.type, authenticatorAttachment: "cross-platform",
           response: { authenticatorData: authData, clientDataJSON: b64urlToBuf(r.clientDataJson),
             signature: b64urlToBuf(r.signature), userHandle: r.userHandle ? b64urlToBuf(r.userHandle) : null,
             getAuthenticatorData: () => authData },
@@ -282,7 +289,7 @@ function injectIntoFrame(wf) {
           toJSON: () => ({ id: r.credentialId, rawId: r.rawId, type: r.type,
             authenticatorAttachment: "cross-platform", clientExtensionResults: {},
             response: { authenticatorData: r.authenticatorData, clientDataJSON: r.clientDataJson,
-              signature: r.signature, userHandle: r.userHandle || null } }) };
+              signature: r.signature, userHandle: r.userHandle || null } }) });
       };
 
       console.info("[WEBAUTHN:frame] navigator.credentials patched in subframe");
