@@ -1,5 +1,6 @@
 const { WebContentsView, session, ipcMain } = require("electron");
 const path = require("node:path");
+const SenderProfileMap = require("./senderProfileMap");
 
 const LEGACY_PARTITION = "persist:teams-4-linux";
 
@@ -82,6 +83,13 @@ class ProfileViewManager {
   #config;
   #bindDisplayMediaHandler;
   #views = new Map();
+  // Phase 2 foundation: webContents → profile attribution for main-process
+  // IPC handlers (tray/badge/notification aggregation consumes this next).
+  #registry;
+  // profileId → { wcId, partition }, captured at view creation so teardown
+  // never depends on the WebContents still being reachable (a page can
+  // destroy its own webContents, e.g. an auth flow calling window.close()).
+  #viewMeta = new Map();
   #handlers = null;
   #resizeHandler = null;
   #navigationHandler = null;
@@ -108,11 +116,22 @@ class ProfileViewManager {
     this.#profilesManager = profilesManager;
     this.#config = config;
     this.#bindDisplayMediaHandler = bindDisplayMediaHandler;
+    this.#registry = new SenderProfileMap(profilesManager);
   }
 
   initialize() {
     if (this.#initialized) return;
     this.#initialized = true;
+
+    // The root window hosts Profile 0 (legacy partition).
+    this.#registry.setRootWebContentsId(this.#window.webContents.id);
+    // Seed the cached root profile id; afterwards the add/remove handlers
+    // keep it current, so resolution never touches the settings store
+    // (electron-store re-reads its JSON file on every access — too costly
+    // for the per-badge-tick hot path Phase 2 puts lookups on).
+    this.#registry.setRootProfileId(
+      this.#profilesManager.getLegacyProfile()?.id ?? null
+    );
 
     this.#handlers = {
       add: (profile) => this.#onAdd(profile),
@@ -308,16 +327,50 @@ class ProfileViewManager {
       }
       this.#chromeView = null;
     }
+    this.#registry.clear();
+    this.#viewMeta.clear();
     this.#initialized = false;
+  }
+
+  // --- Profile attribution (Phase 2 foundation) ------------------------
+
+  /**
+   * Resolve a webContents to the id of the profile that owns it: a profile
+   * view's id, or the root window's Profile 0. Returns null for any
+   * unattributed sender: the switcher pill, dialog windows, the root window
+   * while Profile 0 does not exist (pre-bootstrap, or after its removal) —
+   * and, for now, child windows / webview guests spawned by a profile view
+   * (see the KNOWN GAP note in senderProfileMap.js). Null means
+   * "unattributed", never "safe to ignore".
+   * @param {Electron.WebContents} webContents
+   * @returns {string|null}
+   */
+  resolveProfileId(webContents) {
+    if (!webContents || typeof webContents.id !== "number") return null;
+    return this.#registry.resolveProfileId(webContents.id);
+  }
+
+  /**
+   * Resolve an IPC event straight to the sender's full profile record.
+   * Null under the same contract as {@link resolveProfileId}, plus when the
+   * mapped profile record no longer exists in the store.
+   * @param {Electron.IpcMainEvent|Electron.IpcMainInvokeEvent} event
+   * @returns {object|null}
+   */
+  getProfileFor(event) {
+    return this.#registry.getProfileFor(event);
   }
 
   // --- Event handlers --------------------------------------------------
 
   #onAdd(profile) {
     // Profile 0 (legacy partition) lives on the root window; no overlay
-    // needed. Other profiles get a WebContentsView. Either way the pill
-    // must re-render to show the new profile.
-    if (profile.partition !== LEGACY_PARTITION) {
+    // needed — but its arrival (first-run bootstrap) is what makes root-
+    // window senders attributable. Other profiles get a WebContentsView.
+    // Either way the pill must re-render to show the new profile.
+    if (profile.partition === LEGACY_PARTITION) {
+      this.#registry.setRootProfileId(profile.id);
+    } else {
       this.#createView(profile);
     }
     this.#pushSwitcherState();
@@ -330,6 +383,12 @@ class ProfileViewManager {
 
   #onRemove({ removedId, activeId }) {
     this.#destroyView(removedId);
+    // Re-derive the cached root profile id: removing Profile 0 must make
+    // root-window senders unattributed again. One settings read on a rare
+    // event, keeping the lookup path I/O-free.
+    this.#registry.setRootProfileId(
+      this.#profilesManager.getLegacyProfile()?.id ?? null
+    );
     if (activeId) {
       const next = this.#profilesManager
         .list()
@@ -366,7 +425,22 @@ class ProfileViewManager {
     // binding does not carry across to profile partitions (#2529).
     this.#bindDisplayMediaHandler(view.webContents.session);
 
-    this.#views.set(profile.id, view);
+    const wcId = view.webContents.id;
+    const profileId = profile.id;
+    this.#views.set(profileId, view);
+    this.#viewMeta.set(profileId, { wcId, partition: profile.partition });
+    this.#registry.register(wcId, profileId);
+    // Full symmetric cleanup when the webContents dies outside profile
+    // removal (a page can destroy its own webContents): drop the view AND
+    // the attribution mapping, so a later remove/dispose of this profile
+    // doesn't tear down through a dead view. Idempotent with #destroyView.
+    // #viewMeta is deliberately retained: the profile record still exists,
+    // and a later remove must clear the partition's storage (ADR-020 remove
+    // contract) even though the view is gone.
+    view.webContents.once("destroyed", () => {
+      this.#views.delete(profileId);
+      this.#registry.unregister(wcId);
+    });
     this.#applyBounds(view);
 
     const url = profile.url || this.#config.url;
@@ -376,32 +450,45 @@ class ProfileViewManager {
   }
 
   #destroyView(profileId) {
+    // Keyed on the creation-time meta, not the live view: if the view's
+    // webContents destroyed itself earlier (see #createView), the view entry
+    // is already gone but the removal contract below must still run.
     const view = this.#views.get(profileId);
-    if (!view) return;
+    const meta = this.#viewMeta.get(profileId);
     this.#views.delete(profileId);
+    this.#viewMeta.delete(profileId);
+    if (!view && !meta) return;
+    if (meta) this.#registry.unregister(meta.wcId);
 
-    try {
-      this.#window.contentView.removeChildView(view);
-    } catch {
-      // View may not be currently attached; ignore.
+    if (view) {
+      try {
+        this.#window.contentView.removeChildView(view);
+      } catch {
+        // View may not be currently attached; ignore.
+      }
     }
 
     // Clear the partition's storage so a re-added profile with the same
     // name does not see the previous tenant's data. ADR-020 § "Remove a
     // profile" requires this destructive clear; UI confirmation is the
-    // caller's responsibility (Phase 1c.2 dialog).
-    const partitionSession = view.webContents.session;
-    partitionSession
-      .clearStorageData()
-      .catch((error) =>
-        console.warn(
-          "[ProfileViewManager] clearStorageData failed",
-          { profileId, message: error.message }
-        )
-      );
+    // caller's responsibility (Phase 1c.2 dialog). Resolved from the cached
+    // partition string, never through the view's webContents — that may be
+    // gone if the page destroyed it.
+    if (meta?.partition) {
+      session
+        .fromPartition(meta.partition)
+        .clearStorageData()
+        .catch((error) =>
+          console.warn(
+            "[ProfileViewManager] clearStorageData failed",
+            { profileId, message: error.message }
+          )
+        );
+    }
 
-    if (!view.webContents.isDestroyed()) {
-      view.webContents.close();
+    const wc = view?.webContents;
+    if (wc && !wc.isDestroyed()) {
+      wc.close();
     }
   }
 
