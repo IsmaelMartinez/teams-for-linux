@@ -414,6 +414,17 @@ module.exports = {
         type: "boolean",
         applyMode: "live",
       },
+      clearBadgeOnFocus: {
+        default: true,
+        describe:
+          "Reset the tray/dock badge to 0 when the main window regains focus " +
+          "(after it has lost focus at least once). The badge otherwise mirrors " +
+          "the unread count in Teams' page title, which can lag or disagree with " +
+          "what you have actually read (Activity feed, muted channels, multi-device " +
+          "sync). Clear-on-focus matches the dock-indicator behaviour of Slack/Discord.",
+        type: "boolean",
+        applyMode: "live",
+      },
       disableGlobalShortcuts: {
         default: [],
         describe:
