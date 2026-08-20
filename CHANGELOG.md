@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.17.2](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.17.1...v2.17.2) (2026-08-20)
+
+
+### Documentation
+
+* **adr:** add ADR-028 to the docs sidebar ([#2884](https://github.com/IsmaelMartinez/teams-for-linux/issues/2884)) ([cfe4ce9](https://github.com/IsmaelMartinez/teams-for-linux/commit/cfe4ce992c32d3c114769015d6217ef418f78420)), closes [#2609](https://github.com/IsmaelMartinez/teams-for-linux/issues/2609)
+
 ## [2.17.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.17.0...v2.17.1) (2026-08-20)
 
 
