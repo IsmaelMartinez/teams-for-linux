@@ -14,6 +14,15 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.17.1" date="2026-08-20">
+      <description>
+        <ul>
+          <li>add missing commands and CI gotchas to CLAUDE.md (#2882)</li>
+          <li>adr: add ADR 028 rejecting OTC pre-fill on third-party IdPs (#2881) (d639b42), closes #2869</li>
+          <li>snap: migrate base core22 -&amp;gt; core24 via the snapcraft config key (#2758)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.17.0" date="2026-08-19">
       <description>
         <ul>
