@@ -364,13 +364,13 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 22
-- **Implemented**: 12
-- **Accepted**: 3
+- **Total ADRs**: 27
+- **Implemented**: 14
+- **Accepted**: 6
 - **Proposed**: 2
 - **Rejected**: 5
-- **Average length**: ~500 words
-- **Topics covered**: 9 (Authentication & Security, Screen Sharing, Testing & Quality, Documentation & Standards, Release Process & Automation, Community & Metrics, MQTT & Integration, UI Features, Distribution & Packaging)
+- **Average length**: ~1050 words
+- **Topics covered**: 10 (Authentication & Security, Screen Sharing, Testing & Quality, Performance, Documentation & Standards, Release Process & Automation, Community & Metrics, MQTT & Integration, UI Features, Distribution & Packaging)
 
 ## Related Documentation
 
