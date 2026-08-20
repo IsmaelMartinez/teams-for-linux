@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.17.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.17.0...v2.17.1) (2026-08-20)
+
+
+### Documentation
+
+* add missing commands and CI gotchas to CLAUDE.md ([#2882](https://github.com/IsmaelMartinez/teams-for-linux/issues/2882)) ([c61f0d0](https://github.com/IsmaelMartinez/teams-for-linux/commit/c61f0d007fcae725af2e2ddb95c6d0003bb64c13))
+* **adr:** add ADR 028 rejecting OTC pre-fill on third-party IdPs ([#2881](https://github.com/IsmaelMartinez/teams-for-linux/issues/2881)) ([d639b42](https://github.com/IsmaelMartinez/teams-for-linux/commit/d639b42ac6c00b93cec0274f69b71d49f5627ca9)), closes [#2869](https://github.com/IsmaelMartinez/teams-for-linux/issues/2869)
+
+
+### Maintenance
+
+* **snap:** migrate base core22 -&gt; core24 via the snapcraft config key ([#2758](https://github.com/IsmaelMartinez/teams-for-linux/issues/2758)) ([e6b8d2e](https://github.com/IsmaelMartinez/teams-for-linux/commit/e6b8d2ed320afe743ad09b01244dc5e1578edbb4))
+
 ## [2.17.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.16.0...v2.17.0) (2026-08-19)
 
 
