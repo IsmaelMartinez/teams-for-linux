@@ -97,6 +97,7 @@ const sidebars: SidebarsConfig = {
             'development/adr/024-smartcard-pkcs11-pin-dialog',
             'development/adr/025-config-option-naming-convention',
             'development/adr/026-performance-audit-outcomes',
+            'development/adr/028-third-party-idp-otc-prefill',
           ],
         },
         {
