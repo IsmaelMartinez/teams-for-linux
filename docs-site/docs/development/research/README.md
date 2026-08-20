@@ -25,9 +25,10 @@ Everything listed here describes work that has **not** fully shipped. Once a pie
   - URL paste shipped in v1. Telegram sticker pack import is the proposed next phase, AI generation via a user-configured backend is the speculative one
   - AI path mirrors the `customBackground` pattern, so the wrapper holds no opinion about which backend sits at the other end
 
-- **[FIDO2 Touch Prompt UI](fido2-touch-prompt-research.md)**, surface a "touch your security key now" prompt during the user-presence wait ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631))
-  - The FIDO2 beta only built the PIN-entry UI, so the touch wait is silent (`fido2Backend.js` blocks at `spawn` until the key is touched)
+- **[FIDO2 Touch Prompt UI](fido2-touch-prompt-research.md)**, surface a "touch your security key now" prompt during the user-presence wait ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631), PR [#2779](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779))
+  - The FIDO2 beta only built the PIN-entry UI, so the touch wait was silent (`fido2Backend.js` blocks at `spawn` until the key is touched)
   - Honest limit: a prompt spanning the whole security-key call, not a touch-instant signal
+  - Shipped for the `auth.webauthn.enabled` path; the flag-off path is still open
 
 ### Implemented Features (Research Removed)
 
