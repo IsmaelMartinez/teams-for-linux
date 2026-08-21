@@ -33,6 +33,31 @@ function init(config, ipcRenderer) {
 
   console.info("[WEBAUTHN] Patching navigator.credentials (preload, main frame)");
 
+  const debugEnabled = !!config.auth.webauthn.debug;
+
+  // Log the shape of a request, never its content: which fields the page set
+  // and which extensions it asked for. The extension list matters because the
+  // backend cannot honour any extension, so a page that validates extension
+  // outputs client-side fails in a way nothing else logs (#2719).
+  const logRequestShape = (op, options) => {
+    if (!debugEnabled) return;
+    const publicKey = options.publicKey;
+    const allowCredentials = publicKey.allowCredentials || [];
+    console.info(`[WEBAUTHN] ${op} request shape`, JSON.stringify({
+      mediation: options.mediation || "none",
+      hasAbortSignal: !!options.signal,
+      userVerification: publicKey.userVerification
+        || publicKey.authenticatorSelection?.userVerification
+        || "preferred",
+      allowCredentials: allowCredentials.length,
+      transports: [...new Set(allowCredentials.flatMap((c) => c.transports || []))],
+      extensions: Object.keys(publicKey.extensions || {}),
+      hints: publicKey.hints || [],
+      timeoutMs: publicKey.timeout ?? null,
+      rpIdMatchesHost: (publicKey.rpId || location.hostname) === location.hostname,
+    }));
+  };
+
   const originalCreate = navigator.credentials.create.bind(navigator.credentials);
   const originalGet = navigator.credentials.get.bind(navigator.credentials);
 
@@ -42,6 +67,7 @@ function init(config, ipcRenderer) {
     }
 
     console.info("[WEBAUTHN] Intercepting credentials.create()");
+    logRequestShape("create", options);
 
     try {
       const serialized = serializeCreateOptions(options.publicKey);
@@ -72,11 +98,15 @@ function init(config, ipcRenderer) {
     // check that should be handled natively, not routed to fido2-tools which
     // would immediately trigger device discovery and a PIN dialog.
     if (options.mediation === "conditional") {
-      console.debug("[WEBAUTHN] Skipping conditional mediation (passkey autofill)");
+      // info when debugging: whether the page probes for autofill is part of
+      // the flow picture (#2719), and console.debug does not reach any log.
+      const logSkip = debugEnabled ? console.info : console.debug;
+      logSkip("[WEBAUTHN] Skipping conditional mediation (passkey autofill)");
       return originalGet(options);
     }
 
     console.info("[WEBAUTHN] Intercepting credentials.get()");
+    logRequestShape("get", options);
 
     // Observe only, never act on it. Knowing whether the page gives up on a
     // ceremony (and after how long) is what separates "the user was slow to
@@ -230,13 +260,40 @@ function serializeGetOptions(publicKey) {
 }
 
 /**
+ * Make a reconstructed credential pass instanceof checks. Real
+ * PublicKeyCredential instances cannot be constructed from JS, so the
+ * reconstruction is a plain object; Microsoft's newer passkey bridge page
+ * (login.microsoft.com/common/bridge/fido, used when a remembered account
+ * skips the picker) silently discards it client-side (#2719), while the
+ * classic fido/get page reads the fields and accepts it. Grafting the real
+ * prototypes keeps every own property shadowing the prototype accessors
+ * (own data properties win the lookup, so the getters that need internal
+ * slots are never invoked) while instanceof becomes true.
+ */
+function adoptWebauthnPrototypes(credential) {
+  try {
+    if (globalThis.PublicKeyCredential) {
+      Object.setPrototypeOf(credential, PublicKeyCredential.prototype);
+    }
+    if (globalThis.AuthenticatorAssertionResponse && "signature" in credential.response) {
+      Object.setPrototypeOf(credential.response, AuthenticatorAssertionResponse.prototype);
+    } else if (globalThis.AuthenticatorAttestationResponse && "attestationObject" in credential.response) {
+      Object.setPrototypeOf(credential.response, AuthenticatorAttestationResponse.prototype);
+    }
+  } catch (err) {
+    console.warn("[WEBAUTHN] Could not adopt credential prototypes:", err.message);
+  }
+  return credential;
+}
+
+/**
  * Reconstruct a PublicKeyCredential-shaped object from IPC response.
  * We cannot create real PublicKeyCredential instances, but the shape
  * is sufficient for login.microsoftonline.com's JavaScript to process.
  */
 function reconstructCreateResponse(data) {
   const rawId = base64urlToBuffer(data.rawId);
-  return {
+  return adoptWebauthnPrototypes({
     id: data.credentialId,
     rawId: rawId,
     type: data.type,
@@ -259,7 +316,7 @@ function reconstructCreateResponse(data) {
         clientDataJSON: data.clientDataJson,
       },
     }),
-  };
+  });
 }
 
 function reconstructGetResponse(data) {
@@ -306,7 +363,7 @@ function reconstructGetResponse(data) {
     hasUserHandle: userHandleBuf !== null,
   });
 
-  return credential;
+  return adoptWebauthnPrototypes(credential);
 }
 
 /**

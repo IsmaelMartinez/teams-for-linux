@@ -33,6 +33,44 @@ const ALLOWED_ORIGINS = new Set([
 let initialized = false;
 
 /**
+ * Debug-only login traffic observer (#2719). A failing passkey sign-in shows
+ * no error anywhere: the ceremony succeeds, the page renders "We couldn't
+ * sign you in" without a correlation id, and nothing reaches the Entra
+ * sign-in log. Whether the page even POSTs the assertion to the server is
+ * the discriminator between a client-side and a server-side rejection, so
+ * when auth.webauthn.debug is on, log request method, path, and status for
+ * the login hosts. Never query strings (they carry tokens); GUID path
+ * segments are masked since they identify tenants and sessions.
+ */
+function attachLoginTrafficLogger(mainWindow) {
+  const filter = {
+    urls: [...ALLOWED_ORIGINS].map((origin) => `${origin}/*`),
+  };
+  const interestingTypes = new Set(["xhr", "xmlhttprequest", "mainFrame", "subFrame", "ping", "other"]);
+  const guidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+  const describe = (details) => {
+    const url = new URL(details.url);
+    return {
+      method: details.method,
+      originClass: log.classifyOrigin(url.origin),
+      path: url.pathname.replaceAll(guidPattern, "<id>"),
+      type: details.resourceType,
+    };
+  };
+
+  const webRequest = mainWindow.webContents.session.webRequest;
+  webRequest.onCompleted(filter, (details) => {
+    if (!interestingTypes.has(details.resourceType)) return;
+    log.info("[WEBAUTHN] login traffic", { ...describe(details), status: details.statusCode });
+  });
+  webRequest.onErrorOccurred(filter, (details) => {
+    if (!interestingTypes.has(details.resourceType)) return;
+    log.info("[WEBAUTHN] login traffic error", { ...describe(details), error: details.error });
+  });
+  log.info("[WEBAUTHN] Login traffic logging enabled (auth.webauthn.debug)");
+}
+
+/**
  * Validate that the request origin is an expected Microsoft login domain.
  * @param {string} origin
  * @returns {boolean}
@@ -245,6 +283,20 @@ function injectIntoFrame(wf) {
         };
       }
 
+      // Same prototype grafting as the preload override (#2719): pages that
+      // check instanceof discard a plain object silently.
+      function adopt(credential) {
+        try {
+          if (window.PublicKeyCredential) Object.setPrototypeOf(credential, PublicKeyCredential.prototype);
+          if (window.AuthenticatorAssertionResponse && "signature" in credential.response) {
+            Object.setPrototypeOf(credential.response, AuthenticatorAssertionResponse.prototype);
+          } else if (window.AuthenticatorAttestationResponse && "attestationObject" in credential.response) {
+            Object.setPrototypeOf(credential.response, AuthenticatorAttestationResponse.prototype);
+          }
+        } catch { /* shape still works without instanceof */ }
+        return credential;
+      }
+
       function ipcInvoke(channel, data) {
         return new Promise((resolve, reject) => {
           const id = crypto.randomUUID();
@@ -266,13 +318,13 @@ function injectIntoFrame(wf) {
         console.info("[WEBAUTHN:frame] Intercepting credentials.create()");
         const r = await ipcInvoke("webauthn:create", serCreate(opts.publicKey));
         const raw = b64urlToBuf(r.rawId);
-        return { id: r.credentialId, rawId: raw, type: r.type, authenticatorAttachment: "cross-platform",
+        return adopt({ id: r.credentialId, rawId: raw, type: r.type, authenticatorAttachment: "cross-platform",
           response: { attestationObject: b64urlToBuf(r.attestationObject), clientDataJSON: b64urlToBuf(r.clientDataJson),
             getAuthenticatorData: () => b64urlToBuf(r.authenticatorData), getTransports: () => r.transports || ["usb"],
             getPublicKey: () => null, getPublicKeyAlgorithm: () => r.publicKeyAlgorithm || -7 },
           getClientExtensionResults: () => ({}),
           toJSON: () => ({ id: r.credentialId, rawId: r.rawId, type: r.type,
-            response: { attestationObject: r.attestationObject, clientDataJSON: r.clientDataJson } }) };
+            response: { attestationObject: r.attestationObject, clientDataJSON: r.clientDataJson } }) });
       };
 
       navigator.credentials.get = async function(opts) {
@@ -282,7 +334,7 @@ function injectIntoFrame(wf) {
         const r = await ipcInvoke("webauthn:get", serGet(opts.publicKey));
         const raw = b64urlToBuf(r.rawId);
         const authData = b64urlToBuf(r.authenticatorData);
-        return { id: r.credentialId, rawId: raw, type: r.type, authenticatorAttachment: "cross-platform",
+        return adopt({ id: r.credentialId, rawId: raw, type: r.type, authenticatorAttachment: "cross-platform",
           response: { authenticatorData: authData, clientDataJSON: b64urlToBuf(r.clientDataJson),
             signature: b64urlToBuf(r.signature), userHandle: r.userHandle ? b64urlToBuf(r.userHandle) : null,
             getAuthenticatorData: () => authData },
@@ -290,7 +342,7 @@ function injectIntoFrame(wf) {
           toJSON: () => ({ id: r.credentialId, rawId: r.rawId, type: r.type,
             authenticatorAttachment: "cross-platform", clientExtensionResults: {},
             response: { authenticatorData: r.authenticatorData, clientDataJSON: r.clientDataJson,
-              signature: r.signature, userHandle: r.userHandle || null } }) };
+              signature: r.signature, userHandle: r.userHandle || null } }) });
       };
 
       console.info("[WEBAUTHN:frame] navigator.credentials patched in subframe");
@@ -320,6 +372,10 @@ async function initialize(mainWindow, config) {
   }
 
   log.info("[WEBAUTHN] fido2-tools detected, registering IPC handlers");
+
+  if (config?.auth?.webauthn?.debug && mainWindow) {
+    attachLoginTrafficLogger(mainWindow);
+  }
 
   // Handle credential creation requests from renderer
   ipcMain.handle("webauthn:create", (event, options) => handleWebauthnRequest("create", event, options));

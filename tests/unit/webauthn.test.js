@@ -599,4 +599,13 @@ describe('WebAuthn subframe injection - injected script', () => {
 		assert.ok(injected.includes('toJSON'));
 		assert.ok(injected.includes('getAuthenticatorData'));
 	});
+
+	// Microsoft's bridge/fido page silently discards credentials that fail
+	// instanceof PublicKeyCredential (#2719), so the relayed reconstruction
+	// must graft the real prototypes like the main-frame one does.
+	it('grafts real prototypes onto the relayed credential', () => {
+		assert.ok(injected.includes('Object.setPrototypeOf'));
+		assert.ok(injected.includes('PublicKeyCredential.prototype'));
+		assert.ok(injected.includes('AuthenticatorAssertionResponse.prototype'));
+	});
 });
