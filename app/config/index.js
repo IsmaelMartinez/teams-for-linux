@@ -182,3 +182,7 @@ function argv(configPath, appVersion) {
 }
 
 exports = module.exports = argv;
+// Exposed so the menu can open the very file this module reads, without
+// a second copy of the "config.json" literal drifting from this one.
+module.exports.getConfigFilePath = getConfigFilePath;
+
