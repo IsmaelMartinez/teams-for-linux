@@ -127,6 +127,13 @@ function getPreferencesMenu() {
   };
 }
 
+// The legacy disableBadgeCount switch still hides both badges until a badge
+// toggle is used, at which point Menus folds it into the per-surface leaves.
+function isBadgeDisabled(Menus, leaf) {
+  const config = Menus.configGroup.startupConfig;
+  return config.disableBadgeCount || config.notifications?.[leaf] === false;
+}
+
 function getNotificationsMenu(Menus) {
   return {
     label: "Notifications",
@@ -158,10 +165,16 @@ function getNotificationsMenu(Menus) {
         click: () => Menus.toggleDisableNotificationWindowFlash(),
       },
       {
-        label: "Disable Badge Count",
+        label: "Disable Tray Icon Badge",
         type: "checkbox",
-        checked: Menus.configGroup.startupConfig.disableBadgeCount,
-        click: () => Menus.toggleDisableBadgeCount(),
+        checked: isBadgeDisabled(Menus, "trayBadgeEnabled"),
+        click: () => Menus.toggleTrayBadge(),
+      },
+      {
+        label: "Disable Taskbar Badge",
+        type: "checkbox",
+        checked: isBadgeDisabled(Menus, "taskbarBadgeEnabled"),
+        click: () => Menus.toggleTaskbarBadge(),
       },
       {
         label: "Urgency",

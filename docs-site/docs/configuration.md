@@ -125,7 +125,7 @@ Each option's **Apply** mode (whether a change takes effect immediately or after
 | `appIcon` | `string` | `""` | Teams app icon to show in the tray |
 | `appIconType` | `string` | `"default"` | Type of tray icon. Choices: `default`, `light`, `dark` |
 | `useMutationTitleLogic` | `boolean` | `true` | Use MutationObserver to update counter from title |
-| `disableBadgeCount` | `boolean` | `false` | Disable the badge counter on the taskbar/dock icon |
+| `disableBadgeCount` | `boolean` | `false` | Disable the unread count badge everywhere (tray icon and taskbar/dock). Overrides the per-surface `notifications.trayBadgeEnabled` and `notifications.taskbarBadgeEnabled` toggles |
 
 ### Notification System
 
@@ -139,6 +139,8 @@ Each option's **Apply** mode (whether a change takes effect immediately or after
 | `customNotification` | `object` | `{ toastDuration: 5000 }` | Configuration for custom in-app toast notifications (used when `notificationMethod` is `custom`) |
 | `defaultNotificationUrgency` | `string` | `"normal"` | Default urgency for new notifications. Choices: `low`, `normal`, `critical` |
 | `notifications.timeoutType` | `string` | `"default"` | How long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification `timeoutType`. May not be honoured by every notification daemon. |
+| `notifications.trayBadgeEnabled` | `boolean` | `true` | Draw the unread count badge on the tray icon. Toggleable at runtime from the tray context menu |
+| `notifications.taskbarBadgeEnabled` | `boolean` | `true` | Show the unread count badge on the taskbar/dock icon: macOS dock, and Linux taskbars/docks implementing the Unity LauncherEntry protocol (KDE Plasma, Ubuntu Dock, Dash-to-Dock). Toggleable at runtime from the tray context menu |
 | `notifications.electron.clickAction` | `string` | `"show"` | What clicking a notification does to the main window (`notificationMethod: "electron"` only). Choices: `show` (reveal the window, current behaviour), `restore` (also un-minimise and focus, which helps on GNOME where a plain show does not raise the window) or `none` (do nothing). On Linux whether focus is honoured depends on the window manager. |
 
 ### Incoming Call Handling
@@ -1057,10 +1059,13 @@ Use the in-app menu to clear storage for just the Teams website origin:
 The tray icon functionality varies depending on your Linux desktop environment:
 
 #### Visual Badge Support
-- **Unity (Ubuntu 12.04-18.04)**: ✅ Shows visual launcher badges with unread count
-- **KDE Plasma**: ✅ Shows taskbar badge overlays with unread count
-- **GNOME**: ✅ Limited support via extensions
-- **Cinnamon/MATE**: ❌ No visual badges - **unread count shown in tooltip only**
+
+The taskbar/dock badge is emitted over the Unity LauncherEntry D-Bus protocol, so it appears on any taskbar or dock implementing that protocol. The tray icon badge is drawn onto the tray icon itself and works wherever the tray icon does. Both can be toggled independently (`notifications.trayBadgeEnabled`, `notifications.taskbarBadgeEnabled`, or the tray context menu).
+
+- **KDE Plasma**: ✅ Taskbar badge and tray icon badge
+- **GNOME/Ubuntu**: ✅ Dock badge with Ubuntu Dock or Dash-to-Dock (tray needs an AppIndicator extension)
+- **Unity (Ubuntu 12.04-18.04)**: ✅ Launcher badge with unread count
+- **Cinnamon/MATE**: ❌ No taskbar badge - tray icon badge and tooltip only
 - **XFCE**: ❌ Limited badge support
 - **macOS**: ✅ Dock badges (full support)
 - **Windows**: ✅ Taskbar overlay badges (full support)
