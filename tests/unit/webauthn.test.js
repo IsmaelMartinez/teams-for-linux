@@ -7,6 +7,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { encode: cborEncode, decode: cborDecode } = require('cbor-x');
 const { base64urlEncode, base64urlDecode, generateClientDataJSON, sanitizeForFido2 } = require('../../app/webauthn/helpers');
+const { narrowCandidates } = require('../../app/webauthn/fido2Backend');
 
 // ─── Test helpers hoisted to module scope (replicas of fido2Backend.js logic) ──
 
@@ -526,6 +527,51 @@ describe('WebAuthn fido2Backend - stdin line construction', () => {
 		}
 
 		assert.strictEqual(allLines[2], '1234');
+	});
+});
+
+// ─── fido2Backend.js - silent probe narrowing ───────────────────────────────
+
+// One full assertion per listed credential means one blind touch per entry.
+// narrowCandidates() must reduce the list to the probed match, and must fall
+// back to the full list when nothing probes as present (credProtect hides
+// credentials from silent probes), so probing can only remove touches.
+describe('WebAuthn fido2Backend - narrowCandidates', () => {
+	const creds = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+
+	it('returns a single-credential list untouched without probing', async () => {
+		let probed = 0;
+		const single = [{ id: 'only' }];
+		const result = await narrowCandidates(single, async () => { probed++; return true; });
+		assert.strictEqual(result, single);
+		assert.strictEqual(probed, 0);
+	});
+
+	it('narrows to the first credential that probes as present', async () => {
+		const probedIds = [];
+		const result = await narrowCandidates(creds, async (c) => {
+			probedIds.push(c.id);
+			return c.id === 'b';
+		});
+		assert.deepStrictEqual(result, [{ id: 'b' }]);
+		assert.deepStrictEqual(probedIds, ['a', 'b'], 'probing must stop at the match');
+	});
+
+	it('falls back to the full list when no probe matches', async () => {
+		const probedIds = [];
+		const result = await narrowCandidates(creds, async (c) => {
+			probedIds.push(c.id);
+			return false;
+		});
+		assert.strictEqual(result, creds);
+		assert.deepStrictEqual(probedIds, ['a', 'b', 'c']);
+	});
+
+	it('treats a throwing probe the same as a miss via the caller contract', async () => {
+		// probeCredential() catches its own errors and returns false; this pins
+		// the narrowing behaviour for a probe that reports a miss on every call.
+		const result = await narrowCandidates(creds, async () => false);
+		assert.strictEqual(result.length, 3);
 	});
 });
 

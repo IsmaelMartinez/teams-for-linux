@@ -17,6 +17,10 @@ const log = require("./log");
 
 const execFileAsync = promisify(execFile);
 
+// Silent probes answer in milliseconds; the cap only matters for a key that
+// stalls on "-t up=false" instead of rejecting it.
+const PROBE_TIMEOUT_MS = 5000;
+
 /**
  * Run a fido2 command with stdin input and optional PIN.
  * Uses spawn (not exec/shell) to avoid command injection.
@@ -319,6 +323,61 @@ async function createCredential(options) {
 }
 
 /**
+ * Silently check whether a credential is present on the device.
+ * "-t up=false" turns off the user-presence test, so the key answers without
+ * a touch and, since UV is not requested, without a PIN. The assertion it
+ * returns is unusable for sign-in (no UP flag) and is discarded; only the
+ * exit status matters. Keys that refuse silent assertions fail every probe,
+ * which reads as "no match" and leaves the caller on the sequential path.
+ *
+ * @param {string} device - Device path
+ * @param {string[]} inputLines - clientDataHash, rpId and credentialId lines
+ * @param {number} timeoutMs - Probe timeout in milliseconds
+ * @returns {Promise<boolean>} Whether the credential is on the device
+ */
+async function probeCredential(device, inputLines, timeoutMs) {
+  try {
+    await spawnFido2("fido2-assert", ["-G", "-t", "up=false", device], inputLines, timeoutMs, null);
+    return true;
+  } catch (err) {
+    log.debug("[WEBAUTHN] probe miss", { errClass: log.classifyError(err) });
+    return false;
+  }
+}
+
+/**
+ * Narrow an allowCredentials list to the one credential the device holds,
+ * using silent probes. A full assertion demands a touch per attempted
+ * credential, so without narrowing a login page that lists several
+ * registered credentials asks the user for one blind touch per entry
+ * (issue #2631 territory: there is no prompt telling them). Probing first
+ * means the real assertion needs exactly one touch.
+ *
+ * Returns the original list when nothing probes as present (credProtect can
+ * hide credentials from silent probes), so the sequential behaviour stays
+ * as the fallback and probing can only remove touches, never break a login.
+ *
+ * @param {Array} allowCredentials - Credential descriptors from the RP
+ * @param {(cred: object) => Promise<boolean>} probe - Presence check for one credential
+ * @returns {Promise<Array>} Either [matchedCredential] or the original list
+ */
+async function narrowCandidates(allowCredentials, probe) {
+  if (allowCredentials.length <= 1) {
+    return allowCredentials;
+  }
+  const total = allowCredentials.length;
+  for (const [i, cred] of allowCredentials.entries()) {
+    log.debug("[WEBAUTHN] getAssertion probe", { index: i + 1, total });
+    if (await probe(cred)) {
+      log.info("[WEBAUTHN] getAssertion probe matched", { index: i + 1, total });
+      return [cred];
+    }
+  }
+  log.info("[WEBAUTHN] getAssertion probes found no match, using sequential fallback", { total });
+  return allowCredentials;
+}
+
+/**
  * Get an assertion from a hardware security key.
  *
  * @param {object} options - WebAuthn get options (serialized from renderer)
@@ -364,16 +423,22 @@ async function getAssertion(options) {
 
   const timeoutMs = (options.timeout || 60) * 1000;
 
-  // When multiple allowCredentials are provided, try each one until fido2-assert
-  // succeeds. The server lists all registered credentials, but only one will
-  // match the key that's plugged in (marcovr's bug: first credential may not
-  // be the one on the device).
+  // When multiple allowCredentials are provided, find the one on the device
+  // with silent probes first, so the user touches the key once. If probing
+  // matched nothing, try each credential in turn until fido2-assert succeeds.
+  // The server lists all registered credentials, but only one will match the
+  // key that's plugged in (marcovr's bug: first credential may not be the one
+  // on the device).
   if (hasAllowCredentials) {
+    const candidates = await narrowCandidates(options.allowCredentials, (cred) =>
+      probeCredential(device, [...inputLines, base64urlDecode(cred.id).toString("base64")], PROBE_TIMEOUT_MS),
+    );
+
     let lastError;
-    for (const cred of options.allowCredentials) {
+    for (const cred of candidates) {
       const credInputLines = [...inputLines, base64urlDecode(cred.id).toString("base64")];
-      const index = options.allowCredentials.indexOf(cred) + 1;
-      const total = options.allowCredentials.length;
+      const index = candidates.indexOf(cred) + 1;
+      const total = candidates.length;
       log.debug("[WEBAUTHN] getAssertion cred-try", { index, total });
       try {
         const { stdout } = await spawnFido2(
@@ -447,4 +512,4 @@ function parseAssertionOutput(stdout, options, clientDataJSON, credentialId) {
   };
 }
 
-module.exports = { isAvailable, discoverDevices, createCredential, getAssertion };
+module.exports = { isAvailable, discoverDevices, createCredential, getAssertion, narrowCandidates };

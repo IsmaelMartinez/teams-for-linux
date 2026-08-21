@@ -19,6 +19,7 @@
 const { BrowserWindow, ipcMain, webFrameMain } = require("electron");
 const fido2Backend = require("./fido2Backend");
 const { requestPinPreCollect, requestPinModal } = require("./pinDialog");
+const { showTouchPrompt } = require("./touchPrompt");
 const log = require("./log");
 
 // Defense-in-depth: only allow WebAuthn requests from known Microsoft login origins.
@@ -139,6 +140,11 @@ async function handleWebauthnRequest(operation, event, options) {
     }
 
     const touchStartedAt = Date.now();
+    // The key signals a wanted touch only by blinking, so tell the user on
+    // screen while fido2-tools runs (#2631). The window opens a moment before
+    // the touch is actually wanted (device discovery and silent probes run
+    // first), which is harmless: it names the key's blink as the cue.
+    const touchPrompt = showTouchPrompt();
     try {
       const result = operation === "create"
         ? await fido2Backend.createCredential({ ...options, origin, topOrigin: senderOrigin, preCollectedPin })
@@ -149,6 +155,8 @@ async function handleWebauthnRequest(operation, event, options) {
     } catch (err) {
       touchMs = Date.now() - touchStartedAt;
       throw err;
+    } finally {
+      touchPrompt.close();
     }
   } catch (err) {
     log.error("[WEBAUTHN] Failed", {

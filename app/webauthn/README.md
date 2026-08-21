@@ -5,8 +5,9 @@ On Linux, Chromium's WebAuthn implementation lacks hardware support. This module
 ## Architecture
 
 - `helpers.js`: Shared encoding utilities (base64url, clientDataJSON, input sanitization).
-- `fido2Backend.js`: Spawns Yubico `fido2-tools` CLI processes for device discovery, credential creation, and assertion.
+- `fido2Backend.js`: Spawns Yubico `fido2-tools` CLI processes for device discovery, credential creation, and assertion. When the login page lists several registered credentials, silent probes (`fido2-assert -t up=false`, no touch and no PIN) find the one on the key first, so the real assertion needs a single touch instead of one blind touch per listed credential. If nothing probes as present (credProtect can hide credentials from silent probes), it falls back to trying each credential in turn.
 - `pinDialog.js`: PIN prompt using standard Electron UI patterns (BrowserWindow + contextBridge + HTML form).
+- `touchPrompt.js`: Display-only "touch your security key" window shown while fido2-tools waits for the key (#2631).
 - `index.js`: Sets up `ipcMain` handlers, origin validation, and PIN callback wiring.
 
 ## Prerequisites
