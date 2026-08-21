@@ -11,7 +11,7 @@ On Linux, Chromium's WebAuthn implementation lacks hardware support. This module
 
 ## Prerequisites
 
-Install `fido2-tools` on your Linux system:
+Install `fido2-tools` on your Linux system (the official deb and rpm packages list it as a recommended dependency, so most installs already have it):
 
 ```bash
 # Debian/Ubuntu
