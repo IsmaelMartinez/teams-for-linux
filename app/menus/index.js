@@ -5,6 +5,7 @@ const {
   clipboard,
   dialog,
   ipcMain,
+  shell,
 } = require("electron");
 const fs = require("node:fs"),
   path = require("node:path");
@@ -328,6 +329,52 @@ class Menus {
         type: "warning",
       });
     }
+  }
+
+  // Opens config.json in the user's default editor. The file usually does not
+  // exist — startup logs "No config file found ... using default values" — and
+  // shell.openPath on a missing path just returns an error string, so an empty
+  // stub is written first. That also gives the user something to edit rather
+  // than an empty buffer they have to save into the right place themselves.
+  async openConfigFile() {
+    const configFile = this.configGroup.configFilePath;
+    try {
+      if (!fs.existsSync(configFile)) {
+        fs.mkdirSync(path.dirname(configFile), { recursive: true });
+        fs.writeFileSync(configFile, "{}\n");
+      }
+    } catch (err) {
+      this.#reportOpenFailure("config file", configFile, err.message);
+      return;
+    }
+    await this.#openPath("config file", configFile);
+  }
+
+  async openConfigFolder() {
+    await this.#openPath("config folder", this.configGroup.configPath);
+  }
+
+  // shell.openPath resolves to an empty string on success and to the reason as
+  // a string on failure — it does not reject — so the result has to be checked.
+  async #openPath(what, target) {
+    let reason;
+    try {
+      reason = await shell.openPath(target);
+    } catch (err) {
+      reason = err.message;
+    }
+    if (reason) {
+      this.#reportOpenFailure(what, target, reason);
+    }
+  }
+
+  #reportOpenFailure(what, target, reason) {
+    console.error(`Failed to open ${what} at ${target}: ${reason}`);
+    dialog.showMessageBoxSync(this.window, {
+      message: `Could not open the ${what}.\n\n${target}\n\n${reason}`,
+      title: "Open config",
+      type: "error",
+    });
   }
 
   addProfile() {

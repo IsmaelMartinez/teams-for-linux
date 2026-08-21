@@ -44,6 +44,16 @@ class AppConfiguration {
     return _AppConfiguration_configPath.get(this);
   }
 
+  /**
+   * Absolute path to config.json inside {@link configPath}. Derived from the
+   * config module rather than re-joining the name here, so the menu that opens
+   * the file cannot drift from the loader that reads it.
+   * @returns {string}
+   */
+  get configFilePath() {
+    return require("../config").getConfigFilePath(this.configPath);
+  }
+
   get startupConfig() {
     return _AppConfiguration_startupConfig.get(this);
   }
