@@ -377,6 +377,7 @@ class Menus {
       disableNotificationSoundIfNotAvailable: this.configGroup.startupConfig.disableNotificationSoundIfNotAvailable,
       disableNotificationWindowFlash: this.configGroup.startupConfig.disableNotificationWindowFlash,
       disableBadgeCount: this.configGroup.startupConfig.disableBadgeCount,
+      notifications: this.configGroup.startupConfig.notifications,
       defaultNotificationUrgency: this.configGroup.startupConfig.defaultNotificationUrgency,
     });
   }
@@ -421,13 +422,36 @@ class Menus {
     this.updateMenu();
   }
 
-  toggleDisableBadgeCount() {
-    this.configGroup.startupConfig.disableBadgeCount =
-      !this.configGroup.startupConfig.disableBadgeCount;
-    this.configGroup.legacyConfigStore.set(
-      "disableBadgeCount",
-      this.configGroup.startupConfig.disableBadgeCount
-    );
+  toggleTrayBadge() {
+    this.#toggleBadge("trayBadgeEnabled");
+  }
+
+  toggleTaskbarBadge() {
+    this.#toggleBadge("taskbarBadgeEnabled");
+  }
+
+  #toggleBadge(leaf) {
+    const config = this.configGroup.startupConfig;
+    const store = this.configGroup.legacyConfigStore;
+
+    // The legacy disableBadgeCount master switch hides both badges. Fold it
+    // into the per-surface toggles the first time one of them is used, so the
+    // checkboxes keep matching what is on screen.
+    if (config.disableBadgeCount) {
+      config.disableBadgeCount = false;
+      store.set("disableBadgeCount", false);
+      config.notifications = {
+        ...config.notifications,
+        trayBadgeEnabled: false,
+        taskbarBadgeEnabled: false,
+      };
+      store.set("notifications.trayBadgeEnabled", false);
+      store.set("notifications.taskbarBadgeEnabled", false);
+    }
+
+    const enabled = config.notifications?.[leaf] !== false;
+    config.notifications = { ...config.notifications, [leaf]: !enabled };
+    store.set(`notifications.${leaf}`, !enabled);
     this.updateMenu();
   }
 
