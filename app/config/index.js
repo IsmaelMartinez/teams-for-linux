@@ -182,3 +182,4 @@ function argv(configPath, appVersion) {
 }
 
 exports = module.exports = argv;
+exports.getConfigFilePath = getConfigFilePath;

@@ -111,6 +111,17 @@ function getSettingsMenu(Menus) {
         label: "Restore",
         click: () => Menus.restoreSettings(),
       },
+      {
+        type: "separator",
+      },
+      {
+        label: "Open config file",
+        click: () => Menus.openConfigFile(),
+      },
+      {
+        label: "Open config folder",
+        click: () => Menus.openConfigFolder(),
+      },
     ],
   };
 }

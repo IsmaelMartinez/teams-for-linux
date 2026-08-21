@@ -5,10 +5,12 @@ const {
   clipboard,
   dialog,
   ipcMain,
+  shell,
 } = require("electron");
 const fs = require("node:fs"),
   path = require("node:path");
 const { fileURLToPath } = require("node:url");
+const configFileActions = require("./configFileActions");
 const appMenu = require("./appMenu");
 const buildProfilesMenu = require("./profilesMenu");
 const {
@@ -328,6 +330,17 @@ class Menus {
         type: "warning",
       });
     }
+  }
+
+  // Users have no reliable way to find config.json themselves: the directory
+  // differs per install format (deb/rpm/tar.gz/AppImage vs snap vs flatpak vs
+  // from-source), so guessing it is real friction (#2885).
+  openConfigFile() {
+    configFileActions.openConfigFile(shell, this.configGroup.configPath);
+  }
+
+  openConfigFolder() {
+    configFileActions.openConfigFolder(shell, this.configGroup.configPath);
   }
 
   addProfile() {
