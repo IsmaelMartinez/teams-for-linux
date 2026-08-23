@@ -135,7 +135,14 @@
       ],
       "fpm": [
         "--rpm-rpmbuild-define=_build_id_links  none",
-        "--rpm-digest=sha256"
+        "--rpm-digest=sha256",
+        "--rpm-tag=Recommends: fido2-tools"
+      ]
+    },
+    "deb": {
+      "recommends": [
+        "libappindicator3-1",
+        "fido2-tools"
       ]
     },
     "snapcraft": {

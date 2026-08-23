@@ -323,7 +323,7 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 
 **Solutions/Workarounds:**
 
-1. Install `fido2-tools` on your system:
+1. Install `fido2-tools` on your system (the official deb and rpm packages list it as a recommended dependency, so most installs already have it):
     - Debian / Ubuntu: `sudo apt install fido2-tools`
     - Fedora: `sudo dnf install fido2-tools`
     - Arch: `sudo pacman -S libfido2`

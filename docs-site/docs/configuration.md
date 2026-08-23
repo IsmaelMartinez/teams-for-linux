@@ -349,7 +349,7 @@ Report-only Content Security Policy headers are automatically stripped for all n
 
 Hardware security key authentication (YubiKey, SoloKeys, etc.) for Microsoft Entra ID login. On Linux, Electron's Chromium lacks native WebAuthn hardware support, so this module intercepts `navigator.credentials` calls and routes them to `fido2-tools`. On macOS and Windows, Electron handles WebAuthn natively and this feature is not needed.
 
-Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debian/Ubuntu) or `sudo dnf install fido2-tools` (Fedora) or `sudo pacman -S libfido2` (Arch).
+Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debian/Ubuntu) or `sudo dnf install fido2-tools` (Fedora) or `sudo pacman -S libfido2` (Arch). The official deb and rpm packages list it as a recommended dependency, so it is installed automatically unless weak dependencies are disabled.
 
 ```json
 {
