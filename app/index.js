@@ -598,6 +598,19 @@ function loadMenuToggleSettings() {
       config[setting] = appConfig.legacyConfigStore.get(setting);
     }
   }
+
+  // The badge toggles are nested leaves (ADR-025), persisted by the menu
+  // under their dotted paths. Merge them one leaf at a time so restoring one
+  // never clobbers the other notification settings.
+  for (const leaf of ["trayBadgeEnabled", "taskbarBadgeEnabled"]) {
+    const setting = `notifications.${leaf}`;
+    if (appConfig.legacyConfigStore.has(setting)) {
+      config.notifications = {
+        ...config.notifications,
+        [leaf]: appConfig.legacyConfigStore.get(setting),
+      };
+    }
+  }
 }
 
 function initializeGraphApiClient() {
@@ -782,9 +795,23 @@ async function userStatusChangedHandler(_event, options) {
 }
 
 async function setBadgeCountHandler(_event, count) {
-  if (!config.disableBadgeCount) {
-    app.setBadgeCount(count);
-  }
+  // Sending 0 rather than skipping the call clears a badge that was set
+  // before the toggle was switched off.
+  // taskbarBadgeEnabled ships off, so only an explicit true enables it: yargs
+  // replaces object options wholesale, meaning a partial notifications block
+  // resolves the leaf to undefined rather than its declared default.
+  const badgeCount =
+    config.disableBadgeCount ||
+    config.notifications?.taskbarBadgeEnabled !== true
+      ? 0
+      : count;
+  app.setBadgeCount(badgeCount);
+  // app.setBadgeCount is a silent no-op on modern Linux: Electron gates it on
+  // the long-dead com.canonical.Unity D-Bus name owner. Emit the LauncherEntry
+  // Update signal directly instead, the same path the download progress bar
+  // uses, so taskbars and docks implementing the protocol (KDE Plasma, Ubuntu
+  // Dock, Dash-to-Dock) render the unread count (#2071).
+  launcherEmitter?.update({ count: badgeCount, countVisible: badgeCount > 0 });
 }
 
 function handleGlobalShortcutDisabled() {

@@ -79,11 +79,11 @@ class TrayIconRenderer {
       totalTimeMs: Date.now() - startTime
     });
 
-    if (!this.config.disableBadgeCount) {
-      await this.ipcRenderer.invoke("set-badge-count", count).catch(err =>
-        console.error("[TRAY_DIAG] Failed to set badge count:", err.message)
-      );
-    }
+    // Always sent so the main process can apply the badge toggles in the
+    // set-badge-count handler.
+    await this.ipcRenderer.invoke("set-badge-count", count).catch(err =>
+      console.error("[TRAY_DIAG] Failed to set badge count:", err.message)
+    );
   }
 
   render(newActivityCount) {
@@ -133,7 +133,10 @@ class TrayIconRenderer {
     const ctx = canvas.getContext("2d");
 
     ctx.drawImage(image, 0, 0, 140, 140);
-    if (newActivityCount > 0 && !this.config.disableBadgeCount) {
+    const trayBadgeEnabled =
+      !this.config.disableBadgeCount &&
+      this.config.notifications?.trayBadgeEnabled !== false;
+    if (newActivityCount > 0 && trayBadgeEnabled) {
       ctx.fillStyle = "red";
       ctx.beginPath();
       ctx.ellipse(100, 90, 40, 40, 40, 0, 2 * Math.PI);

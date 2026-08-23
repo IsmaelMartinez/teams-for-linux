@@ -384,12 +384,14 @@ module.exports = {
       notifications: {
         default: {
           timeoutType: "default",
+          trayBadgeEnabled: true,
+          taskbarBadgeEnabled: false,
           electron: {
             clickAction: "show",
           },
         },
         describe:
-          "Notification behaviour. timeoutType: how long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification timeoutType. May not be honoured by every notification daemon. electron.clickAction: what clicking a notification does to the main window when notificationMethod is `electron`. Choices: `show` (reveal the window, default and current behaviour), `restore` (also un-minimise and focus, which helps on GNOME where a plain show does not raise the window) or `none` (do nothing).",
+          "Notification behaviour. timeoutType: how long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification timeoutType. May not be honoured by every notification daemon. trayBadgeEnabled: draw the unread count on the tray icon. taskbarBadgeEnabled: show the unread count on the taskbar/dock icon (macOS dock, and Linux taskbars/docks implementing the Unity LauncherEntry protocol, e.g. KDE Plasma, Ubuntu Dock, Dash-to-Dock). Both badge toggles can also be flipped at runtime from the tray context menu. electron.clickAction: what clicking a notification does to the main window when notificationMethod is `electron`. Choices: `show` (reveal the window, default and current behaviour), `restore` (also un-minimise and focus, which helps on GNOME where a plain show does not raise the window) or `none` (do nothing).",
         type: "object",
         fields: {
           "timeoutType": {
@@ -397,6 +399,16 @@ module.exports = {
             describe:
               "How long notifications stay in the system notification center (Linux/Windows only); may not be honoured by every notification daemon.",
             choices: ["default", "never"],
+          },
+          "trayBadgeEnabled": {
+            type: "boolean",
+            describe:
+              "Draw the unread count badge on the tray icon.",
+          },
+          "taskbarBadgeEnabled": {
+            type: "boolean",
+            describe:
+              "Show the unread count badge on the taskbar/dock icon (macOS dock, and Linux docks implementing the Unity LauncherEntry protocol). Off by default while the feature is in early development.",
           },
           "electron.clickAction": {
             type: "string",
@@ -410,7 +422,7 @@ module.exports = {
       disableBadgeCount: {
         default: false,
         describe:
-          "A flag indicates whether to disable the badge counter on the taskbar/dock icon",
+          "Disable the unread count badge everywhere (tray icon and taskbar/dock). Overrides notifications.trayBadgeEnabled and notifications.taskbarBadgeEnabled, which allow per-surface control",
         type: "boolean",
         applyMode: "live",
       },

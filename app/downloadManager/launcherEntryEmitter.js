@@ -34,6 +34,12 @@
  * progress value. `DownloadManager` calls `update({ progress, progressVisible })`
  * with the byte-weighted average of all active downloads, and
  * `update({ progressVisible: false })` once the queue drains.
+ *
+ * The unread-count badge rides the same signal: the set-badge-count handler
+ * in `app/index.js` calls `update({ count, countVisible })`, since
+ * `app.setBadgeCount` hits the same dead Unity name-owner gate as
+ * `setProgressBar`. Each signal carries only the properties passed, so
+ * badge and progress updates do not clobber each other.
  */
 
 const dbus = require("@homebridge/dbus-native");
@@ -52,6 +58,16 @@ function getBus() {
   if (!bus) {
     try {
       bus = dbus.sessionBus();
+      // A dead or stale session bus surfaces later as an 'error' event on the
+      // connection; without a listener that is an unhandled 'error' and takes
+      // the process down. Disable the emitter instead.
+      bus.connection.on("error", (error) => {
+        console.warn("[LauncherEntry] dbus connection error, disabling", {
+          message: error.message,
+        });
+        busDisabled = true;
+        bus = null;
+      });
     } catch (error) {
       console.warn("[DownloadManager] dbus sessionBus unavailable", {
         message: error.message,
