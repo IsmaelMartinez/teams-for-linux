@@ -30,6 +30,81 @@ const RENAMES = [
     type: "array",
   },
   { flat: "clearStorageData", nested: "storage.clearData" },
+
+  // Batch 2 (2.18.0). Every remaining rename whose target namespace is
+  // brand new, taken in one pass because they share the batch 1 mechanics
+  // exactly. The 18 renames that land in the already-shipped network, auth,
+  // idleDetection and notifications namespaces are deliberately NOT here:
+  // yargs replaces an object option wholesale rather than deep merging it,
+  // so a user moving one leaf into an existing namespace loses the declared
+  // defaults of its siblings. That is gate A in issue #2842 and must land
+  // first.
+  //
+  // customBackground
+  { flat: "isCustomBackgroundEnabled", nested: "customBackground.enabled" },
+  { flat: "customBGServiceBaseUrl", nested: "customBackground.serviceBaseUrl" },
+  {
+    flat: "customBGServiceConfigFetchInterval",
+    nested: "customBackground.configFetchInterval",
+  },
+  // urlHandling
+  { flat: "defaultURLHandler", nested: "urlHandling.defaultHandler" },
+  { flat: "meetupJoinRegEx", nested: "urlHandling.meetupJoinRegEx" },
+  {
+    flat: "onNewWindowOpenMeetupJoinUrlInApp",
+    nested: "urlHandling.openMeetupJoinInApp",
+  },
+  // incomingCalls
+  { flat: "enableIncomingCallToast", nested: "incomingCalls.toast" },
+  { flat: "incomingCallCommand", nested: "incomingCalls.command" },
+  {
+    flat: "incomingCallCommandArgs",
+    nested: "incomingCalls.commandArgs",
+    type: "array",
+  },
+  // appearance
+  { flat: "customCSSName", nested: "appearance.cssName" },
+  { flat: "customCSSLocation", nested: "appearance.cssLocation" },
+  { flat: "followSystemTheme", nested: "appearance.followSystemTheme" },
+  // platform
+  { flat: "chromeUserAgent", nested: "platform.chromeUserAgent" },
+  {
+    flat: "emulateWinChromiumPlatform",
+    nested: "platform.emulateWindowsChromium",
+  },
+  {
+    flat: "spellCheckerLanguages",
+    nested: "platform.spellCheckerLanguages",
+    type: "array",
+  },
+  { flat: "disableTimestampOnCopy", nested: "platform.disableTimestampOnCopy" },
+  // app
+  { flat: "appTitle", nested: "app.title" },
+  { flat: "url", nested: "app.url" },
+  { flat: "partition", nested: "app.partition" },
+  // window
+  { flat: "frame", nested: "window.frame" },
+  { flat: "menubar", nested: "window.menubar" },
+  { flat: "minimized", nested: "window.minimized" },
+  { flat: "closeAppOnCross", nested: "window.closeOnCross" },
+  { flat: "minimizeOnClose", nested: "window.minimizeOnClose" },
+  { flat: "alwaysOnTop", nested: "window.alwaysOnTop" },
+  { flat: "class", nested: "window.class" },
+  // tray
+  { flat: "trayIconEnabled", nested: "tray.enabled" },
+  { flat: "appIcon", nested: "tray.icon" },
+  { flat: "appIconType", nested: "tray.iconType" },
+  { flat: "useMutationTitleLogic", nested: "tray.useMutationTitleLogic" },
+  // performance
+  { flat: "disableGpu", nested: "performance.disableGpu" },
+  {
+    flat: "electronCLIFlags",
+    nested: "performance.electronCLIFlags",
+    type: "array",
+  },
+  // development
+  { flat: "webDebug", nested: "development.webDebug" },
+  { flat: "watchConfigFile", nested: "development.watchConfigFile" },
 ];
 
 // Reads a dotted path, tolerating a missing intermediate object.
@@ -86,6 +161,44 @@ function applyRenamedOptions(config, configFile, renames = RENAMES) {
     // The new name wins when both are supplied; it is the canonical one.
     config[flat] = coerce(value, inverted, type);
   }
+}
+
+/**
+ * Whether the user supplied an option, under either spelling and by whichever
+ * route that spelling actually works.
+ *
+ * Only needed where behaviour turns on an option being *set* rather than on its
+ * value, which today is `disableGpu` alone: app/startup/commandLine.js
+ * force-disables the GPU on Wayland unless the user has said otherwise, so
+ * someone opting back in through the new `performance.disableGpu` name has to
+ * count as having spoken. Reading the resolved config cannot answer this, since
+ * a declared default is indistinguishable from a user-supplied value there.
+ *
+ * The scopes differ on purpose and match applyRenamedOptions. In the config file
+ * both names work, so both count. On the command line only the flat name works,
+ * because the projection above never looks at argv; counting `--performance.
+ * disableGpu` there would report the user as having spoken while their value
+ * stayed unprojected, leaving the Wayland branch to respect a default it
+ * mistook for a choice.
+ *
+ * @param {Record<string, unknown>} configFile the merged system and user config
+ *   file contents.
+ * @param {string[]} argv process.argv, for the command line form of the flat
+ *   name.
+ * @param {string} flat the flat option name.
+ * @returns {boolean}
+ */
+function isOptionSetByUser(configFile, argv, flat) {
+  const rename = RENAMES.find((entry) => entry.flat === flat);
+  const fileNames = rename ? [flat, rename.nested] : [flat];
+
+  if (fileNames.some((name) => readPath(configFile, name) !== undefined)) {
+    return true;
+  }
+
+  // startsWith rather than an exact match so `--disableGpu` and
+  // `--disableGpu=false` both count, matching the check this replaced.
+  return Array.isArray(argv) && argv.some((arg) => arg.startsWith(`--${flat}`));
 }
 
 /**
@@ -146,4 +259,9 @@ function toNestedConfigFile(configFile, renames = RENAMES) {
   return result;
 }
 
-module.exports = { RENAMES, applyRenamedOptions, toNestedConfigFile };
+module.exports = {
+  RENAMES,
+  applyRenamedOptions,
+  isOptionSetByUser,
+  toNestedConfigFile,
+};

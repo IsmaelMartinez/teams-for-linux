@@ -9,7 +9,7 @@ const {
   buildDeprecationWarning,
   isMigrationMenuAvailable,
 } = require("./deprecation");
-const { applyRenamedOptions } = require("./renames");
+const { applyRenamedOptions, isOptionSetByUser } = require("./renames");
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
@@ -154,10 +154,15 @@ function argv(configPath, appVersion) {
   }
 
   // Track whether disableGpu was explicitly set via CLI or config file
-  // This allows Wayland detection to use smart defaults while respecting user preferences
-  const wasSetInCli = process.argv.some(arg => arg.startsWith('--disableGpu'));
-  const wasSetInFile = configObject.configFile && "disableGpu" in configObject.configFile;
-  config.disableGpuExplicitlySet = wasSetInCli || wasSetInFile;
+  // This allows Wayland detection to use smart defaults while respecting user preferences.
+  // Counts both names: since ADR-025 the option is also spelled
+  // performance.disableGpu, and missing that spelling would let the Wayland
+  // default overwrite the choice of a user who opted back into the GPU.
+  config.disableGpuExplicitlySet = isOptionSetByUser(
+    configObject.configFile,
+    process.argv,
+    "disableGpu"
+  );
 
   logger.init(config.logConfig);
 

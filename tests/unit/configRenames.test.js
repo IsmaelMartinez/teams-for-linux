@@ -5,6 +5,7 @@ const assert = require('node:assert');
 const {
 	RENAMES,
 	applyRenamedOptions,
+	isOptionSetByUser,
 	toNestedConfigFile,
 } = require('../../app/config/renames');
 const options = require('../../app/config/options');
@@ -273,5 +274,105 @@ describe('toNestedConfigFile - inverted booleans', () => {
 			toNestedConfigFile({ disableNotifications: 'true' }, table),
 			{ notifications: { enabled: false } },
 		);
+	});
+});
+
+// Gate A in issue #2842. yargs replaces an object option wholesale instead of
+// deep merging it, so a config file that sets one leaf of a namespace drops the
+// declared defaults of every sibling. For a brand new namespace that is
+// harmless, because nothing reads it during the deprecation window. For a
+// namespace that already ships leaves the app reads, it is a silent regression:
+// moving proxyServer into `network` resolves network.disableQuic to undefined
+// and re-enables QUIC (#2518), and moving any auth option in turn disables
+// auth.keepMsalCacheEncryptionCookie, which is what keeps users signed in
+// across restarts.
+//
+// Delete this suite when gate A lands and object options deep merge.
+describe('config renames - gate A boundary', () => {
+	const ALREADY_SHIPPED_LEAVES = [
+		'network',
+		'auth',
+		'idleDetection',
+		'notifications',
+	];
+
+	it('no rename targets a namespace that already ships leaves', () => {
+		for (const { flat, nested } of RENAMES) {
+			const namespace = nested.split('.')[0];
+			assert.ok(
+				!ALREADY_SHIPPED_LEAVES.includes(namespace),
+				`${flat} -> ${nested} needs gate A first; see issue #2842`
+			);
+		}
+	});
+
+	it('every rename target namespace holds only renamed leaves', () => {
+		// The converse check, so a namespace cannot quietly gain an unrelated
+		// leaf that feature code reads directly while the window is open.
+		const renamedLeaves = new Set(RENAMES.map((r) => r.nested));
+		for (const { nested } of RENAMES) {
+			const namespace = nested.split('.')[0];
+			for (const field of Object.keys(options[namespace].fields ?? {})) {
+				assert.ok(
+					renamedLeaves.has(`${namespace}.${field}`),
+					`${namespace}.${field} is not a rename target, so ${namespace} is no longer safe`
+				);
+			}
+		}
+	});
+});
+
+describe('isOptionSetByUser', () => {
+	it('sees the flat name in the config file', () => {
+		assert.strictEqual(isOptionSetByUser({ disableGpu: false }, [], 'disableGpu'), true);
+	});
+
+	it('sees the nested name in the config file', () => {
+		assert.strictEqual(
+			isOptionSetByUser({ performance: { disableGpu: false } }, [], 'disableGpu'),
+			true
+		);
+	});
+
+	it('sees the flat name on the command line', () => {
+		assert.strictEqual(isOptionSetByUser({}, ['--disableGpu'], 'disableGpu'), true);
+		assert.strictEqual(isOptionSetByUser({}, ['--disableGpu=false'], 'disableGpu'), true);
+	});
+
+	// applyRenamedOptions never reads argv, so a nested name on the command line
+	// does not reach the flat key modules read. Counting it as "set" would tell
+	// the Wayland branch to respect a value that was never projected.
+	it('ignores a nested name on the command line, matching the projection', () => {
+		assert.strictEqual(
+			isOptionSetByUser({}, ['--performance.disableGpu=true'], 'disableGpu'),
+			false
+		);
+	});
+
+	it('is false when the user said nothing', () => {
+		assert.strictEqual(isOptionSetByUser({}, [], 'disableGpu'), false);
+		assert.strictEqual(
+			isOptionSetByUser({ performance: {} }, ['--webDebug'], 'disableGpu'),
+			false
+		);
+	});
+
+	// A false value still counts as the user having spoken; that is the whole
+	// point for disableGpu, where `false` means "keep the GPU on".
+	it('counts a falsy value as set', () => {
+		assert.strictEqual(
+			isOptionSetByUser({ performance: { disableGpu: false } }, [], 'disableGpu'),
+			true
+		);
+	});
+
+	it('checks only the flat name for an option with no rename', () => {
+		assert.strictEqual(isOptionSetByUser({ mqtt: { enabled: true } }, [], 'mqtt'), true);
+		assert.strictEqual(isOptionSetByUser({}, [], 'mqtt'), false);
+	});
+
+	it('tolerates a missing config file and a missing argv', () => {
+		assert.doesNotThrow(() => isOptionSetByUser(undefined, undefined, 'disableGpu'));
+		assert.strictEqual(isOptionSetByUser(undefined, undefined, 'disableGpu'), false);
 	});
 });

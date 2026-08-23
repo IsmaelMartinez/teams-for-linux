@@ -37,11 +37,11 @@ Common options and what they control. Names link to the full reference for curre
 
 | Option | Purpose |
 |--------|---------|
-| `disableGpu` | Turn GPU/hardware acceleration off. On Wayland the app already disables the GPU by default, so set this to `false` to force it back on; the main lever for blank-window and rendering issues |
+| `performance.disableGpu` | Turn GPU/hardware acceleration off. On Wayland the app already disables the GPU by default, so set this to `false` to force it back on; the main lever for blank-window and rendering issues |
 | `notificationMethod` | Choose how notifications are delivered: `web`, `electron`, or `custom` |
-| `closeAppOnCross` | Quit the app on window close instead of minimising to tray |
-| `trayIconEnabled` | Show or hide the system tray icon |
-| `emulateWinChromiumPlatform` | Present a Windows Chromium user agent (workaround for Teams gating features by platform) |
+| `window.closeOnCross` | Quit the app on window close instead of minimising to tray |
+| `tray.enabled` | Show or hide the system tray icon |
+| `platform.emulateWindowsChromium` | Present a Windows Chromium user agent (workaround for Teams gating features by platform) |
 | `proxyServer` | Route traffic through a proxy in `address:port` form |
 
 For every option, including the ones not listed here, see [Configuration Options](configuration.md).
