@@ -51,8 +51,8 @@
       "name": "appIcon",
       "type": "string",
       "default": "",
-      "description": "Teams app icon to show in the tray",
-      "applyMode": "restart"
+      "description": "Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu",
+      "applyMode": "live"
     },
     {
       "name": "appIconType",

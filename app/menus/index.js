@@ -4,6 +4,7 @@ const {
   MenuItem,
   clipboard,
   dialog,
+  nativeImage,
   ipcMain,
 } = require("electron");
 const fs = require("node:fs"),
@@ -16,6 +17,7 @@ const {
   clearStorageForPartitions,
 } = require("../utils/storagePartitions");
 const Tray = require("./tray");
+const TrayIconChooser = require("../browser/tools/trayIconChooser");
 const { SpellCheckProvider } = require("../spellCheckProvider");
 const DocumentationWindow = require("../documentationWindow");
 const GpuInfoWindow = require("../gpuInfoWindow");
@@ -303,6 +305,58 @@ class Menus {
     }
   }
 
+  chooseAppIcon() {
+    const result = dialog.showOpenDialogSync(this.window, {
+      title: "Choose App Icon",
+      filters: [{ name: "Images", extensions: ["png"] }],
+      properties: ["openFile"],
+    });
+    if (result && result.length > 0) {
+      const selectedPath = result[0];
+      if (nativeImage.createFromPath(selectedPath).isEmpty()) {
+        dialog.showMessageBoxSync(this.window, {
+          type: "error",
+          title: "Choose App Icon",
+          message: "That file could not be read as an image.",
+          detail: selectedPath,
+        });
+        return;
+      }
+      this.configGroup.startupConfig.appIcon = selectedPath;
+      this.configGroup.legacyConfigStore.set("appIcon", selectedPath);
+      this.tray?.setBaseIconPath(selectedPath);
+      this.#updateWindowIcon(selectedPath);
+      this.updateMenu();
+    }
+  }
+
+  resetAppIcon() {
+    this.configGroup.startupConfig.appIcon = "";
+    this.configGroup.legacyConfigStore.set("appIcon", "");
+    const iconChooser = new TrayIconChooser(this.configGroup.startupConfig);
+    const iconPath = iconChooser.getFile();
+    this.tray?.setBaseIconPath(iconPath);
+    this.#updateWindowIcon(iconPath);
+    this.updateMenu();
+  }
+
+  #updateWindowIcon(iconPath) {
+    this.window.setIcon(nativeImage.createFromPath(iconPath));
+    if (!app.dock) return;
+    // The tray asset is 16px on macOS but the dock needs >=128px, so the
+    // default is resolved separately here, exactly as startup does it.
+    const custom = this.configGroup.startupConfig.appIcon?.trim();
+    const dockIconPath = custom
+      ? custom
+      : path.join(this.configGroup.startupConfig.appPath, "assets/icons/icon-256x256.png");
+    const dockIcon = nativeImage.createFromPath(dockIconPath);
+    app.dock.setIcon(
+      dockIcon.getSize().width < 128
+        ? dockIcon.resize({ width: 128, height: 128 })
+        : dockIcon,
+    );
+  }
+
   saveSettings() {
     // Receive Teams settings from renderer to save to file
     ipcMain.once("get-teams-settings", saveSettingsInternal);
@@ -378,6 +432,7 @@ class Menus {
       disableNotificationWindowFlash: this.configGroup.startupConfig.disableNotificationWindowFlash,
       disableBadgeCount: this.configGroup.startupConfig.disableBadgeCount,
       defaultNotificationUrgency: this.configGroup.startupConfig.defaultNotificationUrgency,
+      appIcon: this.configGroup.startupConfig.appIcon,
     });
   }
 

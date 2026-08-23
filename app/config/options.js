@@ -66,9 +66,10 @@ module.exports = {
       },
       appIcon: {
         default: "",
-        describe: "Teams app icon to show in the tray",
+        describe:
+          "Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu",
         type: "string",
-        applyMode: "restart",
+        applyMode: "live",
       },
       appIconType: {
         default: "default",
