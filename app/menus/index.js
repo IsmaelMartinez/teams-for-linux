@@ -313,6 +313,15 @@ class Menus {
     });
     if (result && result.length > 0) {
       const selectedPath = result[0];
+      if (nativeImage.createFromPath(selectedPath).isEmpty()) {
+        dialog.showMessageBoxSync(this.window, {
+          type: "error",
+          title: "Choose App Icon",
+          message: "That file could not be read as an image.",
+          detail: selectedPath,
+        });
+        return;
+      }
       this.configGroup.startupConfig.appIcon = selectedPath;
       this.configGroup.legacyConfigStore.set("appIcon", selectedPath);
       this.tray?.setBaseIconPath(selectedPath);

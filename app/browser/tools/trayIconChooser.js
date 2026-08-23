@@ -17,7 +17,7 @@ class TrayIconChooser {
     this.config = config;
   }
   getFile() {
-    if (this.config.appIcon.trim() !== "") {
+    if (this.config.appIcon?.trim()) {
       return this.config.appIcon;
     }
     return path.join(
