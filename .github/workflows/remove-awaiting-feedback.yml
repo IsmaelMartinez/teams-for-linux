@@ -25,11 +25,15 @@ jobs:
     # `comment` is absent on pull_request_review, `review` on the other two, so
     # each pair falls through to whichever the event actually supplied.
     #
+    # Bots are matched on `user.type`, not on a "[bot]" login suffix: the PR
+    # reviewer posts as plain `Copilot` with author_association CONTRIBUTOR, so
+    # a suffix test would let its automated review clear the label.
+    #
     # issue_comment is by far the highest-volume trigger, and its payload does
     # carry labels, so gate it here and spare the runner. The review events have
     # no documented labels in their payload and are checked in the step instead.
     if: >-
-      !endsWith(github.event.comment.user.login || github.event.review.user.login, '[bot]')
+      (github.event.comment.user.type || github.event.review.user.type) != 'Bot'
       && !contains(
         fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'),
         github.event.comment.author_association || github.event.review.author_association
