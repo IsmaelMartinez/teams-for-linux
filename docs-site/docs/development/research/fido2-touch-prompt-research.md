@@ -1,12 +1,12 @@
 # FIDO2 Touch Prompt UI (Issue #2631)
 
-:::info Feasibility Research
-Feasibility explored, not yet scheduled. FIDO2 / WebAuthn support is an opt-in beta behind `auth.webauthn.enabled` (see [ADR-021](../adr/021-webauthn-fido2-linux.md)).
+:::info Implemented
+Implemented for the `auth.webauthn.enabled` path in `app/webauthn/touchPrompt.js`. FIDO2 / WebAuthn support is an opt-in beta behind `auth.webauthn.enabled` (see [ADR-021](../adr/021-webauthn-fido2-linux.md)).
 :::
 
 **Date**: 2026-06-09
 **Issue**: [#2631 - FIDO2: missing UI prompt when waiting for authenticator touch](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631)
-**Status**: Research / feasibility (treated as an enhancement, not a regression)
+**Status**: Implemented (treated as an enhancement, not a regression)
 
 ## Summary
 
@@ -43,6 +43,24 @@ Update (2026-07-29): since this note was written, `app/_shared/securePrompt.js` 
 - Seamlessness: the PIN dialog closes before the touch wait, so the new prompt should appear without a visible gap.
 - Window lifecycle: the `finally` that dismisses the prompt should check `isDestroyed()` first, since the parent window could be closed during the wait (up to the 60s timeout) and dismissing an already-destroyed window would throw.
 - Scope: Linux-only, behind `auth.webauthn.enabled`, beta.
+
+## What shipped
+
+The `BrowserWindow`-around-the-await approach above, with one deviation: it ships **with** a Cancel
+button rather than the informational-only v1 this note recommended, because
+[#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631) was later widened to ask for
+"a cancel that rejects". The orphaned-child risk the Risks section flagged is handled by giving
+`spawnFido2` an `AbortSignal` that reuses the very same detached-process-group kill as the timeout,
+so a cancel cannot leave a `fido2` child holding the device.
+
+Validated on real hardware by [@spthiel](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779#issuecomment-5163132960):
+the prompt appears with no visible gap after the PIN dialog closes, touching the key completes the
+sign-in, Cancel and the 60s timeout both land on Microsoft's "We couldn't sign you in" page, and no
+`fido2-assert` process is left behind.
+
+Still open: the `auth.webauthn.enabled` **off** path, where Electron's native WebAuthn draws no UI
+on Linux at all. That needs interception for users who did not opt into the beta, and it is not
+obvious what Cancel should mean when the underlying Chromium call cannot be aborted.
 
 ## Recommendation
 
