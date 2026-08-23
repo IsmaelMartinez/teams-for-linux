@@ -40,6 +40,10 @@ let profilesManagerRef = null;
 let aboutBlankRequestCount = 0;
 let config;
 let window = null;
+// Tracks whether the main window has lost focus at least once since launch, so
+// the clear-badge-on-focus reset (config.clearBadgeOnFocus) only fires on a real
+// return-to-app, not on the initial window show.
+let mainWindowHasBlurred = false;
 let appConfig = null;
 let customBackgroundService = null;
 let streamSelector;
@@ -1328,6 +1332,24 @@ function addEventHandlers() {
   });
 
   window.on("page-title-updated", onPageTitleUpdated);
+  // Reset the tray/dock badge when the user returns to the app. Teams' page-title
+  // unread count (the source of the badge) can lag or disagree with what the user
+  // has actually read; clearing on focus matches the dock-indicator behaviour of
+  // Slack/Discord. Skip the launch focus by requiring a prior blur. The renderer
+  // participates in the update sequence so an in-flight non-zero render cannot
+  // re-stick the badge afterwards.
+  window.on("blur", () => {
+    mainWindowHasBlurred = true;
+  });
+  window.on("focus", () => {
+    if (
+      mainWindowHasBlurred &&
+      config?.clearBadgeOnFocus &&
+      !config?.disableBadgeCount
+    ) {
+      window.webContents.send("clear-badge-on-focus");
+    }
+  });
   window.webContents.setWindowOpenHandler(onNewWindow);
   window.webContents.session.webRequest.onBeforeRequest(
     { urls: ["https://*/*"] },

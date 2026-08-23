@@ -18,6 +18,37 @@ class TrayIconRenderer {
       "unread-count",
       this.updateActivityCount.bind(this),
     );
+
+    // Main process requests a forced badge reset when the window regains focus
+    // (config.clearBadgeOnFocus). Routed through the renderer so it takes part in
+    // the update sequence: bumping the sequence discards any non-zero render that
+    // is still awaiting the canvas, which would otherwise land after the clear and
+    // re-stick the badge.
+    this.ipcRenderer.on("clear-badge-on-focus", () => this.clearBadge());
+  }
+
+  // Force the badge (and tray overlay) back to 0. Distinct from updateActivityCount
+  // because this is a UI reset, not an unread-count change: it must always run even
+  // if the last requested count was already 0, and it must invalidate in-flight
+  // renders from a prior non-zero count.
+  clearBadge() {
+    this.#lastRequestedCount = 0;
+    const sequence = ++this.#updateSequence;
+    console.debug("[TRAY_DIAG] clearBadge on focus", { sequence });
+
+    this.ipcRenderer.send("tray-update", {
+      icon: null,
+      flash: false,
+      count: 0,
+    });
+
+    if (!this.config.disableBadgeCount) {
+      this.ipcRenderer
+        .invoke("set-badge-count", 0)
+        .catch((err) =>
+          console.error("[TRAY_DIAG] Failed to clear badge count:", err.message)
+        );
+    }
   }
 
   async updateActivityCount(event) {
