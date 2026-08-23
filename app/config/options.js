@@ -1251,7 +1251,10 @@ module.exports = {
       },
       platform: {
         default: {
-          chromeUserAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/undefined Safari/537.36",
+          // Same template literal as the flat chromeUserAgent above, not a
+          // copy of its evaluated value: process.versions.chrome is undefined
+          // outside Electron, so a frozen string would ship Chrome/undefined.
+          chromeUserAgent: `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36`,
           emulateWindowsChromium: false,
           spellCheckerLanguages: [],
           disableTimestampOnCopy: false,
@@ -1324,7 +1327,7 @@ module.exports = {
           },
           "menubar": {
             type: "string",
-            choices: ["auto","visible","hidden"],
+            choices: ["auto", "visible", "hidden"],
             describe: "A value controls the menu bar behaviour",
           },
           "minimized": {
@@ -1371,7 +1374,7 @@ module.exports = {
           },
           "iconType": {
             type: "string",
-            choices: ["default","light","dark"],
+            choices: ["default", "light", "dark"],
             describe: "Type of tray icon to be used",
           },
           "useMutationTitleLogic": {

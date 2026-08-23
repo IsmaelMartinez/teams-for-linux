@@ -782,8 +782,8 @@ Wayland display server settings are organized under the `wayland` configuration 
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `platform.chromeUserAgent` | `string` | `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36` | Google Chrome User Agent |
-| `chromeUserAgent` | `string` | `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36` | Deprecated, use `platform.chromeUserAgent` |
+| `platform.chromeUserAgent` | `string` | `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<version> Safari/537.36` | Google Chrome User Agent |
+| `chromeUserAgent` | `string` | `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<version> Safari/537.36` | Deprecated, use `platform.chromeUserAgent` |
 | `platform.emulateWindowsChromium` | `boolean` | `false` | Use windows platform information in chromium (helpful if MFA app doesn't support Linux) |
 | `emulateWinChromiumPlatform` | `boolean` | `false` | Deprecated, use `platform.emulateWindowsChromium` |
 | `platform.spellCheckerLanguages` | `array` | `[]` | Array of languages to use with Electron's spell checker |

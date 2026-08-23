@@ -1393,7 +1393,7 @@
       "name": "platform",
       "type": "object",
       "default": {
-        "chromeUserAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/undefined Safari/537.36",
+        "chromeUserAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<version> Safari/537.36",
         "emulateWindowsChromium": false,
         "spellCheckerLanguages": [],
         "disableTimestampOnCopy": false
@@ -1404,7 +1404,7 @@
         {
           "path": "chromeUserAgent",
           "type": "string",
-          "default": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/undefined Safari/537.36",
+          "default": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<version> Safari/537.36",
           "description": "Google Chrome User Agent"
         },
         {

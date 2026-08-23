@@ -43,9 +43,21 @@ const APPLY_MODES = new Set(["live", "restart"]);
 // The chromeUserAgent default embeds process.versions.chrome, which changes on
 // every Electron bump (and is "undefined" under plain Node). Normalise it to a
 // stable placeholder so the generated output is deterministic.
+// The Chrome user agent embeds the live Chromium version, which is undefined
+// when this script runs outside Electron and would otherwise churn the
+// generated files on every Electron bump. Pin it to a stable placeholder
+// wherever it appears: as the flat option, as a leaf of the `platform`
+// namespace default object, and as that namespace's own derived field default.
 function normaliseDefault(name, value) {
-  if (name === "chromeUserAgent" && typeof value === "string") {
-    return value.replace(/Chrome\/[^\s]*/, "Chrome/<version>");
+  if (typeof value === "string") {
+    return name === "chromeUserAgent"
+      ? value.replace(/Chrome\/[^\s]*/, "Chrome/<version>")
+      : value;
+  }
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, inner]) => [key, normaliseDefault(key, inner)])
+    );
   }
   return value;
 }
@@ -140,7 +152,12 @@ function buildSchema() {
         const fieldEntry = {
           path: fieldPath,
           type: field.type ?? null,
-          default: deriveFieldDefault(def.default, fieldPath),
+          // Normalised on the leaf name, since deriveFieldDefault reads the
+          // raw declaration rather than the normalised entry above.
+          default: normaliseDefault(
+            fieldPath.split(".").pop(),
+            deriveFieldDefault(def.default, fieldPath)
+          ),
           description: normaliseDescription(field.describe),
         };
         if (field.choices) {
