@@ -52,7 +52,7 @@
       "type": "string",
       "default": "",
       "description": "Custom app icon (PNG) used for the tray, window, and dock",
-      "applyMode": "restart"
+      "applyMode": "live"
     },
     {
       "name": "appIconType",

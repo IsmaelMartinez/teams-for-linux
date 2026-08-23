@@ -18,10 +18,15 @@ class TrayIconRenderer {
       "unread-count",
       this.updateActivityCount.bind(this),
     );
+    // Read the new path from the delta, not from this.config: preload's own
+    // config-changed listener registers after this one, so this.config still
+    // holds the previous value when we run.
     ipcRenderer.on('config-changed', (_event, changes) => {
-      if ('appIcon' in changes) {
-        this.baseIcon = nativeImage.createFromPath(new TrayIconChooser(this.config).getFile());
+      if ('appIcon' in changes && changes.appIcon !== this.config.appIcon) {
+        const chooser = new TrayIconChooser({ ...this.config, appIcon: changes.appIcon });
+        this.baseIcon = nativeImage.createFromPath(chooser.getFile());
         this.iconSize = this.baseIcon.getSize();
+        this.#baseIconDataUrl = null;
         this.#lastRequestedCount = undefined;
       }
     });

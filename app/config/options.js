@@ -68,7 +68,7 @@ module.exports = {
         default: "",
         describe: "Custom app icon (PNG) used for the tray, window, and dock",
         type: "string",
-        applyMode: "restart",
+        applyMode: "live",
       },
       appIconType: {
         default: "default",
