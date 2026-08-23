@@ -24,11 +24,19 @@ jobs:
     runs-on: ubuntu-latest
     # `comment` is absent on pull_request_review, `review` on the other two, so
     # each pair falls through to whichever the event actually supplied.
+    #
+    # issue_comment is by far the highest-volume trigger, and its payload does
+    # carry labels, so gate it here and spare the runner. The review events have
+    # no documented labels in their payload and are checked in the step instead.
     if: >-
       !endsWith(github.event.comment.user.login || github.event.review.user.login, '[bot]')
       && !contains(
         fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'),
         github.event.comment.author_association || github.event.review.author_association
+      )
+      && (
+        github.event_name != 'issue_comment'
+        || contains(github.event.issue.labels.*.name, 'awaiting user feedback')
       )
     permissions:
       issues: write
