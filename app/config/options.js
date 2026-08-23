@@ -66,7 +66,8 @@ module.exports = {
       },
       appIcon: {
         default: "",
-        describe: "Custom app icon (PNG) used for the tray, window, and dock",
+        describe:
+          "Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu",
         type: "string",
         applyMode: "live",
       },

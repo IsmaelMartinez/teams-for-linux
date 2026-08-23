@@ -12,7 +12,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 |--------|------|---------|-------------|-------|
 | `appActiveCheckInterval` | `number` | `2` | A numeric value in seconds as poll interval to check if the system is active from being idle | `restart` |
 | `screenSharing` | `object` | `{"thumbnail":{"enabled":true,"alwaysOnTop":true},"lockInhibitionMethod":"Electron"}` | Screen sharing configuration. thumbnail: controls the preview window shown during active sharing. lockInhibitionMethod: screen lock inhibition method (Electron/WakeLockSentinel). | `restart` |
-| `appIcon` | `string` | `""` | Custom app icon (PNG) used for the tray, window, and dock | `live` |
+| `appIcon` | `string` | `""` | Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu | `live` |
 | `appIconType` | `string` | `"default"` | Type of tray icon to be used | `restart` |
 | `appIdleTimeout` | `number` | `300` | A numeric value in seconds as duration before app considers the system as idle | `restart` |
 | `appIdleTimeoutCheckInterval` | `number` | `10` | A numeric value in seconds as poll interval to check if the appIdleTimeout is reached | `restart` |

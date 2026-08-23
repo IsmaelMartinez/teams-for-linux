@@ -122,7 +122,7 @@ Each option's **Apply** mode (whether a change takes effect immediately or after
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `trayIconEnabled` | `boolean` | `true` | Enable tray icon |
-| `appIcon` | `string` | `""` | Teams app icon to show in the tray |
+| `appIcon` | `string` | `""` | Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu |
 | `appIconType` | `string` | `"default"` | Type of tray icon. Choices: `default`, `light`, `dark` |
 | `useMutationTitleLogic` | `boolean` | `true` | Use MutationObserver to update counter from title |
 | `disableBadgeCount` | `boolean` | `false` | Disable the badge counter on the taskbar/dock icon |

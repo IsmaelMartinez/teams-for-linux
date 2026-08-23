@@ -117,12 +117,12 @@ function getSettingsMenu(Menus) {
 }
 
 function getAppIconMenu(Menus) {
-  const hasCustomIcon = !!Menus.configGroup.startupConfig.appIcon;
+  const hasCustomIcon = !!Menus.configGroup.startupConfig.appIcon?.trim();
   return {
     label: "App Icon",
     submenu: [
       {
-        label: "Choose App Icon...",
+        label: "Choose App Icon…",
         click: () => Menus.chooseAppIcon(),
       },
       {

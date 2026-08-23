@@ -51,7 +51,7 @@
       "name": "appIcon",
       "type": "string",
       "default": "",
-      "description": "Custom app icon (PNG) used for the tray, window, and dock",
+      "description": "Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu",
       "applyMode": "live"
     },
     {
