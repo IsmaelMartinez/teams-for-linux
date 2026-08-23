@@ -545,11 +545,15 @@ describe('WebAuthn main-frame override', () => {
 
 	it('returns PublicKeyCredential instances for create and get', async () => {
 		class PublicKeyCredential {}
+		class AuthenticatorAttestationResponse {}
+		class AuthenticatorAssertionResponse {}
 		const credentials = { create: () => {}, get: () => {} };
 		const module = { exports: {} };
 
 		new vm.Script(override, { filename: 'webauthnOverride.js' }).runInNewContext({
 			PublicKeyCredential,
+			AuthenticatorAttestationResponse,
+			AuthenticatorAssertionResponse,
 			DOMException,
 			atob: () => '',
 			btoa: () => '',
@@ -571,6 +575,10 @@ describe('WebAuthn main-frame override', () => {
 
 		assert.ok(created instanceof PublicKeyCredential);
 		assert.ok(asserted instanceof PublicKeyCredential);
+		// The bridge/fido login page instanceof-checks the response object as
+		// well and silently discards the credential otherwise (#2719).
+		assert.ok(created.response instanceof AuthenticatorAttestationResponse);
+		assert.ok(asserted.response instanceof AuthenticatorAssertionResponse);
 	});
 });
 
@@ -601,6 +609,8 @@ describe('WebAuthn subframe injection - injected script', () => {
 
 	it('returns PublicKeyCredential instances for create and get', async () => {
 		class PublicKeyCredential {}
+		class AuthenticatorAttestationResponse {}
+		class AuthenticatorAssertionResponse {}
 		let messageListener;
 		const credentials = { create: () => {}, get: () => {} };
 		const window = {
@@ -615,6 +625,8 @@ describe('WebAuthn subframe injection - injected script', () => {
 
 		new vm.Script(injected, { filename: 'injected-subframe.js' }).runInNewContext({
 			PublicKeyCredential,
+			AuthenticatorAttestationResponse,
+			AuthenticatorAssertionResponse,
 			DOMException,
 			atob: () => '',
 			btoa: () => '',
@@ -632,6 +644,9 @@ describe('WebAuthn subframe injection - injected script', () => {
 
 		assert.ok(created instanceof PublicKeyCredential);
 		assert.ok(asserted instanceof PublicKeyCredential);
+		// Same instanceof requirement as the main-frame override (#2719).
+		assert.ok(created.response instanceof AuthenticatorAttestationResponse);
+		assert.ok(asserted.response instanceof AuthenticatorAssertionResponse);
 	});
 });
 

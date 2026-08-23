@@ -234,11 +234,15 @@ function serializeGetOptions(publicKey) {
  * with its prototype so instanceof checks pass, then add the response fields as
  * properties of the new object.
  */
-function createPublicKeyCredential(properties) {
+function createWithPrototype(prototype, properties) {
   return Object.create(
-    PublicKeyCredential.prototype,
+    prototype,
     Object.getOwnPropertyDescriptors(properties),
   );
+}
+
+function createPublicKeyCredential(properties) {
+  return createWithPrototype(PublicKeyCredential.prototype, properties);
 }
 
 function reconstructCreateResponse(data) {
@@ -248,14 +252,17 @@ function reconstructCreateResponse(data) {
     rawId: rawId,
     type: data.type,
     authenticatorAttachment: "cross-platform",
-    response: {
+    // The response needs its real prototype too: Microsoft's bridge/fido
+    // login page silently discards credentials whose response fails an
+    // AuthenticatorResponse instanceof check (#2719).
+    response: createWithPrototype(AuthenticatorAttestationResponse.prototype, {
       attestationObject: base64urlToBuffer(data.attestationObject),
       clientDataJSON: base64urlToBuffer(data.clientDataJson),
       getAuthenticatorData: () => base64urlToBuffer(data.authenticatorData),
       getTransports: () => data.transports || ["usb"],
       getPublicKey: () => null,
       getPublicKeyAlgorithm: () => data.publicKeyAlgorithm || -7,
-    },
+    }),
     getClientExtensionResults: () => ({}),
     toJSON: () => ({
       id: data.credentialId,
@@ -276,14 +283,18 @@ function reconstructGetResponse(data) {
   const sigBuf = base64urlToBuffer(data.signature);
   const userHandleBuf = data.userHandle ? base64urlToBuffer(data.userHandle) : null;
 
-  const response = {
+  // Grafting the real prototype matters beyond duck typing: Microsoft's
+  // bridge/fido login page (remembered-account sign-in) silently discards
+  // credentials whose response fails an AuthenticatorAssertionResponse
+  // instanceof check, with no error and no network follow-up (#2719).
+  const response = createWithPrototype(AuthenticatorAssertionResponse.prototype, {
     authenticatorData: authDataBuf,
     clientDataJSON: clientDataBuf,
     signature: sigBuf,
     userHandle: userHandleBuf,
     // Some implementations check for these methods on AuthenticatorAssertionResponse
     getAuthenticatorData: () => authDataBuf,
-  };
+  });
 
   const credential = createPublicKeyCredential({
     id: data.credentialId,

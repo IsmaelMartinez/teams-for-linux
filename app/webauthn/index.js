@@ -232,11 +232,15 @@ function injectIntoFrame(wf) {
         return Uint8Array.from(d, c => c.charCodeAt(0)).buffer;
       }
 
-      function createPublicKeyCredential(properties) {
+      function createWithPrototype(prototype, properties) {
         return Object.create(
-          PublicKeyCredential.prototype,
+          prototype,
           Object.getOwnPropertyDescriptors(properties)
         );
+      }
+
+      function createPublicKeyCredential(properties) {
+        return createWithPrototype(PublicKeyCredential.prototype, properties);
       }
 
       function serCreate(pk) {
@@ -282,9 +286,10 @@ function injectIntoFrame(wf) {
         const r = await ipcInvoke("webauthn:create", serCreate(opts.publicKey));
         const raw = b64urlToBuf(r.rawId);
         return createPublicKeyCredential({ id: r.credentialId, rawId: raw, type: r.type, authenticatorAttachment: "cross-platform",
-          response: { attestationObject: b64urlToBuf(r.attestationObject), clientDataJSON: b64urlToBuf(r.clientDataJson),
+          response: createWithPrototype(AuthenticatorAttestationResponse.prototype, {
+            attestationObject: b64urlToBuf(r.attestationObject), clientDataJSON: b64urlToBuf(r.clientDataJson),
             getAuthenticatorData: () => b64urlToBuf(r.authenticatorData), getTransports: () => r.transports || ["usb"],
-            getPublicKey: () => null, getPublicKeyAlgorithm: () => r.publicKeyAlgorithm || -7 },
+            getPublicKey: () => null, getPublicKeyAlgorithm: () => r.publicKeyAlgorithm || -7 }),
           getClientExtensionResults: () => ({}),
           toJSON: () => ({ id: r.credentialId, rawId: r.rawId, type: r.type,
             response: { attestationObject: r.attestationObject, clientDataJSON: r.clientDataJson } }) });
@@ -297,10 +302,13 @@ function injectIntoFrame(wf) {
         const r = await ipcInvoke("webauthn:get", serGet(opts.publicKey));
         const raw = b64urlToBuf(r.rawId);
         const authData = b64urlToBuf(r.authenticatorData);
+        // The real response prototype matters: the bridge/fido login page
+        // silently discards assertions failing an instanceof check (#2719).
         return createPublicKeyCredential({ id: r.credentialId, rawId: raw, type: r.type, authenticatorAttachment: "cross-platform",
-          response: { authenticatorData: authData, clientDataJSON: b64urlToBuf(r.clientDataJson),
+          response: createWithPrototype(AuthenticatorAssertionResponse.prototype, {
+            authenticatorData: authData, clientDataJSON: b64urlToBuf(r.clientDataJson),
             signature: b64urlToBuf(r.signature), userHandle: r.userHandle ? b64urlToBuf(r.userHandle) : null,
-            getAuthenticatorData: () => authData },
+            getAuthenticatorData: () => authData }),
           getClientExtensionResults: () => ({}),
           toJSON: () => ({ id: r.credentialId, rawId: r.rawId, type: r.type,
             authenticatorAttachment: "cross-platform", clientExtensionResults: {},
