@@ -58,6 +58,16 @@ function getBus() {
   if (!bus) {
     try {
       bus = dbus.sessionBus();
+      // A dead or stale session bus surfaces later as an 'error' event on the
+      // connection; without a listener that is an unhandled 'error' and takes
+      // the process down. Disable the emitter instead.
+      bus.connection.on("error", (error) => {
+        console.warn("[LauncherEntry] dbus connection error, disabling", {
+          message: error.message,
+        });
+        busDisabled = true;
+        bus = null;
+      });
     } catch (error) {
       console.warn("[DownloadManager] dbus sessionBus unavailable", {
         message: error.message,

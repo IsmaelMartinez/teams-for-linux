@@ -385,7 +385,7 @@ module.exports = {
         default: {
           timeoutType: "default",
           trayBadgeEnabled: true,
-          taskbarBadgeEnabled: true,
+          taskbarBadgeEnabled: false,
           electron: {
             clickAction: "show",
           },
@@ -408,7 +408,7 @@ module.exports = {
           "taskbarBadgeEnabled": {
             type: "boolean",
             describe:
-              "Show the unread count badge on the taskbar/dock icon (macOS dock, and Linux docks implementing the Unity LauncherEntry protocol).",
+              "Show the unread count badge on the taskbar/dock icon (macOS dock, and Linux docks implementing the Unity LauncherEntry protocol). Off by default while the feature is in early development.",
           },
           "electron.clickAction": {
             type: "string",

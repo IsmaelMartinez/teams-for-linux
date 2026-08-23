@@ -826,9 +826,12 @@ async function userStatusChangedHandler(_event, options) {
 async function setBadgeCountHandler(_event, count) {
   // Sending 0 rather than skipping the call clears a badge that was set
   // before the toggle was switched off.
+  // taskbarBadgeEnabled ships off, so only an explicit true enables it: yargs
+  // replaces object options wholesale, meaning a partial notifications block
+  // resolves the leaf to undefined rather than its declared default.
   const badgeCount =
     config.disableBadgeCount ||
-    config.notifications?.taskbarBadgeEnabled === false
+    config.notifications?.taskbarBadgeEnabled !== true
       ? 0
       : count;
   app.setBadgeCount(badgeCount);

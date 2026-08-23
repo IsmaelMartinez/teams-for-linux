@@ -449,7 +449,12 @@ class Menus {
       store.set("notifications.taskbarBadgeEnabled", false);
     }
 
-    const enabled = config.notifications?.[leaf] !== false;
+    // Mirrors isBadgeDisabled in appMenu.js: the taskbar badge ships off and
+    // needs an explicit true, the tray badge is on unless set to false.
+    const enabled =
+      leaf === "taskbarBadgeEnabled"
+        ? config.notifications?.[leaf] === true
+        : config.notifications?.[leaf] !== false;
     config.notifications = { ...config.notifications, [leaf]: !enabled };
     store.set(`notifications.${leaf}`, !enabled);
     this.updateMenu();

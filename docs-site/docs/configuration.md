@@ -140,7 +140,7 @@ Each option's **Apply** mode (whether a change takes effect immediately or after
 | `defaultNotificationUrgency` | `string` | `"normal"` | Default urgency for new notifications. Choices: `low`, `normal`, `critical` |
 | `notifications.timeoutType` | `string` | `"default"` | How long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification `timeoutType`. May not be honoured by every notification daemon. |
 | `notifications.trayBadgeEnabled` | `boolean` | `true` | Draw the unread count badge on the tray icon. Toggleable at runtime from the tray context menu |
-| `notifications.taskbarBadgeEnabled` | `boolean` | `true` | Show the unread count badge on the taskbar/dock icon: macOS dock, and Linux taskbars/docks implementing the Unity LauncherEntry protocol (KDE Plasma, Ubuntu Dock, Dash-to-Dock). Toggleable at runtime from the tray context menu |
+| `notifications.taskbarBadgeEnabled` | `boolean` | `false` | Show the unread count badge on the taskbar/dock icon: macOS dock, and Linux taskbars/docks implementing the Unity LauncherEntry protocol (KDE Plasma, Ubuntu Dock, Dash-to-Dock). Off by default while the feature is in early development. Toggleable at runtime from the tray context menu |
 | `notifications.electron.clickAction` | `string` | `"show"` | What clicking a notification does to the main window (`notificationMethod: "electron"` only). Choices: `show` (reveal the window, current behaviour), `restore` (also un-minimise and focus, which helps on GNOME where a plain show does not raise the window) or `none` (do nothing). On Linux whether focus is honoured depends on the window manager. |
 
 ### Incoming Call Handling
@@ -1060,7 +1060,7 @@ The tray icon functionality varies depending on your Linux desktop environment:
 
 #### Visual Badge Support
 
-The taskbar/dock badge is emitted over the Unity LauncherEntry D-Bus protocol, so it appears on any taskbar or dock implementing that protocol. The tray icon badge is drawn onto the tray icon itself and works wherever the tray icon does. Both can be toggled independently (`notifications.trayBadgeEnabled`, `notifications.taskbarBadgeEnabled`, or the tray context menu).
+The taskbar/dock badge is emitted over the Unity LauncherEntry D-Bus protocol, so it appears on any taskbar or dock implementing that protocol. It is off by default while the feature is in early development: enable it with `notifications.taskbarBadgeEnabled: true` or from the tray context menu. The tray icon badge is drawn onto the tray icon itself, works wherever the tray icon does, and is on by default (`notifications.trayBadgeEnabled`).
 
 - **KDE Plasma**: ✅ Taskbar badge and tray icon badge
 - **GNOME/Ubuntu**: ✅ Dock badge with Ubuntu Dock or Dash-to-Dock (tray needs an AppIndicator extension)

@@ -79,9 +79,8 @@ class TrayIconRenderer {
       totalTimeMs: Date.now() - startTime
     });
 
-    // Always sent: the main process applies the taskbar badge toggles in the
-    // set-badge-count handler, so a toggle switched off mid-session can clear
-    // a badge that is already showing.
+    // Always sent so the main process can apply the badge toggles in the
+    // set-badge-count handler.
     await this.ipcRenderer.invoke("set-badge-count", count).catch(err =>
       console.error("[TRAY_DIAG] Failed to set badge count:", err.message)
     );

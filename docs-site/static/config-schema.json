@@ -415,7 +415,7 @@
       "default": {
         "timeoutType": "default",
         "trayBadgeEnabled": true,
-        "taskbarBadgeEnabled": true,
+        "taskbarBadgeEnabled": false,
         "electron": {
           "clickAction": "show"
         }
@@ -442,8 +442,8 @@
         {
           "path": "taskbarBadgeEnabled",
           "type": "boolean",
-          "default": true,
-          "description": "Show the unread count badge on the taskbar/dock icon (macOS dock, and Linux docks implementing the Unity LauncherEntry protocol)."
+          "default": false,
+          "description": "Show the unread count badge on the taskbar/dock icon (macOS dock, and Linux docks implementing the Unity LauncherEntry protocol). Off by default while the feature is in early development."
         },
         {
           "path": "electron.clickAction",
