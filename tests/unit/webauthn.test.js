@@ -529,6 +529,51 @@ describe('WebAuthn fido2Backend - stdin line construction', () => {
 	});
 });
 
+const credentialResponse = {
+	credentialId: 'credential',
+	rawId: '',
+	type: 'public-key',
+	attestationObject: '',
+	authenticatorData: '',
+	clientDataJson: '',
+	signature: '',
+	userHandle: null,
+};
+
+describe('WebAuthn main-frame override', () => {
+	const override = readFileSync(path.join(__dirname, '..', '..', 'app', 'browser', 'tools', 'webauthnOverride.js'), 'utf8');
+
+	it('returns PublicKeyCredential instances for create and get', async () => {
+		class PublicKeyCredential {}
+		const credentials = { create: () => {}, get: () => {} };
+		const module = { exports: {} };
+
+		new vm.Script(override, { filename: 'webauthnOverride.js' }).runInNewContext({
+			PublicKeyCredential,
+			DOMException,
+			atob: () => '',
+			btoa: () => '',
+			console: { debug: () => {}, error: () => {}, info: () => {}, warn: () => {} },
+			module,
+			navigator: { credentials },
+			process: { platform: 'linux' },
+			window: { addEventListener: () => {} },
+		});
+		module.exports.init(
+			{ auth: { webauthn: { enabled: true } } },
+			{ invoke: async () => ({ success: true, data: credentialResponse }) },
+		);
+
+		const created = await credentials.create({
+			publicKey: { challenge: new Uint8Array(), user: { id: new Uint8Array() }, pubKeyCredParams: [] },
+		});
+		const asserted = await credentials.get({ publicKey: { challenge: new Uint8Array() } });
+
+		assert.ok(created instanceof PublicKeyCredential);
+		assert.ok(asserted instanceof PublicKeyCredential);
+	});
+});
+
 // The subframe override is a template string run through executeJavaScript, so
 // a syntax error in it fails silently at runtime and surfaces only as logins
 // not working inside the login iframe. Nothing else parses it.
@@ -552,5 +597,40 @@ describe('WebAuthn subframe injection - injected script', () => {
 	it('gives the relayed credential toJSON and getAuthenticatorData', () => {
 		assert.ok(injected.includes('toJSON'));
 		assert.ok(injected.includes('getAuthenticatorData'));
+	});
+
+	it('returns PublicKeyCredential instances for create and get', async () => {
+		class PublicKeyCredential {}
+		let messageListener;
+		const credentials = { create: () => {}, get: () => {} };
+		const window = {
+			addEventListener: (_type, listener) => { messageListener = listener; },
+			removeEventListener: () => {},
+			parent: {
+				postMessage: ({ id }) => messageListener({
+					data: { type: 'webauthn-response', id, result: credentialResponse },
+				}),
+			},
+		};
+
+		new vm.Script(injected, { filename: 'injected-subframe.js' }).runInNewContext({
+			PublicKeyCredential,
+			DOMException,
+			atob: () => '',
+			btoa: () => '',
+			console: { info: () => {} },
+			crypto: { randomUUID: () => 'request-id' },
+			navigator: { credentials },
+			setTimeout: () => 0,
+			window,
+		});
+
+		const created = await credentials.create({
+			publicKey: { challenge: new Uint8Array(), user: { id: new Uint8Array() }, pubKeyCredParams: [] },
+		});
+		const asserted = await credentials.get({ publicKey: { challenge: new Uint8Array() } });
+
+		assert.ok(created instanceof PublicKeyCredential);
+		assert.ok(asserted instanceof PublicKeyCredential);
 	});
 });
