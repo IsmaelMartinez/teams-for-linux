@@ -6,7 +6,6 @@ const authConfig = require('../../app/auth/config');
 const authCache = require('../../app/auth/cache');
 const authFlow = require('../../app/auth/authFlow');
 const authModule = require('../../app/auth/index');
-const preloadTool = require('../../app/browser/tools/appRegistrationAuth');
 
 describe('App Registration Auth - Config Helpers', () => {
   it('returns default values when config is empty or invalid', () => {
@@ -71,16 +70,3 @@ describe('App Registration Auth - Main Orchestrator', () => {
   });
 });
 
-describe('App Registration Auth - Preload Tool', () => {
-  it('skips initialization when disabled in config', () => {
-    let listened = false;
-    const dummyIpc = {
-      on: () => {
-        listened = true;
-      },
-    };
-
-    preloadTool.init({}, dummyIpc);
-    assert.strictEqual(listened, false);
-  });
-});

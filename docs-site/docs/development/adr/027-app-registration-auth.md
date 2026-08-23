@@ -6,7 +6,7 @@ id: 027-app-registration-auth
 
 ## Status
 
-✅ Implemented
+✅ Proposed
 
 ## Context
 

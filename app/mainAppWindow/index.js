@@ -654,6 +654,26 @@ async function triggerAuthRecovery() {
   window.loadURL(config.url, { userAgent: config.chromeUserAgent });
 }
 
+async function runAppRegistrationPreAuth(config, window) {
+  if (!config.auth?.appRegistration?.enabled) return;
+  try {
+    const authModule = require('../auth');
+    console.info('[AUTH] Running App Registration pre-authentication flow');
+    const authResult = await authModule.authenticate(config, {
+      settingsStore: appConfig?.settingsStore,
+      ipcMain: require('electron').ipcMain,
+      webContents: window.webContents,
+    });
+    if (authResult?.success) {
+      console.info('[AUTH] App Registration pre-authentication completed successfully');
+    } else {
+      console.warn('[AUTH] App Registration pre-auth failed (proceeding with normal load):', authResult?.error);
+    }
+  } catch (authErr) {
+    console.warn('[AUTH] Exception during App Registration pre-auth (proceeding with normal load):', authErr?.message);
+  }
+}
+
 exports.onAppReady = async function onAppReady(configGroup, customBackground, sharingService, profilesManager = null) {
   appConfig = configGroup;
   config = configGroup.startupConfig;
@@ -775,30 +795,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   await cleanExpiredAuthCookies(window.webContents.session);
 
   // Pre-authentication hook for Azure App Registration flow
-  if (config.auth?.appRegistration?.enabled) {
-    try {
-      const authModule = require('../auth');
-      console.info('[AUTH] Running App Registration pre-authentication flow');
-      const authResult = await authModule.authenticate(config, {
-        settingsStore: appConfig?.settingsStore,
-        ipcMain: require('electron').ipcMain,
-        webContents: window.webContents,
-      });
-      if (authResult?.success) {
-        console.info('[AUTH] App Registration pre-authentication completed successfully');
-      } else {
-        console.warn(
-          '[AUTH] App Registration pre-authentication failed (proceeding with normal load):',
-          authResult?.error
-        );
-      }
-    } catch (authErr) {
-      console.warn(
-        '[AUTH] Exception during App Registration pre-auth (proceeding with normal load):',
-        authErr.message
-      );
-    }
-  }
+  await runAppRegistrationPreAuth(config, window);
 
   // Restore the last persisted auth-failure signal so login-popup
   // correlation survives app restarts (the broken session does).

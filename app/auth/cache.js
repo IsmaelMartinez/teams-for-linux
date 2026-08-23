@@ -21,13 +21,16 @@ const saveTokenCache = async (settingsStore, serializedData) => {
   }
 
   try {
-    if (safeStorageModule && safeStorageModule.isEncryptionAvailable()) {
+    if (safeStorageModule?.isEncryptionAvailable()) {
       const encryptedBuffer = safeStorageModule.encryptString(serializedData);
       const base64Data = encryptedBuffer.toString('base64');
       settingsStore.set(SETTINGS_KEY, { encrypted: true, data: base64Data });
       return true;
     } else {
-      console.debug('[AuthCache] Encryption unavailable; token cache not saved');
+      console.warn('[AuthCache] Encryption unavailable; token cache not saved');
+      if (process.platform === 'linux' && safeStorageModule?.getSelectedStorageBackend) {
+        console.warn('[AuthCache] Backend: ' + safeStorageModule.getSelectedStorageBackend());
+      }
       return false;
     }
   } catch (error) {
@@ -46,11 +49,11 @@ const loadTokenCache = async (settingsStore) => {
 
   try {
     const entry = settingsStore.get(SETTINGS_KEY);
-    if (!entry || !entry.encrypted || !entry.data) {
+    if (!entry?.encrypted || !entry.data) {
       return null;
     }
 
-    if (safeStorageModule && safeStorageModule.isEncryptionAvailable()) {
+    if (safeStorageModule?.isEncryptionAvailable()) {
       const buffer = Buffer.from(entry.data, 'base64');
       const decrypted = safeStorageModule.decryptString(buffer);
       return decrypted;

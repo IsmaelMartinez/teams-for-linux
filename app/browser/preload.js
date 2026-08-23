@@ -450,12 +450,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "framelessTweaks", path: "./tools/frameless" },
       { name: "customStickers", path: "./tools/customStickers" },
       { name: "dockIconRenderer", path: "./tools/dockIconRenderer" },
-      { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching" },
-      { name: "appRegistrationAuth", path: "./tools/appRegistrationAuth" }
+      { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching" }
     ];
 
     // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)
-    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "meetingStartDetector", "webauthnOverride", "speakingIndicator", "customStickers", "dockIconRenderer", "appRegistrationAuth"]);
+    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "meetingStartDetector", "webauthnOverride", "speakingIndicator", "customStickers", "dockIconRenderer"]);
 
     let successCount = 0;
     for (const module of modules) {

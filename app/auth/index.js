@@ -2,6 +2,7 @@
  * Main orchestrator for Azure App Registration authentication module.
  */
 
+const { dialog, clipboard, shell } = require('electron');
 const { isEnabled, getAuthMethod } = require('./config');
 const { createCachePlugin } = require('./cache');
 const {
@@ -9,7 +10,6 @@ const {
   acquireTokenSilent,
   acquireTokenDeviceCode,
   acquireTokenInteractive,
-  seedSessionCookies,
 } = require('./authFlow');
 
 let currentStatus = { status: 'idle', method: null, error: null };
@@ -34,13 +34,32 @@ const registerIpcHandlers = (ipcMain) => {
   }
 };
 
-const notifyDeviceCode = (deviceCodeData, webContents) => {
+const notifyDeviceCode = async (deviceCodeData) => {
   if (typeof deviceCodeCallbackListener === 'function') {
     deviceCodeCallbackListener(deviceCodeData);
   }
-  if (webContents && typeof webContents.send === 'function') {
-    webContents.send('app-registration-device-code', deviceCodeData);
+  
+  clipboard.writeText(deviceCodeData.userCode);
+  
+  const { response } = await dialog.showMessageBox({
+    type: 'info',
+    title: 'Teams Authentication Required',
+    message: 'Sign in to Teams',
+    detail: `Your device code is: ${deviceCodeData.userCode}\n(It has been copied to your clipboard)\n\nPlease click "Open Browser", paste the code, and sign in.`,
+    buttons: ['Open Browser', 'Cancel'],
+    defaultId: 0,
+    cancelId: 1
+  });
+  
+  if (response === 0) {
+    shell.openExternal(deviceCodeData.verificationUri);
   }
+};
+
+const resolveFlow = (config) => {
+  const configured = getAuthMethod(config);
+  if (configured !== 'auto') return configured;
+  return (process.env.DISPLAY || process.env.WAYLAND_DISPLAY) ? 'interactive' : 'deviceCode';
 };
 
 const authenticate = async (config, options = {}) => {
@@ -62,20 +81,13 @@ const authenticate = async (config, options = {}) => {
       console.info('[Auth] Cached account found, attempting silent token acquisition');
       const silentResult = await acquireTokenSilent(pca, config, accounts[0]);
       if (silentResult) {
-        await seedSessionCookies(config, options);
         currentStatus = { status: 'success', method: 'silent', error: null };
         return { success: true, method: 'silent' };
       }
     }
 
     // 2. Select flow based on authMethod config
-    const configuredMethod = getAuthMethod(config);
-    let flowToUse = configuredMethod;
-    if (configuredMethod === 'auto') {
-      const hasDisplay = Boolean(process.env.DISPLAY || process.env.WAYLAND_DISPLAY);
-      flowToUse = hasDisplay ? 'interactive' : 'deviceCode';
-    }
-
+    let flowToUse = resolveFlow(config);
     let authResult = null;
 
     if (flowToUse === 'interactive') {
@@ -84,7 +96,7 @@ const authenticate = async (config, options = {}) => {
         authResult = await acquireTokenInteractive(pca, config, options);
         currentStatus = { status: 'success', method: 'interactive', error: null };
       } catch (interactiveError) {
-        if (configuredMethod === 'auto') {
+        if (getAuthMethod(config) === 'auto') {
           console.warn(
             '[Auth] Interactive auth failed in auto mode, falling back to device-code flow'
           );
@@ -98,7 +110,9 @@ const authenticate = async (config, options = {}) => {
     if (flowToUse === 'deviceCode') {
       console.info('[Auth] Starting device-code authentication flow');
       authResult = await acquireTokenDeviceCode(pca, config, (data) => {
-        notifyDeviceCode(data, options.webContents);
+        // notifyDeviceCode is async but we just fire and forget here
+        // as MSAL polls for the user to complete it in browser
+        notifyDeviceCode(data);
       });
       currentStatus = { status: 'success', method: 'deviceCode', error: null };
     }
@@ -106,9 +120,6 @@ const authenticate = async (config, options = {}) => {
     if (!authResult) {
       throw new Error('Authentication produced no token result');
     }
-
-    // 3. Seed session cookies for Teams
-    await seedSessionCookies(config, options);
 
     return { success: true, method: currentStatus.method };
   } catch (error) {

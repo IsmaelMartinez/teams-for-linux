@@ -1,9 +1,9 @@
 /**
  * MSAL authentication flows for Azure App Registration.
- * Handles device-code, interactive, silent token acquisition and cookie seeding.
+ * Handles device-code, interactive and silent token acquisition.
  */
 
-const { PublicClientApplication, LogLevel } = require('@azure/msal-node');
+const { PublicClientApplication, LogLevel, CryptoProvider } = require('@azure/msal-node');
 const { getClientId, getTenantId, getScopes, getRedirectUri } = require('./config');
 
 /**
@@ -48,7 +48,7 @@ const acquireTokenSilent = async (pca, config, account) => {
     });
     return result;
   } catch (error) {
-    console.debug('[AuthFlow] Silent token acquisition failed');
+    console.debug('[AuthFlow] Silent token acquisition failed:', error?.message);
     return null;
   }
 };
@@ -83,14 +83,20 @@ const acquireTokenDeviceCode = async (pca, config, onDeviceCodeCallback) => {
  */
 const acquireTokenInteractive = async (pca, config, dependencies = {}) => {
   const BrowserWindow = dependencies.BrowserWindow || require('electron').BrowserWindow;
-  const clientId = getClientId(config);
-  const tenantId = getTenantId(config);
   const scopes = getScopes(config);
   const redirectUri = getRedirectUri(config);
 
-  const authUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(
-    redirectUri
-  )}&response_mode=query&scope=${encodeURIComponent(scopes.join(' '))}`;
+  const cryptoProvider = new CryptoProvider();
+  const { verifier, challenge } = await cryptoProvider.generatePkceCodes();
+  const state = cryptoProvider.createNewGuid();
+
+  const authUrl = await pca.getAuthCodeUrl({
+    scopes,
+    redirectUri,
+    state,
+    codeChallenge: challenge,
+    codeChallengeMethod: 'S256',
+  });
 
   return new Promise((resolve, reject) => {
     let authWindow = new BrowserWindow({
@@ -116,30 +122,40 @@ const acquireTokenInteractive = async (pca, config, dependencies = {}) => {
 
     const handleRedirect = async (url) => {
       if (isResolved) return;
-      if (url.startsWith(redirectUri)) {
-        isResolved = true;
-        try {
-          const parsedUrl = new URL(url);
+
+      try {
+        const parsedUrl = new URL(url);
+        const configuredRedirect = new URL(redirectUri);
+
+        if (parsedUrl.origin === configuredRedirect.origin && parsedUrl.pathname === configuredRedirect.pathname) {
+          isResolved = true;
+
           const code = parsedUrl.searchParams.get('code');
           const error = parsedUrl.searchParams.get('error');
+          const returnedState = parsedUrl.searchParams.get('state');
 
           cleanup();
 
           if (error) {
             return reject(new Error(`Interactive login error: ${error}`));
           }
-
           if (!code) {
             return reject(new Error('Interactive login failed: missing authorization code'));
+          }
+          if (returnedState !== state) {
+            return reject(new Error('Interactive login failed: state mismatch'));
           }
 
           const tokenResult = await pca.acquireTokenByCode({
             code,
             redirectUri,
             scopes,
+            codeVerifier: verifier,
           });
           resolve(tokenResult);
-        } catch (err) {
+        }
+      } catch (err) {
+        if (isResolved) {
           reject(err);
         }
       }
@@ -170,62 +186,10 @@ const acquireTokenInteractive = async (pca, config, dependencies = {}) => {
   });
 };
 
-/**
- * Seed session cookies on login.microsoftonline.com via hidden BrowserWindow with prompt=none
- */
-const seedSessionCookies = async (config, dependencies = {}) => {
-  const BrowserWindow = dependencies.BrowserWindow || require('electron').BrowserWindow;
-  const clientId = getClientId(config);
-  const tenantId = getTenantId(config);
-  const scopes = getScopes(config);
-  const redirectUri = getRedirectUri(config);
-
-  const seedUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(
-    redirectUri
-  )}&response_mode=query&scope=${encodeURIComponent(scopes.join(' '))}&prompt=none`;
-
-  return new Promise((resolve) => {
-    let seedWindow = new BrowserWindow({
-      show: false,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        partition: config.partition || 'persist:teams-4-linux',
-      },
-    });
-
-    let timeoutId = setTimeout(() => {
-      if (seedWindow && !seedWindow.isDestroyed()) {
-        seedWindow.destroy();
-      }
-      resolve();
-    }, 10000);
-
-    const finish = () => {
-      clearTimeout(timeoutId);
-      if (seedWindow && !seedWindow.isDestroyed()) {
-        seedWindow.destroy();
-      }
-      resolve();
-    };
-
-    seedWindow.webContents.on('did-finish-load', finish);
-    seedWindow.webContents.on('did-fail-load', finish);
-    seedWindow.webContents.on('will-redirect', (event, url) => {
-      if (url.startsWith(redirectUri)) {
-        finish();
-      }
-    });
-
-    seedWindow.loadURL(seedUrl).catch(() => finish());
-  });
-};
-
 module.exports = {
   createPublicClientApplication,
   acquireTokenSilent,
   acquireTokenDeviceCode,
   acquireTokenInteractive,
-  seedSessionCookies,
 };
 

@@ -15,4 +15,3 @@ debian-changelog
 test-results/
 playwright-report/
 .auth/
-.omo/
