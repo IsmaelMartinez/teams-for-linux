@@ -1,5 +1,39 @@
 # Changelog
 
+## [2.18.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.17.1...v2.18.0) (2026-08-24)
+
+
+### Features
+
+* **menus:** add a menu option to choose a custom app icon ([#2895](https://github.com/IsmaelMartinez/teams-for-linux/issues/2895)) ([6c830a5](https://github.com/IsmaelMartinez/teams-for-linux/commit/6c830a5bd13a0417080fcb2c091c89474488cd7c))
+* **webauthn:** show a prompt while waiting for a security key touch ([#2779](https://github.com/IsmaelMartinez/teams-for-linux/issues/2779)) ([4d52dc6](https://github.com/IsmaelMartinez/teams-for-linux/commit/4d52dc6da59806d151c20c2d3279eab3cbd541b6))
+
+
+### Bug Fixes
+
+* **packaging:** recommend fido2-tools in deb and rpm packages ([#2887](https://github.com/IsmaelMartinez/teams-for-linux/issues/2887)) ([00721f4](https://github.com/IsmaelMartinez/teams-for-linux/commit/00721f4814b08d16783c2d39990327aeaeaf7b1b))
+* **webauthn:** give reconstructed authenticator responses their real prototypes ([#2890](https://github.com/IsmaelMartinez/teams-for-linux/issues/2890)) ([3119b05](https://github.com/IsmaelMartinez/teams-for-linux/commit/3119b05672aa350dc8b4b1ae310ac6e6e3cc68ab))
+* **webauthn:** return PublicKeyCredential-compatible responses ([#2878](https://github.com/IsmaelMartinez/teams-for-linux/issues/2878)) ([d9dfbfb](https://github.com/IsmaelMartinez/teams-for-linux/commit/d9dfbfbaa3a4acef24605892368f3feac66c159a))
+
+
+### Documentation
+
+* **adr:** add ADR-028 to the docs sidebar ([#2884](https://github.com/IsmaelMartinez/teams-for-linux/issues/2884)) ([cfe4ce9](https://github.com/IsmaelMartinez/teams-for-linux/commit/cfe4ce992c32d3c114769015d6217ef418f78420)), closes [#2609](https://github.com/IsmaelMartinez/teams-for-linux/issues/2609)
+
+
+### CI/CD
+
+* **labels:** ignore maintainer replies and cover PRs in awaiting-feedback removal ([#2896](https://github.com/IsmaelMartinez/teams-for-linux/issues/2896)) ([adbc4be](https://github.com/IsmaelMartinez/teams-for-linux/commit/adbc4be3584dd736b47979a1b66a3edee641c458))
+
+
+### Maintenance
+
+* **deps:** bump the minor-and-patch group with 4 updates ([#2901](https://github.com/IsmaelMartinez/teams-for-linux/issues/2901)) ([2d99d35](https://github.com/IsmaelMartinez/teams-for-linux/commit/2d99d352c2315163a5da1f917be6dab00f54d1e7))
+
+### Thanks
+
+Big thanks to @app/dependabot, @divslinger, @nikolainyegaard, @pelazas for contributing to this release.
+
 ## [2.17.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.17.0...v2.17.1) (2026-08-20)
 
 

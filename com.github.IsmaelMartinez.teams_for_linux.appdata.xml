@@ -14,6 +14,20 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.18.0" date="2026-08-24">
+      <description>
+        <ul>
+          <li>menus: add a menu option to choose a custom app icon (#2895)</li>
+          <li>webauthn: show a prompt while waiting for a security key touch (#2779)</li>
+          <li>packaging: recommend fido2-tools in deb and rpm packages (#2887)</li>
+          <li>webauthn: give reconstructed authenticator responses their real prototypes (#2890)</li>
+          <li>webauthn: return PublicKeyCredential-compatible responses (#2878)</li>
+          <li>adr: add ADR-028 to the docs sidebar (#2884) (cfe4ce9), closes #2609</li>
+          <li>labels: ignore maintainer replies and cover PRs in awaiting-feedback removal (#2896)</li>
+          <li>deps: bump the minor-and-patch group with 4 updates (#2901)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.17.1" date="2026-08-20">
       <description>
         <ul>
