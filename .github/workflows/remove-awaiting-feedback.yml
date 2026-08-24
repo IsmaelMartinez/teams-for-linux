@@ -1,11 +1,20 @@
-name: Remove awaiting feedback label on comment
+name: Remove awaiting feedback label on reply
 
-# When a non-bot user comments on an issue that has the "awaiting user feedback"
-# label, automatically remove the label so maintainers know the user has responded.
+# When someone other than a maintainer replies on an issue or pull request that
+# carries the "awaiting user feedback" label, remove the label so maintainers
+# know the reporter or contributor has responded.
+#
+# Maintainer activity (OWNER / MEMBER / COLLABORATOR) and bot activity are
+# ignored: a maintainer asking the question must not clear the flag that says
+# the question is still outstanding.
 
 on:
   issue_comment:
     types: [created]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
 
 # Restrict default permissions — each job declares only what it needs
 permissions: {}
@@ -13,21 +22,53 @@ permissions: {}
 jobs:
   remove-label:
     runs-on: ubuntu-latest
+    # `comment` is absent on pull_request_review, `review` on the other two, so
+    # each pair falls through to whichever the event actually supplied.
+    #
+    # Bots are matched on `user.type`, not on a "[bot]" login suffix: the PR
+    # reviewer posts as plain `Copilot` with author_association CONTRIBUTOR, so
+    # a suffix test would let its automated review clear the label.
+    #
+    # issue_comment is by far the highest-volume trigger, and its payload does
+    # carry labels, so gate it here and spare the runner. The review events have
+    # no documented labels in their payload and are checked in the step instead.
     if: >-
-      !github.event.issue.pull_request
-      && !endsWith(github.event.comment.user.login, '[bot]')
-      && contains(github.event.issue.labels.*.name, 'awaiting user feedback')
+      (github.event.comment.user.type || github.event.review.user.type) != 'Bot'
+      && !contains(
+        fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'),
+        github.event.comment.author_association || github.event.review.author_association
+      )
+      && (
+        github.event_name != 'issue_comment'
+        || contains(github.event.issue.labels.*.name, 'awaiting user feedback')
+      )
     permissions:
       issues: write
+      pull-requests: write
 
     steps:
       - name: Remove awaiting user feedback label
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
+            const LABEL = 'awaiting user feedback';
+            // issue_comment carries `issue` (for issues and PRs alike); the
+            // pull_request_review* events carry `pull_request` instead. Labels
+            // are read back from the API rather than the payload, because the
+            // pull_request payload object is not documented to include them.
+            const issue_number = (context.payload.issue ?? context.payload.pull_request).number;
+            const { data: target } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+            });
+            if (!target.labels.some((label) => label.name === LABEL)) {
+              core.info(`No "${LABEL}" label on #${issue_number}, nothing to do.`);
+              return;
+            }
             await github.rest.issues.removeLabel({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
-              name: 'awaiting user feedback',
+              issue_number,
+              name: LABEL,
             });
