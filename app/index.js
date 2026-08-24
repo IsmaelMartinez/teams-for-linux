@@ -35,6 +35,22 @@ const WebAuthn = require("./webauthn");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
+// Tell Chromium which .desktop entry this process belongs to. Without it,
+// notifications go out with no desktop-entry hint and desktop environments
+// fall back to the raw app name, so KDE and GNOME title every notification
+// "teams-for-linux" instead of the desktop entry's Name. Sandboxed installs
+// export the entry under their own id; an externally set CHROME_DESKTOP
+// (the same mechanism, as an env var) is left alone.
+if (process.platform === "linux" && !process.env.CHROME_DESKTOP) {
+  if (process.env.FLATPAK_ID) {
+    app.setDesktopName(`${process.env.FLATPAK_ID}.desktop`);
+  } else if (process.env.SNAP_INSTANCE_NAME) {
+    app.setDesktopName(`${process.env.SNAP_INSTANCE_NAME}_teams-for-linux.desktop`);
+  } else {
+    app.setDesktopName("teams-for-linux.desktop");
+  }
+}
+
 const { NETWORK_ERROR_PATTERNS } = require("./config/defaults");
 
 function isNetworkError(message) {
