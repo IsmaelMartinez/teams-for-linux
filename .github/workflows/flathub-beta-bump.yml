@@ -1,0 +1,228 @@
+name: Flathub Beta Bump Summary
+
+# Computes the exact source rewrites the Flathub `beta` branch needs after a
+# pre-release and prints them as a job summary to copy and paste.
+#
+# Bumping `beta` is manual (#2833): Flathub's hosted external-data-checker only
+# runs against a repo's default branch, `master`, so flathubbot's `update-*` PRs
+# never cover `beta`. Doing it by hand meant re-deriving three url/sha256 pairs
+# every time.
+#
+# This deliberately stops at the summary and does not open a PR against the
+# packaging repo. That would need a fine-grained PAT stored here and scoped to
+# flathub/com.github.IsmaelMartinez.teams_for_linux, a standing credential
+# traded against a five-minute edit per pre-release. See #2880.
+#
+# Both deb hashes come free from the release asset `digest` field, so only the
+# metainfo is downloaded. Sources are matched by parsing the published manifest,
+# never by find-and-replace: releases also carry an armv7l deb the manifest does
+# not reference, and a blind rewrite would invent a source for it.
+#
+# All release-controlled values reach the shell through env: and are quoted at
+# use, never interpolated into a run: body.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to compute the bump for (defaults to the latest release)"
+        required: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  PACKAGING_REPO: flathub/com.github.IsmaelMartinez.teams_for_linux
+  APP_ID: com.github.IsmaelMartinez.teams_for_linux
+
+jobs:
+  beta_bump_summary:
+    name: compute beta branch bump
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Resolve the release tag
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_TAG: ${{ inputs.tag }}
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          TAG="${INPUT_TAG:-${EVENT_TAG:-}}"
+          if [ -z "$TAG" ]; then
+            # `gh release view` with no tag resolves via releases/latest, which
+            # skips pre-releases. Pre-releases are exactly what this workflow is
+            # for, so take the newest published release instead. --exclude-drafts
+            # matters: merging the release PR leaves a draft until it is
+            # published by hand, and a draft has no git tag.
+            TAG=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1 \
+              --exclude-drafts --json tagName --jq '.[0].tagName')
+          fi
+          if [ -z "$TAG" ]; then
+            echo "::error::Could not resolve a release tag"
+            exit 1
+          fi
+
+          PRERELEASE=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --json isPrerelease --jq .isPrerelease)
+
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=${PRERELEASE}" >> "$GITHUB_OUTPUT"
+
+      - name: Skip stable releases
+        id: guard
+        env:
+          PRERELEASE: ${{ steps.release.outputs.prerelease }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ "$PRERELEASE" = "true" ]; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Stable releases go to `master`, which Flathub's checker bumps itself.
+          echo "::notice::Not a pre-release; the beta branch is not involved"
+          {
+            echo "### Flathub beta bump not needed"
+            echo
+            printf '`%s` is a stable release. Flathub bumps `master` for this one.\n' "$TAG"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "skip=true" >> "$GITHUB_OUTPUT"
+
+      - name: Install PyYAML
+        if: steps.guard.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          # python3-yaml is not guaranteed on the runner image and the manifest
+          # parse below depends on it.
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends python3-yaml
+
+      - name: Fetch the published beta manifest
+        if: steps.guard.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          if ! curl --proto '=https' --proto-redir '=https' --tlsv1.2 -fsSL -o manifest.yml \
+            "https://raw.githubusercontent.com/${PACKAGING_REPO}/beta/${APP_ID}.yml"; then
+            echo "::error::No beta branch on ${PACKAGING_REPO}, nothing to bump"
+            exit 1
+          fi
+
+      - name: Gather the new sources
+        if: steps.guard.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          # Asset digests are published by the API, so the debs (>100MB each)
+          # never have to be downloaded to be hashed.
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --json assets --jq '.assets' > assets.json
+
+          # The metainfo is a few KB and carries no published digest, so it is
+          # the only file fetched. Its URL is deterministic from the tag.
+          METAINFO_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${TAG}/${APP_ID}.appdata.xml"
+          curl --proto '=https' --proto-redir '=https' --tlsv1.2 -fsSL \
+            -o metainfo.xml "$METAINFO_URL"
+          METAINFO_SHA=$(sha256sum metainfo.xml | cut -d' ' -f1)
+          export METAINFO_URL METAINFO_SHA
+
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          import os
+          import re
+          import sys
+
+          import yaml
+
+          tag = os.environ["TAG"]
+          metainfo_url = os.environ["METAINFO_URL"]
+          metainfo_sha = os.environ["METAINFO_SHA"]
+
+          with open("manifest.yml") as fh:
+              manifest = yaml.safe_load(fh)
+          with open("assets.json") as fh:
+              assets = json.load(fh)
+
+          # digest is "sha256:<hex>"; anything else means the API changed shape.
+          by_name = {}
+          for asset in assets:
+              digest = asset.get("digest") or ""
+              if digest.startswith("sha256:"):
+                  by_name[asset["name"]] = (asset["url"], digest.split(":", 1)[1])
+
+          rows = []
+          problems = []
+
+          for source in manifest["modules"][0]["sources"]:
+              if source.get("type") != "file":
+                  continue
+              old_url = source.get("url", "")
+
+              # Match each source by what it currently points at rather than by
+              # position, so reordering or adding an arch in the manifest cannot
+              # silently pair a source with the wrong asset.
+              if old_url.endswith(".appdata.xml"):
+                  rows.append((old_url, metainfo_url, source.get("sha256"), metainfo_sha))
+                  continue
+
+              suffix = re.search(r"(_[^_/]+\.deb)$", old_url)
+              if not suffix:
+                  problems.append(f"could not classify source url `{old_url}`")
+                  continue
+
+              match = [n for n in by_name if n.endswith(suffix.group(1))]
+              if len(match) != 1:
+                  problems.append(
+                      f"expected exactly one release asset ending `{suffix.group(1)}`, found {len(match)}"
+                  )
+                  continue
+
+              new_url, new_sha = by_name[match[0]]
+              rows.append((old_url, new_url, source.get("sha256"), new_sha))
+
+          print(f"## Flathub `beta` bump for `{tag}`")
+          print()
+          if problems:
+              print("> [!WARNING]")
+              for problem in problems:
+                  print(f"> {problem}")
+              print()
+
+          print(
+              f"Edit [`{os.environ['APP_ID']}.yml`]"
+              f"(https://github.com/{os.environ['PACKAGING_REPO']}/blob/beta/{os.environ['APP_ID']}.yml)"
+              " on the `beta` branch and apply these, in order:"
+          )
+          print()
+          for index, (old_url, new_url, old_sha, new_sha) in enumerate(rows, start=1):
+              print(f"<details><summary>Source {index}</summary>")
+              print()
+              print("```diff")
+              print(f"-        url: {old_url}")
+              print(f"+        url: {new_url}")
+              print(f"-        sha256: {old_sha}")
+              print(f"+        sha256: {new_sha}")
+              print("```")
+              print()
+              print("</details>")
+              print()
+
+          if not rows:
+              print("Nothing to rewrite: the manifest referenced no file sources.")
+
+          # A partial summary is worse than a failed job, because it looks
+          # complete. Fail loudly so the manual bump is not done from it.
+          if problems:
+              sys.exit(1)
+          PY
