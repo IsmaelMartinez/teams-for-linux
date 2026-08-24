@@ -30,6 +30,10 @@
 
 * **deps:** bump the minor-and-patch group with 4 updates ([#2901](https://github.com/IsmaelMartinez/teams-for-linux/issues/2901)) ([2d99d35](https://github.com/IsmaelMartinez/teams-for-linux/commit/2d99d352c2315163a5da1f917be6dab00f54d1e7))
 
+### Thanks
+
+Big thanks to @app/dependabot, @divslinger, @nikolainyegaard, @pelazas for contributing to this release.
+
 ## [2.17.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.17.0...v2.17.1) (2026-08-20)
 
 
