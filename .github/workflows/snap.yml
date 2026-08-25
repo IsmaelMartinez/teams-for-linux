@@ -83,17 +83,11 @@ jobs:
 
     env:
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
-      SNAPCRAFT_BUILD_ENVIRONMENT: lxd
+      # Note: No LXD - electron-builder handles armv7l cross-compilation directly
 
     steps:
       - name: Install Snapcraft
         uses: samuelmeuli/action-snapcraft@d33c176a9b784876d966f80fb1b461808edc0641 # v2.1.1
-
-      - name: Install and initialize LXD
-        # core24 builds run `snapcraft pack --use-lxd` on every arch (no more
-        # direct app-builder template packing). armv7l is a snapcraft
-        # cross-build: platforms build-on amd64 / build-for armhf.
-        uses: canonical/setup-lxd@da2ac84e727dc534215fd14cd088b9209d65893b # main
 
       - name: Check out Git repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -151,11 +145,15 @@ jobs:
 
     steps:
       - name: Install Snapcraft
-        # The core24 `snapcraft` target builds via `snapcraft pack`, which is
-        # supported on snapcraft 8.x and 9.x alike, so the former 8.x/stable
-        # pin (needed only for the legacy core22 `snapcraft snap` command,
-        # #2590/#2592) is no longer required.
+        # snapcraft 9.0.0 removed the legacy `snap` packing command that
+        # electron-builder's deprecated core22 `snap` target invokes
+        # (`snapcraft snap --output`), so the native-arm64 build fails. Pin
+        # below 9.0.0 until the snap build migrates to the core24 `snapcraft`
+        # target, which uses `snapcraft pack` (#2590, #2592). The amd64 and
+        # armv7l jobs pack via app-builder directly and are unaffected.
         uses: samuelmeuli/action-snapcraft@d33c176a9b784876d966f80fb1b461808edc0641 # v2.1.1
+        with:
+          channel: 8.x/stable
 
       - name: Install and initialize LXD
         uses: canonical/setup-lxd@da2ac84e727dc534215fd14cd088b9209d65893b # main
