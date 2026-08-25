@@ -16,14 +16,14 @@ updates:
           - "patch"
     open-pull-requests-limit: 10
     ignore:
-      # electron-builder is frozen at the known-good 26.8.1 — the last release
-      # that builds on both snap and the windows-2025 runner. 26.15.0+ rewrote
-      # the snap build into pure-TS and broke snap launch (#2684: command.sh
-      # sources a missing desktop-init.sh). 26.14.0's bundled node-gyp cannot
-      # find Visual Studio on windows-2025, breaking the exe build. Ignore ALL
-      # updates — including 26.8.x patches, which would otherwise auto-merge
-      # unreviewed via dependabot-auto-merge.yml — until the snap build migrates
-      # to core24 (#2590).
+      # electron-builder is frozen at the known-good 26.15.7 (#2756) — the
+      # first v26 release that fixes the snap-template extraction bug behind
+      # DOA snaps (#2684, electron-userland/electron-builder#10004) while
+      # still building the exe on windows-2025. Ignore ALL updates —
+      # including patches, which would otherwise auto-merge unreviewed via
+      # dependabot-auto-merge.yml — a Dependabot unpin is how 2.14.0's snap
+      # shipped broken. The core24 migration that would relax this (#2590,
+      # #2758) was reverted in #2905 (snaps core-dump on launch).
       - dependency-name: "electron-builder"
 
   # npm dependencies for docs site
