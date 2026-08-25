@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.18.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.18.0...v2.18.1) (2026-08-25)
+
+
+### Bug Fixes
+
+* **snap:** revert core22 -&gt; core24 migration ([#2758](https://github.com/IsmaelMartinez/teams-for-linux/issues/2758)) ([#2906](https://github.com/IsmaelMartinez/teams-for-linux/issues/2906)) ([1353ce1](https://github.com/IsmaelMartinez/teams-for-linux/commit/1353ce1916bfde30a2388766ad0591e6df1193f9))
+
 ## [2.18.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.17.1...v2.18.0) (2026-08-24)
 
 
