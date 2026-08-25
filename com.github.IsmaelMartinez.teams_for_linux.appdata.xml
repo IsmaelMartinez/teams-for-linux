@@ -14,6 +14,13 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.18.1" date="2026-08-25">
+      <description>
+        <ul>
+          <li>snap: revert core22 -&amp;gt; core24 migration (#2758) (#2906)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.18.0" date="2026-08-24">
       <description>
         <ul>
