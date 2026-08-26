@@ -215,11 +215,28 @@ describe('toNestedConfigFile', () => {
 		};
 		const migrated = toNestedConfigFile(original, table);
 
-		// Values as yargs would have resolved them from the flat spellings.
-		const resolved = { ...original };
+		// Resolved from nothing but the migrated file, so the projection has to
+		// rebuild every flat value on its own. Seeding this from `original`
+		// would pass even for a migration that did nothing at all.
+		const resolved = {};
 		applyRenamedOptions(resolved, migrated, table);
 
 		assert.deepStrictEqual(resolved, original);
+	});
+
+	// A flat name that is also someone's namespace makes migration depend on
+	// table order: whichever entry runs second finds the namespace occupied by
+	// a non-object and is skipped. No collision exists today; this keeps it so.
+	it('has no flat name that is also a namespace segment', () => {
+		const flatNames = new Set(RENAMES.map(({ flat }) => flat));
+		for (const { nested } of RENAMES) {
+			for (const segment of nested.split('.').slice(0, -1)) {
+				assert.ok(
+					!flatNames.has(segment),
+					`"${segment}" is both a flat option and a namespace in ${nested}`,
+				);
+			}
+		}
 	});
 
 	it('migrates away every flat name in the real table', () => {
