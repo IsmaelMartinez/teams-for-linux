@@ -85,3 +85,30 @@ describe('buildDeprecationWarning - aggregation', () => {
 		assert.doesNotMatch(warning, /proxy\.internal/);
 	});
 });
+
+describe('buildDeprecationWarning - pointing at the migration', () => {
+	const deprecated = { clearStorageData: 'use storage.clearData' };
+	const configFile = { clearStorageData: true };
+
+	it('points at the menu entry when the menu exists', () => {
+		const warning = buildDeprecationWarning(deprecated, configFile, true);
+		assert.match(warning, /Show Updated Config/);
+	});
+
+	// The application menu is only built when the tray icon is enabled
+	// (app/mainAppWindow/index.js), so these users have nowhere to click.
+	it('says nothing about the menu when there is no menu', () => {
+		const warning = buildDeprecationWarning(deprecated, configFile, false);
+		assert.doesNotMatch(warning, /Show Updated Config/);
+	});
+
+	it('omits the pointer when the caller does not say either way', () => {
+		const warning = buildDeprecationWarning(deprecated, configFile);
+		assert.doesNotMatch(warning, /Show Updated Config/);
+	});
+
+	it('still leads with the deprecated options, not the pointer', () => {
+		const warning = buildDeprecationWarning(deprecated, configFile, true);
+		assert.match(warning, /^1 configuration option is deprecated/);
+	});
+});

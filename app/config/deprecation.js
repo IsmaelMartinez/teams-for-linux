@@ -20,9 +20,13 @@
  *   getDeprecatedOptions() output: option name to message, or `true` when the
  *   option declared `deprecated: true` with no text.
  * @param {Record<string, unknown>} configFile the merged config file contents.
+ * @param {boolean} [menuAvailable] whether the application menu exists, which
+ *   is where the migration is offered. It is not built when the tray icon is
+ *   off (app/mainAppWindow/index.js), and pointing those users at a menu they
+ *   do not have would be worse than saying nothing.
  * @returns {string|null} a single warning, or null when nothing is deprecated.
  */
-function buildDeprecationWarning(deprecatedOptions, configFile) {
+function buildDeprecationWarning(deprecatedOptions, configFile, menuAvailable) {
   // Object.hasOwn, matching validator.js, so an inherited key (a config file
   // literally naming "__proto__" or "constructor") cannot trigger a warning.
   const used = Object.keys(deprecatedOptions || {}).filter(
@@ -43,7 +47,11 @@ function buildDeprecationWarning(deprecatedOptions, configFile) {
       ? "1 configuration option is"
       : `${used.length} configuration options are`;
 
-  return `${subject} deprecated and will be removed in a future release:\n${lines.join("\n")}`;
+  const pointer = menuAvailable
+    ? "\n\nSettings > Show Updated Config… writes a copy of your config using the new names. Your own config.json is left alone."
+    : "";
+
+  return `${subject} deprecated and will be removed in a future release:\n${lines.join("\n")}${pointer}`;
 }
 
 module.exports = { buildDeprecationWarning };

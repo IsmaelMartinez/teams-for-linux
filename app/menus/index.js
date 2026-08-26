@@ -6,6 +6,7 @@ const {
   dialog,
   nativeImage,
   ipcMain,
+  shell,
 } = require("electron");
 const fs = require("node:fs"),
   path = require("node:path");
@@ -25,6 +26,10 @@ const JoinMeetingDialog = require("../joinMeetingDialog");
 const AddProfileDialog = require("../profileDialogs/addProfile");
 const ManageProfileDialog = require("../profileDialogs/manageProfile");
 const autoUpdaterModule = require("../autoUpdater");
+const {
+  writeMigratedConfig,
+  MIGRATED_FILE,
+} = require("../config/migrateFile");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
@@ -361,6 +366,62 @@ class Menus {
     // Receive Teams settings from renderer to save to file
     ipcMain.once("get-teams-settings", saveSettingsInternal);
     this.window.webContents.send("get-teams-settings");
+  }
+
+  async showMigratedConfig() {
+    const result = writeMigratedConfig(this.configGroup.configPath);
+
+    if (result.status === "no-config") {
+      await dialog.showMessageBox({
+        type: "info",
+        title: "Updated Config",
+        message: "There is no config.json yet, so there is nothing to update.",
+      });
+      return;
+    }
+    if (result.status === "nothing-to-migrate") {
+      await dialog.showMessageBox({
+        type: "info",
+        title: "Updated Config",
+        message: "Your config already uses the current option names.",
+      });
+      return;
+    }
+    if (result.status === "failed") {
+      await dialog.showMessageBox({
+        type: "error",
+        title: "Updated Config",
+        message: `Could not write the updated config: ${result.error}`,
+      });
+      return;
+    }
+
+    // Option names only, never values: this text goes on screen and into the
+    // log, and a config file carries broker URLs and certificate paths.
+    const count = result.renamed.length;
+    const detail = [
+      `${count} ${count === 1 ? "option has" : "options have"} a new name:`,
+      ...result.renamed.map((name) => `  • ${name}`),
+      "",
+      "Your config.json is untouched. Review the copy, then rename it over",
+      "config.json when you are happy with it.",
+      ...(result.warnings.length
+        ? ["", "The copy needs a look first:", ...result.warnings.map((w) => `  • ${w}`)]
+        : []),
+    ].join("\n");
+
+    const { response } = await dialog.showMessageBox({
+      type: result.warnings.length ? "warning" : "info",
+      title: "Updated Config",
+      message: `Written to ${MIGRATED_FILE}`,
+      detail,
+      buttons: ["Open It", "Close"],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (response === 0) {
+      shell.openPath(result.file);
+    }
   }
 
   restoreSettings() {

@@ -106,7 +106,10 @@ function checkUsedDeprecatedValues(yargsInstance, configObject, config) {
   // yargs v18: getDeprecatedOptions() must be called on the instance
   const message = buildDeprecationWarning(
     yargsInstance.getDeprecatedOptions(),
-    configObject.configFile
+    configObject.configFile,
+    // The migration is offered from the application menu, which only exists
+    // when the tray icon does.
+    Boolean(config.trayIconEnabled)
   );
   if (!message) return;
 

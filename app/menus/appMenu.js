@@ -112,6 +112,15 @@ function getSettingsMenu(Menus) {
         label: "Restore",
         click: () => Menus.restoreSettings(),
       },
+      {
+        type: "separator",
+      },
+      // The startup warning names the deprecated options; this turns that into
+      // something the user can act on in one click (ADR-025, #2913).
+      {
+        label: "Show Updated Config…",
+        click: () => Menus.showMigratedConfig(),
+      },
     ],
   };
 }
