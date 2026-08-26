@@ -15,12 +15,16 @@
  * because the settings store re-reads its JSON file on every access and
  * resolution sits on the per-badge-tick hot path once aggregation consumes it.
  *
- * KNOWN GAP (correct before relying on "null ⇒ not a profile"): child
- * surfaces spawned BY a profile view — `window.open()` popups and `<webview>`
- * guests inherit the view's partition and preload but are not registered
- * here, so they currently resolve to null. The consuming PR registers
- * descendants (`did-create-window` / `did-attach-webview`); until it lands,
- * null means "unattributed", never "safe to ignore".
+ * Descendants: surfaces spawned BY a profile surface — `window.open()` popups
+ * (which inherit its partition and preload) and `<webview>` guests (own
+ * partition, but embedded inside that profile's surface) — are registered by
+ * ProfileViewManager (recursively, via `did-create-window` /
+ * `did-attach-webview`) to the same profile for their lifetime. Descendants of
+ * the ROOT window are kept in their own set and resolve through the current
+ * root profile id, since that id is mutable (bootstrap / removal). Null
+ * therefore means: the switcher pill, a dialog window, or the root window and
+ * its descendants while Profile 0 does not exist — "unattributed", never
+ * "safe to ignore".
  *
  * Pure module (no Electron imports) so the mapping logic is unit-testable
  * directly under `node --test`.
@@ -32,6 +36,8 @@ class SenderProfileMap {
   #rootWebContentsId = null;
   /** @type {string|null} Profile 0's id once bootstrapped, else null. */
   #rootProfileId = null;
+  /** @type {Set<number>} webContents ids of popups/guests spawned by the root window. */
+  #rootDescendants = new Set();
   #profilesManager;
 
   /**
@@ -64,8 +70,18 @@ class SenderProfileMap {
     this.#byWebContentsId.delete(webContentsId);
   }
 
+  /** A popup / webview guest spawned by the root window (Profile 0). */
+  registerRootDescendant(webContentsId) {
+    this.#rootDescendants.add(webContentsId);
+  }
+
+  unregisterRootDescendant(webContentsId) {
+    this.#rootDescendants.delete(webContentsId);
+  }
+
   clear() {
     this.#byWebContentsId.clear();
+    this.#rootDescendants.clear();
     this.#rootWebContentsId = null;
     this.#rootProfileId = null;
   }
@@ -74,16 +90,16 @@ class SenderProfileMap {
    * Pure map lookup — no I/O.
    * @param {number} webContentsId
    * @returns {string|null} The owning profile's id, or null when the sender
-   *   is unattributed: the switcher pill, a dialog window, the root window
-   *   before Profile 0 is bootstrapped — or (see KNOWN GAP above) a child
-   *   window / webview guest spawned by a profile view.
+   *   is unattributed: the switcher pill, a dialog window, or the root
+   *   window / its descendants while Profile 0 does not exist.
    */
   resolveProfileId(webContentsId) {
     const direct = this.#byWebContentsId.get(webContentsId);
     if (direct !== undefined) return direct;
     if (
-      this.#rootWebContentsId !== null &&
-      webContentsId === this.#rootWebContentsId
+      (this.#rootWebContentsId !== null &&
+        webContentsId === this.#rootWebContentsId) ||
+      this.#rootDescendants.has(webContentsId)
     ) {
       return this.#rootProfileId;
     }
