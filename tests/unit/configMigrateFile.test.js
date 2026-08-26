@@ -86,6 +86,42 @@ describe('writeMigratedConfig', () => {
 		assert.strictEqual(writeMigratedConfig(dir).status, 'invalid-json');
 	});
 
+	// Valid JSON that is not an object would otherwise fall through as
+	// "nothing to migrate", which reads as reassurance about an unusable file.
+	it('treats valid JSON that is not an object as invalid', () => {
+		for (const contents of ['[]', '"a string"', '42', 'null']) {
+			writeConfig(contents);
+			assert.strictEqual(
+				writeMigratedConfig(dir).status,
+				'invalid-json',
+				`${contents} should not read as a usable config`,
+			);
+		}
+	});
+
+	// The copy holds whatever config.json holds, secrets included, so it must
+	// not be more readable than the original.
+	it('does not make the copy more readable than config.json', () => {
+		writeConfig({ clearStorageData: true });
+		fs.chmodSync(path.join(dir, 'config.json'), 0o600);
+
+		const result = writeMigratedConfig(dir);
+		const copyMode = fs.statSync(result.file).mode & 0o777;
+
+		assert.strictEqual(copyMode, 0o600, `copy is ${copyMode.toString(8)}`);
+	});
+
+	it('tightens a copy left over from an earlier run', () => {
+		writeConfig({ clearStorageData: true });
+		fs.chmodSync(path.join(dir, 'config.json'), 0o600);
+		fs.writeFileSync(path.join(dir, MIGRATED_FILE), '{}', { mode: 0o644 });
+		fs.chmodSync(path.join(dir, MIGRATED_FILE), 0o644);
+
+		const result = writeMigratedConfig(dir);
+
+		assert.strictEqual(fs.statSync(result.file).mode & 0o777, 0o600);
+	});
+
 	// V8 embeds a slice of the source text in a JSON parse error, and that
 	// slice is the user's config, so the message must not be passed through.
 	it('never passes a parse error through, since it quotes the file', () => {

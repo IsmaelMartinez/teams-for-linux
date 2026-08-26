@@ -5,10 +5,24 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { RENAMES, toNestedConfigFile } = require("./renames");
-const { validateConfigFile } = require("./validator");
+const { validateConfigFile, isPlainObject } = require("./validator");
 const options = require("./options");
 
 const MIGRATED_FILE = "config.migrated.json";
+
+// The copy carries everything config.json carries, including MQTT credentials,
+// service URLs and certificate paths, so it must not end up more readable than
+// the original. Mirror the original's mode, and fall back to owner-only rather
+// than to whatever the umask gives.
+const FALLBACK_MODE = 0o600;
+
+function modeOf(file) {
+  try {
+    return fs.statSync(file).mode & 0o777;
+  } catch {
+    return FALLBACK_MODE;
+  }
+}
 
 /**
  * Reads the USER config file only, deliberately, not the system-and-user merge
@@ -17,9 +31,9 @@ const MIGRATED_FILE = "config.migrated.json";
  * policy into a whole-namespace user override.
  */
 function readUserConfig(configPath) {
-  const file = path.join(configPath, "config.json");
-  if (!fs.existsSync(file)) return null;
-  return JSON.parse(fs.readFileSync(file, "utf8"));
+  return JSON.parse(
+    fs.readFileSync(path.join(configPath, "config.json"), "utf8"),
+  );
 }
 
 /**
@@ -39,13 +53,22 @@ function readUserConfig(configPath) {
  *   source text in it and that slice is the user's config.
  */
 function writeMigratedConfig(configPath) {
+  // Absence is checked separately from parsing, so a file holding `null` is
+  // reported as unusable rather than as "you have no config yet".
+  if (!fs.existsSync(path.join(configPath, "config.json"))) {
+    return { status: "no-config" };
+  }
+
   let userConfig;
   try {
     userConfig = readUserConfig(configPath);
   } catch {
     return { status: "invalid-json" };
   }
-  if (!userConfig) return { status: "no-config" };
+  // Valid JSON that is not an object (an array, a string, a number, null)
+  // would fall through as "nothing to migrate", which reads as reassurance
+  // when the file is actually unusable.
+  if (!isPlainObject(userConfig)) return { status: "invalid-json" };
 
   const present = RENAMES.map(({ flat }) => flat).filter((flat) =>
     Object.hasOwn(userConfig, flat),
@@ -70,8 +93,15 @@ function writeMigratedConfig(configPath) {
   const warnings = validateConfigFile(migrated, options);
 
   const file = path.join(configPath, MIGRATED_FILE);
+  const mode = modeOf(path.join(configPath, "config.json"));
   try {
-    fs.writeFileSync(file, `${JSON.stringify(migrated, null, 2)}\n`, "utf8");
+    fs.writeFileSync(file, `${JSON.stringify(migrated, null, 2)}\n`, {
+      encoding: "utf8",
+      mode,
+    });
+    // writeFileSync only applies `mode` when it creates the file, so a copy
+    // left over from an earlier run would keep its old permissions.
+    fs.chmodSync(file, mode);
   } catch (err) {
     return { status: "write-failed", error: err.message };
   }

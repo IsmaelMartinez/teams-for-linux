@@ -379,7 +379,7 @@ class Menus {
       "no-config": "There is no config.json yet, so there is nothing to update.",
       "nothing-to-migrate": "Your config already uses the current option names.",
       "invalid-json":
-        "config.json could not be read as JSON, so it cannot be updated. Fix the file and try again.",
+        "config.json is not a readable JSON object, so it cannot be updated. Fix the file and try again.",
     };
     if (plain[result.status]) {
       await dialog.showMessageBox(this.window, {
