@@ -23,20 +23,33 @@ class FakeWebContents {
     this.id = nextWcId++;
     this.session = { clearStorageData: async () => {} };
     this._once = {};
+    this._on = {};
     this._destroyed = false;
   }
   loadURL() {}
   async loadFile() {}
-  on() {}
+  on(event, cb) {
+    (this._on[event] ||= []).push(cb);
+  }
+  emit(event, ...args) {
+    for (const cb of this._on[event] || []) cb(...args);
+  }
   once(event, cb) {
     (this._once[event] ||= []).push(cb);
+  }
+  emitOnce(event) {
+    if (event === 'destroyed') this._destroyed = true;
+    for (const cb of this._once[event] || []) cb();
+    this._once[event] = [];
   }
   removeListener() {}
   send() {}
   isDestroyed() {
     return this._destroyed;
   }
-  close() {}
+  close() {
+    this.closed = true;
+  }
 }
 
 class FakeWebContentsView {
@@ -53,9 +66,7 @@ class FakeWebContentsView {
   // in the real app.
   destroyWebContents() {
     const wc = this.webContents;
-    wc._destroyed = true;
-    for (const cb of wc._once['destroyed'] || []) cb();
-    wc._once['destroyed'] = [];
+    wc.emitOnce('destroyed');
     this.webContents = undefined;
     return wc;
   }
@@ -102,6 +113,7 @@ function fakeWindow() {
 
 const LEGACY = { id: 'profile-0', partition: 'persist:teams-4-linux', name: 'My account' };
 const PROFILE_A = { id: 'profile-a', partition: 'persist:teams-profile-a', name: 'A' };
+const PROFILE_B = { id: 'profile-b', partition: 'persist:teams-profile-b', name: 'B' };
 
 function fakeProfilesManager(profiles) {
   const handlers = {};
@@ -114,7 +126,14 @@ function fakeProfilesManager(profiles) {
       for (const h of handlers[event] || []) h(payload);
     },
     list: () => profiles,
-    getActive: () => profiles[0] ?? null,
+    activeId: profiles[0]?.id ?? null,
+    getActive() {
+      return profiles.find((p) => p.id === this.activeId) ?? null;
+    },
+    switch(id) {
+      this.activeId = id;
+      this.emit('switch', profiles.find((p) => p.id === id));
+    },
     getLegacyProfile: () =>
       profiles.find((p) => p.partition === LEGACY.partition) ?? null,
   };
@@ -138,10 +157,16 @@ afterEach(() => {
   delete require.cache[electronPath];
 });
 
-function build(profiles) {
+function build(profiles, bindWindowOpenHandler) {
   const win = fakeWindow();
   const pm = fakeProfilesManager(profiles);
-  const pvm = new ProfileViewManager(win, pm, { url: 'https://teams.cloud.microsoft' }, () => {});
+  const pvm = new ProfileViewManager(
+    win,
+    pm,
+    { url: 'https://teams.cloud.microsoft' },
+    () => {},
+    bindWindowOpenHandler
+  );
   pvm.initialize();
   return { win, pm, pvm };
 }
@@ -239,6 +264,125 @@ describe('ProfileViewManager sender attribution wiring', () => {
     const profileView = createdViews[0];
     pm.emit('remove', { removedId: 'profile-a', activeId: 'profile-0' });
     assert.strictEqual(pvm.resolveProfileId(profileView.webContents), null);
+  });
+
+  it('installs the window-open policy on each profile view (not on the pill), loading into itself', () => {
+    const bound = [];
+    build([LEGACY, PROFILE_A, PROFILE_B], (target, loadTarget) =>
+      bound.push([target, loadTarget])
+    );
+    const [viewA, viewB] = createdViews;
+    const pillView = createdViews[createdViews.length - 1];
+    assert.deepStrictEqual(bound, [
+      [viewA.webContents, viewA.webContents],
+      [viewB.webContents, viewB.webContents],
+    ]);
+    assert.ok(!bound.some(([t]) => t === pillView.webContents));
+  });
+
+  it('attributes a child window opened by a profile view to that profile, until it is destroyed', () => {
+    const { pvm } = build([LEGACY, PROFILE_A]);
+    const child = { webContents: new FakeWebContents() };
+    createdViews[0].webContents.emit('did-create-window', child);
+    assert.strictEqual(pvm.resolveProfileId(child.webContents), 'profile-a');
+    child.webContents.emitOnce('destroyed');
+    assert.strictEqual(pvm.resolveProfileId(child.webContents), null);
+  });
+
+  it('attributes a <webview> guest attached in a profile view to that profile, until it is destroyed', () => {
+    const { pvm } = build([LEGACY, PROFILE_A]);
+    const guest = new FakeWebContents();
+    createdViews[0].webContents.emit('did-attach-webview', {}, guest);
+    assert.strictEqual(pvm.resolveProfileId(guest), 'profile-a');
+    guest.emitOnce('destroyed');
+    assert.strictEqual(pvm.resolveProfileId(guest), null);
+  });
+
+  it('attributes grandchildren: a popup of a popup, and a popup of a webview guest', () => {
+    const { pvm } = build([LEGACY, PROFILE_A]);
+    const child = { webContents: new FakeWebContents() };
+    createdViews[0].webContents.emit('did-create-window', child);
+    const grandchild = { webContents: new FakeWebContents() };
+    child.webContents.emit('did-create-window', grandchild);
+    assert.strictEqual(pvm.resolveProfileId(grandchild.webContents), 'profile-a');
+
+    const guest = new FakeWebContents();
+    createdViews[0].webContents.emit('did-attach-webview', {}, guest);
+    const guestPopup = { webContents: new FakeWebContents() };
+    guest.emit('did-create-window', guestPopup);
+    assert.strictEqual(pvm.resolveProfileId(guestPopup.webContents), 'profile-a');
+  });
+
+  it('installs the window-open policy on descendants with the ORIGINATING view as load target', () => {
+    const bound = [];
+    build([LEGACY, PROFILE_A], (target, loadTarget) => bound.push([target, loadTarget]));
+    const view = createdViews[0];
+    const child = { webContents: new FakeWebContents() };
+    view.webContents.emit('did-create-window', child);
+    const grandchild = { webContents: new FakeWebContents() };
+    child.webContents.emit('did-create-window', grandchild);
+    assert.deepStrictEqual(bound.slice(1), [
+      [child.webContents, view.webContents],
+      [grandchild.webContents, view.webContents],
+    ]);
+  });
+
+  it('a deep link loaded from a background profile activates that profile', () => {
+    let activateFn = null;
+    const { pm } = build([LEGACY, PROFILE_A], (_t, _l, activate) => {
+      activateFn = activate;
+    });
+    assert.strictEqual(pm.getActive().id, 'profile-0');
+    activateFn();
+    assert.strictEqual(pm.getActive().id, 'profile-a');
+    // Idempotent once active.
+    activateFn();
+    assert.strictEqual(pm.getActive().id, 'profile-a');
+  });
+
+  it('removing a profile unregisters AND closes its live descendants (not just on dispose)', () => {
+    const { pm, pvm } = build([LEGACY, PROFILE_A]);
+    const view = createdViews[0];
+    const child = { webContents: new FakeWebContents() };
+    view.webContents.emit('did-create-window', child);
+    const grandchild = { webContents: new FakeWebContents() };
+    child.webContents.emit('did-create-window', grandchild);
+    pm.emit('remove', { removedId: 'profile-a', activeId: 'profile-0' });
+    assert.strictEqual(pvm.resolveProfileId(child.webContents), null);
+    assert.strictEqual(pvm.resolveProfileId(grandchild.webContents), null);
+    assert.strictEqual(child.webContents.closed, true);
+    assert.strictEqual(grandchild.webContents.closed, true);
+  });
+
+  it('a view that destroys itself takes its descendants out of attribution too', () => {
+    const { pvm } = build([LEGACY, PROFILE_A]);
+    const view = createdViews[0];
+    const child = { webContents: new FakeWebContents() };
+    view.webContents.emit('did-create-window', child);
+    view.destroyWebContents();
+    assert.strictEqual(pvm.resolveProfileId(child.webContents), null);
+    assert.strictEqual(child.webContents.closed, true);
+  });
+
+  it("attributes the root window's descendants to Profile 0 — null pre-bootstrap, the id after", () => {
+    const profiles = [PROFILE_A];
+    const { win, pm, pvm } = build(profiles);
+    const popup = { webContents: new FakeWebContents() };
+    win.webContents.emit('did-create-window', popup);
+    assert.strictEqual(pvm.resolveProfileId(popup.webContents), null);
+    profiles.push(LEGACY);
+    pm.emit('add', LEGACY);
+    assert.strictEqual(pvm.resolveProfileId(popup.webContents), 'profile-0');
+    popup.webContents.emitOnce('destroyed');
+    assert.strictEqual(pvm.resolveProfileId(popup.webContents), null);
+  });
+
+  it('descendant attribution is dropped on dispose', () => {
+    const { pvm } = build([LEGACY, PROFILE_A]);
+    const child = { webContents: new FakeWebContents() };
+    createdViews[0].webContents.emit('did-create-window', child);
+    pvm.dispose();
+    assert.strictEqual(pvm.resolveProfileId(child.webContents), null);
   });
 
   it('dispose clears all attribution including the root window', () => {
