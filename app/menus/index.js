@@ -370,34 +370,50 @@ class Menus {
 
   async showMigratedConfig() {
     const result = writeMigratedConfig(this.configGroup.configPath);
+    const TITLE = "Updated Config";
 
-    if (result.status === "no-config") {
-      await dialog.showMessageBox({
+    // Everything below prints option NAMES only. A config file carries broker
+    // URLs, certificate paths and service URLs, and this text goes on screen
+    // and into the log.
+    const plain = {
+      "no-config": "There is no config.json yet, so there is nothing to update.",
+      "nothing-to-migrate": "Your config already uses the current option names.",
+      "invalid-json":
+        "config.json could not be read as JSON, so it cannot be updated. Fix the file and try again.",
+    };
+    if (plain[result.status]) {
+      await dialog.showMessageBox(this.window, {
         type: "info",
-        title: "Updated Config",
-        message: "There is no config.json yet, so there is nothing to update.",
+        title: TITLE,
+        message: plain[result.status],
       });
       return;
     }
-    if (result.status === "nothing-to-migrate") {
-      await dialog.showMessageBox({
-        type: "info",
-        title: "Updated Config",
-        message: "Your config already uses the current option names.",
+
+    if (result.status === "blocked") {
+      await dialog.showMessageBox(this.window, {
+        type: "warning",
+        title: TITLE,
+        message: "Nothing could be updated automatically.",
+        detail: [
+          "These options have new names, but the namespace they move into is",
+          "already set to something that is not a group of settings:",
+          ...result.skipped.map((name) => `  • ${name}`),
+        ].join("\n"),
       });
       return;
     }
-    if (result.status === "failed") {
-      await dialog.showMessageBox({
+
+    if (result.status === "write-failed") {
+      await dialog.showMessageBox(this.window, {
         type: "error",
-        title: "Updated Config",
-        message: `Could not write the updated config: ${result.error}`,
+        title: TITLE,
+        message: "The updated config could not be written.",
+        detail: result.error,
       });
       return;
     }
 
-    // Option names only, never values: this text goes on screen and into the
-    // log, and a config file carries broker URLs and certificate paths.
     const count = result.renamed.length;
     const detail = [
       `${count} ${count === 1 ? "option has" : "options have"} a new name:`,
@@ -405,22 +421,34 @@ class Menus {
       "",
       "Your config.json is untouched. Review the copy, then rename it over",
       "config.json when you are happy with it.",
+      ...(result.skipped.length
+        ? ["", "Left alone, because their namespace is already set to something else:",
+           ...result.skipped.map((name) => `  • ${name}`)]
+        : []),
       ...(result.warnings.length
         ? ["", "The copy needs a look first:", ...result.warnings.map((w) => `  • ${w}`)]
         : []),
     ].join("\n");
 
-    const { response } = await dialog.showMessageBox({
+    const { response } = await dialog.showMessageBox(this.window, {
       type: result.warnings.length ? "warning" : "info",
-      title: "Updated Config",
-      message: `Written to ${MIGRATED_FILE}`,
+      title: TITLE,
+      // The directory too, so someone whose desktop has no handler for .json
+      // can still find the file after "Open It" does nothing.
+      message: `Written to ${MIGRATED_FILE} in ${result.dir}`,
       detail,
       buttons: ["Open It", "Close"],
       defaultId: 0,
       cancelId: 1,
     });
-    if (response === 0) {
-      shell.openPath(result.file);
+    if (response !== 0) return;
+
+    // Electron resolves with a non-empty error string when the OS has no
+    // handler; matching app/downloadManager, log only that it failed, since
+    // the string can carry the path.
+    const openError = await shell.openPath(result.file);
+    if (openError) {
+      console.warn("[Config] Could not open the updated config", { failed: true });
     }
   }
 

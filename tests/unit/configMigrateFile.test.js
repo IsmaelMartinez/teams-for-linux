@@ -81,12 +81,45 @@ describe('writeMigratedConfig', () => {
 		);
 	});
 
-	it('reports failed rather than throwing on an unreadable config', () => {
+	it('reports invalid-json rather than throwing on an unreadable config', () => {
 		writeConfig('{ not json');
+		assert.strictEqual(writeMigratedConfig(dir).status, 'invalid-json');
+	});
+
+	// V8 embeds a slice of the source text in a JSON parse error, and that
+	// slice is the user's config, so the message must not be passed through.
+	it('never passes a parse error through, since it quotes the file', () => {
+		writeConfig('{ "url": mqtt://user:hunter2@broker.example }');
 		const result = writeMigratedConfig(dir);
 
-		assert.strictEqual(result.status, 'failed');
-		assert.ok(result.error, 'expected an error message');
+		assert.strictEqual(JSON.stringify(result), '{"status":"invalid-json"}');
+	});
+
+	// toNestedConfigFile leaves a flat key alone when its namespace is occupied
+	// by a non-object; saying it moved would describe a file we did not write.
+	it('does not report a rename that its own transform refused to make', () => {
+		writeConfig({ clearStorageData: true, storage: 'not-an-object' });
+		const result = writeMigratedConfig(dir);
+
+		assert.strictEqual(result.status, 'blocked');
+		assert.deepStrictEqual(result.skipped, ['clearStorageData']);
+		assert.ok(
+			!fs.existsSync(path.join(dir, MIGRATED_FILE)),
+			'nothing moved, so no copy should have been written',
+		);
+	});
+
+	it('separates what moved from what it had to leave', () => {
+		writeConfig({
+			clearStorageData: true,
+			globalShortcuts: ['Ctrl+1'],
+			shortcuts: 'not-an-object',
+		});
+		const result = writeMigratedConfig(dir);
+
+		assert.strictEqual(result.status, 'written');
+		assert.deepStrictEqual(result.renamed, ['clearStorageData']);
+		assert.deepStrictEqual(result.skipped, ['globalShortcuts']);
 	});
 
 	// Values never reach the caller, which puts them on screen and in the log.

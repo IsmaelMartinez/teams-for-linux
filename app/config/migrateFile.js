@@ -27,27 +27,41 @@ function readUserConfig(configPath) {
  * original.
  *
  * @param {string} configPath the directory holding config.json.
- * @returns {{status: string, file?: string, renamed?: string[], warnings?: string[]}}
- *   `status` is one of `no-config`, `nothing-to-migrate`, `written`, or
- *   `failed`; `renamed` lists the flat names that moved, and `warnings` carries
- *   whatever the validator says about the result. Values are never included,
- *   so this is safe to log.
+ * @returns {{status: string, file?: string, dir?: string, renamed?: string[],
+ *   skipped?: string[], warnings?: string[], error?: string}} `status` is one
+ *   of `no-config`, `nothing-to-migrate`, `blocked`, `invalid-json`,
+ *   `write-failed` or `written`.
+ *
+ *   Only option NAMES are ever returned, never configured values, so the whole
+ *   result is safe to put on screen and in the log. `error` carries a
+ *   filesystem message on `write-failed` and is absent otherwise; a JSON parse
+ *   error is deliberately not passed through, because V8 embeds a slice of the
+ *   source text in it and that slice is the user's config.
  */
 function writeMigratedConfig(configPath) {
   let userConfig;
   try {
     userConfig = readUserConfig(configPath);
-  } catch (err) {
-    return { status: "failed", error: err.message };
+  } catch {
+    return { status: "invalid-json" };
   }
   if (!userConfig) return { status: "no-config" };
 
-  const renamed = RENAMES.map(({ flat }) => flat).filter((flat) =>
+  const present = RENAMES.map(({ flat }) => flat).filter((flat) =>
     Object.hasOwn(userConfig, flat),
   );
-  if (renamed.length === 0) return { status: "nothing-to-migrate" };
+  if (present.length === 0) return { status: "nothing-to-migrate" };
 
   const migrated = toNestedConfigFile(userConfig);
+
+  // What actually moved, read off the result rather than assumed from the
+  // input: toNestedConfigFile leaves a flat key alone when its namespace is
+  // occupied by a non-object, and reporting those as migrated would describe a
+  // file we did not write.
+  const renamed = present.filter((flat) => !Object.hasOwn(migrated, flat));
+  const skipped = present.filter((flat) => Object.hasOwn(migrated, flat));
+
+  if (renamed.length === 0) return { status: "blocked", skipped };
 
   // The transform moves values verbatim, while a flat option gets its declared
   // type coerced by yargs and a nested leaf does not. The validator is what
@@ -59,10 +73,10 @@ function writeMigratedConfig(configPath) {
   try {
     fs.writeFileSync(file, `${JSON.stringify(migrated, null, 2)}\n`, "utf8");
   } catch (err) {
-    return { status: "failed", error: err.message };
+    return { status: "write-failed", error: err.message };
   }
 
-  return { status: "written", file, renamed, warnings };
+  return { status: "written", file, dir: configPath, renamed, skipped, warnings };
 }
 
 module.exports = { writeMigratedConfig, MIGRATED_FILE };
