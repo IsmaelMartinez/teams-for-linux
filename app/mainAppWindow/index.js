@@ -66,11 +66,7 @@ function setupScreenSharing(selectedSource) {
 // window, which is a different profile. Profile views previously had no
 // handler at all; see profileWindowOpenPolicy.js for what is deliberately
 // still left on Electron's default and why.
-function bindWindowOpenHandler(
-  targetWebContents,
-  loadTargetWebContents = targetWebContents,
-  activate
-) {
+function bindWindowOpenHandler(targetWebContents, loadTargetWebContents, activate) {
   installProfileWindowOpenHandler(targetWebContents, {
     config,
     loadTargetWebContents,
