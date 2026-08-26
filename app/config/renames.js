@@ -74,4 +74,58 @@ function applyRenamedOptions(config, configFile, renames = RENAMES) {
   }
 }
 
-module.exports = { RENAMES, applyRenamedOptions };
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * Rewrites a config file's flat keys onto their nested targets, the inverse of
+ * applyRenamedOptions. Never mutates the input.
+ *
+ * `coerce` serves both directions: negation is symmetric, and an array-typed
+ * option needs wrapping on the way out for the same reason as on the way in.
+ * Where both spellings are present the nested one is kept, matching runtime
+ * precedence, so the result resolves to the same settings as the original.
+ *
+ * @param {Record<string, unknown>} configFile the merged system and user
+ *   config file contents.
+ * @param {typeof RENAMES} renames override for tests.
+ * @returns {Record<string, unknown>} a new config file object.
+ */
+function toNestedConfigFile(configFile, renames = RENAMES) {
+  if (!isPlainObject(configFile)) return {};
+
+  const result = structuredClone(configFile);
+
+  for (const { flat, nested, inverted, type } of renames) {
+    // Object.hasOwn, matching validator.js, so an inherited key cannot match.
+    if (!Object.hasOwn(result, flat)) continue;
+
+    const parts = nested.split(".");
+    const leaf = parts.pop();
+
+    let node = result;
+    let reachable = true;
+    for (const part of parts) {
+      if (!Object.hasOwn(node, part)) node[part] = {};
+      else if (!isPlainObject(node[part])) {
+        reachable = false;
+        break;
+      }
+      node = node[part];
+    }
+
+    // A namespace occupied by a non-object is the user's to fix; leave the
+    // flat key rather than clobber it.
+    if (!reachable) continue;
+
+    if (!Object.hasOwn(node, leaf)) {
+      node[leaf] = coerce(result[flat], inverted, type);
+    }
+    delete result[flat];
+  }
+
+  return result;
+}
+
+module.exports = { RENAMES, applyRenamedOptions, toNestedConfigFile };
