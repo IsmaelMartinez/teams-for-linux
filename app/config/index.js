@@ -118,10 +118,12 @@ function checkUsedDeprecatedValues(yargsInstance, configObject, config) {
   // showConfigurationDialogs in app/index.js open a blocking modal at startup,
   // and the ADR-025 batches deprecate keys as common as `url` and `appTitle`,
   // so nearly every customised config would meet one. The flat names keep
-  // working until 2.30.0 (#2842), so there is nothing to act on yet. Restore
-  // the modal a few releases before the removal, once every rename has landed:
-  // the acknowledgement is keyed on a hash of this message, so prompting once
-  // per batch re-prompts people who already dismissed it.
+  // working until 2.30.0 (#2842), so there is nothing to act on yet. Restoring
+  // a real surface before that removal is therefore required, not optional,
+  // since with the file transport off by default this warning reaches nobody.
+  // Wait until every rename has landed: the acknowledgement is keyed on a hash
+  // of this message, so prompting once per batch re-prompts people who already
+  // dismissed it.
   console.warn(message);
 }
 
@@ -170,8 +172,10 @@ function argv(configPath, appVersion) {
   logger.init(config.logConfig);
 
   // Runs after logger.init so the warning reaches the log file and not just
-  // stdout; the log is the only channel it has, and users attaching a log to a
-  // bug report need to see it.
+  // stdout, for the users who have file logging on. It is deliberately quiet
+  // for everyone else: the file transport is off by default and a desktop
+  // launch discards stdout, so nothing surfaces this today. That is only
+  // acceptable while there is nothing to act on; see checkUsedDeprecatedValues.
   // Pass yargs instance to access getDeprecatedOptions() in v18
   checkUsedDeprecatedValues(yargsInstance, configObject, config);
 
