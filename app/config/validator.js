@@ -139,4 +139,4 @@ function validateConfigFile(configFile, optionDefinitions) {
   return warnings;
 }
 
-module.exports = { validateConfigFile };
+module.exports = { validateConfigFile, isPlainObject };

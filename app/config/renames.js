@@ -1,5 +1,6 @@
 // Flat-to-nested option renames from ADR-025, applied during the deprecation
-// window. Pure data module, no Electron imports, mirroring validator.js.
+// window. Pure data module, no Electron imports, mirroring validator.js and
+// borrowing its isPlainObject rather than keeping a fourth copy of it.
 //
 // Both names work while a rename is in its window. The FLAT name stays the one
 // every module reads, so no feature code is swept; a nested value is projected
@@ -17,6 +18,8 @@
 // while `shortcuts.global: "Control+Shift+M"` would arrive as a bare string,
 // which fails the Array.isArray check in app/globalShortcuts/index.js and makes
 // a for..of over disableGlobalShortcuts iterate characters or throw.
+const { isPlainObject } = require("./validator");
+
 /** @type {{flat: string, nested: string, inverted?: boolean, type?: string}[]} */
 const RENAMES = [
   // Batch 1 (2.17.0)
@@ -74,10 +77,6 @@ function applyRenamedOptions(config, configFile, renames = RENAMES) {
   }
 }
 
-function isPlainObject(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
 /**
  * Rewrites a config file's flat keys onto their nested targets, the inverse of
  * applyRenamedOptions. Never mutates the input.
@@ -85,10 +84,18 @@ function isPlainObject(value) {
  * `coerce` serves both directions: negation is symmetric, and an array-typed
  * option needs wrapping on the way out for the same reason as on the way in.
  * Where both spellings are present the nested one is kept, matching runtime
- * precedence, so the result resolves to the same settings as the original.
+ * precedence.
  *
- * @param {Record<string, unknown>} configFile the merged system and user
- *   config file contents.
+ * Values otherwise move verbatim, which is not what yargs does. A flat option
+ * declares a type, so yargs turns `"clearStorageData": "false"` into boolean
+ * `false`; the nested leaf is undeclared and stays the truthy string. Callers
+ * should run the result through validator.js, which reports type mismatches,
+ * rather than assume the two files resolve alike.
+ *
+ * @param {Record<string, unknown>} configFile the USER config file, not the
+ *   system-and-user merge from index.js: migrating that and writing it back as
+ *   the user file would copy /etc values in, turning per-key admin policy into
+ *   a whole-namespace user override.
  * @param {typeof RENAMES} renames override for tests.
  * @returns {Record<string, unknown>} a new config file object.
  */
