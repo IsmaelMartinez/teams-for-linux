@@ -18,9 +18,9 @@
  * KNOWN GAP (correct before relying on "null ⇒ not a profile"): child
  * surfaces spawned BY a profile view — `window.open()` popups and `<webview>`
  * guests inherit the view's partition and preload but are not registered
- * here, so they currently resolve to null. The consuming PR must either
- * register descendants (`did-create-window` / `did-attach-webview`) or treat
- * null as "unattributed", never as "safe to ignore".
+ * here, so they currently resolve to null. The consuming PR registers
+ * descendants (`did-create-window` / `did-attach-webview`); until it lands,
+ * null means "unattributed", never "safe to ignore".
  *
  * Pure module (no Electron imports) so the mapping logic is unit-testable
  * directly under `node --test`.
