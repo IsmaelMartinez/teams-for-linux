@@ -114,12 +114,15 @@ function checkUsedDeprecatedValues(yargsInstance, configObject, config) {
   );
   if (!message) return;
 
+  // Log only, on purpose. Appending to `config.warnings` makes
+  // showConfigurationDialogs in app/index.js open a blocking modal at startup,
+  // and the ADR-025 batches deprecate keys as common as `url` and `appTitle`,
+  // so nearly every customised config would meet one. The flat names keep
+  // working until 2.30.0 (#2842), so there is nothing to act on yet. Restore
+  // the modal a few releases before the removal, once every rename has landed:
+  // the acknowledgement is keyed on a hash of this message, so prompting once
+  // per batch re-prompts people who already dismissed it.
   console.warn(message);
-  // Single entry on purpose; see app/config/deprecation.js for why.
-  // `warnings` is not a declared option, so a config file containing that key
-  // lands here verbatim; only extend it when it is already a list.
-  const existing = Array.isArray(config["warnings"]) ? config["warnings"] : [];
-  config["warnings"] = [...existing, message];
 }
 
 function argv(configPath, appVersion) {
@@ -167,7 +170,8 @@ function argv(configPath, appVersion) {
   logger.init(config.logConfig);
 
   // Runs after logger.init so the warning reaches the log file and not just
-  // stdout; users attaching a log to a bug report need to see it.
+  // stdout; the log is the only channel it has, and users attaching a log to a
+  // bug report need to see it.
   // Pass yargs instance to access getDeprecatedOptions() in v18
   checkUsedDeprecatedValues(yargsInstance, configObject, config);
 
