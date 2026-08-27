@@ -5,7 +5,10 @@ const { ipcMain } = require("electron");
 const logger = require("./logger");
 const configOptions = require("./options");
 const { validateConfigFile } = require("./validator");
-const { buildDeprecationWarning } = require("./deprecation");
+const {
+  buildDeprecationWarning,
+  isMigrationMenuAvailable,
+} = require("./deprecation");
 const { applyRenamedOptions } = require("./renames");
 
 function getConfigFilePath(configPath) {
@@ -106,7 +109,8 @@ function checkUsedDeprecatedValues(yargsInstance, configObject, config) {
   // yargs v18: getDeprecatedOptions() must be called on the instance
   const message = buildDeprecationWarning(
     yargsInstance.getDeprecatedOptions(),
-    configObject.configFile
+    configObject.configFile,
+    isMigrationMenuAvailable(config)
   );
   if (!message) return;
 

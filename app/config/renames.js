@@ -42,10 +42,21 @@ function readPath(source, path) {
   return node;
 }
 
+// yargs turns the strings "true" and "false" into booleans for a declared
+// boolean option, so negating the raw value would invert the wrong thing:
+// "false" is truthy, and !"false" is false, the opposite of what the user
+// wrote. A boolean leaf carrying a boolean raises no validator warning either,
+// so this would be a silent flip rather than a reported type mismatch.
+function toBoolean(value) {
+  if (value === "false") return false;
+  if (value === "true") return true;
+  return Boolean(value);
+}
+
 // Mirrors the coercion yargs would have applied to the flat option: an array
 // option given a scalar is wrapped, and an inverted boolean is negated.
 function coerce(value, inverted, type) {
-  if (inverted) return !value;
+  if (inverted) return !toBoolean(value);
   if (type === "array" && !Array.isArray(value)) return [value];
   return value;
 }

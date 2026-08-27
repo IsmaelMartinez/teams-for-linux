@@ -247,3 +247,31 @@ describe('toNestedConfigFile', () => {
 		}
 	});
 });
+
+describe('toNestedConfigFile - inverted booleans', () => {
+	const table = [
+		{ flat: 'disableNotifications', nested: 'notifications.enabled', inverted: true },
+	];
+
+	it('negates a real boolean', () => {
+		assert.deepStrictEqual(
+			toNestedConfigFile({ disableNotifications: true }, table),
+			{ notifications: { enabled: false } },
+		);
+	});
+
+	// yargs turns "false" into boolean false for a declared boolean option, so
+	// the flat name leaves notifications ON. Negating the raw string would
+	// produce `enabled: false` and silently turn them off, and a boolean at a
+	// boolean leaf raises no validator warning to catch it.
+	it('reads the strings yargs would have coerced before negating', () => {
+		assert.deepStrictEqual(
+			toNestedConfigFile({ disableNotifications: 'false' }, table),
+			{ notifications: { enabled: true } },
+		);
+		assert.deepStrictEqual(
+			toNestedConfigFile({ disableNotifications: 'true' }, table),
+			{ notifications: { enabled: false } },
+		);
+	});
+});
