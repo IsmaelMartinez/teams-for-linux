@@ -5,7 +5,10 @@ const { ipcMain } = require("electron");
 const logger = require("./logger");
 const configOptions = require("./options");
 const { validateConfigFile } = require("./validator");
-const { buildDeprecationWarning } = require("./deprecation");
+const {
+  buildDeprecationWarning,
+  isMigrationMenuAvailable,
+} = require("./deprecation");
 const { applyRenamedOptions } = require("./renames");
 
 function getConfigFilePath(configPath) {
@@ -107,9 +110,7 @@ function checkUsedDeprecatedValues(yargsInstance, configObject, config) {
   const message = buildDeprecationWarning(
     yargsInstance.getDeprecatedOptions(),
     configObject.configFile,
-    // The migration is offered from the application menu, which only exists
-    // when the tray icon does.
-    Boolean(config.trayIconEnabled)
+    isMigrationMenuAvailable(config)
   );
   if (!message) return;
 
