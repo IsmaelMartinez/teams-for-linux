@@ -24,7 +24,7 @@ function parseDevicePaths(stdout) {
 }
 
 /** Replicates parseAssertionOutput() for captured-stdout fixtures. */
-function parseAssertionOutput(stdout, rpId, allowCredentials, passedCredentialId) {
+function parseAssertionOutput(stdout, rpId, credentialId) {
 	const lines = stdout.trim().split('\n');
 	const echoOffset = lines.length > 2 && lines[1] === rpId ? 2 : 0;
 	const dataLines = lines.slice(echoOffset);
@@ -35,18 +35,8 @@ function parseAssertionOutput(stdout, rpId, allowCredentials, passedCredentialId
 
 	const authData = cborDecode(Buffer.from(dataLines[0], 'base64'));
 	const signature = Buffer.from(dataLines[1], 'base64');
-	let credentialId = passedCredentialId || null;
-	if (!credentialId) {
-		if (dataLines.length >= 3) {
-			credentialId = base64urlEncode(Buffer.from(dataLines[2], 'base64'));
-		} else if (allowCredentials?.length === 1) {
-			credentialId = allowCredentials[0].id;
-		} else {
-			throw new Error('No credential ID');
-		}
-	}
-	const userHandle = dataLines.length >= 4
-		? base64urlEncode(Buffer.from(dataLines[3], 'base64'))
+	const userHandle = dataLines.length >= 3
+		? base64urlEncode(Buffer.from(dataLines[2], 'base64'))
 		: null;
 
 	return { authData, signature, credentialId, userHandle };
@@ -71,11 +61,8 @@ function parseCredOutput(stdout, rpId) {
 }
 
 /** Replicates the getAssertion() argument-building logic. */
-function buildAssertArgs(userVerification, hasAllowCredentials) {
+function buildAssertArgs(userVerification) {
 	const args = ['-G'];
-	if (!hasAllowCredentials) {
-		args.push('-r');
-	}
 	if (userVerification === 'required') {
 		args.push('-v');
 	}
@@ -272,94 +259,95 @@ describe('WebAuthn fido2Backend - device path parsing', () => {
 // ─── fido2Backend.js - assertion output parsing ─────────────────────────────
 
 describe('WebAuthn fido2Backend - assertion output parsing', () => {
-	it('parses resident assertion with echo offset (rlavriv fido2-tools 1.16.0)', () => {
-		// Captured from rlavriv's test script output (without -h, with -r)
+	it('parses a resident assertion with echo offset, reading the final line as the user id (rlavriv fido2-tools 1.16.0)', () => {
+		// Captured from rlavriv's test script output (without -h, with -r).
+		// Per fido2-assert(1) OUTPUT FORMAT the lines are: echoed clientDataHash,
+		// echoed rpId, authData, signature, and the user id when the credential
+		// is resident. No credential id is ever printed.
 		const stdout = [
 			'7nISPgbSl7qCoiFCvPYPUgUuOrf+ZG6yXdIKcCXY6vU=',       // echoed clientDataHash
 			'login.microsoft.com',                                    // echoed rpId
 			'WCU1bJ7UoJMhuWlfHq+RggPxtV9onaYfvJYYTBV92mgMgQUAAAA/', // authData
 			'MEUCIQDKkAXNUi3UU9edMr1+ag5/kFrsoFP8btYu63fEUJEjMAIgX63DiInGGuKk1+Gr3IxRpUh80YT3wPugS8tELPzr1Bg=', // signature
-			'T0Y60HIbtJ9OJkyKaflJ82fJHV7PVuL8814yAhxxzf/7gmgar/d6JnVQa3lk9VjY5ilM', // credentialId
+			'T0Y60HIbtJ9OJkyKaflJ82fJHV7PVuL8814yAhxxzf/7gmgar/d6JnVQa3lk9VjY5ilM', // user id
 		].join('\n');
 
-		const result = parseAssertionOutput(stdout, 'login.microsoft.com', []);
+		const result = parseAssertionOutput(stdout, 'login.microsoft.com', 'enumerated-cred-id');
 
-		// Echo offset should be 2 (first two lines are echoed input)
 		// After CBOR decode, the 39-byte CBOR wrapper yields a 37-byte authData payload
 		assert.strictEqual(result.authData.length, 37, 'authData should be 37 bytes after CBOR decode');
 		assert.ok(result.signature.length > 0, 'signature should not be empty');
-		assert.ok(result.credentialId.length > 0, 'credentialId should be present');
-		// credentialId should be base64url-encoded
-		assert.ok(!result.credentialId.includes('+'));
-		assert.ok(!result.credentialId.includes('/'));
+		assert.strictEqual(result.credentialId, 'enumerated-cred-id');
+		assert.ok(result.userHandle.length > 0, 'userHandle should be present');
+		// userHandle should be base64url-encoded
+		assert.ok(!result.userHandle.includes('+'));
+		assert.ok(!result.userHandle.includes('/'));
 	});
 
-	it('parses assertion without echo offset', () => {
+	it('parses a non-resident assertion without echo offset and without a user id line', () => {
 		// Some fido2-tools versions don't echo input back
 		const stdout = [
 			'WCU1bJ7UoJMhuWlfHq+RggPxtV9onaYfvJYYTBV92mgMgQUAAAA/', // authData
 			'MEUCIQDKkAXNUi3UU9edMr1+ag5/kFrsoFP8btYu63fEUJEjMAIgX63DiInGGuKk1+Gr3IxRpUh80YT3wPugS8tELPzr1Bg=', // signature
 		].join('\n');
 
-		const result = parseAssertionOutput(stdout, 'login.microsoft.com', [
-			{ id: 'test-cred-id', type: 'public-key' },
-		]);
+		const result = parseAssertionOutput(stdout, 'login.microsoft.com', 'test-cred-id');
 
 		assert.strictEqual(result.authData.length, 37);
 		assert.ok(result.signature.length > 0);
-		// With only 2 lines and single allowCredential, falls back to provided ID
 		assert.strictEqual(result.credentialId, 'test-cred-id');
 		assert.strictEqual(result.userHandle, null);
 	});
 
-	it('parses full resident assertion with userHandle (rlavriv output)', () => {
-		const stdout = [
-			'7nISPgbSl7qCoiFCvPYPUgUuOrf+ZG6yXdIKcCXY6vU=',
-			'login.microsoft.com',
-			'WCU1bJ7UoJMhuWlfHq+RggPxtV9onaYfvJYYTBV92mgMgQUAAAA/',
-			'MEUCIQDKkAXNUi3UU9edMr1+ag5/kFrsoFP8btYu63fEUJEjMAIgX63DiInGGuKk1+Gr3IxRpUh80YT3wPugS8tELPzr1Bg=',
-			'T0Y60HIbtJ9OJkyKaflJ82fJHV7PVuL8814yAhxxzf/7gmgar/d6JnVQa3lk9VjY5ilM',
-			'fxEoxorlyfCKJ5o2h+R5OGHzYtLXybXCNm9MMhw9Ubw=',  // userHandle
-		].join('\n');
-
-		const result = parseAssertionOutput(stdout, 'login.microsoft.com', []);
-		assert.ok(result.userHandle !== null, 'userHandle should be present');
-		assert.ok(result.userHandle.length > 0);
-	});
-
 	it('throws when output has fewer than 2 data lines', () => {
 		assert.throws(
-			() => parseAssertionOutput('only-one-line\n', 'other.rp.id', []),
+			() => parseAssertionOutput('only-one-line\n', 'other.rp.id', 'cred-id'),
 			/Expected at least 2 lines/,
 		);
 	});
+});
 
-	it('throws when no credential ID and multiple allowCredentials', () => {
-		const stdout = [
-			cborEncode(Buffer.from([0x00, 0x01, 0x02])).toString('base64'), // valid CBOR authData
-			'BBBB', // signature
-		].join('\n');
+// ─── fido2Backend.js - resident credential enumeration ──────────────────────
 
-		assert.throws(
-			() => parseAssertionOutput(stdout, 'login.microsoft.com', [
-				{ id: 'cred1' },
-				{ id: 'cred2' },
-			]),
-			/No credential ID/,
-		);
+describe('WebAuthn fido2Backend - resident credential list parsing', () => {
+	const { _parseResidentCredentialList } = require('../../app/webauthn/fido2Backend');
+
+	it('parses a credential line into base64url id and user handle', () => {
+		// fido2-token -L -k output (libfido2 tools/credman.c print_rk):
+		// "NN: <credId base64> <displayName> <userId base64> <type> <prot>"
+		const stdout = '00: T0Y60HIbtJ9OJkyKaflJ82fJHV7PVuL8814yAhxxzf/7gmgar/d6JnVQa3lk9VjY5ilM user@example.com fxEoxorlyfCKJ5o2h+R5OGHzYtLXybXCNm9MMhw9Ubw= es256 uvopt\n';
+
+		const creds = _parseResidentCredentialList(stdout);
+
+		assert.strictEqual(creds.length, 1);
+		assert.strictEqual(creds[0].credentialId, 'T0Y60HIbtJ9OJkyKaflJ82fJHV7PVuL8814yAhxxzf_7gmgar_d6JnVQa3lk9VjY5ilM');
+		assert.strictEqual(creds[0].userHandle, 'fxEoxorlyfCKJ5o2h-R5OGHzYtLXybXCNm9MMhw9Ubw');
 	});
 
-	it('uses passed credentialId when provided', () => {
-		const stdout = [
-			'WCU1bJ7UoJMhuWlfHq+RggPxtV9onaYfvJYYTBV92mgMgQUAAAA/',
-			'MEUCIQDKkAXNUi3UU9edMr1+ag5/kFrsoFP8btYu63fEUJEjMAIgX63DiInGGuKk1+Gr3IxRpUh80YT3wPugS8tELPzr1Bg=',
-		].join('\n');
+	it('handles display names containing spaces', () => {
+		const stdout = '01: AAAA Some Display Name BBBB es256 uvopt+uvblocked\n';
 
-		const result = parseAssertionOutput(stdout, 'other.rp', [
-			{ id: 'cred1' },
-			{ id: 'cred2' },
-		], 'passed-cred-id');
-		assert.strictEqual(result.credentialId, 'passed-cred-id');
+		const creds = _parseResidentCredentialList(stdout);
+
+		assert.strictEqual(creds.length, 1);
+		assert.strictEqual(creds[0].credentialId, 'AAAA');
+		assert.strictEqual(creds[0].userHandle, 'BBBB');
+	});
+
+	it('parses multiple credentials', () => {
+		const stdout = '00: AAAA one CCCC es256 uvopt\n01: BBBB two DDDD es256 uvopt\n';
+
+		const creds = _parseResidentCredentialList(stdout);
+
+		assert.strictEqual(creds.length, 2);
+		assert.strictEqual(creds[0].credentialId, 'AAAA');
+		assert.strictEqual(creds[1].credentialId, 'BBBB');
+	});
+
+	it('ignores lines that are not credential entries', () => {
+		assert.deepStrictEqual(_parseResidentCredentialList(''), []);
+		assert.deepStrictEqual(_parseResidentCredentialList('Enter PIN for /dev/hidraw2:\n'), []);
+		assert.deepStrictEqual(_parseResidentCredentialList('fido2-token: fido_credman_get_dev_rk: FIDO_ERR_INVALID_ARGUMENT\n'), []);
 	});
 });
 
@@ -410,27 +398,18 @@ describe('WebAuthn fido2Backend - credential creation output parsing', () => {
 // ─── fido2Backend.js - argument building ────────────────────────────────────
 
 describe('WebAuthn fido2Backend - getAssertion argument construction', () => {
-	it('uses -r for resident assertion (no allowCredentials)', () => {
-		const args = buildAssertArgs('required', false);
-		assert.ok(args.includes('-r'));
-		assert.ok(args.includes('-v'));
-		assert.deepStrictEqual(args, ['-G', '-r', '-v']);
-	});
-
-	it('omits -r when allowCredentials are provided', () => {
-		const args = buildAssertArgs('required', true);
-		assert.ok(!args.includes('-r'));
+	it('adds -v for required userVerification', () => {
+		const args = buildAssertArgs('required');
 		assert.deepStrictEqual(args, ['-G', '-v']);
 	});
 
 	it('omits -v for preferred userVerification', () => {
-		const args = buildAssertArgs('preferred', false);
-		assert.ok(!args.includes('-v'));
-		assert.deepStrictEqual(args, ['-G', '-r']);
+		const args = buildAssertArgs('preferred');
+		assert.deepStrictEqual(args, ['-G']);
 	});
 
 	it('omits -v for discouraged userVerification', () => {
-		const args = buildAssertArgs('discouraged', true);
+		const args = buildAssertArgs('discouraged');
 		assert.deepStrictEqual(args, ['-G']);
 	});
 });
@@ -463,7 +442,7 @@ describe('WebAuthn fido2Backend - createCredential argument construction', () =>
 // ─── fido2Backend.js - stdin construction ───────────────────────────────────
 
 describe('WebAuthn fido2Backend - stdin line construction', () => {
-	it('builds correct assertion input for resident credentials (no allowCredentials)', () => {
+	it('builds the shared assertion input prefix (clientDataHash and rpId)', () => {
 		const clientDataHash = Buffer.from('fake-hash-32-bytes-for-testing!!');
 		const rpId = 'login.microsoft.com';
 		const inputLines = [clientDataHash.toString('base64'), sanitizeForFido2(rpId)];
@@ -829,10 +808,12 @@ describe('getAssertion allowCredentials loop', () => {
 		Buffer.from('signature-bytes').toString('base64'),
 	].join('\n') + '\n';
 
-	// In resident-key mode the tool also reports which credential it used,
-	// because the caller never told it.
+	// When the asserted credential is resident, fido2-assert appends the user
+	// id as a final line. The credential id never appears in its output; it
+	// comes from the fido2-token credman listing instead.
 	const RESIDENT_CREDENTIAL = Buffer.from('resident-cred');
-	const residentStdout = successStdout.trimEnd() + '\n' + RESIDENT_CREDENTIAL.toString('base64') + '\n';
+	const USER_HANDLE = Buffer.from('user-handle');
+	const residentStdout = successStdout.trimEnd() + '\n' + USER_HANDLE.toString('base64') + '\n';
 
 	const credential = (name) => ({ id: base64urlEncode(Buffer.from(name)), type: 'public-key' });
 	const THREE_CREDENTIALS = [credential('cred-one'), credential('cred-two'), credential('cred-three')];
@@ -847,7 +828,14 @@ describe('getAssertion allowCredentials loop', () => {
 		stubDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fido2-stub-'));
 		logPath = path.join(stubDir, 'calls.log');
 
-		writeStub('fido2-token', 'process.stdout.write("/dev/hidraw9: vendor=0x1050, product=0x0407 (Stub)\\n");\n');
+		// -L alone lists devices; -L -k <rpId> <device> lists resident credentials.
+		writeStub('fido2-token', `
+			if (process.argv.includes("-k")) {
+				process.stdout.write(process.env.FIDO2_STUB_RK_LINES || "");
+				process.exit(0);
+			}
+			process.stdout.write("/dev/hidraw9: vendor=0x1050, product=0x0407 (Stub)\\n");
+		`);
 
 		// Reads stdin to completion first, exactly like the real tool, so the
 		// backend's parameter write never lands on a closed pipe. Each behaviour
@@ -882,6 +870,7 @@ describe('getAssertion allowCredentials loop', () => {
 		process.env.FIDO2_STUB_LOG = logPath;
 		process.env.FIDO2_STUB_STDOUT = successStdout;
 		process.env.FIDO2_STUB_STDOUT_RESIDENT = residentStdout;
+		process.env.FIDO2_STUB_RK_LINES = `00: ${RESIDENT_CREDENTIAL.toString('base64')} Stub Display Name ${USER_HANDLE.toString('base64')} es256 uvopt\n`;
 	});
 
 	after(() => {
@@ -891,6 +880,7 @@ describe('getAssertion allowCredentials loop', () => {
 		delete process.env.FIDO2_STUB_SCRIPT;
 		delete process.env.FIDO2_STUB_STDOUT;
 		delete process.env.FIDO2_STUB_STDOUT_RESIDENT;
+		delete process.env.FIDO2_STUB_RK_LINES;
 		fs.rmSync(stubDir, { recursive: true, force: true });
 	});
 
@@ -989,12 +979,45 @@ describe('getAssertion allowCredentials loop', () => {
 		assert.strictEqual(spawnCount(), 6);
 	});
 
-	it('spawns once in resident-key mode when no credentials are listed', posixOnly, async () => {
+	it('resolves a discoverable sign-in by enumerating resident credentials', posixOnly, async () => {
 		arm('success-resident');
 
 		const result = await fido2Backend.getAssertion(assertionOptions({}));
 
+		// The credential id comes from the credman listing, the user handle from
+		// the assertion output, and the ceremony ran once with that credential.
 		assert.strictEqual(result.credentialId, base64urlEncode(RESIDENT_CREDENTIAL));
+		assert.strictEqual(result.userHandle, base64urlEncode(USER_HANDLE));
 		assert.strictEqual(spawnCount(), 1);
+	});
+
+	it('fails a discoverable sign-in cleanly when the key holds no credential for the site', posixOnly, async () => {
+		arm('success-resident');
+		const saved = process.env.FIDO2_STUB_RK_LINES;
+		process.env.FIDO2_STUB_RK_LINES = '';
+		try {
+			await assert.rejects(
+				() => fido2Backend.getAssertion(assertionOptions({})),
+				/NotAllowedError: no credential for this site/,
+			);
+			assert.strictEqual(spawnCount(), 0);
+		} finally {
+			process.env.FIDO2_STUB_RK_LINES = saved;
+		}
+	});
+
+	it('fails a discoverable sign-in cleanly when the key holds several accounts', posixOnly, async () => {
+		arm('success-resident');
+		const saved = process.env.FIDO2_STUB_RK_LINES;
+		process.env.FIDO2_STUB_RK_LINES = saved + `01: ${base64urlEncode(Buffer.from('other-cred'))} Other Name ${base64urlEncode(Buffer.from('other-user'))} es256 uvopt\n`;
+		try {
+			await assert.rejects(
+				() => fido2Backend.getAssertion(assertionOptions({})),
+				/more than one account/,
+			);
+			assert.strictEqual(spawnCount(), 0);
+		} finally {
+			process.env.FIDO2_STUB_RK_LINES = saved;
+		}
 	});
 });
