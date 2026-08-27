@@ -32,6 +32,11 @@ function throwIfCancelled(signal) {
   if (signal?.aborted) throw new Error(CANCELLED_MESSAGE);
 }
 
+// Silent probes answer in milliseconds; the cap only matters for a key that
+// stalls on "-t up=false" instead of rejecting it, where the worst case is
+// the old behaviour plus this long per listed credential.
+const PROBE_TIMEOUT_MS = 5000;
+
 /**
  * Run a fido2 command with stdin input and optional PIN.
  * Uses spawn (not exec/shell) to avoid command injection.
@@ -371,6 +376,63 @@ async function createCredential(options) {
 }
 
 /**
+ * Silently check whether a credential is present on the device.
+ * "-t up=false" turns off the user-presence test, so the key answers without
+ * a touch and, since UV is not requested, without a PIN. The assertion it
+ * returns is unusable for sign-in (no UP flag) and is discarded; only the
+ * exit status matters. Keys that refuse silent assertions fail every probe,
+ * which reads as "no match" and leaves the caller on the sequential path.
+ *
+ * @param {string} device - Device path
+ * @param {string[]} inputLines - clientDataHash, rpId and credentialId lines
+ * @param {AbortSignal} [abortSignal] - Cancelling rejects instead of reporting a miss
+ * @returns {Promise<boolean>} Whether the credential is on the device
+ */
+async function probeCredential(device, inputLines, abortSignal) {
+  try {
+    await spawnFido2("fido2-assert", ["-G", "-t", "up=false", device], inputLines, PROBE_TIMEOUT_MS, null, abortSignal);
+    return true;
+  } catch (err) {
+    const errClass = log.classifyError(err);
+    // A cancel is the user giving up on the ceremony, not a probe miss.
+    if (errClass === "CANCELLED") throw err;
+    log.debug("[WEBAUTHN] probe miss", { errClass });
+    return false;
+  }
+}
+
+/**
+ * Narrow an allowCredentials list to the one credential the device holds,
+ * using silent probes. A full assertion demands a touch per attempted
+ * credential, so without narrowing a login page that lists several
+ * registered credentials asks the user for one blind touch per entry.
+ * Probing first means the real assertion needs exactly one touch.
+ *
+ * Returns the original list when nothing probes as present (credProtect can
+ * hide credentials from silent probes), so the sequential behaviour stays
+ * as the fallback and probing can only remove touches, never break a login.
+ *
+ * @param {Array} allowCredentials - Credential descriptors from the RP
+ * @param {(cred: object) => Promise<boolean>} probe - Presence check for one credential
+ * @returns {Promise<Array>} Either [matchedCredential] or the original list
+ */
+async function narrowCandidates(allowCredentials, probe) {
+  if (allowCredentials.length <= 1) {
+    return allowCredentials;
+  }
+  const total = allowCredentials.length;
+  for (const [i, cred] of allowCredentials.entries()) {
+    log.debug("[WEBAUTHN] getAssertion probe", { index: i + 1, total });
+    if (await probe(cred)) {
+      log.info("[WEBAUTHN] getAssertion probe matched", { index: i + 1, total });
+      return [cred];
+    }
+  }
+  log.info("[WEBAUTHN] getAssertion probes found no match, using sequential fallback", { total });
+  return allowCredentials;
+}
+
+/**
  * Try each credential the relying party allowed, until one is on the key.
  *
  * The server lists every credential it has registered for the account, but only
@@ -467,7 +529,12 @@ async function getAssertion(options) {
   const timeoutMs = (options.timeout || 60) * 1000;
 
   if (hasAllowCredentials) {
-    return tryAllowCredentials(options, args, inputLines, timeoutMs, clientDataJSON);
+    // Find the one credential on the device with silent probes first, so the
+    // user touches the key once instead of once per listed credential.
+    const candidates = await narrowCandidates(options.allowCredentials, (cred) =>
+      probeCredential(device, [...inputLines, base64urlDecode(cred.id).toString("base64")], options.abortSignal),
+    );
+    return tryAllowCredentials({ ...options, allowCredentials: candidates }, args, inputLines, timeoutMs, clientDataJSON);
   }
 
   // No allowCredentials — use resident key mode
@@ -528,3 +595,6 @@ module.exports = { isAvailable, discoverDevices, createCredential, getAssertion,
 // Exposed so the cancellation path can be unit-tested against a real detached
 // child process. Not part of the module's contract — do not use from app code.
 module.exports._spawnFido2 = spawnFido2;
+
+// Exposed for unit tests only, same caveat as above.
+module.exports._narrowCandidates = narrowCandidates;
