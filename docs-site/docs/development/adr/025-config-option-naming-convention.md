@@ -28,7 +28,7 @@ Spell words out rather than abbreviating (`customBackground`, not `customBG`), a
 
 The table maps every flat option to its nested target. Four renames invert a boolean, marked in the Inverted column, so tooling must negate those values rather than copy them; a blank cell means copy unchanged. For example `disableNotifications: true` becomes `notifications.enabled: false`, and defaults stay behaviour-preserving under inversion (`disableNotifications` defaults to `false`, so `notifications.enabled` defaults to `true`).
 
-None of these nested targets are implemented yet. The flat names on the left are the only names the app accepts today, and applying this table to a config file now will get those keys ignored with a startup warning. When a rename does ship, the old name will not disappear silently: it produces a startup warning and the change is announced in the release notes. Whether it also keeps applying for a deprecation window, or stops taking effect the day the rename lands, is still being decided in [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841), where immediate removal is one of the live outcomes. That decision must be settled before the first rename.
+The table ships in batches. The `shortcuts` and `storage` renames landed in 2.17.0, and the ten remaining brand-new namespaces are in flight; the rest are still flat-only, and naming one of those nested targets today gets the key ignored with a startup warning. [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841) settled what happens to the old name: both spellings keep working until the flat declarations are removed in 2.30.0, and `app/config/renames.js` projects a nested value onto the flat key that modules still read. A deprecated key in a config file is reported at startup by `checkUsedDeprecatedValues`, and each batch is announced in the release notes.
 
 The `notifications`, `idleDetection`, `network` and `auth` targets are shipped objects that already hold unrelated leaves; merging renamed options into them is intentional, and every leaf key below was checked against the shipped fields with no collisions.
 
@@ -110,15 +110,17 @@ An alias layer keeping flat names working forever was rejected by the original r
 
 ### Positive
 
-Contributors get one canonical answer for naming a new option and for where an existing flat option will land, without reading a 1600-line research document. The mapping is stable enough for tooling to consume once a migration mechanism is chosen, and that choice is deliberately left open here and tracked in [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841). One candidate already exists in the codebase and is worth evaluating first: yargs' own `deprecated` field, which `checkUsedDeprecatedValues` in `app/config/index.js` reads on every startup, warning for any deprecated key present in the config file, system-wide or user, and which no option declares yet. On its own it only warns, since it neither maps an old name to its successor nor handles the four inversions, so it covers part of the problem rather than all of it.
+Contributors get one canonical answer for naming a new option and for where an existing flat option will land, without reading a 1600-line research document. The mapping is stable enough for tooling to consume, and [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841) chose the mechanism: yargs' own `deprecated` field, which `checkUsedDeprecatedValues` in `app/config/index.js` reads on every startup for any deprecated key present in the config file, system-wide or user. That only warns, since it neither maps an old name to its successor nor handles the four inversions, so `app/config/renames.js` supplies both.
 
 ### Negative
 
-The four inversions mean a naive key-copy migration would silently flip user intent, so tooling must consult the Inverted column. This table is hand-maintained and can drift from `app/config/options.js` until something pins the two together in code.
+The four inversions mean a naive key-copy migration would silently flip user intent, so tooling must consult the Inverted column; `coerce` in `app/config/renames.js` is what does that, in both directions. The table in this document is hand-maintained, but its code counterpart no longer drifts unnoticed: the `config renames - table integrity` suite in `tests/unit/configRenames.test.js` pins every entry against `app/config/options.js`.
+
+Migration is not full equivalence. A flat option declares a type and yargs coerces the config-file value to it, while a nested leaf is not a declared option, so a config that leans on that coercion (`"disableGpu": "false"` as a string) changes meaning when rewritten. Tooling should validate its output rather than assume the two files resolve alike.
 
 ### Neutral
 
-A permanent alias layer and a `--migrate-config` codemod stay deferred, renames proceed namespace by namespace as tracked in [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842), and the four occupied namespaces will mix long-shipped and newly-arrived leaves.
+A permanent alias layer stays rejected. The codemod no longer does: `toNestedConfigFile` in `app/config/renames.js` rewrites a config file onto the nested names, and [#2913](https://github.com/IsmaelMartinez/teams-for-linux/issues/2913) tracks the surface that offers it to users. Renames proceed namespace by namespace as tracked in [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842), and the four occupied namespaces will mix long-shipped and newly-arrived leaves.
 
 ## Related
 

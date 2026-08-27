@@ -1,5 +1,6 @@
 // Flat-to-nested option renames from ADR-025, applied during the deprecation
-// window. Pure data module, no Electron imports, mirroring validator.js.
+// window. Pure data module, no Electron imports, mirroring validator.js and
+// borrowing its isPlainObject rather than keeping a fourth copy of it.
 //
 // Both names work while a rename is in its window. The FLAT name stays the one
 // every module reads, so no feature code is swept; a nested value is projected
@@ -17,6 +18,8 @@
 // while `shortcuts.global: "Control+Shift+M"` would arrive as a bare string,
 // which fails the Array.isArray check in app/globalShortcuts/index.js and makes
 // a for..of over disableGlobalShortcuts iterate characters or throw.
+const { isPlainObject } = require("./validator");
+
 /** @type {{flat: string, nested: string, inverted?: boolean, type?: string}[]} */
 const RENAMES = [
   // Batch 1 (2.17.0)
@@ -74,4 +77,62 @@ function applyRenamedOptions(config, configFile, renames = RENAMES) {
   }
 }
 
-module.exports = { RENAMES, applyRenamedOptions };
+/**
+ * Rewrites a config file's flat keys onto their nested targets, the inverse of
+ * applyRenamedOptions. Never mutates the input.
+ *
+ * `coerce` serves both directions: negation is symmetric, and an array-typed
+ * option needs wrapping on the way out for the same reason as on the way in.
+ * Where both spellings are present the nested one is kept, matching runtime
+ * precedence.
+ *
+ * Values otherwise move verbatim, which is not what yargs does. A flat option
+ * declares a type, so yargs turns `"clearStorageData": "false"` into boolean
+ * `false`; the nested leaf is undeclared and stays the truthy string. Callers
+ * should run the result through validator.js, which reports type mismatches,
+ * rather than assume the two files resolve alike.
+ *
+ * @param {Record<string, unknown>} configFile the USER config file, not the
+ *   system-and-user merge from index.js: migrating that and writing it back as
+ *   the user file would copy /etc values in, turning per-key admin policy into
+ *   a whole-namespace user override.
+ * @param {typeof RENAMES} renames override for tests.
+ * @returns {Record<string, unknown>} a new config file object.
+ */
+function toNestedConfigFile(configFile, renames = RENAMES) {
+  if (!isPlainObject(configFile)) return {};
+
+  const result = structuredClone(configFile);
+
+  for (const { flat, nested, inverted, type } of renames) {
+    // Object.hasOwn, matching validator.js, so an inherited key cannot match.
+    if (!Object.hasOwn(result, flat)) continue;
+
+    const parts = nested.split(".");
+    const leaf = parts.pop();
+
+    let node = result;
+    let reachable = true;
+    for (const part of parts) {
+      if (!Object.hasOwn(node, part)) node[part] = {};
+      else if (!isPlainObject(node[part])) {
+        reachable = false;
+        break;
+      }
+      node = node[part];
+    }
+
+    // A namespace occupied by a non-object is the user's to fix; leave the
+    // flat key rather than clobber it.
+    if (!reachable) continue;
+
+    if (!Object.hasOwn(node, leaf)) {
+      node[leaf] = coerce(result[flat], inverted, type);
+    }
+    delete result[flat];
+  }
+
+  return result;
+}
+
+module.exports = { RENAMES, applyRenamedOptions, toNestedConfigFile };
