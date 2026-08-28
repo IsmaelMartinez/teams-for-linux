@@ -112,8 +112,11 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin, signal) {
     // handler in app/index.js does not recognise it as recoverable, so it takes
     // the whole app down (#2920). The real outcome is decided by 'close' and
     // 'error' below, so this only has to keep the failed write from throwing.
+    // Warn rather than debug: log.debug is off unless auth.webauthn.debug is
+    // set, and a failed parameter write means the tool never received its
+    // input, whose only other symptom is the full timeout a minute later.
     proc.stdin.on("error", (err) => {
-      log.debug("[WEBAUTHN] stdin write failed", { errCode: err.code });
+      log.warn("[WEBAUTHN] stdin write failed", { errCode: err.code });
     });
 
     proc.stdout.on("data", (data) => { stdout += data.toString(); });
@@ -123,10 +126,8 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin, signal) {
       stderr += chunk;
 
       // Detect the PIN prompt: "Enter PIN for /dev/hidrawN:"
-      // Only when the tool is ready for PIN input do we write it. A cancel or
-      // timeout has already killed the process group, and a prompt chunk can
-      // still arrive after that, so do not offer the PIN to a dead child.
-      if (!pinWritten && pin && !rejected && !exited && chunk.includes("Enter PIN for")) {
+      // Only when the tool is ready for PIN input do we write it.
+      if (!pinWritten && pin && chunk.includes("Enter PIN for")) {
         pinWritten = true;
         log.info("[WEBAUTHN] PIN prompt detected, writing PIN");
         proc.stdin.write(pin.trim() + "\n");

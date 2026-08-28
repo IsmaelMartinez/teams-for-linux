@@ -719,14 +719,14 @@ describe('Security key cancellation', () => {
 
 // ─── Writing to a child that has already gone (#2920) ────────────────────────
 
-describe('Security key PIN write against a closed pipe', () => {
+describe('Security key stdin writes against a closed pipe', () => {
 	const fido2Backend = require('../../app/webauthn/fido2Backend');
 
-	it('does not raise an uncaught exception when the PIN lands on a closed stdin', async () => {
-		// The child closes its read end before prompting, so the PIN write hits a
-		// dead pipe. With no listener on stdin that EPIPE becomes an uncaught
-		// exception, and the handler in app/index.js does not classify it as
-		// recoverable, so it calls process.exit(1) and the app disappears.
+	it('does not raise an uncaught exception when a write lands on a closed stdin', async () => {
+		// The child closes its read end before prompting, so both the parameter
+		// write and the PIN write hit a dead pipe. With no listener on stdin that
+		// EPIPE becomes an uncaught exception, and the handler in app/index.js
+		// does not classify it as recoverable, so it calls process.exit(1).
 		const uncaught = [];
 		const trap = (err) => uncaught.push(err);
 		process.on('uncaughtException', trap);
