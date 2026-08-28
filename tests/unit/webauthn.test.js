@@ -23,24 +23,12 @@ function parseDevicePaths(stdout) {
 		.filter(Boolean);
 }
 
-/** Replicates parseAssertionOutput() for captured-stdout fixtures. */
-function parseAssertionOutput(stdout, rpId, credentialId) {
-	const lines = stdout.trim().split('\n');
-	const echoOffset = lines.length > 2 && lines[1] === rpId ? 2 : 0;
-	const dataLines = lines.slice(echoOffset);
-
-	if (dataLines.length < 2) {
-		throw new Error(`Expected at least 2 lines, got ${dataLines.length}`);
-	}
-
-	const authData = cborDecode(Buffer.from(dataLines[0], 'base64'));
-	const signature = Buffer.from(dataLines[1], 'base64');
-	const userHandle = dataLines.length >= 3
-		? base64urlEncode(Buffer.from(dataLines[2], 'base64'))
-		: null;
-
-	return { authData, signature, credentialId, userHandle };
-}
+// The real implementations, not replicas: a replica edited in lockstep with
+// the code it copies cannot catch the code being wrong.
+const {
+	_parseAssertionOutput: parseAssertionOutput,
+	_buildAssertArgs: buildAssertArgs,
+} = require('../../app/webauthn/fido2Backend');
 
 /** Replicates the createCredential() stdout parsing logic. */
 function parseCredOutput(stdout, rpId) {
@@ -58,15 +46,6 @@ function parseCredOutput(stdout, rpId) {
 		signature: Buffer.from(dataLines[3], 'base64'),
 		x5c: dataLines.length >= 5 ? Buffer.from(dataLines[4], 'base64') : null,
 	};
-}
-
-/** Replicates the getAssertion() argument-building logic. */
-function buildAssertArgs(userVerification) {
-	const args = ['-G'];
-	if (userVerification === 'required') {
-		args.push('-v');
-	}
-	return args;
 }
 
 /** Replicates buildCredArgs() from fido2Backend.js. */
@@ -272,12 +251,13 @@ describe('WebAuthn fido2Backend - assertion output parsing', () => {
 			'T0Y60HIbtJ9OJkyKaflJ82fJHV7PVuL8814yAhxxzf/7gmgar/d6JnVQa3lk9VjY5ilM', // user id
 		].join('\n');
 
-		const result = parseAssertionOutput(stdout, 'login.microsoft.com', 'enumerated-cred-id');
+		const result = parseAssertionOutput(stdout, { rpId: 'login.microsoft.com' }, Buffer.from('{}'), 'enumerated-cred-id');
 
 		// After CBOR decode, the 39-byte CBOR wrapper yields a 37-byte authData payload
-		assert.strictEqual(result.authData.length, 37, 'authData should be 37 bytes after CBOR decode');
-		assert.ok(result.signature.length > 0, 'signature should not be empty');
+		assert.strictEqual(base64urlDecode(result.authenticatorData).length, 37, 'authData should be 37 bytes after CBOR decode');
+		assert.ok(base64urlDecode(result.signature).length > 0, 'signature should not be empty');
 		assert.strictEqual(result.credentialId, 'enumerated-cred-id');
+		assert.strictEqual(result.rawId, 'enumerated-cred-id');
 		assert.ok(result.userHandle.length > 0, 'userHandle should be present');
 		// userHandle should be base64url-encoded
 		assert.ok(!result.userHandle.includes('+'));
@@ -291,17 +271,17 @@ describe('WebAuthn fido2Backend - assertion output parsing', () => {
 			'MEUCIQDKkAXNUi3UU9edMr1+ag5/kFrsoFP8btYu63fEUJEjMAIgX63DiInGGuKk1+Gr3IxRpUh80YT3wPugS8tELPzr1Bg=', // signature
 		].join('\n');
 
-		const result = parseAssertionOutput(stdout, 'login.microsoft.com', 'test-cred-id');
+		const result = parseAssertionOutput(stdout, { rpId: 'login.microsoft.com' }, Buffer.from('{}'), 'test-cred-id');
 
-		assert.strictEqual(result.authData.length, 37);
-		assert.ok(result.signature.length > 0);
+		assert.strictEqual(base64urlDecode(result.authenticatorData).length, 37);
+		assert.ok(base64urlDecode(result.signature).length > 0);
 		assert.strictEqual(result.credentialId, 'test-cred-id');
 		assert.strictEqual(result.userHandle, null);
 	});
 
 	it('throws when output has fewer than 2 data lines', () => {
 		assert.throws(
-			() => parseAssertionOutput('only-one-line\n', 'other.rp.id', 'cred-id'),
+			() => parseAssertionOutput('only-one-line\n', { rpId: 'other.rp.id' }, Buffer.from('{}'), 'cred-id'),
 			/Expected at least 2 lines/,
 		);
 	});
@@ -348,6 +328,38 @@ describe('WebAuthn fido2Backend - resident credential list parsing', () => {
 		assert.deepStrictEqual(_parseResidentCredentialList(''), []);
 		assert.deepStrictEqual(_parseResidentCredentialList('Enter PIN for /dev/hidraw2:\n'), []);
 		assert.deepStrictEqual(_parseResidentCredentialList('fido2-token: fido_credman_get_dev_rk: FIDO_ERR_INVALID_ARGUMENT\n'), []);
+	});
+
+	it('handles the payment column appended by libfido2 1.17', () => {
+		// print_rk grew a seventh column ("pay"/"nopay") in 1.17.0. Counting
+		// back from the end without stripping it lands on the algorithm.
+		const creds = _parseResidentCredentialList('00: AAAA user@example.com BBBB es256 uvopt nopay\n01: CCCC other@example.com DDDD es256 uvopt pay\n');
+
+		assert.strictEqual(creds.length, 2);
+		assert.strictEqual(creds[0].credentialId, 'AAAA');
+		assert.strictEqual(creds[0].userHandle, 'BBBB');
+		assert.strictEqual(creds[1].credentialId, 'CCCC');
+		assert.strictEqual(creds[1].userHandle, 'DDDD');
+	});
+
+	it('fails closed when a credential line does not parse', () => {
+		// A display name containing a newline splits one credential into two
+		// fragments. Skipping the unparseable fragment would make two accounts
+		// look like one and defeat the multi-account guard, so it must throw.
+		assert.throws(
+			() => _parseResidentCredentialList('00: AAAA first\nline BBBB es256 uvopt\n'),
+			/NotAllowedError/,
+		);
+		// Unknown algorithm in the type column: not a format this parser knows.
+		assert.throws(
+			() => _parseResidentCredentialList('00: AAAA name BBBB frobnicate uvopt\n'),
+			/NotAllowedError/,
+		);
+		// Field that must be base64 is not.
+		assert.throws(
+			() => _parseResidentCredentialList('00: AAAA name not!base64 es256 uvopt\n'),
+			/NotAllowedError/,
+		);
 	});
 });
 
@@ -831,6 +843,10 @@ describe('getAssertion allowCredentials loop', () => {
 		// -L alone lists devices; -L -k <rpId> <device> lists resident credentials.
 		writeStub('fido2-token', `
 			if (process.argv.includes("-k")) {
+				if (process.env.FIDO2_STUB_RK_FAIL) {
+					process.stderr.write("fido2-token: fido_credman_get_dev_rk: FIDO_ERR_INVALID_ARGUMENT");
+					process.exit(1);
+				}
 				process.stdout.write(process.env.FIDO2_STUB_RK_LINES || "");
 				process.exit(0);
 			}
@@ -1003,6 +1019,22 @@ describe('getAssertion allowCredentials loop', () => {
 			assert.strictEqual(spawnCount(), 0);
 		} finally {
 			process.env.FIDO2_STUB_RK_LINES = saved;
+		}
+	});
+
+	it('maps a key without credential management to NotAllowedError with guidance', posixOnly, async () => {
+		// FIDO_ERR_INVALID_ARGUMENT raw would hit mapError's "invalid" branch
+		// and reach the page as InvalidStateError.
+		arm('success-resident');
+		process.env.FIDO2_STUB_RK_FAIL = '1';
+		try {
+			await assert.rejects(
+				() => fido2Backend.getAssertion(assertionOptions({})),
+				/^Error: NotAllowedError: .*entering your email address/,
+			);
+			assert.strictEqual(spawnCount(), 0);
+		} finally {
+			delete process.env.FIDO2_STUB_RK_FAIL;
 		}
 	});
 

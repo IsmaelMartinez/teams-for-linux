@@ -494,11 +494,24 @@ async function tryAllowCredentials(options, args, inputLines, timeoutMs, clientD
   throw lastError;
 }
 
+// Credential algorithms print_rk emits. Anything else in the type column
+// means the line is not in a format this parser knows.
+const RK_TYPES = new Set(["es256", "es384", "rs256", "eddsa"]);
+const BASE64_RE = /^[A-Za-z0-9+/]+={0,2}$/;
+
+const RK_UNPARSEABLE =
+  "NotAllowedError: could not read the credential listing from the security key. Start the sign-in by entering your email address instead.";
+
 /**
  * Parse `fido2-token -L -k` output into resident credential descriptors.
- * Each line reads "NN: <credId base64> <displayName> <userId base64> <type> <prot>"
- * (libfido2 tools/credman.c print_rk). The display name is free text and may
- * contain spaces, so the fields are taken from the two ends of the line.
+ * Each line reads "NN: <credId base64> <displayName> <userId base64> <type> <prot>",
+ * with libfido2 1.17 appending a "pay"/"nopay" column (tools/credman.c
+ * print_rk). The display name is free text and may contain spaces, so the
+ * fixed fields are anchored from the end of the line after stripping the
+ * optional payment column, and validated. A line that names a credential
+ * ("NN:") but does not parse throws instead of being skipped: the caller
+ * counts credentials to decide whether asserting is safe, and a display name
+ * containing a newline must not make two accounts look like one.
  *
  * @param {string} stdout - Raw stdout from fido2-token -L -k
  * @returns {Array<{credentialId: string, userHandle: string}>} base64url-encoded
@@ -507,10 +520,20 @@ function parseResidentCredentialList(stdout) {
   const creds = [];
   for (const line of stdout.split("\n")) {
     const parts = line.trim().split(/\s+/);
-    if (parts.length < 5 || !/^\d+:$/.test(parts[0])) continue;
+    if (!/^\d+:$/.test(parts[0])) continue;
+    const last = parts[parts.length - 1];
+    if (last === "pay" || last === "nopay") {
+      parts.pop();
+    }
+    const credentialId = parts[1];
+    const userId = parts[parts.length - 3];
+    const type = parts[parts.length - 2];
+    if (parts.length < 6 || !RK_TYPES.has(type) || !BASE64_RE.test(credentialId) || !BASE64_RE.test(userId)) {
+      throw new Error(RK_UNPARSEABLE);
+    }
     creds.push({
-      credentialId: base64urlEncode(Buffer.from(parts[1], "base64")),
-      userHandle: base64urlEncode(Buffer.from(parts[parts.length - 3], "base64")),
+      credentialId: base64urlEncode(Buffer.from(credentialId, "base64")),
+      userHandle: base64urlEncode(Buffer.from(userId, "base64")),
     });
   }
   return creds;
@@ -532,6 +555,21 @@ async function listResidentCredentials(options, device, timeoutMs) {
     options.preCollectedPin || null, options.abortSignal,
   );
   return parseResidentCredentialList(stdout);
+}
+
+/**
+ * Build the fido2-assert argument list, device excluded.
+ * Only "required" adds -v per the WebAuthn spec; "preferred" must not force UV.
+ *
+ * @param {string} [userVerification] - The request's userVerification value
+ * @returns {string[]} fido2-assert arguments
+ */
+function buildAssertArgs(userVerification) {
+  const args = ["-G"];
+  if (userVerification === "required") {
+    args.push("-v");
+  }
+  return args;
 }
 
 /**
@@ -566,13 +604,7 @@ async function getAssertion(options) {
 
   const hasAllowCredentials = options.allowCredentials && options.allowCredentials.length > 0;
 
-  const args = ["-G"];
-
-  // Only add -v for "required" per WebAuthn spec; "preferred" should not force UV.
-  if (options.userVerification === "required") {
-    args.push("-v");
-  }
-
+  const args = buildAssertArgs(options.userVerification);
   args.push(device);
 
   const timeoutMs = (options.timeout || 60) * 1000;
@@ -594,7 +626,24 @@ async function getAssertion(options) {
   // (#2719 follow-up reports). Enumerate the resident credentials for this rpId
   // instead and run the normal credential-id path with the one found.
   log.debug("[WEBAUTHN] getAssertion discoverable-credential mode");
-  const residentCreds = await listResidentCredentials(options, device, timeoutMs);
+  // The listing and the assertion share the relying party's timeout budget
+  // rather than each getting the full amount.
+  const startedAt = Date.now();
+  let residentCreds;
+  try {
+    residentCreds = await listResidentCredentials(options, device, timeoutMs);
+  } catch (err) {
+    const errClass = log.classifyError(err);
+    // A cancel, a wrong PIN, a timeout, or an already user-readable failure
+    // must keep its meaning. Everything else here is typically
+    // FIDO_ERR_INVALID_ARGUMENT from a key without CTAP 2.1 credential
+    // management, whose raw text would map to InvalidStateError on the page.
+    if (errClass === "CANCELLED" || errClass === "BAD_PIN" || errClass === "TIMEOUT" || err.message.startsWith("NotAllowedError:")) {
+      throw err;
+    }
+    log.warn("[WEBAUTHN] Resident credential listing failed", { errClass });
+    throw new Error("NotAllowedError: the security key does not support listing its credentials (CTAP 2.1 credential management). Start the sign-in by entering your email address instead.");
+  }
   log.info("[WEBAUTHN] Resident credentials for rpId", { count: residentCreds.length });
   if (residentCreds.length === 0) {
     throw new Error("NotAllowedError: no credential for this site is stored on the security key. Start the sign-in by entering your email address instead.");
@@ -605,9 +654,10 @@ async function getAssertion(options) {
     throw new Error("NotAllowedError: the security key holds credentials for more than one account on this site and an account picker is not implemented yet. Start the sign-in by entering your email address instead.");
   }
   const chosen = residentCreds[0];
+  const remainingMs = Math.max(1000, timeoutMs - (Date.now() - startedAt));
   const result = await tryAllowCredentials(
     { ...options, allowCredentials: [{ id: chosen.credentialId }] },
-    args, inputLines, timeoutMs, clientDataJSON,
+    args, inputLines, remainingMs, clientDataJSON,
   );
   // fido2-assert prints the user id itself when the credential is resident;
   // the credman answer covers key or tool versions that do not.
@@ -663,3 +713,5 @@ module.exports._narrowCandidates = narrowCandidates;
 // Exposed for unit tests against captured fido2-token output. Not part of the
 // module's contract — do not use from app code.
 module.exports._parseResidentCredentialList = parseResidentCredentialList;
+module.exports._parseAssertionOutput = parseAssertionOutput;
+module.exports._buildAssertArgs = buildAssertArgs;
