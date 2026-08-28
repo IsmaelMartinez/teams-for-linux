@@ -32,8 +32,8 @@ We implement a dedicated authentication module (`app/auth/`) that integrates `@a
 
 2. **MSAL Node Integration (`app/auth/authFlow.js`)**:
    - Manages token acquisition using `@azure/msal-node` `PublicClientApplication`.
-   - Supports device-code flow (`acquireTokenByDeviceCode`) and interactive window flow (`acquireTokenByCode`).
-   - Seeds browser session cookies post-authentication by navigating a hidden `BrowserWindow` with `prompt=none` to `https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize`.
+   - Supports device-code flow (`acquireTokenByDeviceCode`) and PKCE-secured interactive window flow (`acquireTokenByCode`).
+   - Interactive flow runs in a dedicated `BrowserWindow` sharing the partition (`persist:teams-4-linux`), establishing session cookies directly in the app session context under the custom App Registration.
 
 3. **Encrypted Token Cache (`app/auth/cache.js`)**:
    - Serializes MSAL token cache and encrypts it using Electron `safeStorage`.
@@ -43,8 +43,8 @@ We implement a dedicated authentication module (`app/auth/`) that integrates `@a
    - Hook runs during `onAppReady` after cleaning expired cookies but before Teams web page load.
    - On auth failure, logs a warning and degrades gracefully (Teams loads with standard web sign-in).
 
-5. **Device-Code Renderer Preload Tool (`app/browser/tools/appRegistrationAuth.js`)**:
-   - Receives device-code events via IPC and displays an in-app overlay dialog with user code and verification link.
+5. **Device-Code Notification (`app/auth/index.js`)**:
+   - Notifies the user via a native Electron modal (`dialog.showMessageBox`), copies the code to the clipboard, and allows opening the verification URL directly in the default browser.
 
 ## Alternatives Considered
 
@@ -62,7 +62,7 @@ We implement a dedicated authentication module (`app/auth/`) that integrates `@a
 
 ## Consequences
 
-- Adds `@azure/msal-node` (~120KB) dependency to `package.json`.
+- Adds `@azure/msal-node` dependency to `package.json` (lazily loaded only when `auth.appRegistration.enabled` is `true`).
 - Requires user to register a custom Public Client App in Azure Portal to use the feature.
 - Enforces strict PII log sanitization: `clientId`, `tenantId`, and token contents are never logged.
-- Additive design: zero effect when `auth.appRegistration.enabled` is `false`.
+- Additive design: zero startup overhead and zero effect when `auth.appRegistration.enabled` is `false`.

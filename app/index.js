@@ -693,8 +693,11 @@ async function handleAppReady() {
     // exist so their sessions are caught by the session-created listener.
     certificateModule.installCertificateVerifyProc(config, app, session.defaultSession);
 
-    require("./auth").initialize(config, { settingsStore: appConfig?.settingsStore });
-    require("./auth").registerIpcHandlers(ipcMain);
+    if (config.auth?.appRegistration?.enabled) {
+      const auth = require("./auth");
+      auth.initialize(config, { settingsStore: appConfig?.settingsStore });
+      auth.registerIpcHandlers(ipcMain);
+    }
 
     await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService, profilesManager);
 

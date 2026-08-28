@@ -5,12 +5,7 @@
 const { dialog, clipboard, shell } = require('electron');
 const { isEnabled, getAuthMethod } = require('./config');
 const { createCachePlugin } = require('./cache');
-const {
-  createPublicClientApplication,
-  acquireTokenSilent,
-  acquireTokenDeviceCode,
-  acquireTokenInteractive,
-} = require('./authFlow');
+
 
 let currentStatus = { status: 'idle', method: null, error: null };
 let deviceCodeCallbackListener = null;
@@ -72,6 +67,13 @@ const authenticate = async (config, options = {}) => {
   const cachePlugin = settingsStore ? createCachePlugin(settingsStore) : null;
 
   try {
+    const {
+      createPublicClientApplication,
+      acquireTokenSilent,
+      acquireTokenDeviceCode,
+      acquireTokenInteractive,
+    } = require('./authFlow');
+
     const pca = createPublicClientApplication(config, cachePlugin);
     const tokenCache = pca.getTokenCache();
     const accounts = await tokenCache.getAllAccounts();
