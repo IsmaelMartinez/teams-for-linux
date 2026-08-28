@@ -107,6 +107,15 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin, signal) {
     signal?.addEventListener("abort", onAbort, { once: true });
     const stopListeningForAbort = () => signal?.removeEventListener("abort", onAbort);
 
+    // Writing into a child that is already gone gives EPIPE on the stream.
+    // Without a listener Node promotes that to an uncaught exception, and the
+    // handler in app/index.js does not recognise it as recoverable, so it takes
+    // the whole app down (#2920). The real outcome is decided by 'close' and
+    // 'error' below, so this only has to keep the failed write from throwing.
+    proc.stdin.on("error", (err) => {
+      log.debug("[WEBAUTHN] stdin write failed", { errCode: err.code });
+    });
+
     proc.stdout.on("data", (data) => { stdout += data.toString(); });
 
     proc.stderr.on("data", (data) => {
@@ -114,8 +123,10 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin, signal) {
       stderr += chunk;
 
       // Detect the PIN prompt: "Enter PIN for /dev/hidrawN:"
-      // Only when the tool is ready for PIN input do we write it.
-      if (!pinWritten && pin && chunk.includes("Enter PIN for")) {
+      // Only when the tool is ready for PIN input do we write it. A cancel or
+      // timeout has already killed the process group, and a prompt chunk can
+      // still arrive after that, so do not offer the PIN to a dead child.
+      if (!pinWritten && pin && !rejected && !exited && chunk.includes("Enter PIN for")) {
         pinWritten = true;
         log.info("[WEBAUTHN] PIN prompt detected, writing PIN");
         proc.stdin.write(pin.trim() + "\n");
