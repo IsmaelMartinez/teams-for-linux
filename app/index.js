@@ -35,13 +35,21 @@ const WebAuthn = require("./webauthn");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
-// Tell Chromium which .desktop entry this process belongs to. Without it,
-// notifications go out with no desktop-entry hint and desktop environments
-// fall back to the raw app name, so KDE and GNOME title every notification
-// "teams-for-linux" instead of the desktop entry's Name. Sandboxed installs
-// export the entry under their own id; an externally set CHROME_DESKTOP
-// (the same mechanism, as an env var) is left alone.
-if (process.platform === "linux" && !process.env.CHROME_DESKTOP) {
+// Name notifications "Teams for Linux" instead of the raw app name.
+// Desktop environments read two different fields for the header: KDE shows
+// the notification's app_name (which Electron takes from app.name), GNOME
+// resolves the desktop-entry hint and shows that entry's Name. Cover both.
+// app.name also seeds the default userData path, so pin the path first or
+// existing installs would silently switch config directory.
+if (process.platform === "linux") {
+  const userDataPath = app.getPath("userData");
+  app.setName("Teams for Linux");
+  app.setPath("userData", userDataPath);
+
+  // The desktop-entry hint must be set unconditionally: Electron pre-sets
+  // CHROME_DESKTOP itself before app code runs, so guarding on the env var
+  // being absent would be a no-op. Sandboxed installs export the entry
+  // under their own id.
   if (process.env.FLATPAK_ID) {
     app.setDesktopName(`${process.env.FLATPAK_ID}.desktop`);
   } else if (process.env.SNAP_INSTANCE_NAME) {
