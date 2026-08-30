@@ -107,6 +107,18 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin, signal) {
     signal?.addEventListener("abort", onAbort, { once: true });
     const stopListeningForAbort = () => signal?.removeEventListener("abort", onAbort);
 
+    // Writing into a child that is already gone gives EPIPE on the stream.
+    // Without a listener Node promotes that to an uncaught exception, and the
+    // handler in app/index.js does not recognise it as recoverable, so it takes
+    // the whole app down (#2920). The real outcome is decided by 'close' and
+    // 'error' below, so this only has to keep the failed write from throwing.
+    // Warn rather than debug: log.debug is off unless auth.webauthn.debug is
+    // set, and a failed parameter write means the tool never received its
+    // input, whose only other symptom is the full timeout a minute later.
+    proc.stdin.on("error", (err) => {
+      log.warn("[WEBAUTHN] stdin write failed", { errCode: err.code });
+    });
+
     proc.stdout.on("data", (data) => { stdout += data.toString(); });
 
     proc.stderr.on("data", (data) => {

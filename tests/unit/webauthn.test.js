@@ -717,6 +717,51 @@ describe('Security key cancellation', () => {
 	});
 });
 
+// ─── Writing to a child that has already gone (#2920) ────────────────────────
+
+describe('Security key stdin writes against a closed pipe', () => {
+	const fido2Backend = require('../../app/webauthn/fido2Backend');
+
+	it('does not raise an uncaught exception when a write lands on a closed stdin', async () => {
+		// The child closes its read end before prompting, so both the parameter
+		// write and the PIN write hit a dead pipe. With no listener on stdin that
+		// EPIPE becomes an uncaught exception, and the handler in app/index.js
+		// does not classify it as recoverable, so it calls process.exit(1).
+		const uncaught = [];
+		const trap = (err) => uncaught.push(err);
+		process.on('uncaughtException', trap);
+
+		try {
+			await assert.rejects(
+				fido2Backend._spawnFido2(
+					process.execPath,
+					[
+						'-e',
+						'require("node:fs").closeSync(0);' +
+							'process.stderr.write("Enter PIN for /dev/hidraw0:");' +
+							'setTimeout(() => process.exit(1), 300);',
+					],
+					[],
+					5000,
+					'1234',
+					null,
+				),
+				/exited with code 1/,
+			);
+			// The write is asynchronous, so give the EPIPE a chance to surface.
+			await new Promise((resolve) => setTimeout(resolve, 250));
+
+			assert.deepStrictEqual(
+				uncaught.map((err) => err.code),
+				[],
+				'writing the PIN to a dead child must not throw out of the promise',
+			);
+		} finally {
+			process.off('uncaughtException', trap);
+		}
+	});
+});
+
 // ─── The allowCredentials retry loop, driven for real ─────────────────────────
 //
 // getAssertion() walks the credentials the server allowed until one is on the
