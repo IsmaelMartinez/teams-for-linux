@@ -36,10 +36,6 @@ class NotificationBridge {
     }
   }
 
-  unregister(id) {
-    this.#entries.delete(id);
-  }
-
   // Idempotent: Teams calling stub.close() and the main process reporting the
   // system dismissal must fire Teams' onclose exactly once.
   close(id) {

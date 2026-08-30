@@ -109,17 +109,6 @@ describe('NotificationBridge', () => {
 		assert.deepStrictEqual(stub.calls.map((c) => c.type), ['close', 'click']);
 	});
 
-	it('delivers nothing once unregistered', () => {
-		const stub = makeStub();
-		bridge.register('id-1', stub);
-		bridge.unregister('id-1');
-
-		ipc.emit('notification-clicked', {}, 'id-1');
-		ipc.emit('notification-closed', {}, 'id-1');
-
-		assert.strictEqual(stub.calls.length, 0);
-	});
-
 	it('evicts the oldest entries past the limit instead of growing without bound', () => {
 		const small = new NotificationBridge(ipc, { limit: 2 });
 		const first = makeStub();
