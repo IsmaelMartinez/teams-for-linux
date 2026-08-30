@@ -314,7 +314,6 @@ function createElectronNotification(options) {
     globalThis.electronAPI
       .showNotification({ ...options, notificationId })
       .catch((e) => {
-        notificationBridge.unregister(notificationId);
         console.debug("showNotification failed", e);
       });
   }
