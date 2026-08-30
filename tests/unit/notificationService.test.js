@@ -202,27 +202,21 @@ describe('NotificationService icons', () => {
 		assert.strictEqual(notifications[0].shown, true);
 	});
 
-	it('does not fetch non-HTTPS icon URLs', async () => {
-		let fetchCalls = 0;
-		makeService(async () => { fetchCalls += 1; });
+	for (const [label, icon] of [
+		['non-HTTPS icon URLs', 'http://localhost/avatar.png'],
+		['icons from a different HTTPS origin', 'https://example.com/avatar.png'],
+	]) {
+		it(`does not fetch ${label}`, async () => {
+			let fetchCalls = 0;
+			makeService(async () => { fetchCalls += 1; });
 
-		await show({ icon: 'http://localhost/avatar.png' });
+			await show({ icon });
 
-		assert.strictEqual(fetchCalls, 0);
-		assert.strictEqual('icon' in notifications[0].options, false);
-		assert.strictEqual(notifications[0].shown, true);
-	});
-
-	it('does not fetch icons from a different HTTPS origin', async () => {
-		let fetchCalls = 0;
-		makeService(async () => { fetchCalls += 1; });
-
-		await show({ icon: 'https://example.com/avatar.png' });
-
-		assert.strictEqual(fetchCalls, 0);
-		assert.strictEqual('icon' in notifications[0].options, false);
-		assert.strictEqual(notifications[0].shown, true);
-	});
+			assert.strictEqual(fetchCalls, 0);
+			assert.strictEqual('icon' in notifications[0].options, false);
+			assert.strictEqual(notifications[0].shown, true);
+		});
+	}
 
 	it('still shows the notification when fetch rejects a redirect', async () => {
 		makeService(async (_url, options) => {
@@ -286,39 +280,23 @@ describe('NotificationService click and close relay', () => {
 		cleanupElectronMock();
 	});
 
-	it('relays the click to the creating renderer with the notification id', async () => {
-		makeService(async () => {});
+	for (const [label, clickAction, notificationId, expectedWindow, expectedSends] of [
+		['relays the click to the creating renderer with the notification id', undefined, 'notif-1', ['show'], [['notification-clicked', 'notif-1']]],
+		['relays the click when clickAction is "restore"', 'restore', 'notif-2', ['restore'], [['notification-clicked', 'notif-2']]],
+		['does not touch the window or relay when clickAction is "none"', 'none', 'notif-3', [], []],
+	]) {
+		it(label, async () => {
+			makeService(async () => {}, {
+				config: clickAction ? { notifications: { electron: { clickAction } } } : {},
+			});
 
-		await show({ notificationId: 'notif-1' }, makeSender());
-		notifications[0].emit('click');
+			await show({ notificationId }, makeSender());
+			notifications[0].emit('click');
 
-		assert.deepStrictEqual(windowActions, ['show']);
-		assert.deepStrictEqual(sends, [['notification-clicked', 'notif-1']]);
-	});
-
-	it('relays the click when clickAction is "restore"', async () => {
-		makeService(async () => {}, {
-			config: { notifications: { electron: { clickAction: 'restore' } } },
+			assert.deepStrictEqual(windowActions, expectedWindow);
+			assert.deepStrictEqual(sends, expectedSends);
 		});
-
-		await show({ notificationId: 'notif-2' }, makeSender());
-		notifications[0].emit('click');
-
-		assert.deepStrictEqual(windowActions, ['restore']);
-		assert.deepStrictEqual(sends, [['notification-clicked', 'notif-2']]);
-	});
-
-	it('does not touch the window or relay when clickAction is "none"', async () => {
-		makeService(async () => {}, {
-			config: { notifications: { electron: { clickAction: 'none' } } },
-		});
-
-		await show({ notificationId: 'notif-3' }, makeSender());
-		notifications[0].emit('click');
-
-		assert.deepStrictEqual(windowActions, []);
-		assert.deepStrictEqual(sends, []);
-	});
+	}
 
 	it('does not throw or relay when the window is gone', async () => {
 		makeService(async () => {}, { windowMissing: true });
