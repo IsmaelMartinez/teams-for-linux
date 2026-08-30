@@ -529,6 +529,45 @@ describe('WebAuthn fido2Backend - stdin line construction', () => {
 	});
 });
 
+// ─── fido2Backend.js - silent probe narrowing ───────────────────────────────
+
+// One full assertion per listed credential means one blind touch per entry.
+// narrowCandidates() must reduce the list to the probed match, and must fall
+// back to the full list when nothing probes as present (credProtect hides
+// credentials from silent probes), so probing can only remove touches.
+describe('WebAuthn fido2Backend - narrowCandidates', () => {
+	const { _narrowCandidates } = require('../../app/webauthn/fido2Backend');
+	const creds = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+
+	it('returns a single-credential list untouched without probing', async () => {
+		let probed = 0;
+		const single = [{ id: 'only' }];
+		const result = await _narrowCandidates(single, async () => { probed++; return true; });
+		assert.strictEqual(result, single);
+		assert.strictEqual(probed, 0);
+	});
+
+	it('narrows to the first credential that probes as present', async () => {
+		const probedIds = [];
+		const result = await _narrowCandidates(creds, async (c) => {
+			probedIds.push(c.id);
+			return c.id === 'b';
+		});
+		assert.deepStrictEqual(result, [{ id: 'b' }]);
+		assert.deepStrictEqual(probedIds, ['a', 'b'], 'probing must stop at the match');
+	});
+
+	it('falls back to the full list when no probe matches', async () => {
+		const probedIds = [];
+		const result = await _narrowCandidates(creds, async (c) => {
+			probedIds.push(c.id);
+			return false;
+		});
+		assert.strictEqual(result, creds);
+		assert.deepStrictEqual(probedIds, ['a', 'b', 'c']);
+	});
+});
+
 const credentialResponse = {
 	credentialId: 'credential',
 	rawId: '',
@@ -879,13 +918,33 @@ describe('getAssertion allowCredentials loop', () => {
 		...extra,
 	});
 
-	it('moves on to the next credential when the key does not hold this one', posixOnly, async () => {
-		arm('no-credentials', 'success');
+	it('probes for the credential on the key and asserts only against it', posixOnly, async () => {
+		// Spawns: probe cred-one (miss), probe cred-two (match), real assertion.
+		arm('no-credentials', 'success', 'success');
 
 		const result = await fido2Backend.getAssertion(assertionOptions({ allowCredentials: THREE_CREDENTIALS }));
 
 		assert.strictEqual(result.credentialId, THREE_CREDENTIALS[1].id);
-		assert.strictEqual(spawnCount(), 2);
+		assert.strictEqual(spawnCount(), 3);
+	});
+
+	it('falls back to trying each credential when no probe matches', posixOnly, async () => {
+		// Spawns: three probe misses, then the sequential walk: miss, success.
+		arm('no-credentials', 'no-credentials', 'no-credentials', 'no-credentials', 'success');
+
+		const result = await fido2Backend.getAssertion(assertionOptions({ allowCredentials: THREE_CREDENTIALS }));
+
+		assert.strictEqual(result.credentialId, THREE_CREDENTIALS[1].id);
+		assert.strictEqual(spawnCount(), 5);
+	});
+
+	it('skips probing when only one credential is allowed', posixOnly, async () => {
+		arm('success');
+
+		const result = await fido2Backend.getAssertion(assertionOptions({ allowCredentials: [THREE_CREDENTIALS[0]] }));
+
+		assert.strictEqual(result.credentialId, THREE_CREDENTIALS[0].id);
+		assert.strictEqual(spawnCount(), 1);
 	});
 
 	it('stops trying further credentials once cancelled', posixOnly, async () => {
@@ -901,28 +960,33 @@ describe('getAssertion allowCredentials loop', () => {
 		controller.abort();
 
 		await assert.rejects(pending, (err) => err.message === fido2Backend.CANCELLED_MESSAGE);
-		// The whole point: one child, not one per allowed credential.
+		// The whole point: one child, not one per allowed credential. The first
+		// spawn is a probe here, so this also pins that a cancel mid-probe
+		// rejects instead of reading as a miss and probing on.
 		assert.strictEqual(spawnCount(), 1);
 	});
 
 	it('does not retry an error that is not "wrong credential"', posixOnly, async () => {
-		arm('bad-pin');
+		// Spawns: three probe misses, then the first sequential attempt fails
+		// with a final error and the walk must stop there.
+		arm('no-credentials', 'no-credentials', 'no-credentials', 'bad-pin');
 
 		await assert.rejects(
 			() => fido2Backend.getAssertion(assertionOptions({ allowCredentials: THREE_CREDENTIALS })),
 			/FIDO_ERR_PIN_INVALID/,
 		);
-		assert.strictEqual(spawnCount(), 1);
+		assert.strictEqual(spawnCount(), 4);
 	});
 
 	it('tries every allowed credential before giving up', posixOnly, async () => {
-		arm('no-credentials', 'no-credentials', 'no-credentials');
+		// Three probe misses, then three sequential misses.
+		arm('no-credentials');
 
 		await assert.rejects(
 			() => fido2Backend.getAssertion(assertionOptions({ allowCredentials: THREE_CREDENTIALS })),
 			/FIDO_ERR_NO_CREDENTIALS/,
 		);
-		assert.strictEqual(spawnCount(), 3);
+		assert.strictEqual(spawnCount(), 6);
 	});
 
 	it('spawns once in resident-key mode when no credentials are listed', posixOnly, async () => {
