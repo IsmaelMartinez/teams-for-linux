@@ -6,7 +6,9 @@ id: 020-multi-account-profile-switcher
 
 ## Status
 
-✅ Proposed
+✅ Implemented (Phase 1, v2.9.0)
+
+Phase 1 shipped behind the opt-in `multiAccount.enabled` flag. Phase 2 (per-profile unread aggregation) is in progress and Phase 3 (per-profile launch) is untouched; both are tracked in [#2495](https://github.com/IsmaelMartinez/teams-for-linux/issues/2495).
 
 ## Context
 
