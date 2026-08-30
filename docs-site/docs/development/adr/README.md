@@ -42,7 +42,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | ✅ Implemented | 2026-02-26 | N/A |
 | [018](018-issue-triage-bot-github-app-migration.md) | Issue Triage Bot GitHub App Migration | ✅ Implemented | 2026-03-06 | N/A |
 | [019](019-repo-activity-dashboard.md) | Repository Activity Dashboard | ✅ Accepted | 2026-03-11 | N/A |
-| [020](020-multi-account-profile-switcher.md) | Multi-Account Profile Switcher | 🚧 Proposed | 2026-04-16 | N/A |
+| [020](020-multi-account-profile-switcher.md) | Multi-Account Profile Switcher | ✅ Implemented | 2026-04-16 | v2.9.0+ |
 | [021](021-webauthn-fido2-linux.md) | WebAuthn / FIDO2 Hardware Security Keys on Linux | 🚧 Proposed | 2026-04-21 | N/A |
 | [022](022-custom-notification-toast-scope.md) | Custom Notification Toast Scope | ✅ Accepted | 2025-11-16 | v2.6.16 |
 | [023](023-release-automation-tooling.md) | Release Automation Tooling | ✅ Implemented | 2026-03-13 | N/A |

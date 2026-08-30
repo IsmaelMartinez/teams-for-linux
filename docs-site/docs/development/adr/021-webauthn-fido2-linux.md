@@ -12,7 +12,7 @@ id: 021-webauthn-fido2-linux
 
 Hardware security keys (YubiKey, SoloKeys, Nitrokey, Feitian, etc.) have been unusable on `teams-for-linux` for years, tracked in the long-running umbrella issue [#802](https://github.com/IsmaelMartinez/teams-for-linux/issues/802) and a steady stream of duplicates (#1407, #1546, #1338, #1824, #2011, #2038, #1875, #2152, #2332, #2409).
 
-The root cause is upstream: Electron/Chromium on Linux does not ship a native FIDO2 authenticator backend. The WebAuthn JavaScript API surface (`navigator.credentials.create` / `.get`) is present in the renderer and the ceremony starts, but there is no OS-level platform authenticator implementation to complete it against a USB key. The tracking ticket is [electron/electron#24573](https://github.com/electron/electron/issues/24573), which has seen no movement for years. macOS and Windows are unaffected because Chromium on those platforms delegates to the OS WebAuthn stack.
+The root cause is upstream: Electron/Chromium on Linux does not ship a native FIDO2 authenticator backend. The WebAuthn JavaScript API surface (`navigator.credentials.create` / `.get`) is present in the renderer and the ceremony starts, but there is no OS-level platform authenticator implementation to complete it against a USB key. The tracking ticket is [electron/electron#24573](https://github.com/electron/electron/issues/24573), which remains open with no Linux implementation. macOS and Windows are unaffected because Chromium on those platforms delegates to the OS WebAuthn stack.
 
 A previous attempt to ship a fix ([PR #2353](https://github.com/IsmaelMartinez/teams-for-linux/pull/2353)) was reverted by [PR #2356](https://github.com/IsmaelMartinez/teams-for-linux/pull/2356) after merge, because it had not been validated against real hardware with a real Microsoft tenant. Community testers (@rafajunio, @machadofelipe, @marcovr, @rlavriv) then iterated on a replacement ([PR #2357](https://github.com/IsmaelMartinez/teams-for-linux/pull/2357)) which has been end-to-end validated on YubiKey + Arch Linux + Microsoft 365 with `fido2-tools` 1.16.0.
 
@@ -42,7 +42,7 @@ Ferdium shipped a conceptually identical approach via `electron-webauthn-linux` 
 
 ### Wait for Chromium Linux WebAuthn
 
-Preferred in principle, but electron/electron#24573 has been idle for years and Chromium shows no sign of prioritising Linux FIDO2. Waiting is indefinite. Rejected.
+Preferred in principle, but electron/electron#24573 is still open with no Linux implementation. Electron 42 and 43 added `app.configureWebAuthn()` and a `select-webauthn-account` session event (electron/electron#51563), both macOS only, so the Linux gap is unchanged. Waiting is indefinite. Rejected.
 
 ### Native Node.js FIDO2 library
 
