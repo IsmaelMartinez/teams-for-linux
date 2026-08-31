@@ -521,13 +521,13 @@ function parseResidentCredentialList(stdout) {
   for (const line of stdout.split("\n")) {
     const parts = line.trim().split(/\s+/);
     if (!/^\d+:$/.test(parts[0])) continue;
-    const last = parts[parts.length - 1];
+    const last = parts.at(-1);
     if (last === "pay" || last === "nopay") {
       parts.pop();
     }
     const credentialId = parts[1];
-    const userId = parts[parts.length - 3];
-    const type = parts[parts.length - 2];
+    const userId = parts.at(-3);
+    const type = parts.at(-2);
     if (parts.length < 6 || !RK_TYPES.has(type) || !BASE64_RE.test(credentialId) || !BASE64_RE.test(userId)) {
       throw new Error(RK_UNPARSEABLE);
     }

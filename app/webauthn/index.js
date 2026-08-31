@@ -132,7 +132,7 @@ async function handleWebauthnRequest(operation, event, options) {
     const uvRequired = operation === "create"
       ? options.authenticatorSelection?.userVerification === "required"
       : options.userVerification === "required";
-    const discoverableGet = operation === "get" && !(options.allowCredentials?.length > 0);
+    const discoverableGet = operation === "get" && (options.allowCredentials?.length ?? 0) === 0;
 
     let preCollectedPin = null;
     if (uvRequired || discoverableGet) {
