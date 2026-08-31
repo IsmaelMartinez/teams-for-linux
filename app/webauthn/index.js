@@ -125,14 +125,18 @@ async function handleWebauthnRequest(operation, event, options) {
   let touchMs = null;
 
   try {
-    // Determine if UV is required (PIN will be needed)
+    // Determine if UV is required (PIN will be needed). A get with no
+    // allowCredentials also needs the PIN: the discoverable flow lists the
+    // key's resident credentials via credential management, which is PIN-gated
+    // on most keys regardless of what userVerification asks for.
     const uvRequired = operation === "create"
       ? options.authenticatorSelection?.userVerification === "required"
       : options.userVerification === "required";
+    const discoverableGet = operation === "get" && (options.allowCredentials?.length ?? 0) === 0;
 
     let preCollectedPin = null;
-    if (uvRequired) {
-      log.info("[WEBAUTHN] userVerification=required, collecting PIN upfront");
+    if (uvRequired || discoverableGet) {
+      log.info("[WEBAUTHN] Collecting PIN upfront", { uvRequired, discoverableGet });
       const pinStartedAt = Date.now();
       preCollectedPin = await collectPin(event.sender);
       pinMs = Date.now() - pinStartedAt;
