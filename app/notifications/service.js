@@ -42,9 +42,9 @@ class NotificationService {
     ipcMain.handle("show-notification", this.#handleShowNotification.bind(this));
   }
 
-  async #handleShowNotification(_event, options) {
+  async #handleShowNotification(event, options) {
     const notificationId = options?.notificationId || crypto.randomUUID();
-    return this.#showNotification({ ...options, notificationId });
+    return this.#showNotification({ ...options, notificationId }, event?.sender);
   }
 
   async #handlePlayNotificationSound(_event, options) {
@@ -55,7 +55,7 @@ class NotificationService {
     return this.#playNotificationSound(options || {});
   }
 
-  async #showNotification(options) {
+  async #showNotification(options, sender) {
     const startTime = Date.now();
     console.debug("[NOTIFICATIONS] Native notification request received", {
       titleLength: options.title?.length || 0,
@@ -88,12 +88,32 @@ class NotificationService {
 
       const notification = new Notification(notificationConfig);
 
+      // Relay lifecycle events to the renderer that created the notification.
+      // event.sender is the only correct target: with multiAccount each profile
+      // runs in its own WebContentsView on its own session partition
+      // (mainAppWindow/profileViewManager.js), so the root window's webContents
+      // is the wrong renderer and would push one account's ids into another
+      // account's partition. The payload is the opaque notification id and
+      // nothing else; never widen it to title or body.
+      const relay = (channel) => {
+        if (!sender || sender.isDestroyed()) return;
+        sender.send(channel, options.notificationId);
+      };
+
       notification.on("click", () => {
         // notifications.electron.clickAction controls window behaviour on click
         // (issue #2647). Defaults to "show" so existing behaviour is unchanged.
         const clickAction = this.#config.notifications?.electron?.clickAction ?? "show";
         console.debug(`[NOTIFICATIONS] Notification clicked, clickAction=${clickAction}`);
+        // "none" suppresses the relay too: letting Teams navigate marks the
+        // conversation read and sends a read receipt, which an option
+        // documented as doing nothing must not do behind a hidden window.
         if (clickAction === "none") return;
+        // Neither show() nor restoreWindow() null-check, so a click arriving
+        // during shutdown would throw out of this emitter and take the relay
+        // with it.
+        const win = this.#mainWindow.getWindow();
+        if (!win || win.isDestroyed()) return;
         if (clickAction === "restore") {
           // restore if minimised, show if in the tray, then focus. Whether the
           // focus is honoured is window-manager dependent on Linux.
@@ -101,15 +121,15 @@ class NotificationService {
         } else {
           this.#mainWindow.show();
         }
+        // Show first, relay second: backgroundThrottling is on by default, so
+        // route work Teams defers to requestAnimationFrame would sit queued
+        // while the page is still hidden (issue #2768).
+        relay("notification-clicked");
       });
 
       notification.on("close", () => {
         console.debug("[NOTIFICATIONS] Notification dismissed by system");
-        const win = this.#mainWindow.getWindow();
-        if (!win || win.isDestroyed()) return;
-        const { webContents } = win;
-        if (!webContents || webContents.isDestroyed()) return;
-        webContents.send("notification-closed", options.notificationId);
+        relay("notification-closed");
       });
 
       notification.show();

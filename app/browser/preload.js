@@ -294,30 +294,26 @@ function createWebNotification(classicNotification, title, options) {
   return null;
 }
 
+// Bridges the main process's notification lifecycle onto the stubs above: close,
+// so Teams knows when the system dismissed a notification, and click, so Teams'
+// own handler can open the conversation the notification came from (issue #2768).
+// Two ipcRenderer listeners for the whole renderer, not a pair per notification.
+const NotificationBridge = require("./notifications/notificationBridge");
+const notificationBridge = new NotificationBridge(ipcRenderer);
+
 function createElectronNotification(options) {
   const notificationId = crypto.randomUUID();
   const stub = createNotificationStub();
-  let closed = false;
-  // Bridge the close event from the main process so Teams knows when
-  // the system dismisses the notification (e.g. GNOME timeout).
-  // Idempotent so stub.close() and the IPC arrival can each trigger it.
-  const finalizeClose = () => {
-    if (closed) return;
-    closed = true;
-    ipcRenderer.removeListener("notification-closed", onClosed);
-    if (stub.onclose) stub.onclose();
-  };
-  const onClosed = (_event, closedId) => {
-    if (closedId !== notificationId) return;
-    finalizeClose();
-  };
-  stub.close = finalizeClose;
   if (globalThis.electronAPI?.showNotification) {
-    ipcRenderer.on("notification-closed", onClosed);
+    // Register before invoking: main can emit click or close as soon as it has
+    // shown the notification. stub.close() from Teams and the notification-closed
+    // IPC both route through the bridge, so whichever lands first fires onclose
+    // exactly once. Without electronAPI the stub keeps its own close().
+    notificationBridge.register(notificationId, stub);
+    stub.close = () => notificationBridge.close(notificationId);
     globalThis.electronAPI
       .showNotification({ ...options, notificationId })
       .catch((e) => {
-        ipcRenderer.removeListener("notification-closed", onClosed);
         console.debug("showNotification failed", e);
       });
   }
