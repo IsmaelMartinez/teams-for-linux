@@ -29,6 +29,10 @@
 * **deps:** bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml ([#2909](https://github.com/IsmaelMartinez/teams-for-linux/issues/2909)) ([ad7e611](https://github.com/IsmaelMartinez/teams-for-linux/commit/ad7e611940373839c0af321ee144763485f5928f))
 * **deps:** bump the minor-and-patch group with 2 updates ([#2925](https://github.com/IsmaelMartinez/teams-for-linux/issues/2925)) ([70a460c](https://github.com/IsmaelMartinez/teams-for-linux/commit/70a460c498d4b0516498b03ef4a0f3160af15150))
 
+### Thanks
+
+Big thanks to @app/dependabot, @jpenberthy, @nikolainyegaard for contributing to this release.
+
 ## [2.18.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.18.0...v2.18.1) (2026-08-25)
 
 
