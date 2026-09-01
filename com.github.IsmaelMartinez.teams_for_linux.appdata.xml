@@ -14,6 +14,23 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.19.0" date="2026-09-01">
+      <description>
+        <ul>
+          <li>config: add toNestedConfigFile to migrate flat keys to nested (#2914)</li>
+          <li>config: offer the migrated config from the Settings menu (#2915)</li>
+          <li>multi-account: sender→profile attribution map (ADR-020 Phase 2 foundation) (#2865)</li>
+          <li>auth: keep msal cookie persistence on when a partial auth block omits it (#2928)</li>
+          <li>notifications: relay notification clicks so Teams opens the sending chat (#2903)</li>
+          <li>webauthn: ask for a single security key touch (#2889) (7291364), closes #2922</li>
+          <li>webauthn: resolve discoverable sign-ins via credential management (#2917)</li>
+          <li>webauthn: survive the FIDO2 PIN landing on an exited child (#2921)</li>
+          <li>correct stale ADR status and upstream claims, add multi-account roadmap entry (#2923)</li>
+          <li>deps: bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml (#2909)</li>
+          <li>deps: bump the minor-and-patch group with 2 updates (#2925)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.18.1" date="2026-08-25">
       <description>
         <ul>

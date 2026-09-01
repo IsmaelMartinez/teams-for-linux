@@ -1,5 +1,38 @@
 # Changelog
 
+## [2.19.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.18.1...v2.19.0) (2026-09-01)
+
+
+### Features
+
+* **config:** add toNestedConfigFile to migrate flat keys to nested ([#2914](https://github.com/IsmaelMartinez/teams-for-linux/issues/2914)) ([2e14be0](https://github.com/IsmaelMartinez/teams-for-linux/commit/2e14be024d186192b8181f637f4e24bfe6e1616d))
+* **config:** offer the migrated config from the Settings menu ([#2915](https://github.com/IsmaelMartinez/teams-for-linux/issues/2915)) ([e5ac708](https://github.com/IsmaelMartinez/teams-for-linux/commit/e5ac7085551004e87f507f75e48afdf79bf49237))
+* **multi-account:** sender→profile attribution map (ADR-020 Phase 2 foundation) ([#2865](https://github.com/IsmaelMartinez/teams-for-linux/issues/2865)) ([d750d6d](https://github.com/IsmaelMartinez/teams-for-linux/commit/d750d6d45e296b8001caa99ce8e957611e899599))
+
+
+### Bug Fixes
+
+* **auth:** keep msal cookie persistence on when a partial auth block omits it ([#2928](https://github.com/IsmaelMartinez/teams-for-linux/issues/2928)) ([2b4eece](https://github.com/IsmaelMartinez/teams-for-linux/commit/2b4eecef1c8f988c4f17563f8e0e2bcaf7ceba4b))
+* **notifications:** relay notification clicks so Teams opens the sending chat ([#2903](https://github.com/IsmaelMartinez/teams-for-linux/issues/2903)) ([32097ad](https://github.com/IsmaelMartinez/teams-for-linux/commit/32097ad49afab7ab3d03cd281f0a487e04879940))
+* **webauthn:** ask for a single security key touch ([#2889](https://github.com/IsmaelMartinez/teams-for-linux/issues/2889)) ([7291364](https://github.com/IsmaelMartinez/teams-for-linux/commit/729136435022115aa52193bb39d973b9e123cc1e)), closes [#2922](https://github.com/IsmaelMartinez/teams-for-linux/issues/2922)
+* **webauthn:** resolve discoverable sign-ins via credential management ([#2917](https://github.com/IsmaelMartinez/teams-for-linux/issues/2917)) ([90102b4](https://github.com/IsmaelMartinez/teams-for-linux/commit/90102b44c61cdb0aa1ed3100125a7d6ec789fcdb))
+* **webauthn:** survive the FIDO2 PIN landing on an exited child ([#2921](https://github.com/IsmaelMartinez/teams-for-linux/issues/2921)) ([f7f5199](https://github.com/IsmaelMartinez/teams-for-linux/commit/f7f5199ab87087c4a9db602a54ceb72bf347112b))
+
+
+### Documentation
+
+* correct stale ADR status and upstream claims, add multi-account roadmap entry ([#2923](https://github.com/IsmaelMartinez/teams-for-linux/issues/2923)) ([88e0144](https://github.com/IsmaelMartinez/teams-for-linux/commit/88e0144e9a422a5dd15385b94546efa652493402))
+
+
+### Maintenance
+
+* **deps:** bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml ([#2909](https://github.com/IsmaelMartinez/teams-for-linux/issues/2909)) ([ad7e611](https://github.com/IsmaelMartinez/teams-for-linux/commit/ad7e611940373839c0af321ee144763485f5928f))
+* **deps:** bump the minor-and-patch group with 2 updates ([#2925](https://github.com/IsmaelMartinez/teams-for-linux/issues/2925)) ([70a460c](https://github.com/IsmaelMartinez/teams-for-linux/commit/70a460c498d4b0516498b03ef4a0f3160af15150))
+
+### Thanks
+
+Big thanks to @app/dependabot, @jpenberthy, @nikolainyegaard for contributing to this release.
+
 ## [2.18.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.18.0...v2.18.1) (2026-08-25)
 
 
