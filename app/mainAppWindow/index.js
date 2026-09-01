@@ -331,9 +331,8 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
 // Set an expiration date for the cookie to promote it from a session cookie, so it survives restarts
 const MSAL_ENCRYPTION_COOKIE = 'msal.cache.encryption';
 function keepMsalEncryptionCookiePersistent(windowSession) {
-  // Treat undefined as enabled: yargs replaces object options wholesale, so a
-  // partial `auth` block in config.json (e.g. the FIDO2 setup from the docs)
-  // erases this leaf's default and must not silently disable the fix (#2722)
+  // undefined counts as enabled: a partial auth block in config.json replaces
+  // the defaults wholesale and must not silently disable this fix (#2722)
   if (config?.auth?.keepMsalCacheEncryptionCookie?.enabled === false) return;
   windowSession.cookies.on('changed', (_event, cookie, _cause, removed) => {
     if (removed || cookie.name !== MSAL_ENCRYPTION_COOKIE || !cookie.session) {
