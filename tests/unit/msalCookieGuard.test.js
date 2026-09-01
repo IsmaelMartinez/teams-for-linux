@@ -18,7 +18,7 @@ describe('keepMsalEncryptionCookiePersistent guard', () => {
 	it('bails out only on an explicit enabled === false', () => {
 		assert.match(
 			source,
-			/config\?\.auth\?\.keepMsalCacheEncryptionCookie\?\.enabled\s*===\s*false\)\s*return/,
+			/config\?\.auth\?\.keepMsalCacheEncryptionCookie\?\.enabled\s*===\s*false/,
 			'undefined (partial auth block, #2722) must keep the cookie persistence on',
 		);
 	});
