@@ -21,6 +21,15 @@ What this does and does not change:
 - Native, deb, AppImage and snap installs are unaffected: the portal's
   background monitor only tracks Flatpak instances and `SetStatus` rejects
   host callers.
+- Autostart is left exactly as the user set it. `RequestBackground` conflates
+  background permission with autostart management, and the portal reads a
+  missing `autostart` option as an explicit `false`, so it unlinked
+  `~/.config/autostart/<app-id>.desktop` on every launch
+  ([#2936](https://github.com/IsmaelMartinez/teams-for-linux/issues/2936)).
+  There is no way to opt out of that, so the module reads the user's current
+  entry and sends the same state back, passing `commandline` from the existing
+  `Exec` so a customised launch command survives the portal's rewrite. The app
+  has no autostart feature of its own and does not enable it for anyone.
 
 Diagnostic log lines (no PII): portal version, `RequestBackground`
 response code (0 granted, 1 dismissed, 2 error), and status-set confirmation.

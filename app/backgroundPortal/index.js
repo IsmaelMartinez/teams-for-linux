@@ -36,6 +36,10 @@ const STATUS_MESSAGE = "Running in background";
 // The response may sit behind a user-facing permission dialog, so the wait is
 // generous. After the timeout we only stop listening; nothing is aborted.
 const RESPONSE_TIMEOUT_MS = 30000;
+// Desktop-entry Exec line, and the field codes the spec allows inside it which
+// are not part of the command itself.
+const EXEC_LINE = /^Exec=(.*)$/m;
+const DESKTOP_FIELD_CODES = /%[uUfFickdDnNvm]/g;
 
 /**
  * Request the background permission and, when granted on a v2+ portal, set
@@ -116,6 +120,49 @@ function getPortalVersion(sessionBus, callback) {
 }
 
 /**
+ * Read the user's current autostart entry, if any.
+ *
+ * The portal treats a missing `autostart` option as an explicit false: its
+ * `autostart_requested` flag is initialised to FALSE and `g_variant_lookup`
+ * leaves it untouched when the key is absent, after which
+ * `enable_autostart_sync` runs on every granted request and unlinks the entry.
+ * There is no way to ask for background permission without also declaring an
+ * autostart intent, so we read whatever the user already has and hand the same
+ * state back (#2936).
+ *
+ * @returns {{commandline: string[]}|null} null when autostart is not enabled
+ */
+function readAutostartEntry() {
+  const fs = require("node:fs");
+  const os = require("node:os");
+  const path = require("node:path");
+
+  const file = path.join(
+    os.homedir(),
+    ".config",
+    "autostart",
+    `${process.env.FLATPAK_ID}.desktop`
+  );
+
+  let contents;
+  try {
+    contents = fs.readFileSync(file, "utf8");
+  } catch {
+    // No entry is the ordinary case, and means autostart is already off.
+    return null;
+  }
+
+  // Granting autostart makes the portal rewrite the file from `commandline`,
+  // so carry the existing Exec across or flags such as --minimized are lost.
+  const exec = EXEC_LINE.exec(contents)?.[1] ?? "";
+  const commandline = exec
+    .replace(DESKTOP_FIELD_CODES, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+  return { commandline };
+}
+
+/**
  * Call RequestBackground and wait for the portal's asynchronous Response
  * signal. The signal arrives on a Request object path ending in our
  * handle_token, which is how the reply is matched without computing the
@@ -123,6 +170,16 @@ function getPortalVersion(sessionBus, callback) {
  */
 function requestBackground(sessionBus, callback) {
   const token = `tfl${Date.now().toString(36)}`;
+  const autostart = readAutostartEntry();
+  const options = [
+    ["handle_token", ["s", token]],
+    ["reason", ["s", REQUEST_REASON]],
+    // Always sent. Leaving it out is what deleted the entry (#2936).
+    ["autostart", ["b", autostart !== null]],
+  ];
+  if (autostart?.commandline.length) {
+    options.push(["commandline", ["as", autostart.commandline]]);
+  }
   const matchRule = `type='signal',interface='${REQUEST_INTERFACE}',member='Response'`;
   let done = false;
 
@@ -178,10 +235,7 @@ function requestBackground(sessionBus, callback) {
             // Empty parent window: the request is not anchored to a window,
             // which the portal accepts.
             "",
-            [
-              ["handle_token", ["s", token]],
-              ["reason", ["s", REQUEST_REASON]],
-            ],
+            options,
           ],
         },
         (error) => {
