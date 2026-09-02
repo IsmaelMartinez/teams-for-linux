@@ -26,10 +26,14 @@ What this does and does not change:
   missing `autostart` option as an explicit `false`, so it unlinked
   `~/.config/autostart/<app-id>.desktop` on every launch
   ([#2936](https://github.com/IsmaelMartinez/teams-for-linux/issues/2936)).
-  There is no way to opt out of that, so the module reads the user's current
-  entry and sends the same state back, passing `commandline` from the existing
-  `Exec` so a customised launch command survives the portal's rewrite. The app
-  has no autostart feature of its own and does not enable it for anyone.
+  There is no way to opt out of that, so the module reads whether the user has
+  autostart on, counting `Hidden=true` and `X-GNOME-Autostart-enabled=false` as
+  off, and sends the same state back. No `commandline` goes with it: the
+  portal's `rewrite_commandline` always prepends `flatpak run` and turns the
+  first element into `--command=`, so echoing back an `Exec` the portal wrote
+  double-wraps it, and `enable_autostart_sync` rebuilds the file from scratch
+  on every call regardless. The app has no autostart feature of its own and
+  does not enable it for anyone.
 
 Diagnostic log lines (no PII): portal version, `RequestBackground`
 response code (0 granted, 1 dismissed, 2 error), and status-set confirmation.

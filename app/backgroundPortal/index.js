@@ -36,10 +36,12 @@ const STATUS_MESSAGE = "Running in background";
 // The response may sit behind a user-facing permission dialog, so the wait is
 // generous. After the timeout we only stop listening; nothing is aborted.
 const RESPONSE_TIMEOUT_MS = 30000;
-// Desktop-entry Exec line, and the field codes the spec allows inside it which
-// are not part of the command itself.
-const EXEC_LINE = /^Exec=(.*)$/m;
-const DESKTOP_FIELD_CODES = /%[uUfFickdDnNvm]/g;
+// An autostart entry is switched off in place rather than deleted: GNOME
+// writes X-GNOME-Autostart-enabled=false, and the spec's Hidden=true means the
+// same thing. Reading either as "on" would re-enable autostart for someone who
+// deliberately turned it off.
+const HIDDEN_LINE = /^Hidden\s*=\s*(\S*)/m;
+const GNOME_AUTOSTART_LINE = /^X-GNOME-Autostart-enabled\s*=\s*(\S*)/m;
 
 /**
  * Request the background permission and, when granted on a v2+ portal, set
@@ -120,7 +122,7 @@ function getPortalVersion(sessionBus, callback) {
 }
 
 /**
- * Read the user's current autostart entry, if any.
+ * Whether the user currently has autostart switched on.
  *
  * The portal treats a missing `autostart` option as an explicit false: its
  * `autostart_requested` flag is initialised to FALSE and `g_variant_lookup`
@@ -130,9 +132,16 @@ function getPortalVersion(sessionBus, callback) {
  * autostart intent, so we read whatever the user already has and hand the same
  * state back (#2936).
  *
- * @returns {{commandline: string[]}|null} null when autostart is not enabled
+ * No `commandline` is sent with it. The portal's `rewrite_commandline` always
+ * prepends `flatpak run` and turns the first element into `--command=`, so
+ * handing back an Exec the portal itself wrote double-wraps it. Left out, the
+ * portal writes its own correct `flatpak run <app-id>`, and since
+ * `enable_autostart_sync` rebuilds the file from scratch on every call a
+ * hand-edited Exec never survived regardless.
+ *
+ * @returns {boolean}
  */
-function readAutostartEntry() {
+function isAutostartEnabled() {
   const fs = require("node:fs");
   const os = require("node:os");
   const path = require("node:path");
@@ -149,17 +158,14 @@ function readAutostartEntry() {
     contents = fs.readFileSync(file, "utf8");
   } catch {
     // No entry is the ordinary case, and means autostart is already off.
-    return null;
+    return false;
   }
 
-  // Granting autostart makes the portal rewrite the file from `commandline`,
-  // so carry the existing Exec across or flags such as --minimized are lost.
-  const exec = EXEC_LINE.exec(contents)?.[1] ?? "";
-  const commandline = exec
-    .replace(DESKTOP_FIELD_CODES, " ")
-    .split(/\s+/)
-    .filter(Boolean);
-  return { commandline };
+  // The portal writes a single [Desktop Entry] group, so scanning the whole
+  // file for these two keys is enough.
+  if (HIDDEN_LINE.exec(contents)?.[1] === "true") return false;
+  if (GNOME_AUTOSTART_LINE.exec(contents)?.[1] === "false") return false;
+  return true;
 }
 
 /**
@@ -170,16 +176,12 @@ function readAutostartEntry() {
  */
 function requestBackground(sessionBus, callback) {
   const token = `tfl${Date.now().toString(36)}`;
-  const autostart = readAutostartEntry();
   const options = [
     ["handle_token", ["s", token]],
     ["reason", ["s", REQUEST_REASON]],
     // Always sent. Leaving it out is what deleted the entry (#2936).
-    ["autostart", ["b", autostart !== null]],
+    ["autostart", ["b", isAutostartEnabled()]],
   ];
-  if (autostart?.commandline.length) {
-    options.push(["commandline", ["as", autostart.commandline]]);
-  }
   const matchRule = `type='signal',interface='${REQUEST_INTERFACE}',member='Response'`;
   let done = false;
 

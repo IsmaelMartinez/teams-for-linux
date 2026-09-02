@@ -93,12 +93,18 @@ describe('backgroundPortal', () => {
 		} else {
 			process.env.HOME = originalHome;
 		}
+		while (tempHomes.length) {
+			fs.rmSync(tempHomes.pop(), { recursive: true, force: true });
+		}
 	});
+
+	const tempHomes = [];
 
 	// os.homedir() reads $HOME on POSIX, so pointing it at a temp tree is
 	// enough to stand in for the user's real autostart directory.
 	function withTempHome(entryContents) {
 		const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tfl-autostart-'));
+		tempHomes.push(dir);
 		if (entryContents !== null) {
 			const autostartDir = path.join(dir, '.config', 'autostart');
 			fs.mkdirSync(autostartDir, { recursive: true });
@@ -185,7 +191,7 @@ describe('backgroundPortal', () => {
 		assert.ok(!options.some(([key]) => key === 'commandline'));
 	});
 
-	it('reports autostart on, with the existing Exec, when the user has an entry', async () => {
+	it('reports autostart on when the user has an entry', async () => {
 		pretendFlatpakOnLinux();
 		withTempHome(
 			'[Desktop Entry]\nType=Application\n' +
@@ -201,20 +207,47 @@ describe('backgroundPortal', () => {
 			options.find(([key]) => key === 'autostart'),
 			['autostart', ['b', true]]
 		);
-		assert.deepStrictEqual(
-			options.find(([key]) => key === 'commandline'),
-			[
-				'commandline',
-				[
-					'as',
-					[
-						'flatpak',
-						'run',
-						'com.github.IsmaelMartinez.teams_for_linux',
-						'--minimized',
-					],
-				],
-			]
-		);
 	});
+
+	// The portal's rewrite_commandline prepends `flatpak run` and turns the
+	// first element into `--command=`, so echoing back an Exec it wrote itself
+	// double-wraps it. Leaving the key out makes the portal write its own.
+	it('never sends a commandline alongside an enabled entry', async () => {
+		pretendFlatpakOnLinux();
+		withTempHome(
+			'[Desktop Entry]\nType=Application\n' +
+				'Exec=flatpak run com.github.IsmaelMartinez.teams_for_linux --minimized %U\n'
+		);
+		const bus = makeFakeBus({ portalVersion: 2, responseCode: 0 });
+		assert.strictEqual(loadWithFakeBus(bus).init(), true);
+
+		await waitFor(() => bus.calls.some((c) => c.member === 'removeMatch'));
+
+		assert.ok(!optionsOf(bus).some(([key]) => key === 'commandline'));
+	});
+
+	// An entry the user switched off is still on disk. Reading it as "on" would
+	// hand the portal a true and turn autostart back on behind their back.
+	for (const [label, disablingLine] of [
+		['X-GNOME-Autostart-enabled=false', 'X-GNOME-Autostart-enabled=false'],
+		['Hidden=true', 'Hidden=true'],
+	]) {
+		it(`reports autostart off for an entry disabled with ${label}`, async () => {
+			pretendFlatpakOnLinux();
+			withTempHome(
+				'[Desktop Entry]\nType=Application\n' +
+					'Exec=flatpak run com.github.IsmaelMartinez.teams_for_linux\n' +
+					`${disablingLine}\n`
+			);
+			const bus = makeFakeBus({ portalVersion: 2, responseCode: 0 });
+			assert.strictEqual(loadWithFakeBus(bus).init(), true);
+
+			await waitFor(() => bus.calls.some((c) => c.member === 'removeMatch'));
+
+			assert.deepStrictEqual(
+				optionsOf(bus).find(([key]) => key === 'autostart'),
+				['autostart', ['b', false]]
+			);
+		});
+	}
 });
