@@ -3,6 +3,7 @@ const { chmod } = require("node:fs/promises");
 const path = require("node:path");
 const { generateReleaseInfo } = require("./generateReleaseInfo");
 const { generateDebianChangelog } = require("./generateDebianChangelog");
+const { patchSnapDesktopLauncher } = require("./patchSnapDesktopLauncher");
 
 function getAppFileName(context) {
   const productFileName = context.packager.appInfo.productFilename;
@@ -26,6 +27,7 @@ exports.default = async function afterPack(context) {
     // Ensure release info is generated for Linux publishing
     if (context.electronPlatformName === "linux") {
       await generateReleaseInfoForLinux();
+      await patchSnapLauncherIfNeeded(context);
     }
 
     const appPath = `${context.appOutDir}/${getAppFileName(context)}`;
@@ -39,6 +41,15 @@ exports.default = async function afterPack(context) {
     process.exit(1);
   }
 };
+
+// afterPack runs inside doPack, before any target builds, so this is the last
+// point at which the snap's launcher scripts can still be fixed up (#2946).
+async function patchSnapLauncherIfNeeded(context) {
+  if (!context.targets.some((target) => target.name === "snap")) {
+    return;
+  }
+  await patchSnapDesktopLauncher(context.arch);
+}
 
 async function generateReleaseInfoForLinux() {
   try {
