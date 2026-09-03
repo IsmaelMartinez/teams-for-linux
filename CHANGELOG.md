@@ -23,6 +23,10 @@
 * **deps:** bump fast-uri from 3.1.5 to 3.1.7 ([#2942](https://github.com/IsmaelMartinez/teams-for-linux/issues/2942)) ([dc75562](https://github.com/IsmaelMartinez/teams-for-linux/commit/dc755622d761ca7c6678fe848ddfd67200826ce0))
 * **deps:** bump github/codeql-action from 4.37.8 to 4.37.9 ([#2932](https://github.com/IsmaelMartinez/teams-for-linux/issues/2932)) ([c710b7b](https://github.com/IsmaelMartinez/teams-for-linux/commit/c710b7b3b03d27370c8c803fc0ec86086e8e6fba))
 
+### Thanks
+
+Big thanks to @app/dependabot, @iMonZ for contributing to this release.
+
 ## [2.19.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.18.1...v2.19.0) (2026-09-01)
 
 
