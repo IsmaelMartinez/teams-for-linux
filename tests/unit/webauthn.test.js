@@ -1200,3 +1200,151 @@ describe('WebAuthn origin allowlist - auth.webauthn.extraOrigins', () => {
 		assert.ok(!webauthn._isAllowedOrigin(CORPORATE_ORIGIN));
 	});
 });
+
+// ─── The combined origin gate on a relayed ceremony (issue #2931) ─────────────
+
+// handleWebauthnRequest() checks BOTH the IPC sender's origin and the inner
+// frame's origin. Nothing asserted on that pairing, so the AND could quietly
+// become an OR. These tests drive the real IPC handler registered by
+// initialize() and pin the three topologies a federated tenant can hit.
+describe('WebAuthn IPC gate - relayed ceremony origins', () => {
+	const CORPORATE_ORIGIN = 'https://sso.example.com';
+	const MICROSOFT_LOGIN_ORIGIN = 'https://login.microsoftonline.com';
+	const TEAMS_ORIGIN = 'https://teams.microsoft.com';
+
+	const handlers = new Map();
+	const backendCalls = [];
+
+	// Load a private copy of app/webauthn with electron and the security-key
+	// backend stubbed, so invoking the handler exercises the gate without a
+	// BrowserWindow or a real fido2-tools spawn. The stubs go in and come
+	// straight back out: the copy binds them at require time, and the other
+	// describes in this file keep the real modules.
+	const webauthnMain = (() => {
+		const stubbed = {
+			[require.resolve('electron')]: {
+				BrowserWindow: { fromWebContents: () => null },
+				ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
+				webFrameMain: { fromId: () => null },
+			},
+			[require.resolve('../../app/webauthn/fido2Backend')]: {
+				CANCELLED_MESSAGE: 'Operation cancelled by user',
+				isAvailable: async () => true,
+				createCredential: async (options) => { backendCalls.push(options); return credentialResponse; },
+				getAssertion: async (options) => { backendCalls.push(options); return credentialResponse; },
+			},
+			[require.resolve('../../app/webauthn/touchPrompt')]: {
+				showTouchPrompt: () => ({ dismiss: () => {} }),
+			},
+			[require.resolve('../../app/webauthn/pinDialog')]: {
+				requestPinPreCollect: async () => '1234',
+				requestPinModal: async () => '1234',
+			},
+		};
+
+		const indexPath = require.resolve('../../app/webauthn');
+		const saved = new Map();
+		for (const modulePath of [...Object.keys(stubbed), indexPath]) {
+			saved.set(modulePath, require.cache[modulePath]);
+		}
+		for (const [modulePath, exports] of Object.entries(stubbed)) {
+			require.cache[modulePath] = { id: modulePath, filename: modulePath, loaded: true, exports };
+		}
+		delete require.cache[indexPath];
+
+		try {
+			return require('../../app/webauthn');
+		} finally {
+			for (const [modulePath, entry] of saved) {
+				if (entry) require.cache[modulePath] = entry;
+				else delete require.cache[modulePath];
+			}
+		}
+	})();
+
+	// A get with a non-empty allowCredentials and no required user verification
+	// skips PIN collection, so the request reaches the gate and then the backend.
+	const GET_OPTIONS = {
+		challenge: 'Y2hhbGxlbmdl',
+		rpId: 'example.com',
+		userVerification: 'preferred',
+		allowCredentials: [{ id: 'Y3JlZA', type: 'public-key' }],
+	};
+
+	/**
+	 * Invoke the real webauthn:get handler the way the IPC layer would.
+	 * @param {string} senderOrigin - origin of the main frame that sent the IPC
+	 * @param {string} [frameOrigin] - origin of the subframe that started the
+	 *   ceremony; omitted for a non-relayed, main-frame ceremony
+	 */
+	async function invokeGet(senderOrigin, frameOrigin) {
+		backendCalls.length = 0;
+		const event = { senderFrame: { origin: senderOrigin }, sender: { getURL: () => senderOrigin } };
+		const options = frameOrigin ? { ...GET_OPTIONS, frameOrigin } : { ...GET_OPTIONS };
+		return handlers.get('webauthn:get')(event, options);
+	}
+
+	before(async () => {
+		await webauthnMain.initialize(null, {
+			auth: { webauthn: { enabled: true, extraOrigins: [CORPORATE_ORIGIN] } },
+		});
+		assert.ok(handlers.has('webauthn:get'), 'webauthn:get handler should be registered');
+	});
+
+	// Topology 2: the corporate IdP runs in an iframe inside a Microsoft login
+	// page. The sender is a built-in origin, the inner frame is the configured
+	// one, so both halves of the gate pass and the key signs the inner origin.
+	it('allows a relay from a Microsoft login page into a configured extra origin', async () => {
+		const result = await invokeGet(MICROSOFT_LOGIN_ORIGIN, CORPORATE_ORIGIN);
+
+		assert.strictEqual(result.success, true);
+		assert.strictEqual(backendCalls.length, 1);
+		// The assertion is signed for the frame that called navigator.credentials.
+		assert.strictEqual(backendCalls[0].origin, CORPORATE_ORIGIN);
+		assert.strictEqual(backendCalls[0].topOrigin, MICROSOFT_LOGIN_ORIGIN);
+	});
+
+	// Topology 3: the same corporate IdP in an iframe inside the Teams SPA.
+	// This stays blocked ON PURPOSE. teams.microsoft.com is not on the allowlist
+	// and never has been, so the same block already applies to a Microsoft login
+	// iframe hosted there; it is not a regression introduced by extraOrigins.
+	// Loosening it would mean trusting the Teams origin as an IPC sender, which
+	// lets anything running in the Teams SPA drive the security key. That is a
+	// deliberate security decision, taken outside this config option.
+	it('blocks a relay whose sender origin is the Teams SPA, even for a configured frame origin', async () => {
+		const result = await invokeGet(TEAMS_ORIGIN, CORPORATE_ORIGIN);
+
+		assert.strictEqual(result.success, false);
+		assert.match(result.error, /SecurityError/);
+		assert.strictEqual(backendCalls.length, 0, 'the security key must never be reached');
+	});
+
+	// The gate is an AND in both directions: an allowlisted sender cannot lend
+	// its standing to an unconfigured inner frame.
+	it('blocks a relay into an unconfigured frame origin from an allowed sender', async () => {
+		const result = await invokeGet(MICROSOFT_LOGIN_ORIGIN, 'https://evil.example.com');
+
+		assert.strictEqual(result.success, false);
+		assert.match(result.error, /SecurityError/);
+		assert.strictEqual(backendCalls.length, 0);
+	});
+
+	// Topology 1: the corporate IdP is the top-level page, which is what #2931
+	// actually reports. Sender and frame origin are the same configured origin.
+	it('allows a non-relayed ceremony whose sender is a configured extra origin', async () => {
+		const result = await invokeGet(CORPORATE_ORIGIN);
+
+		assert.strictEqual(result.success, true);
+		assert.strictEqual(backendCalls.length, 1);
+		assert.strictEqual(backendCalls[0].origin, CORPORATE_ORIGIN);
+		assert.strictEqual(backendCalls[0].topOrigin, CORPORATE_ORIGIN);
+	});
+
+	it('blocks a non-relayed ceremony from an origin that was never configured', async () => {
+		const result = await invokeGet(TEAMS_ORIGIN);
+
+		assert.strictEqual(result.success, false);
+		assert.match(result.error, /SecurityError/);
+		assert.strictEqual(backendCalls.length, 0);
+	});
+});
