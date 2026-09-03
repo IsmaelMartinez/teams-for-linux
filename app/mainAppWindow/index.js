@@ -20,6 +20,7 @@ require("../appConfiguration");
 const ConnectionManager = require("../connectionManager");
 const ssoPasswordPrefill = require("../ssoPasswordPrefill");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
+const deepLinkRouter = require("./deepLinkRouter");
 const os = require("node:os");
 const path = require("node:path");
 
@@ -866,7 +867,7 @@ exports.setQuickChatManager = function (quickChatManager) {
 
 exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
   console.debug("second-instance started");
-  if (window) {
+  if (window && !window.isDestroyed()) {
     event.preventDefault();
     const url = processArgs(args);
     if (url && allowFurtherRequests) {
@@ -874,12 +875,39 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
       setTimeout(() => {
         allowFurtherRequests = true;
       }, 5000);
-      window.loadURL(url, { userAgent: config.chromeUserAgent });
+      // `loadURL` rejects with ERR_ABORTED whenever Teams redirects the
+      // navigation it started, and the main process exits on
+      // unhandledRejection. The error is dropped rather than logged because it
+      // carries the deep link, and with it the recipient or meeting.
+      openDeepLink(url).catch(() => {
+        console.debug("[DEEPLINK] navigation failed");
+      });
     }
 
     restoreWindow();
   }
 };
+
+/**
+ * Opens a deep link, preferring in-page routing over a full navigation.
+ *
+ * A full `loadURL` discards the running SPA and cold-boots it, which is the
+ * multi-second delay between activating a link and seeing the target. Launcher
+ * links route through the loaded SPA instead, and anything it does not consume
+ * falls back to the full navigation.
+ *
+ * @param {string} url - Deep link URL resolved from the launch argument
+ */
+async function openDeepLink(url) {
+  const routed = await deepLinkRouter.navigateInPage(window, url, config.url);
+  if (routed) {
+    console.debug("[DEEPLINK] routed in page");
+    return;
+  }
+
+  console.debug("[DEEPLINK] in-page routing unavailable, reloading");
+  await window.loadURL(url, { userAgent: config.chromeUserAgent });
+}
 
 function applyAppConfiguration(config, window) {
   applySpellCheckerConfiguration(config.spellCheckerLanguages, window);
