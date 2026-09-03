@@ -175,6 +175,9 @@
       "category": "public.app-category.productivity",
       "target": [
         "dmg"
+      "target": [
+        "dmg",
+        "zip"
       ],
       "extendInfo": {
         "NSCameraUsageDescription": "We need camera access for video calls.",
