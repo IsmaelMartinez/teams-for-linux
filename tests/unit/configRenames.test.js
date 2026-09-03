@@ -337,6 +337,31 @@ describe('isOptionSetByUser', () => {
 	it('sees the flat name on the command line', () => {
 		assert.strictEqual(isOptionSetByUser({}, ['--disableGpu'], 'disableGpu'), true);
 		assert.strictEqual(isOptionSetByUser({}, ['--disableGpu=false'], 'disableGpu'), true);
+		assert.strictEqual(isOptionSetByUser({}, ['--disableGpu', 'false'], 'disableGpu'), true);
+	});
+
+	// Every spelling below was confirmed against yargs to set `disableGpu`:
+	// camel-case expansion makes --disable-gpu the same option, and boolean
+	// negation adds --no- in front of both forms.
+	it('sees the kebab-case and negated spellings yargs also accepts', () => {
+		for (const arg of [
+			'--no-disableGpu',
+			'--disable-gpu',
+			'--disable-gpu=false',
+			'--no-disable-gpu',
+		]) {
+			assert.strictEqual(isOptionSetByUser({}, [arg], 'disableGpu'), true, arg);
+		}
+	});
+
+	// A prefix match would count this, but yargs treats it as its own unknown
+	// option and leaves disableGpu at the default, so nothing was ever set.
+	it('ignores a longer option that merely starts with the flat name', () => {
+		assert.strictEqual(isOptionSetByUser({}, ['--disableGpuFoo'], 'disableGpu'), false);
+		assert.strictEqual(
+			isOptionSetByUser({}, ['--disableGpuFoo=true'], 'disableGpu'),
+			false
+		);
 	});
 
 	// applyRenamedOptions never reads argv, so a nested name on the command line

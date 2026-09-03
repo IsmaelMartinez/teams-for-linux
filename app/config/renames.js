@@ -164,6 +164,26 @@ function applyRenamedOptions(config, configFile, renames = RENAMES) {
 }
 
 /**
+ * Every `--flag` token yargs accepts for a flat option name.
+ *
+ * yargs' camel-case expansion means `--disableGpu` and `--disable-gpu` are the
+ * same option, and boolean negation adds `--no-` in front of both. A probe over
+ * all 84 declared options confirmed this decamelisation matches the alias yargs
+ * generates for each of them.
+ *
+ * The `[A-Z]` class has no quantifier and cannot backtrack, so matching is
+ * linear in the length of the name.
+ *
+ * @param {string} flat the flat option name.
+ * @returns {string[]} the accepted tokens, without any `=value` suffix.
+ */
+function argvSpellings(flat) {
+  const kebab = flat.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+  const names = kebab === flat ? [flat] : [flat, kebab];
+  return names.flatMap((name) => [`--${name}`, `--no-${name}`]);
+}
+
+/**
  * Whether the user supplied an option, under either spelling and by whichever
  * route that spelling actually works.
  *
@@ -176,10 +196,11 @@ function applyRenamedOptions(config, configFile, renames = RENAMES) {
  *
  * The scopes differ on purpose and match applyRenamedOptions. In the config file
  * both names work, so both count. On the command line only the flat name works,
- * because the projection above never looks at argv; counting `--performance.
- * disableGpu` there would report the user as having spoken while their value
- * stayed unprojected, leaving the Wayland branch to respect a default it
- * mistook for a choice.
+ * in any of the spellings yargs accepts for it (see argvSpellings), because the
+ * projection above never looks at argv; counting `--performance.disableGpu`
+ * there would report the user as having spoken while their value stayed
+ * unprojected, leaving the Wayland branch to respect a default it mistook for a
+ * choice.
  *
  * @param {Record<string, unknown>} configFile the merged system and user config
  *   file contents.
@@ -196,9 +217,15 @@ function isOptionSetByUser(configFile, argv, flat) {
     return true;
   }
 
-  // startsWith rather than an exact match so `--disableGpu` and
-  // `--disableGpu=false` both count, matching the check this replaced.
-  return Array.isArray(argv) && argv.some((arg) => arg.startsWith(`--${flat}`));
+  // Match the whole token, not a prefix: `--disableGpuFoo` is a different
+  // option to yargs and leaves `disableGpu` at its default, so counting it
+  // would report a choice the user never made. Splitting on the first `=`
+  // covers `--disableGpu=false`; `--disableGpu false` is already two tokens.
+  const spellings = argvSpellings(flat);
+  return (
+    Array.isArray(argv) &&
+    argv.some((arg) => spellings.includes(arg.split("=")[0]))
+  );
 }
 
 /**
