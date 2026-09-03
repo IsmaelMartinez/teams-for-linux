@@ -56,9 +56,13 @@ Create a `config.json` file with your desired settings:
 
 ```json
 {
-  "closeAppOnCross": true,
+  "window": {
+    "closeOnCross": true
+  },
   "disableNotifications": false,
-  "customCSSName": "compactDark"
+  "appearance": {
+    "cssName": "compactDark"
+  }
 }
 ```
 
@@ -89,42 +93,77 @@ Each option's **Apply** mode (whether a change takes effect immediately or after
 
 ## Configuration Options Reference
 
+### Renamed options
+
+Options are moving from flat top-level names to nested namespaces, following the
+convention in [ADR-025](development/adr/025-config-option-naming-convention.md).
+Both spellings work: pick the nested name for new configuration, and the tables
+below mark each old name as deprecated and point at its replacement. Where you
+set both, the nested name wins.
+
+The old names keep working until **2.30.0**, and using one logs a single
+aggregated warning at startup naming every option to move.
+
+:::note
+During this transition the nested names are read from `config.json` only.
+Command-line flags and environment variables keep using the flat name, so
+`--partition nopersist` still works and `--app.partition nopersist` is silently
+ignored. The examples below use whichever spelling actually applies.
+:::
+
 ### Application Core
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `url` | `string` | `"https://teams.cloud.microsoft"` | Microsoft Teams URL |
-| `appTitle` | `string` | `"Microsoft Teams"` | Text to be suffixed with page title |
-| `partition` | `string` | `"persist:teams-4-linux"` | BrowserWindow webpreferences partition |
+| `app.url` | `string` | `"https://teams.cloud.microsoft"` | Microsoft Teams URL |
+| `url` | `string` | `"https://teams.cloud.microsoft"` | Deprecated, use `app.url` |
+| `app.title` | `string` | `"Microsoft Teams"` | Text to be suffixed with page title |
+| `appTitle` | `string` | `"Microsoft Teams"` | Deprecated, use `app.title` |
+| `app.partition` | `string` | `"persist:teams-4-linux"` | BrowserWindow webpreferences partition |
+| `partition` | `string` | `"persist:teams-4-linux"` | Deprecated, use `app.partition` |
 
 ### Window & UI Behavior
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `frame` | `boolean` | `true` | Specify false to create a Frameless Window |
-| `menubar` | `string` | `"auto"` | Menu bar behaviour. Choices: `auto`, `visible`, `hidden` |
-| `minimized` | `boolean` | `false` | Start the application minimized |
-| `minimizeOnClose` | `boolean` | `false` | Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when `closeAppOnCross` is true) |
-| `closeAppOnCross` | `boolean` | `false` | Close the app when clicking the close (X) cross |
-| `alwaysOnTop` | `boolean` | `true` | Keep the pop-out window always on top of other windows |
-| `class` | `string` | `null` | Custom value for the WM_CLASS property |
+| `window.frame` | `boolean` | `true` | Specify false to create a Frameless Window |
+| `frame` | `boolean` | `true` | Deprecated, use `window.frame` |
+| `window.menubar` | `string` | `"auto"` | Menu bar behaviour. Choices: `auto`, `visible`, `hidden` |
+| `menubar` | `string` | `"auto"` | Deprecated, use `window.menubar` |
+| `window.minimized` | `boolean` | `false` | Start the application minimized |
+| `minimized` | `boolean` | `false` | Deprecated, use `window.minimized` |
+| `window.minimizeOnClose` | `boolean` | `false` | Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when `window.closeOnCross` is true) |
+| `minimizeOnClose` | `boolean` | `false` | Deprecated, use `window.minimizeOnClose` |
+| `window.closeOnCross` | `boolean` | `false` | Close the app when clicking the close (X) cross |
+| `closeAppOnCross` | `boolean` | `false` | Deprecated, use `window.closeOnCross` |
+| `window.alwaysOnTop` | `boolean` | `true` | Keep the pop-out window always on top of other windows |
+| `alwaysOnTop` | `boolean` | `true` | Deprecated, use `window.alwaysOnTop` |
+| `window.class` | `string` | `null` | Custom value for the WM_CLASS property |
+| `class` | `string` | `null` | Deprecated, use `window.class` |
 
 ### Theming & Appearance
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `customCSSName` | `string` | `""` | Custom CSS name. Options: "compactDark", "compactLight", "tweaks", "condensedDark", "condensedLight" |
-| `customCSSLocation` | `string` | `""` | Custom CSS styles file location |
-| `followSystemTheme` | `boolean` | `false` | Follow the operating-system dark/light theme preference. Set `true` to drive Teams's theme from the OS preference. |
+| `appearance.cssName` | `string` | `""` | Custom CSS name. Options: "compactDark", "compactLight", "tweaks", "condensedDark", "condensedLight" |
+| `customCSSName` | `string` | `""` | Deprecated, use `appearance.cssName` |
+| `appearance.cssLocation` | `string` | `""` | Custom CSS styles file location |
+| `customCSSLocation` | `string` | `""` | Deprecated, use `appearance.cssLocation` |
+| `appearance.followSystemTheme` | `boolean` | `false` | Follow the operating-system dark/light theme preference. Set `true` to drive Teams's theme from the OS preference. |
+| `followSystemTheme` | `boolean` | `false` | Deprecated, use `appearance.followSystemTheme` |
 
 ### Tray Icon
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `trayIconEnabled` | `boolean` | `true` | Enable tray icon |
-| `appIcon` | `string` | `""` | Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu |
-| `appIconType` | `string` | `"default"` | Type of tray icon. Choices: `default`, `light`, `dark` |
-| `useMutationTitleLogic` | `boolean` | `true` | Use MutationObserver to update counter from title |
+| `tray.enabled` | `boolean` | `true` | Enable tray icon |
+| `trayIconEnabled` | `boolean` | `true` | Deprecated, use `tray.enabled` |
+| `tray.icon` | `string` | `""` | Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu |
+| `appIcon` | `string` | `""` | Deprecated, use `tray.icon` |
+| `tray.iconType` | `string` | `"default"` | Type of tray icon. Choices: `default`, `light`, `dark` |
+| `appIconType` | `string` | `"default"` | Deprecated, use `tray.iconType` |
+| `tray.useMutationTitleLogic` | `boolean` | `true` | Use MutationObserver to update counter from title |
+| `useMutationTitleLogic` | `boolean` | `true` | Deprecated, use `tray.useMutationTitleLogic` |
 | `disableBadgeCount` | `boolean` | `false` | Disable the badge counter on the taskbar/dock icon |
 
 ### Notification System
@@ -145,9 +184,12 @@ Each option's **Apply** mode (whether a change takes effect immediately or after
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `enableIncomingCallToast` | `boolean` | `false` | Enable incoming call toast |
-| `incomingCallCommand` | `string` | `null` | Command or executable to run when an incoming call is detected |
-| `incomingCallCommandArgs` | `array` | `[]` | Arguments to pass to the incoming call command |
+| `incomingCalls.toast` | `boolean` | `false` | Enable incoming call toast |
+| `enableIncomingCallToast` | `boolean` | `false` | Deprecated, use `incomingCalls.toast` |
+| `incomingCalls.command` | `string` | `null` | Command or executable to run when an incoming call is detected |
+| `incomingCallCommand` | `string` | `null` | Deprecated, use `incomingCalls.command` |
+| `incomingCalls.commandArgs` | `array` | `[]` | Arguments to pass to the incoming call command |
+| `incomingCallCommandArgs` | `array` | `[]` | Deprecated, use `incomingCalls.commandArgs` |
 
 > [!NOTE]
 > See [Incoming Call Command](#incoming-call-command) for detailed usage examples.
@@ -550,9 +592,12 @@ Media settings are organized under the `media` configuration object with subgrou
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `isCustomBackgroundEnabled` | `boolean` | `false` | Enable custom background feature |
-| `customBGServiceBaseUrl` | `string` | `"http://localhost"` | Base URL of the server which provides custom background images |
-| `customBGServiceConfigFetchInterval` | `number` | `0` | Poll interval in seconds to download background service config |
+| `customBackground.enabled` | `boolean` | `false` | Enable custom background feature |
+| `isCustomBackgroundEnabled` | `boolean` | `false` | Deprecated, use `customBackground.enabled` |
+| `customBackground.serviceBaseUrl` | `string` | `"http://localhost"` | Base URL of the server which provides custom background images |
+| `customBGServiceBaseUrl` | `string` | `"http://localhost"` | Deprecated, use `customBackground.serviceBaseUrl` |
+| `customBackground.configFetchInterval` | `number` | `0` | Poll interval in seconds to download background service config |
+| `customBGServiceConfigFetchInterval` | `number` | `0` | Deprecated, use `customBackground.configFetchInterval` |
 
 ### Custom Stickers
 
@@ -571,10 +616,13 @@ A floating sticker panel that lists image files from a local folder and pastes t
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `defaultURLHandler` | `string` | `""` | Default application to open HTTP URLs |
-| `meetupJoinRegEx` | `string` | `^https://teams\\.(?:microsoft\\.com|live\\.com|cloud\\.microsoft)/(v2/\\?meetingjoin=|meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)` | Regex for Teams meetup-join and related links |
+| `urlHandling.defaultHandler` | `string` | `""` | Default application to open HTTP URLs |
+| `defaultURLHandler` | `string` | `""` | Deprecated, use `urlHandling.defaultHandler` |
+| `urlHandling.meetupJoinRegEx` | `string` | `^https://teams\\.(?:microsoft\\.com\|live\\.com\|cloud\\.microsoft)/(v2/\\?meetingjoin=\|meet/\|l/(?:app\|call\|channel\|chat\|entity\|file\|meet(?:ing\|up-join)\|message\|task\|team)/)` | Regex for Teams meetup-join and related links |
+| `meetupJoinRegEx` | `string` | `^https://teams\\.(?:microsoft\\.com\|live\\.com\|cloud\\.microsoft)/(v2/\\?meetingjoin=\|meet/\|l/(?:app\|call\|channel\|chat\|entity\|file\|meet(?:ing\|up-join)\|message\|task\|team)/)` | Deprecated, use `urlHandling.meetupJoinRegEx` |
 | `msTeamsProtocols` | `object` | `{ v1: "^msteams:/(?:meet/\|l/(?:app\|call\|channel\|chat\|entity\|file\|meet(?:ing\|up-join)\|message\|task\|team)/)", v2: "^msteams://teams\\.(?:microsoft\\.com\|live\\.com\|cloud\\.microsoft)/(?:meet/\|l/(?:app\|call\|channel\|chat\|entity\|file\|meet(?:ing\|up-join)\|message\|task\|team)/)" }` | Regular expressions for Microsoft Teams protocol links (v1 = legacy `msteams:` scheme, v2 = host-based `msteams://` scheme) |
-| `onNewWindowOpenMeetupJoinUrlInApp` | `boolean` | `true` | Open meetupJoinRegEx URLs in the app instead of default browser |
+| `urlHandling.openMeetupJoinInApp` | `boolean` | `true` | Open `urlHandling.meetupJoinRegEx` URLs in the app instead of default browser |
+| `onNewWindowOpenMeetupJoinUrlInApp` | `boolean` | `true` | Deprecated, use `urlHandling.openMeetupJoinInApp` |
 
 ### Keyboard Shortcuts
 
@@ -688,8 +736,10 @@ All topics use retained messages by default, ensuring subscribers receive the la
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `disableGpu` | `boolean` | `false` | Disable GPU and hardware acceleration |
-| `electronCLIFlags` | `array` | `[]` | Electron CLI flags |
+| `performance.disableGpu` | `boolean` | `false` | Disable GPU and hardware acceleration |
+| `disableGpu` | `boolean` | `false` | Deprecated, use `performance.disableGpu` |
+| `performance.electronCLIFlags` | `array` | `[]` | Electron CLI flags |
+| `electronCLIFlags` | `array` | `[]` | Deprecated, use `performance.electronCLIFlags` |
 
 ### Wayland
 
@@ -722,18 +772,24 @@ Wayland display server settings are organized under the `wayland` configuration 
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `webDebug` | `boolean` | `false` | Enable debug at start |
+| `development.webDebug` | `boolean` | `false` | Enable debug at start |
+| `webDebug` | `boolean` | `false` | Deprecated, use `development.webDebug` |
 | `logConfig` | `object` | `{ transports: { console: { level: "info" }, file: { level: false } } }` | Electron-log configuration |
-| `watchConfigFile` | `boolean` | `false` | Watch for changes in config file and reload the app |
+| `development.watchConfigFile` | `boolean` | `false` | Watch for changes in config file and reload the app |
+| `watchConfigFile` | `boolean` | `false` | Deprecated, use `development.watchConfigFile` |
 
 ### Advanced Platform Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `chromeUserAgent` | `string` | `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36` | Google Chrome User Agent |
-| `emulateWinChromiumPlatform` | `boolean` | `false` | Use windows platform information in chromium (helpful if MFA app doesn't support Linux) |
-| `spellCheckerLanguages` | `array` | `[]` | Array of languages to use with Electron's spell checker |
-| `disableTimestampOnCopy` | `boolean` | `false` | Controls whether timestamps are included when copying messages |
+| `platform.chromeUserAgent` | `string` | `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<version> Safari/537.36` | Google Chrome User Agent |
+| `chromeUserAgent` | `string` | `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<version> Safari/537.36` | Deprecated, use `platform.chromeUserAgent` |
+| `platform.emulateWindowsChromium` | `boolean` | `false` | Use windows platform information in chromium (helpful if MFA app doesn't support Linux) |
+| `emulateWinChromiumPlatform` | `boolean` | `false` | Deprecated, use `platform.emulateWindowsChromium` |
+| `platform.spellCheckerLanguages` | `array` | `[]` | Array of languages to use with Electron's spell checker |
+| `spellCheckerLanguages` | `array` | `[]` | Deprecated, use `platform.spellCheckerLanguages` |
+| `platform.disableTimestampOnCopy` | `boolean` | `false` | Controls whether timestamps are included when copying messages |
+| `disableTimestampOnCopy` | `boolean` | `false` | Deprecated, use `platform.disableTimestampOnCopy` |
 
 :::note Wayland GPU Handling
 When running under Wayland, GPU acceleration is **automatically disabled by default** to prevent blank window issues. To enable GPU acceleration on Wayland, you can explicitly override this behavior using either:
@@ -741,7 +797,9 @@ When running under Wayland, GPU acceleration is **automatically disabled by defa
 **Configuration file** (`config.json`):
 ```json
 {
-  "disableGpu": false
+  "performance": {
+    "disableGpu": false
+  }
 }
 ```
 
@@ -780,16 +838,20 @@ When enabled, this flag:
 #### Minimal Configuration
 ```json
 {
-  "closeAppOnCross": true
+  "window": {
+    "closeOnCross": true
+  }
 }
 ```
 
 #### Dark Theme with Notifications Disabled
 ```json
 {
-  "customCSSName": "compactDark",
-  "disableNotifications": true,
-  "followSystemTheme": true
+  "appearance": {
+    "cssName": "compactDark",
+    "followSystemTheme": true
+  },
+  "disableNotifications": true
 }
 ```
 
@@ -800,12 +862,10 @@ When enabled, this flag:
     "intune": {
       "enabled": true,
       "user": "user@company.com"
-    },
-    "certificate": {
-      "path": "/path/to/cert.p12",
-      "password": "password"
     }
   },
+  "clientCertPath": "/path/to/cert.p12",
+  "clientCertPassword": "password",
   "proxyServer": "proxy.company.com:8080"
 }
 ```
@@ -877,14 +937,18 @@ Create `/etc/teams-for-linux/config.json` to set organization-wide defaults:
 
 ```json
 {
-  "closeAppOnCross": false,
+  "window": {
+    "closeOnCross": false
+  },
   "disableNotifications": false,
   "screenSharing": {
     "thumbnail": {
       "enabled": true
     }
   },
-  "customCSSName": "compactDark",
+  "appearance": {
+    "cssName": "compactDark"
+  },
   "auth": {
     "intune": {
       "enabled": true
@@ -902,9 +966,11 @@ The configuration file can include Electron CLI flags that will be added when th
 
 ```json
 {
-  "electronCLIFlags": [
-    "disable-software-rasterizer"
-  ]
+  "performance": {
+    "electronCLIFlags": [
+      "disable-software-rasterizer"
+    ]
+  }
 }
 ```
 
@@ -955,8 +1021,10 @@ To use the incoming call command feature, a command or executable needs to be co
 
 ```json
 {
-  "incomingCallCommand": "/home/user/incomingCallScript.sh",
-  "incomingCallCommandArgs": ["-f", "1234"]
+  "incomingCalls": {
+    "command": "/home/user/incomingCallScript.sh",
+    "commandArgs": ["-f", "1234"]
+  }
 }
 ```
 

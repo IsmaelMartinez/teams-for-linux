@@ -34,7 +34,8 @@ describe('buildDeprecationWarning - nothing to report', () => {
 
 describe('buildDeprecationWarning - aggregation', () => {
 	// The headline contract: one string covering every deprecated option in use,
-	// because app/index.js opens a blocking modal per entry in config.warnings.
+	// so a config with several of them logs one message rather than a wall of
+	// near-identical lines.
 	it('reports every deprecated option in use in a single message', () => {
 		const warning = buildDeprecationWarning(
 			{

@@ -114,22 +114,38 @@ Each profile can have its own `config.json` file in its respective user data dir
 ### Example Work Profile Config
 ```json
 {
-  "appTitle": "Teams - Work",
-  "appIconType": "dark",
+  "app": {
+    "title": "Teams - Work"
+  },
+  "tray": {
+    "iconType": "dark"
+  },
   "disableNotificationSound": false,
-  "customCSSName": "compactDark",
-  "closeAppOnCross": false
+  "appearance": {
+    "cssName": "compactDark"
+  },
+  "window": {
+    "closeOnCross": false
+  }
 }
 ```
 
 ### Example Personal Profile Config
 ```json
 {
-  "appTitle": "Teams - Personal",
-  "appIconType": "light",
+  "app": {
+    "title": "Teams - Personal"
+  },
+  "tray": {
+    "iconType": "light"
+  },
   "disableNotificationSound": true,
-  "customCSSName": "compactLight",
-  "closeAppOnCross": true
+  "appearance": {
+    "cssName": "compactLight"
+  },
+  "window": {
+    "closeOnCross": true
+  }
 }
 ```
 

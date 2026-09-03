@@ -1,10 +1,10 @@
 // Builds the startup warning for deprecated config options. Pure data module,
 // no Electron imports, mirroring app/config/validator.js.
 //
-// One aggregated message, never one per option: showConfigurationDialogs in
-// app/index.js opens a blocking modal for every entry in config.warnings, so
-// a config using several deprecated options would stack modals at startup.
-// This matters as ADR-025 renames land, since each rename deprecates a key.
+// One aggregated message, never one per option: ADR-025 deprecates a key per
+// rename, so a config using several would otherwise emit a wall of
+// near-identical lines. app/config/index.js only logs this and deliberately
+// keeps it out of the startup modal; the reasoning lives there.
 //
 // PII safety (see CLAUDE.md): the message contains option NAMES and the
 // author-written deprecation text only, never config values.

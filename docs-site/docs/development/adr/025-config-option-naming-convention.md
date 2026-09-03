@@ -28,7 +28,11 @@ Spell words out rather than abbreviating (`customBackground`, not `customBG`), a
 
 The table maps every flat option to its nested target. Four renames invert a boolean, marked in the Inverted column, so tooling must negate those values rather than copy them; a blank cell means copy unchanged. For example `disableNotifications: true` becomes `notifications.enabled: false`, and defaults stay behaviour-preserving under inversion (`disableNotifications` defaults to `false`, so `notifications.enabled` defaults to `true`).
 
-The table ships in batches. The `shortcuts` and `storage` renames landed in 2.17.0, and the ten remaining brand-new namespaces are in flight; the rest are still flat-only, and naming one of those nested targets today gets the key ignored with a startup warning. [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841) settled what happens to the old name: both spellings keep working until the flat declarations are removed in 2.30.0, and `app/config/renames.js` projects a nested value onto the flat key that modules still read. A deprecated key in a config file is reported at startup by `checkUsedDeprecatedValues`, and each batch is announced in the release notes.
+[#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841) settled how a rename behaves once it ships: both names keep working for a long deprecation window, the flat one marked `deprecated` so it produces a single aggregated startup warning naming its replacement, and the flat declarations are removed together in **2.30.0**. Where a config file sets both, the nested name wins. The migration runs namespace by namespace and is tracked in [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842); `docs-site/static/config-schema.json` is the live record of which targets have landed, so read it rather than this table to know what the app accepts today.
+
+During the window the flat name stays the one every module reads. `app/config/renames.js` holds the machine-readable table and projects a nested value onto its flat key, so no feature code is swept while both spellings are live. That projection takes its input from the config file only, which means a nested name set through a command-line flag or an environment variable is silently ignored; those keep using the flat name until removal.
+
+The table ships in batches, each announced in the release notes. The `shortcuts` and `storage` renames landed in 2.17.0; the ten remaining brand-new namespaces land with this batch. The startup warning also points at **Settings > Show Updated Config…** ([#2913](https://github.com/IsmaelMartinez/teams-for-linux/issues/2913)), which writes a copy of the config using the new names and leaves the user's own `config.json` alone, so the warning names an action rather than only a problem.
 
 The `notifications`, `idleDetection`, `network` and `auth` targets are shipped objects that already hold unrelated leaves; merging renamed options into them is intentional, and every leaf key below was checked against the shipped fields with no collisions.
 
@@ -104,7 +108,7 @@ The research mapping also re-parented three already-nested objects: `cacheManage
 
 ### Runtime aliasing of old names
 
-An alias layer keeping flat names working forever was rejected by the original research and stays rejected; the precedent is hard removal after a deprecation window, as with `ssoInTuneEnabled` and its siblings (`app/intune/README.md`). That rejection is about a permanent layer. Whether a time-boxed fallback reads the old key for one deprecation window is a separate question and is open in [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841).
+An alias layer keeping flat names working forever was rejected by the original research and stays rejected; the precedent is hard removal after a deprecation window, as with `ssoInTuneEnabled` and its siblings (`app/intune/README.md`). That rejection is about a permanent layer. Whether a time-boxed fallback reads the old key for one deprecation window was the separate question, and [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841) answered it yes: both names apply until removal in 2.30.0, after which the flat declarations and the projection layer are deleted together.
 
 ## Consequences
 
@@ -120,13 +124,13 @@ Migration is not full equivalence. A flat option declares a type and yargs coerc
 
 ### Neutral
 
-A permanent alias layer stays rejected. The codemod no longer does: `toNestedConfigFile` in `app/config/renames.js` rewrites a config file onto the nested names, and [#2913](https://github.com/IsmaelMartinez/teams-for-linux/issues/2913) tracks the surface that offers it to users. Renames proceed namespace by namespace as tracked in [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842), and the four occupied namespaces will mix long-shipped and newly-arrived leaves.
+A permanent alias layer stays rejected. The codemod no longer does: `toNestedConfigFile` in `app/config/renames.js` rewrites a config file onto the nested names, and [#2913](https://github.com/IsmaelMartinez/teams-for-linux/issues/2913) tracks the surface that offers it to users. Renames proceed namespace by namespace as tracked in [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842), and the four occupied namespaces will mix long-shipped and newly-arrived leaves. Those four go last: yargs replaces an object option wholesale rather than deep merging it, so until that is fixed a user moving one leaf into an existing namespace would lose the declared defaults of its siblings.
 
 ## Related
 
 - [ADR-024](024-smartcard-pkcs11-pin-dialog.md): shipped the `auth.clientCertificate` namespace this ADR aligns with
 - Roadmap: [Config Schema as Single Source of Truth](../plan/roadmap.md) (#2597), where the in-app settings window is tracked
-- [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841), the deprecation window decision that must precede the first rename, and [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842), which tracks the migration itself
+- [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841), the settled deprecation window decision, and [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842), which tracks the migration itself
 - [Documentation, Contributing, and Config UX research](../research/documentation-and-config-ux-research.md), which builds on this convention
 - `app/config/options.js` and `docs-site/static/config-schema.json`, the live inventory
 - Research history: see git history for `docs-site/docs/development/research/configuration-organization-research.md`

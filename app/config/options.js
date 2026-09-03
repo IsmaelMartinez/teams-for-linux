@@ -70,6 +70,7 @@ module.exports = {
           "Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu",
         type: "string",
         applyMode: "live",
+        deprecated: "use tray.icon instead",
       },
       appIconType: {
         default: "default",
@@ -77,6 +78,7 @@ module.exports = {
         type: "string",
         choices: ["default", "light", "dark"],
         applyMode: "restart",
+        deprecated: "use tray.iconType instead",
       },
       appIdleTimeout: {
         default: 300,
@@ -97,12 +99,14 @@ module.exports = {
         describe: "A text to be suffixed with page title",
         type: "string",
         applyMode: "restart",
+        deprecated: "use app.title instead",
       },
       alwaysOnTop: {
         default: true,
         describe: "Keep the pop-out window always on top of other windows.",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use window.alwaysOnTop instead",
       },
       authServerWhitelist: {
         default: "*",
@@ -141,6 +145,7 @@ module.exports = {
         describe: "Google Chrome User Agent",
         type: "string",
         applyMode: "restart",
+        deprecated: "use platform.chromeUserAgent instead",
       },
       customBGServiceBaseUrl: {
         default: "http://localhost",
@@ -148,6 +153,7 @@ module.exports = {
           "Base URL of the server which provides custom background images",
         type: "string",
         applyMode: "restart",
+        deprecated: "use customBackground.serviceBaseUrl instead",
       },
       customBGServiceConfigFetchInterval: {
         default: 0,
@@ -155,6 +161,7 @@ module.exports = {
           "A numeric value in seconds as poll interval to download background service config download",
         type: "number",
         applyMode: "restart",
+        deprecated: "use customBackground.configFetchInterval instead",
       },
       customCACertsFingerprints: {
         default: [],
@@ -169,12 +176,14 @@ module.exports = {
           'custom CSS name for the packaged available css files. Currently those are: "compactDark", "compactLight", "tweaks", "condensedDark" and "condensedLight" ',
         type: "string",
         applyMode: "restart",
+        deprecated: "use appearance.cssName instead",
       },
       customCSSLocation: {
         default: "",
         describe: "custom CSS styles file location",
         type: "string",
         applyMode: "restart",
+        deprecated: "use appearance.cssLocation instead",
       },
       customStickers: {
         default: {
@@ -234,12 +243,14 @@ module.exports = {
           "Controls whether timestamps are included when copying messages in chats",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use platform.disableTimestampOnCopy instead",
       },
       class: {
         default: null,
         describe: "A custom value for the WM_CLASS property",
         type: "string",
         applyMode: "restart",
+        deprecated: "use window.class instead",
       },
       cacheManagement: {
         default: {
@@ -294,6 +305,7 @@ module.exports = {
         describe: "Close the app when clicking the close (X) cross",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use window.closeOnCross instead",
       },
       defaultNotificationUrgency: {
         default: "normal",
@@ -307,6 +319,7 @@ module.exports = {
         describe: "Default application to be used to open the HTTP URLs",
         type: "string",
         applyMode: "restart",
+        deprecated: "use urlHandling.defaultHandler instead",
       },
       disableGpu: {
         default: false,
@@ -314,6 +327,7 @@ module.exports = {
           "A flag to disable GPU and hardware acceleration (can be useful if the window remains blank)",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use performance.disableGpu instead",
       },
       download: {
         default: {
@@ -436,6 +450,7 @@ module.exports = {
         describe: "Electron CLI flags",
         type: "array",
         applyMode: "restart",
+        deprecated: "use performance.electronCLIFlags instead",
       },
       emulateWinChromiumPlatform: {
         default: false,
@@ -443,12 +458,14 @@ module.exports = {
           "Use windows platform information in chromium. This is helpful if MFA app does not support Linux.",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use platform.emulateWindowsChromium instead",
       },
       enableIncomingCallToast: {
         default: false,
         describe: "Enable incoming call toast",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use incomingCalls.toast instead",
       },
       followSystemTheme: {
         default: false,
@@ -456,12 +473,14 @@ module.exports = {
           "Follow the operating-system dark/light theme preference. Default is false; set true to drive Teams's theme from the OS preference.",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use appearance.followSystemTheme instead",
       },
       frame: {
         default: true,
         describe: "Specify false to create a Frameless Window. Default is true",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use window.frame instead",
       },
       incomingCallCommand: {
         default: null,
@@ -469,18 +488,21 @@ module.exports = {
           'Command to execute on an incoming call. (caution: "~" in path is not supported)',
         type: "string",
         applyMode: "restart",
+        deprecated: "use incomingCalls.command instead",
       },
       incomingCallCommandArgs: {
         default: [],
         describe: "Arguments for the incoming call command.",
         type: "array",
         applyMode: "restart",
+        deprecated: "use incomingCalls.commandArgs instead",
       },
       isCustomBackgroundEnabled: {
         default: false,
         describe: "A flag indicates whether to enable custom background or not",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use customBackground.enabled instead",
       },
       logConfig: {
         default: {
@@ -515,6 +537,7 @@ module.exports = {
         describe: "Regex for Teams meetup-join and related links",
         type: "string",
         applyMode: "restart",
+        deprecated: "use urlHandling.meetupJoinRegEx instead",
       },
       menubar: {
         default: "auto",
@@ -522,12 +545,14 @@ module.exports = {
         type: "string",
         choices: ["auto", "visible", "hidden"],
         applyMode: "restart",
+        deprecated: "use window.menubar instead",
       },
       minimized: {
         default: false,
         describe: "Start the application minimized",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use window.minimized instead",
       },
       minimizeOnClose: {
         default: false,
@@ -535,6 +560,7 @@ module.exports = {
           "Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when closeAppOnCross is true)",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use window.minimizeOnClose instead",
       },
       notificationMethod: {
         default: "web",
@@ -566,12 +592,14 @@ module.exports = {
           "Open meetupJoinRegEx URLs in the app instead of the default browser",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use urlHandling.openMeetupJoinInApp instead",
       },
       partition: {
         default: "persist:teams-4-linux",
         describe: "BrowserWindow webpreferences partition",
         type: "string",
         applyMode: "restart",
+        deprecated: "use app.partition instead",
       },
       proxyServer: {
         default: null,
@@ -621,6 +649,7 @@ module.exports = {
           "Array of languages to use with Electron's spell checker (experimental)",
         type: "array",
         applyMode: "restart",
+        deprecated: "use platform.spellCheckerLanguages instead",
       },
       ssoBasicAuthUser: {
         default: "",
@@ -639,6 +668,7 @@ module.exports = {
         describe: "Enable tray icon",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use tray.enabled instead",
       },
       msTeamsProtocols: {
         default: {
@@ -667,24 +697,28 @@ module.exports = {
         describe: "Microsoft Teams URL",
         type: "string",
         applyMode: "restart",
+        deprecated: "use app.url instead",
       },
       useMutationTitleLogic: {
         default: true,
         describe: "Use MutationObserver to update counter from title",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use tray.useMutationTitleLogic instead",
       },
       watchConfigFile: {
         default: false,
         describe: "Watch for changes in the config file and reload the app",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use development.watchConfigFile instead",
       },
       webDebug: {
         default: false,
         describe: "Enable debug at start",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use development.webDebug instead",
       },
       media: {
         default: {
@@ -1111,6 +1145,281 @@ module.exports = {
             type: "boolean|object",
             describe:
               "Flag to clear storage data. Expects an object of the type https://www.electronjs.org/docs/latest/api/session#sesclearstoragedataoptions",
+          },
+        },
+        applyMode: "restart",
+      },
+      customBackground: {
+        default: {
+          enabled: false,
+          serviceBaseUrl: "http://localhost",
+          configFetchInterval: 0,
+        },
+        describe:
+          "Custom background image configuration. Replaces the deprecated isCustomBackgroundEnabled, customBGServiceBaseUrl and customBGServiceConfigFetchInterval options.",
+        type: "object",
+        fields: {
+          "enabled": {
+            type: "boolean",
+            describe: "A flag indicates whether to enable custom background or not",
+          },
+          "serviceBaseUrl": {
+            type: "string",
+            describe: "Base URL of the server which provides custom background images",
+          },
+          "configFetchInterval": {
+            type: "number",
+            describe: "A numeric value in seconds as poll interval to download background service config download",
+          },
+        },
+        applyMode: "restart",
+      },
+      urlHandling: {
+        default: {
+          defaultHandler: "",
+          meetupJoinRegEx: "^https://teams\\.(?:microsoft\\.com|live\\.com|cloud\\.microsoft)/(v2/\\?meetingjoin=|meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)",
+          openMeetupJoinInApp: true,
+        },
+        describe:
+          "How the app decides which URLs it opens itself and which it hands to the desktop. Replaces the deprecated defaultURLHandler, meetupJoinRegEx and onNewWindowOpenMeetupJoinUrlInApp options.",
+        type: "object",
+        fields: {
+          "defaultHandler": {
+            type: "string",
+            describe: "Default application to be used to open the HTTP URLs",
+          },
+          "meetupJoinRegEx": {
+            type: "string",
+            describe: "Regex for Teams meetup-join and related links",
+          },
+          "openMeetupJoinInApp": {
+            type: "boolean",
+            describe: "Open meetupJoinRegEx URLs in the app instead of the default browser",
+          },
+        },
+        applyMode: "restart",
+      },
+      incomingCalls: {
+        default: {
+          toast: false,
+          command: null,
+          commandArgs: [],
+        },
+        describe:
+          "Incoming call notification and external command configuration. Replaces the deprecated enableIncomingCallToast, incomingCallCommand and incomingCallCommandArgs options.",
+        type: "object",
+        fields: {
+          "toast": {
+            type: "boolean",
+            describe: "Enable incoming call toast",
+          },
+          "command": {
+            type: "string",
+            describe: "Command to execute on an incoming call. (caution: \"~\" in path is not supported)",
+          },
+          "commandArgs": {
+            type: "array",
+            describe: "Arguments for the incoming call command.",
+          },
+        },
+        applyMode: "restart",
+      },
+      appearance: {
+        default: {
+          cssName: "",
+          cssLocation: "",
+          followSystemTheme: false,
+        },
+        describe:
+          "Custom CSS and theme configuration. Replaces the deprecated customCSSName, customCSSLocation and followSystemTheme options.",
+        type: "object",
+        fields: {
+          "cssName": {
+            type: "string",
+            describe: "custom CSS name for the packaged available css files. Currently those are: \"compactDark\", \"compactLight\", \"tweaks\", \"condensedDark\" and \"condensedLight\" ",
+          },
+          "cssLocation": {
+            type: "string",
+            describe: "custom CSS styles file location",
+          },
+          "followSystemTheme": {
+            type: "boolean",
+            describe: "Follow the operating-system dark/light theme preference. Default is false; set true to drive Teams's theme from the OS preference.",
+          },
+        },
+        applyMode: "restart",
+      },
+      platform: {
+        default: {
+          // Same template literal as the flat chromeUserAgent above, not a
+          // copy of its evaluated value: process.versions.chrome is undefined
+          // outside Electron, so a frozen string would ship Chrome/undefined.
+          chromeUserAgent: `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36`,
+          emulateWindowsChromium: false,
+          spellCheckerLanguages: [],
+          disableTimestampOnCopy: false,
+        },
+        describe:
+          "Platform emulation and OS integration configuration. Replaces the deprecated chromeUserAgent, emulateWinChromiumPlatform, spellCheckerLanguages and disableTimestampOnCopy options.",
+        type: "object",
+        fields: {
+          "chromeUserAgent": {
+            type: "string",
+            describe: "Google Chrome User Agent",
+          },
+          "emulateWindowsChromium": {
+            type: "boolean",
+            describe: "Use windows platform information in chromium. This is helpful if MFA app does not support Linux.",
+          },
+          "spellCheckerLanguages": {
+            type: "array",
+            describe: "Array of languages to use with Electron's spell checker (experimental)",
+          },
+          "disableTimestampOnCopy": {
+            type: "boolean",
+            describe: "Controls whether timestamps are included when copying messages in chats",
+          },
+        },
+        applyMode: "restart",
+      },
+      app: {
+        default: {
+          title: "Microsoft Teams",
+          url: "https://teams.cloud.microsoft",
+          partition: "persist:teams-4-linux",
+        },
+        describe:
+          "Core application identity and the Teams URL it loads. Replaces the deprecated appTitle, url and partition options.",
+        type: "object",
+        fields: {
+          "title": {
+            type: "string",
+            describe: "A text to be suffixed with page title",
+          },
+          "url": {
+            type: "string",
+            describe: "Microsoft Teams URL",
+          },
+          "partition": {
+            type: "string",
+            describe: "BrowserWindow webpreferences partition",
+          },
+        },
+        applyMode: "restart",
+      },
+      window: {
+        default: {
+          frame: true,
+          menubar: "auto",
+          minimized: false,
+          closeOnCross: false,
+          minimizeOnClose: false,
+          alwaysOnTop: true,
+          class: null,
+        },
+        describe:
+          "Main window geometry, decoration and close behaviour. Replaces the deprecated frame, menubar, minimized, closeAppOnCross, minimizeOnClose, alwaysOnTop and class options.",
+        type: "object",
+        fields: {
+          "frame": {
+            type: "boolean",
+            describe: "Specify false to create a Frameless Window. Default is true",
+          },
+          "menubar": {
+            type: "string",
+            choices: ["auto", "visible", "hidden"],
+            describe: "A value controls the menu bar behaviour",
+          },
+          "minimized": {
+            type: "boolean",
+            describe: "Start the application minimized",
+          },
+          "closeOnCross": {
+            type: "boolean",
+            describe: "Close the app when clicking the close (X) cross",
+          },
+          "minimizeOnClose": {
+            type: "boolean",
+            describe: "Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when closeAppOnCross is true)",
+          },
+          "alwaysOnTop": {
+            type: "boolean",
+            describe: "Keep the pop-out window always on top of other windows.",
+          },
+          "class": {
+            type: "string",
+            describe: "A custom value for the WM_CLASS property",
+          },
+        },
+        applyMode: "restart",
+      },
+      tray: {
+        default: {
+          enabled: true,
+          icon: "",
+          iconType: "default",
+          useMutationTitleLogic: true,
+        },
+        describe:
+          "Tray icon configuration. Replaces the deprecated trayIconEnabled, appIcon, appIconType and useMutationTitleLogic options.",
+        type: "object",
+        fields: {
+          "enabled": {
+            type: "boolean",
+            describe: "Enable tray icon",
+          },
+          "icon": {
+            type: "string",
+            describe: "Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu",
+          },
+          "iconType": {
+            type: "string",
+            choices: ["default", "light", "dark"],
+            describe: "Type of tray icon to be used",
+          },
+          "useMutationTitleLogic": {
+            type: "boolean",
+            describe: "Use MutationObserver to update counter from title",
+          },
+        },
+        applyMode: "restart",
+      },
+      performance: {
+        default: {
+          disableGpu: false,
+          electronCLIFlags: [],
+        },
+        describe:
+          "GPU and Chromium startup flag configuration. Replaces the deprecated disableGpu and electronCLIFlags options.",
+        type: "object",
+        fields: {
+          "disableGpu": {
+            type: "boolean",
+            describe: "A flag to disable GPU and hardware acceleration (can be useful if the window remains blank)",
+          },
+          "electronCLIFlags": {
+            type: "array",
+            describe: "Electron CLI flags",
+          },
+        },
+        applyMode: "restart",
+      },
+      development: {
+        default: {
+          webDebug: false,
+          watchConfigFile: false,
+        },
+        describe:
+          "Debugging and development aids. Replaces the deprecated webDebug and watchConfigFile options.",
+        type: "object",
+        fields: {
+          "webDebug": {
+            type: "boolean",
+            describe: "Enable debug at start",
+          },
+          "watchConfigFile": {
+            type: "boolean",
+            describe: "Watch for changes in the config file and reload the app",
           },
         },
         applyMode: "restart",

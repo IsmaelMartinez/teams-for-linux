@@ -16,7 +16,7 @@ For configuration options, see [Configuration](configuration.md). For developmen
 
 ## Performance Tuning
 
-When the app feels slow or heavy, seven configuration options are the first-line knobs to check. `disableGpu` turns off GPU compositing and hardware acceleration, which helps on broken graphics drivers and hurts otherwise. `cacheManagement.maxCacheSizeMB` (default 600) and `cacheManagement.cacheCheckIntervalMs` (default one hour) govern automatic cache cleanup, while `electronCLIFlags` passes arbitrary Chromium flags for tuning memory, GPU, or rendering behaviour. `appIdleTimeout` and `appIdleTimeoutCheckInterval` control how often idle state is polled, and `wayland.xwaylandOptimizations` affects GPU behaviour under XWayland. See [Configuration](configuration.md) for details on each option.
+When the app feels slow or heavy, seven configuration options are the first-line knobs to check. `performance.disableGpu` turns off GPU compositing and hardware acceleration, which helps on broken graphics drivers and hurts otherwise. `cacheManagement.maxCacheSizeMB` (default 600) and `cacheManagement.cacheCheckIntervalMs` (default one hour) govern automatic cache cleanup, while `performance.electronCLIFlags` passes arbitrary Chromium flags for tuning memory, GPU, or rendering behaviour. `appIdleTimeout` and `appIdleTimeoutCheckInterval` control how often idle state is polled, and `wayland.xwaylandOptimizations` affects GPU behaviour under XWayland. See [Configuration](configuration.md) for details on each option.
 
 ---
 
@@ -382,11 +382,13 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 
 **Solutions/Workarounds:**
 
-Set a custom `chromeUserAgent` in your `config.json` file (see the [Installation and Updates](#installation-and-updates) section for the configuration folder path corresponding to your installation method) so the user agent carries an application-identifier token, then restart the app. Take the default user agent from the [configuration reference](configuration.md) and insert a token such as `teams-for-linux/1.0` before the `Chrome/...` segment:
+Set a custom `platform.chromeUserAgent` in your `config.json` file (see the [Installation and Updates](#installation-and-updates) section for the configuration folder path corresponding to your installation method) so the user agent carries an application-identifier token, then restart the app. Take the default user agent from the [configuration reference](configuration.md) and insert a token such as `teams-for-linux/1.0` before the `Chrome/...` segment:
 
 ```json
 {
-  "chromeUserAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) teams-for-linux/1.0 Chrome/<your-chrome-version> Safari/537.36"
+  "platform": {
+    "chromeUserAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) teams-for-linux/1.0 Chrome/<your-chrome-version> Safari/537.36"
+  }
 }
 ```
 
@@ -493,10 +495,12 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
 
 **Solutions/Workarounds:**
 
-1. **Re-enable GPU acceleration** by setting `disableGpu` to `false` in your `config.json` file (see the [Installation and Updates](#installation-and-updates) section for the configuration folder path corresponding to your installation method):
+1. **Re-enable GPU acceleration** by setting `performance.disableGpu` to `false` in your `config.json` file (see the [Installation and Updates](#installation-and-updates) section for the configuration folder path corresponding to your installation method):
     ```json
     {
-      "disableGpu": false
+      "performance": {
+        "disableGpu": false
+      }
     }
     ```
 2. **Verify hardware acceleration** is active via **Debug → Open GPU Info** from the application menu (or `chrome://gpu` via DevTools), confirming the video decode/encode entries are hardware-accelerated.
@@ -512,10 +516,12 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
 
 **Solutions/Workarounds:**
 
-1. **Disable GPU acceleration** by setting `disableGpu` to `true` in `~/.config/teams-for-linux/config.json`:
+1. **Disable GPU acceleration** by setting `performance.disableGpu` to `true` in `~/.config/teams-for-linux/config.json`:
     ```json
     {
-      "disableGpu": true
+      "performance": {
+        "disableGpu": true
+      }
     }
     ```
 2. **Alternatively**, launch with `--disable-gpu` on the command line, or add it to the `Exec=` line of a custom copy of the `.desktop` entry under `~/.local/share/applications/teams-for-linux.desktop`.
@@ -523,7 +529,7 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
 **Related GitHub Issues:** [#2459](https://github.com/IsmaelMartinez/teams-for-linux/issues/2459)
 
 :::note Important
-The `electronCLIFlags` config option (`config.json`) **cannot** override `--ozone-platform` because the flag must be set before the Electron process starts, and config is loaded after. Use command-line arguments or `.desktop` file edits instead.
+The `performance.electronCLIFlags` config option (`config.json`) **cannot** override `--ozone-platform` because the flag must be set before the Electron process starts, and config is loaded after. Use command-line arguments or `.desktop` file edits instead.
 :::
 
 ---
