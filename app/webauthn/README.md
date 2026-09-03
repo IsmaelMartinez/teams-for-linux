@@ -8,6 +8,7 @@ On Linux, Chromium's WebAuthn implementation lacks hardware support. This module
 - `fido2Backend.js`: Spawns Yubico `fido2-tools` CLI processes for device discovery, credential creation, and assertion.
 - `pinDialog.js`: PIN prompt using standard Electron UI patterns (BrowserWindow + contextBridge + HTML form).
 - `touchPrompt.js`: "Waiting for your security key" prompt shown for the duration of the security-key call, with a Cancel that aborts it. Same BrowserWindow + contextBridge pattern as `pinDialog.js`.
+- `originAllowlist.js`: Builds the set of origins a ceremony may be served for, from the built-in Microsoft origins plus `auth.webauthn.extraOrigins`. Shared with the preload relay so both gates agree.
 - `index.js`: Sets up `ipcMain` handlers, origin validation, and PIN callback wiring.
 
 ## Prerequisites
@@ -43,9 +44,9 @@ Ceremonies are only served for the built-in Microsoft login origins. A federated
 tenant whose key prompt is served by its own identity provider logs
 `[WEBAUTHN] Blocked request { reason: 'origin-not-allowed' }`; add that origin to
 `auth.webauthn.extraOrigins` (an array of exact `https` origins, no wildcards or
-paths) and restart. The allowlist is applied in two places that must stay in
-sync: `buildAllowedOrigins()` in `index.js` and `buildRelayOrigins()` in
-`app/browser/tools/webauthnOverride.js`.
+paths) and restart. The allowlist gates two places, `index.js` and the
+postMessage relay in `app/browser/tools/webauthnOverride.js`; both build it from
+`originAllowlist.js`, so neither can drift.
 
 ## Reading a sign-in log
 

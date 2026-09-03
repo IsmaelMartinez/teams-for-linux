@@ -570,8 +570,13 @@ const credentialResponse = {
 	userHandle: null,
 };
 
+// The tool is loaded by the preload with a plain CommonJS require, so its own
+// relative requires have to resolve from its real directory, not the test's.
+const TOOLS_DIR = path.join(__dirname, '..', '..', 'app', 'browser', 'tools');
+const requireFromTools = (id) => require(id.startsWith('.') ? path.resolve(TOOLS_DIR, id) : id);
+
 describe('WebAuthn main-frame override', () => {
-	const override = readFileSync(path.join(__dirname, '..', '..', 'app', 'browser', 'tools', 'webauthnOverride.js'), 'utf8');
+	const override = readFileSync(path.join(TOOLS_DIR, 'webauthnOverride.js'), 'utf8');
 
 	it('returns PublicKeyCredential instances for create and get', async () => {
 		class PublicKeyCredential {}
@@ -591,6 +596,7 @@ describe('WebAuthn main-frame override', () => {
 			module,
 			navigator: { credentials },
 			process: { platform: 'linux' },
+			require: requireFromTools,
 			window: { addEventListener: () => {} },
 		});
 		module.exports.init(
@@ -1061,7 +1067,7 @@ describe('getAssertion allowCredentials loop', () => {
 // both have to honour the config, or a subframe relay stays blocked.
 describe('WebAuthn origin allowlist - auth.webauthn.extraOrigins', () => {
 	const webauthn = require('../../app/webauthn');
-	const overrideSrc = readFileSync(path.join(__dirname, '..', '..', 'app', 'browser', 'tools', 'webauthnOverride.js'), 'utf8');
+	const overrideSrc = readFileSync(path.join(TOOLS_DIR, 'webauthnOverride.js'), 'utf8');
 
 	const MICROSOFT_ORIGINS = [
 		'https://login.microsoftonline.com',
@@ -1078,7 +1084,6 @@ describe('WebAuthn origin allowlist - auth.webauthn.extraOrigins', () => {
 		const module = { exports: {} };
 
 		new vm.Script(overrideSrc, { filename: 'webauthnOverride.js' }).runInNewContext({
-			URL,
 			DOMException,
 			atob: () => '',
 			btoa: () => '',
@@ -1086,6 +1091,7 @@ describe('WebAuthn origin allowlist - auth.webauthn.extraOrigins', () => {
 			module,
 			navigator: { credentials: { create: () => {}, get: () => {} } },
 			process: { platform: 'linux' },
+			require: requireFromTools,
 			window: { addEventListener: (_type, listener) => { messageListener = listener; } },
 		});
 		module.exports.init(
