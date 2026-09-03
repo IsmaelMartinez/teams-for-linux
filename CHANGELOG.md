@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.20.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.19.0...v2.20.0) (2026-09-03)
+
+
+### Features
+
+* **ci:** open the Flathub beta bump PR automatically after a pre-release ([#2930](https://github.com/IsmaelMartinez/teams-for-linux/issues/2930)) ([b2029d5](https://github.com/IsmaelMartinez/teams-for-linux/commit/b2029d5c800e40cecf31efad1d3b62256c0f0d05)), closes [#2880](https://github.com/IsmaelMartinez/teams-for-linux/issues/2880)
+
+
+### Bug Fixes
+
+* **build:** macOS Build System & architecture ([#2900](https://github.com/IsmaelMartinez/teams-for-linux/issues/2900)) ([9bd0e3a](https://github.com/IsmaelMartinez/teams-for-linux/commit/9bd0e3afb1bc079e5e2d142f123193a04ddbb90d))
+* **snap:** stop the desktop launcher aborting before Electron starts ([#2948](https://github.com/IsmaelMartinez/teams-for-linux/issues/2948)) ([a089fab](https://github.com/IsmaelMartinez/teams-for-linux/commit/a089fab590870dddd30496cd79489f86db90cabe))
+* **webauthn:** allow extra login origins via auth.webauthn.extraOrigins ([#2945](https://github.com/IsmaelMartinez/teams-for-linux/issues/2945)) ([9056ea5](https://github.com/IsmaelMartinez/teams-for-linux/commit/9056ea5dc126f4295712cfd62d669e5d4612bb7a))
+
+
+### Maintenance
+
+* **deps-dev:** bump @humanfs/node from 0.16.7 to 0.16.8 ([#2941](https://github.com/IsmaelMartinez/teams-for-linux/issues/2941)) ([80fc759](https://github.com/IsmaelMartinez/teams-for-linux/commit/80fc75945db56f8652b03df1ca0ee928c84c496f))
+* **deps-dev:** bump @xmldom/xmldom from 0.8.13 to 0.8.15 ([#2943](https://github.com/IsmaelMartinez/teams-for-linux/issues/2943)) ([2cc788f](https://github.com/IsmaelMartinez/teams-for-linux/commit/2cc788ffc2d4b0f5268ae262ba4a5a976c53bac5))
+* **deps:** bump browserslist from 4.28.6 to 4.28.8 in /docs-site ([#2940](https://github.com/IsmaelMartinez/teams-for-linux/issues/2940)) ([26c9629](https://github.com/IsmaelMartinez/teams-for-linux/commit/26c9629f0c3bcaf345192c6415f9295a993e3b9f))
+* **deps:** bump fast-uri from 3.1.5 to 3.1.7 ([#2942](https://github.com/IsmaelMartinez/teams-for-linux/issues/2942)) ([dc75562](https://github.com/IsmaelMartinez/teams-for-linux/commit/dc755622d761ca7c6678fe848ddfd67200826ce0))
+* **deps:** bump github/codeql-action from 4.37.8 to 4.37.9 ([#2932](https://github.com/IsmaelMartinez/teams-for-linux/issues/2932)) ([c710b7b](https://github.com/IsmaelMartinez/teams-for-linux/commit/c710b7b3b03d27370c8c803fc0ec86086e8e6fba))
+
 ## [2.19.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.18.1...v2.19.0) (2026-09-01)
 
 
