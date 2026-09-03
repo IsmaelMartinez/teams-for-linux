@@ -12,7 +12,7 @@ const {
 	writeFileSync,
 } = require('node:fs');
 const { tmpdir } = require('node:os');
-const { join, relative, resolve } = require('node:path');
+const { join, relative, resolve, sep } = require('node:path');
 
 const {
 	patchScript,
@@ -82,13 +82,19 @@ function extractXdgLinksBlock(source) {
 function runXdgLinksBlock({ scriptPath, placement, emptyXdgDir = false }) {
 	const root = makeTempDir();
 	try {
-		const realHome = join(root, 'fs', 'home', 'user');
+		// `[ -e "$REALHOME/$b" ]` climbs three levels past the common ancestor,
+		// because $b is relative to the snap home three directories deeper. Pad
+		// the fake filesystem so that overshoot stays inside the temp root
+		// instead of reaching into the real one (on a shallow /tmp it lands on
+		// /mnt).
+		const fsRoot = join(root, 'pad-1', 'pad-2', 'pad-3', 'fs');
+		const realHome = join(fsRoot, 'home', 'user');
 		const snapHome = join(realHome, 'snap', 'teams-for-linux', '2396');
 		mkdirSync(snapHome, { recursive: true });
 
 		const xdgDir =
 			placement === 'escape'
-				? join(root, 'fs', 'mnt', 'hdd', 'documents')
+				? join(fsRoot, 'mnt', 'hdd', 'documents')
 				: join(snapHome, 'Documents');
 		mkdirSync(xdgDir, { recursive: true });
 		if (!emptyXdgDir) {
@@ -96,10 +102,11 @@ function runXdgLinksBlock({ scriptPath, placement, emptyXdgDir = false }) {
 		}
 
 		if (placement === 'escape') {
-			// `[ -e "$REALHOME/$b" ]` overshoots the common ancestor; on the
-			// reporter's box it clamped at /. Create what it resolves to so the
-			// guard passes, reproducing their trace.
-			mkdirSync(resolve(realHome, relative(snapHome, xdgDir)), { recursive: true });
+			// Create what the overshooting test resolves to, so the guard passes
+			// and we reproduce the reporter's trace (theirs clamped at /).
+			const decoy = resolve(realHome, relative(snapHome, xdgDir));
+			assert.ok(decoy.startsWith(root + sep), `decoy ${decoy} escaped the sandbox`);
+			mkdirSync(decoy, { recursive: true });
 		} else {
 			mkdirSync(join(realHome, 'Documents'), { recursive: true });
 		}
