@@ -365,6 +365,22 @@ Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debia
 |--------|------|---------|-------------|
 | `auth.webauthn.enabled` | `boolean` | `false` | Enable FIDO2 hardware security key support for WebAuthn authentication on Linux |
 | `auth.webauthn.debug` | `boolean` | `false` | Enable verbose WebAuthn diagnostic logging (useful for beta testers troubleshooting key registration) |
+| `auth.webauthn.extraOrigins` | `array` | `[]` | Extra sign-in origins allowed to use hardware keys, in addition to the built-in Microsoft login origins |
+
+Interception is limited to the Microsoft login origins (`https://login.microsoftonline.com`, `https://login.microsoft.com`, `https://login.live.com`). If your tenant is federated and the key prompt is served by your own identity provider, the ceremony is blocked and the log shows `[WEBAUTHN] Blocked request { reason: 'origin-not-allowed' }`. Add that origin to `auth.webauthn.extraOrigins` and restart:
+
+```json
+{
+  "auth": {
+    "webauthn": {
+      "enabled": true,
+      "extraOrigins": ["https://sso.example.com"]
+    }
+  }
+}
+```
+
+Entries are exact `https` origins: scheme, host and, where the identity provider is not on 443, its port (`https://sso.example.com:8443`). Wildcards, paths and `http` entries are ignored, so a subdomain of a listed origin is not covered and has to be listed in its own right.
 
 #### Certificates
 
