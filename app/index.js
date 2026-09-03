@@ -693,6 +693,12 @@ async function handleAppReady() {
     // exist so their sessions are caught by the session-created listener.
     certificateModule.installCertificateVerifyProc(config, app, session.defaultSession);
 
+    if (config.auth?.appRegistration?.enabled) {
+      const auth = require("./auth");
+      auth.initialize(config, { settingsStore: appConfig?.settingsStore });
+      auth.registerIpcHandlers(ipcMain);
+    }
+
     await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService, profilesManager);
 
     // Flatpak only: record the background permission with the desktop portal

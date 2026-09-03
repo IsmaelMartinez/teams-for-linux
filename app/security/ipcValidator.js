@@ -70,6 +70,8 @@ const allowedChannels = new Set([
   'meeting-started',
   
   // Authentication and forms
+  'app-registration-auth-status',
+  'app-registration-device-code',
   'submitForm',
   
   // Settings management
