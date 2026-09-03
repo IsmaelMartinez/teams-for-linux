@@ -133,7 +133,7 @@ function init(config, ipcRenderer) {
   window.addEventListener("message", async (event) => {
     if (event.data?.type !== "webauthn-request") return;
     if (!ALLOWED_RELAY_ORIGINS.has(event.origin)) {
-      console.warn("[WEBAUTHN] Blocked relay: origin not allowed (add it to auth.webauthn.extraOrigins?)");
+      console.warn("[WEBAUTHN] Blocked relay: origin not allowed. If this is your federated IdP sign-in page, add it to auth.webauthn.extraOrigins.");
       return;
     }
     const { id, channel, data } = event.data;

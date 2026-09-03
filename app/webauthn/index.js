@@ -103,7 +103,7 @@ async function handleWebauthnRequest(operation, event, options) {
       op: operation,
       reason: "origin-not-allowed",
       originClass: log.classifyOrigin(origin),
-      hint: "add the sign-in origin to auth.webauthn.extraOrigins",
+      hint: "if this is your federated IdP sign-in page, add it to auth.webauthn.extraOrigins",
     });
     return { success: false, error: "SecurityError: origin not allowed" };
   }
