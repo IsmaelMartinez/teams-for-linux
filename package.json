@@ -44,6 +44,7 @@
     "dist:linux:snap": "electron-builder -l snap",
     "dist:linux:snap:armv7l": "electron-builder --armv7l -l snap",
     "dist:linux:snap:arm64": "electron-builder --arm64 -l snap",
+    "dist:mac": "electron-builder --mac --x64 --arm64 -c.mac.identity=-",
     "dist:mac:x64": "electron-builder --mac --x64",
     "dist:mac:arm64": "electron-builder --mac --arm64",
     "dist:windows": "electron-builder --windows --x64",
@@ -171,6 +172,10 @@
     },
     "mac": {
       "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "extendInfo": {
         "NSCameraUsageDescription": "We need camera access for video calls.",
         "NSMicrophoneUsageDescription": "We need microphone access for audio."
