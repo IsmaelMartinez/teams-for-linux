@@ -118,9 +118,11 @@ function checkUsedDeprecatedValues(yargsInstance, configObject, config) {
   // showConfigurationDialogs in app/index.js open a blocking modal at startup,
   // and the ADR-025 batches deprecate keys as common as `url` and `appTitle`,
   // so nearly every customised config would meet one. The flat names keep
-  // working until 2.30.0 (#2842), so there is nothing to act on yet. Restoring
-  // a real surface before that removal is therefore required, not optional,
-  // since with the file transport off by default this warning reaches nobody.
+  // working until 2.30.0 (#2842), so there is nothing to act on yet.
+  // The message points at "Settings > Show Updated Config…" (#2913) when that
+  // menu is reachable, which is the action to take; the remaining gap is that
+  // with the file transport off by default the warning itself reaches nobody,
+  // so a real surface is still needed before the flat names are removed.
   // Wait until every rename has landed: the acknowledgement is keyed on a hash
   // of this message, so prompting once per batch re-prompts people who already
   // dismissed it.
