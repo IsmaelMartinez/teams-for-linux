@@ -1135,6 +1135,19 @@ describe('WebAuthn origin allowlist - auth.webauthn.extraOrigins', () => {
 		assert.ok(await relayAccepts('https://login.microsoftonline.com'));
 	});
 
+	// An IdP off 443 has the port in its origin, so the configured entry needs it too.
+	it('keeps a non-default port and drops a redundant one', async () => {
+		webauthn._applyExtraOrigins(['https://sso.example.com:8443', 'https://idp.example.com:443']);
+		const relayAccepts = loadRelay(['https://sso.example.com:8443', 'https://idp.example.com:443']);
+
+		assert.ok(webauthn._isAllowedOrigin('https://sso.example.com:8443'));
+		assert.ok(await relayAccepts('https://sso.example.com:8443'));
+		assert.ok(!webauthn._isAllowedOrigin('https://sso.example.com'));
+		// :443 is the default, so the browser reports the origin without it.
+		assert.ok(webauthn._isAllowedOrigin('https://idp.example.com'));
+		assert.ok(await relayAccepts('https://idp.example.com'));
+	});
+
 	// Exact match only: neither a sibling host nor a subdomain of a configured
 	// origin may ride in on it.
 	it('still blocks an origin that was not configured', async () => {

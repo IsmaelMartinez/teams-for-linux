@@ -1105,7 +1105,7 @@
           "path": "webauthn.extraOrigins",
           "type": "array",
           "default": [],
-          "description": "Extra sign-in origins allowed to use hardware security keys, in addition to the built-in Microsoft login origins (https://login.microsoftonline.com, https://login.microsoft.com, https://login.live.com). Add your federated IdP origin if the FIDO2 prompt happens off the Microsoft hosts. Exact https origins only (scheme and host, e.g. 'https://sso.example.com'); wildcards, paths and http entries are ignored."
+          "description": "Extra sign-in origins allowed to use hardware security keys, in addition to the built-in Microsoft login origins (https://login.microsoftonline.com, https://login.microsoft.com, https://login.live.com). Add your federated IdP origin if the FIDO2 prompt happens off the Microsoft hosts. Exact https origins only: scheme, host and, where the IdP is not on 443, its port (e.g. 'https://sso.example.com' or 'https://sso.example.com:8443'). Wildcards, paths and http entries are ignored."
         },
         {
           "path": "reauthRecovery.enabled",

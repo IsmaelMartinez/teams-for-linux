@@ -380,7 +380,7 @@ Interception is limited to the Microsoft login origins (`https://login.microsoft
 }
 ```
 
-Entries are exact `https` origins, scheme and host only. Wildcards, paths and `http` entries are ignored, so a subdomain of a listed origin is not covered and has to be listed in its own right.
+Entries are exact `https` origins: scheme, host and, where the identity provider is not on 443, its port (`https://sso.example.com:8443`). Wildcards, paths and `http` entries are ignored, so a subdomain of a listed origin is not covered and has to be listed in its own right.
 
 #### Certificates
 
