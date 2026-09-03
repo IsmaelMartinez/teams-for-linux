@@ -45,6 +45,20 @@ When the app feels slow or heavy, seven configuration options are the first-line
     *   Download the latest installer from the official GitHub releases page.
     *   Perform a clean installation.
 
+#### Issue: Snap exits immediately with status 1 and no output
+
+**Description:** `snap run teams-for-linux` returns exit code 1 with completely empty stdout and stderr. No window appears and nothing is written to the journal. Affects snap revisions from 2396 onwards on `core22` ([#2946](https://github.com/IsmaelMartinez/teams-for-linux/issues/2946)).
+
+**Potential Causes:**
+*   The snap launcher runs a desktop-integration script under `set -e` that calls `rmdir` on an XDG user directory. `rmdir` fails on a non-empty directory, its error is discarded, and the launcher aborts before Electron ever starts.
+*   Triggered when `~/.config/user-dirs.locale` is missing, or when an XDG user directory (Documents, Downloads, and so on) points somewhere the snap cannot read, such as a path under `/mnt` that needs the `removable-media` interface.
+
+**Solutions/Workarounds:**
+
+1.  **Update the snap.** Revisions built after this issue was fixed launch normally: `sudo snap refresh teams-for-linux`.
+
+2.  **If you cannot update yet**, either create the missing locale file with `touch ~/.config/user-dirs.locale`, connect the interface your XDG directories need with `sudo snap connect teams-for-linux:removable-media`, or roll back with `sudo snap revert teams-for-linux`.
+
 #### Issue: No History after Electron version update
 
 **Description:** When updating the Electron version, the channel history may sometimes disappear. This issue is typically related to a change in the user agent.
