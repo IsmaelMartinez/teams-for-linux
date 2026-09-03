@@ -14,8 +14,10 @@ const {
 const { tmpdir } = require('node:os');
 const { join, relative, resolve, sep } = require('node:path');
 
+const { Arch } = require('builder-util');
 const {
 	patchScript,
+	patchSnapDesktopLauncher,
 	BUNDLED_TEMPLATE_SCRIPT,
 	ORIGINAL_BLOCK,
 	PATCHED_BLOCK,
@@ -216,6 +218,27 @@ describe('snap desktop launcher patch (#2946)', () => {
 			}
 		} finally {
 			rmSync(dir, { recursive: true, force: true });
+		}
+	});
+
+	// arm64 takes the no-template path: it must patch the bundled script and
+	// never reach for the downloaded snap template, which would need the network.
+	// electronGet is required lazily inside patchDownloadedTemplate, so its
+	// absence from the module cache proves that branch was skipped.
+	it('arm64 patches only the bundled launcher, never the downloaded template', async () => {
+		const electronGet = require.resolve('app-builder-lib/out/util/electronGet');
+		const original = readFileSync(BUNDLED_TEMPLATE_SCRIPT, 'utf8');
+		delete require.cache[electronGet];
+		try {
+			await patchSnapDesktopLauncher(Arch.arm64);
+
+			assert.ok(
+				!(electronGet in require.cache),
+				'arm64 must not load the downloaded-template code path',
+			);
+			assert.ok(readFileSync(BUNDLED_TEMPLATE_SCRIPT, 'utf8').includes(PATCH_MARKER));
+		} finally {
+			writeFileSync(BUNDLED_TEMPLATE_SCRIPT, original, { mode: 0o755 });
 		}
 	});
 

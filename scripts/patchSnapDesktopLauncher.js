@@ -70,10 +70,10 @@ const SNAP_TEMPLATES = {
 
 // Only these two arches take the downloaded-template path (coreLegacy.js:59).
 // arm64 is packed by snapcraft from the scripts bundled in app-builder-lib.
-const TEMPLATE_ARCH_BY_ARCH = {
-  [Arch.x64]: "amd64",
-  [Arch.armv7l]: "armhf",
-};
+const TEMPLATE_ARCH_BY_ARCH = new Map([
+  [Arch.x64, "amd64"],
+  [Arch.armv7l, "armhf"],
+]);
 
 const PATCH_MARKER = "teams-for-linux #2946";
 
@@ -130,7 +130,7 @@ async function patchScript(scriptPath) {
         "electron-builder's snap launcher changed — re-check the workaround before building.",
     );
   }
-  if (source.indexOf(ORIGINAL_BLOCK, at + ORIGINAL_BLOCK.length) >= 0) {
+  if (source.includes(ORIGINAL_BLOCK, at + ORIGINAL_BLOCK.length)) {
     throw new Error(`#2946 snap launcher patch: the rmdir block appears more than once in ${scriptPath}.`);
   }
 
@@ -193,9 +193,8 @@ async function patchSnapDesktopLauncher(arch) {
   await patchScript(BUNDLED_TEMPLATE_SCRIPT);
 
   // Used by the template path (x64, armv7l).
-  const templateArch = TEMPLATE_ARCH_BY_ARCH[arch];
-  if (templateArch !== undefined) {
-    await patchDownloadedTemplate(templateArch);
+  if (TEMPLATE_ARCH_BY_ARCH.has(arch)) {
+    await patchDownloadedTemplate(TEMPLATE_ARCH_BY_ARCH.get(arch));
   }
 
   console.log("✅ Snap desktop launcher patched");
