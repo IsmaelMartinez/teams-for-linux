@@ -10,6 +10,62 @@
  * Linux-only: on macOS/Windows, Electron's Chromium handles WebAuthn natively.
  */
 
+// Origins the Layer 2 postMessage relay accepts subframe requests from.
+// NOTE: intentionally duplicates DEFAULT_ALLOWED_ORIGINS / normalizeOrigin in
+// app/webauthn/index.js. This module has to stay self-contained (it is loaded
+// into the renderer by the preload), and the main process re-checks the origin
+// before anything is signed, so this copy is the secondary gate. Keep both in
+// sync.
+const DEFAULT_RELAY_ORIGINS = [
+  "https://login.microsoftonline.com",
+  "https://login.microsoft.com",
+  "https://login.live.com",
+];
+
+/**
+ * Reduce a configured entry to an exact https origin, or null if it cannot be
+ * one. Exact match only: no wildcards, no prefixes, no paths.
+ */
+function normalizeOrigin(entry) {
+  if (typeof entry !== "string") return null;
+  const trimmed = entry.trim();
+  if (!trimmed) return null;
+  let url;
+  try {
+    url = new URL(trimmed);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:") return null;
+  if (url.username || url.password) return null;
+  if (url.pathname !== "/" || url.search || url.hash) return null;
+  if (url.hostname.includes("*")) return null;
+  return url.origin;
+}
+
+/**
+ * Build the relay allowlist from the built-in Microsoft origins plus any
+ * configured extras (#2931). Malformed entries are dropped with a warning that
+ * never repeats the value, since a corporate IdP host identifies the tenant.
+ * @param {unknown} extraOrigins - auth.webauthn.extraOrigins
+ * @returns {Set<string>}
+ */
+function buildRelayOrigins(extraOrigins) {
+  const origins = new Set(DEFAULT_RELAY_ORIGINS);
+  if (!Array.isArray(extraOrigins)) return origins;
+
+  let rejected = 0;
+  for (const entry of extraOrigins) {
+    const origin = normalizeOrigin(entry);
+    if (origin) origins.add(origin);
+    else rejected += 1;
+  }
+  if (rejected > 0) {
+    console.warn("[WEBAUTHN] Ignored malformed auth.webauthn.extraOrigins entries", { rejected });
+  }
+  return origins;
+}
+
 function init(config, ipcRenderer) {
   if (process.platform !== "linux") {
     console.debug("[WEBAUTHN] Skipping: not Linux");
@@ -123,16 +179,12 @@ function init(config, ipcRenderer) {
   // Layer 2 relay: listen for postMessage from subframes that were injected
   // via executeJavaScript in the main process. This bridges the gap between
   // frames (no ipcRenderer) and the main process (needs IPC).
-  const ALLOWED_RELAY_ORIGINS = new Set([
-    "https://login.microsoftonline.com",
-    "https://login.microsoft.com",
-    "https://login.live.com",
-  ]);
+  const ALLOWED_RELAY_ORIGINS = buildRelayOrigins(config?.auth?.webauthn?.extraOrigins);
 
   window.addEventListener("message", async (event) => {
     if (event.data?.type !== "webauthn-request") return;
     if (!ALLOWED_RELAY_ORIGINS.has(event.origin)) {
-      console.warn("[WEBAUTHN] Blocked relay: origin not allowed");
+      console.warn("[WEBAUTHN] Blocked relay: origin not allowed (add it to auth.webauthn.extraOrigins?)");
       return;
     }
     const { id, channel, data } = event.data;

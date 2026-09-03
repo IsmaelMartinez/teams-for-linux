@@ -39,6 +39,14 @@ Enable in `config.json`:
 }
 ```
 
+Ceremonies are only served for the built-in Microsoft login origins. A federated
+tenant whose key prompt is served by its own identity provider logs
+`[WEBAUTHN] Blocked request { reason: 'origin-not-allowed' }`; add that origin to
+`auth.webauthn.extraOrigins` (an array of exact `https` origins, no wildcards or
+paths) and restart. The allowlist is applied in two places that must stay in
+sync: `buildAllowedOrigins()` in `index.js` and `buildRelayOrigins()` in
+`app/browser/tools/webauthnOverride.js`.
+
 ## Reading a sign-in log
 
 Every ceremony logs a `[WEBAUTHN]` line at each step, so `grep WEBAUTHN` over a session log shows the whole flow. Four fields matter when a sign-in fails but the ceremony itself reports success:

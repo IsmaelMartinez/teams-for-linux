@@ -24,21 +24,77 @@ const log = require("./log");
 
 // Defense-in-depth: only allow WebAuthn requests from known Microsoft login origins.
 // The IPC allowlist is the primary control; this is a secondary check.
-const ALLOWED_ORIGINS = new Set([
+const DEFAULT_ALLOWED_ORIGINS = [
   "https://login.microsoftonline.com",
   "https://login.microsoft.com",
   "https://login.live.com",
-]);
+];
+
+// Federated tenants sign in on their own IdP host, which is never one of the
+// Microsoft defaults, so the ceremony was blocked outright (#2931). Extended at
+// initialize() from auth.webauthn.extraOrigins. The same list gates the
+// subframe relay in app/browser/tools/webauthnOverride.js.
+let allowedOrigins = new Set(DEFAULT_ALLOWED_ORIGINS);
 
 let initialized = false;
 
 /**
- * Validate that the request origin is an expected Microsoft login domain.
+ * Reduce a configured entry to an exact https origin, or null if it cannot be
+ * one. Exact match only: no wildcards, no prefixes, no paths, so an allowlist
+ * decision never depends on pattern matching.
+ * @param {unknown} entry
+ * @returns {string|null}
+ */
+function normalizeOrigin(entry) {
+  if (typeof entry !== "string") return null;
+  const trimmed = entry.trim();
+  if (!trimmed) return null;
+  let url;
+  try {
+    url = new URL(trimmed);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:") return null;
+  if (url.username || url.password) return null;
+  if (url.pathname !== "/" || url.search || url.hash) return null;
+  if (url.hostname.includes("*")) return null;
+  return url.origin;
+}
+
+/**
+ * Build the allowlist from the built-in Microsoft origins plus any configured
+ * extras. Malformed entries are dropped with a warning that never repeats the
+ * value, since a corporate IdP host identifies the tenant.
+ * @param {unknown} extraOrigins - auth.webauthn.extraOrigins
+ * @returns {Set<string>}
+ */
+function buildAllowedOrigins(extraOrigins) {
+  const origins = new Set(DEFAULT_ALLOWED_ORIGINS);
+  if (!Array.isArray(extraOrigins)) return origins;
+
+  let rejected = 0;
+  for (const entry of extraOrigins) {
+    const origin = normalizeOrigin(entry);
+    if (origin) origins.add(origin);
+    else rejected += 1;
+  }
+  if (rejected > 0) {
+    log.warn("[WEBAUTHN] Ignored malformed auth.webauthn.extraOrigins entries", {
+      rejected,
+      expected: "exact https origin, e.g. https://sso.example.com",
+    });
+  }
+  return origins;
+}
+
+/**
+ * Validate that the request origin is an allowed login origin.
  * @param {string} origin
  * @returns {boolean}
  */
 function isAllowedOrigin(origin) {
-  return ALLOWED_ORIGINS.has(origin);
+  return allowedOrigins.has(origin);
 }
 
 /**
@@ -101,6 +157,7 @@ async function handleWebauthnRequest(operation, event, options) {
       op: operation,
       reason: "origin-not-allowed",
       originClass: log.classifyOrigin(origin),
+      hint: "add the sign-in origin to auth.webauthn.extraOrigins",
     });
     return { success: false, error: "SecurityError: origin not allowed" };
   }
@@ -333,11 +390,13 @@ function injectIntoFrame(wf) {
  *
  * @param {Electron.BrowserWindow} [mainWindow] - Main window for frame injection
  * @param {object} [config] - App config; auth.webauthn.debug enables verbose logs
+ *   and auth.webauthn.extraOrigins adds login origins beyond the Microsoft defaults
  */
 async function initialize(mainWindow, config) {
   if (initialized) return;
 
   log.setDebug(config?.auth?.webauthn?.debug);
+  allowedOrigins = buildAllowedOrigins(config?.auth?.webauthn?.extraOrigins);
 
   const available = await fido2Backend.isAvailable();
   if (!available) {
@@ -373,7 +432,17 @@ async function initialize(mainWindow, config) {
   }
 
   initialized = true;
-  log.info("[WEBAUTHN] Hardware security key support initialized");
+  log.info("[WEBAUTHN] Hardware security key support initialized", {
+    extraOrigins: allowedOrigins.size - DEFAULT_ALLOWED_ORIGINS.length,
+  });
 }
 
-module.exports = { initialize };
+module.exports = {
+  initialize,
+  // Exported for tests: the allowlist is the security gate, so it is asserted
+  // on directly rather than through a replica.
+  _applyExtraOrigins: (extraOrigins) => {
+    allowedOrigins = buildAllowedOrigins(extraOrigins);
+  },
+  _isAllowedOrigin: isAllowedOrigin,
+};

@@ -1053,3 +1053,131 @@ describe('getAssertion allowCredentials loop', () => {
 		}
 	});
 });
+
+// ─── Configurable login origins (issue #2931) ────────────────────────────────
+
+// Federated tenants sign in on their own IdP host, so the hardcoded Microsoft
+// allowlist blocked the ceremony outright. The gate lives in two places and
+// both have to honour the config, or a subframe relay stays blocked.
+describe('WebAuthn origin allowlist - auth.webauthn.extraOrigins', () => {
+	const webauthn = require('../../app/webauthn');
+	const overrideSrc = readFileSync(path.join(__dirname, '..', '..', 'app', 'browser', 'tools', 'webauthnOverride.js'), 'utf8');
+
+	const MICROSOFT_ORIGINS = [
+		'https://login.microsoftonline.com',
+		'https://login.microsoft.com',
+		'https://login.live.com',
+	];
+	const CORPORATE_ORIGIN = 'https://sso.example.com';
+
+	// Drive the preload relay for real: build it with the given config, then
+	// dispatch a subframe message and report whether it reached IPC.
+	function loadRelay(extraOrigins) {
+		let messageListener;
+		const relayed = [];
+		const module = { exports: {} };
+
+		new vm.Script(overrideSrc, { filename: 'webauthnOverride.js' }).runInNewContext({
+			URL,
+			DOMException,
+			atob: () => '',
+			btoa: () => '',
+			console: { debug: () => {}, error: () => {}, info: () => {}, warn: () => {} },
+			module,
+			navigator: { credentials: { create: () => {}, get: () => {} } },
+			process: { platform: 'linux' },
+			window: { addEventListener: (_type, listener) => { messageListener = listener; } },
+		});
+		module.exports.init(
+			{ auth: { webauthn: { enabled: true, extraOrigins } } },
+			{ invoke: async () => ({ success: true, data: credentialResponse }) },
+		);
+
+		return async function relayAccepts(origin) {
+			const before = relayed.length;
+			await messageListener({
+				origin,
+				data: { type: 'webauthn-request', id: 'request-id', channel: 'webauthn:get', data: {} },
+				source: { postMessage: () => relayed.push(origin) },
+			});
+			return relayed.length > before;
+		};
+	}
+
+	after(() => webauthn._applyExtraOrigins([]));
+
+	it('allows only the Microsoft origins when nothing is configured', async () => {
+		webauthn._applyExtraOrigins([]);
+		const relayAccepts = loadRelay([]);
+
+		for (const origin of MICROSOFT_ORIGINS) {
+			assert.ok(webauthn._isAllowedOrigin(origin), `${origin} should be allowed`);
+			assert.ok(await relayAccepts(origin), `relay should accept ${origin}`);
+		}
+		assert.ok(!webauthn._isAllowedOrigin(CORPORATE_ORIGIN));
+		assert.ok(!(await relayAccepts(CORPORATE_ORIGIN)));
+	});
+
+	it('allows a configured origin in the main allowlist and the relay', async () => {
+		webauthn._applyExtraOrigins([CORPORATE_ORIGIN]);
+		const relayAccepts = loadRelay([CORPORATE_ORIGIN]);
+
+		assert.ok(webauthn._isAllowedOrigin(CORPORATE_ORIGIN));
+		assert.ok(await relayAccepts(CORPORATE_ORIGIN));
+		// The Microsoft defaults are added to, never replaced.
+		assert.ok(webauthn._isAllowedOrigin('https://login.microsoftonline.com'));
+		assert.ok(await relayAccepts('https://login.microsoftonline.com'));
+	});
+
+	// Exact match only: neither a sibling host nor a subdomain of a configured
+	// origin may ride in on it.
+	it('still blocks an origin that was not configured', async () => {
+		webauthn._applyExtraOrigins([CORPORATE_ORIGIN]);
+		const relayAccepts = loadRelay([CORPORATE_ORIGIN]);
+
+		const blocked = [
+			'https://evil.example.com',
+			'https://sso.example.com.evil.test',
+			'https://idp.sso.example.com',
+			'http://sso.example.com',
+		];
+		for (const origin of blocked) {
+			assert.ok(!webauthn._isAllowedOrigin(origin), `${origin} should be blocked`);
+			assert.ok(!(await relayAccepts(origin)), `relay should block ${origin}`);
+		}
+	});
+
+	it('ignores malformed entries instead of allowing them', async () => {
+		const malformed = [
+			'sso.example.com',
+			'http://sso.example.com',
+			'https://*.example.com',
+			'https://sso.example.com/login',
+			'https://user:pw@sso.example.com',
+			'',
+			'   ',
+			42,
+			null,
+		];
+		webauthn._applyExtraOrigins(malformed);
+		const relayAccepts = loadRelay(malformed);
+
+		for (const entry of malformed) {
+			if (typeof entry !== 'string') continue;
+			assert.ok(!webauthn._isAllowedOrigin(entry), `${entry} should not be allowed`);
+			assert.ok(!(await relayAccepts(entry)), `relay should block ${entry}`);
+		}
+		// A path or credentials mistake must not be quietly promoted to its origin.
+		assert.ok(!webauthn._isAllowedOrigin(CORPORATE_ORIGIN));
+		assert.ok(!(await relayAccepts(CORPORATE_ORIGIN)));
+		// The Microsoft defaults survive a config full of junk.
+		assert.ok(webauthn._isAllowedOrigin('https://login.live.com'));
+		assert.ok(await relayAccepts('https://login.live.com'));
+	});
+
+	it('accepts a non-array config without throwing', () => {
+		webauthn._applyExtraOrigins('https://sso.example.com');
+		assert.ok(webauthn._isAllowedOrigin('https://login.live.com'));
+		assert.ok(!webauthn._isAllowedOrigin(CORPORATE_ORIGIN));
+	});
+});

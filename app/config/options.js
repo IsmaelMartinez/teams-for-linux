@@ -946,6 +946,7 @@ module.exports = {
           webauthn: {
             enabled: false,
             debug: false,
+            extraOrigins: [],
           },
           reauthRecovery: {
             enabled: false,
@@ -967,7 +968,7 @@ module.exports = {
             days: 400
           }
         },
-        describe: "Authentication configuration. auth.webauthn.enabled turns on hardware security key support on Linux (requires fido2-tools). auth.webauthn.debug enables verbose diagnostic logs, intended for beta testers only. auth.reauthRecovery.enabled opts into the in-app re-authentication recovery feature and is off by default; while off, renderer auth-failure signals are ignored and Teams' own stale 'sign in again' banner is left untouched (you re-authenticate by relaunching, as before this feature existed). When on, a reliable MSAL InteractionRequired signal automatically clears stale auth state and reloads to force a fresh interactive login, and clicking the stale 'sign in again' banner is intercepted to recover in-app instead of opening the login popup externally. Uncaught Teams worker 'UPR' errors are noisy and fire on healthy sessions, so they never trigger an automatic reload on their own; they only help recognise a genuinely broken session for the banner interception. Interception only happens when the session has emitted a trusted auth-failure signal within the last hour, so login popups from healthy flows (initial sign-in, consent and step-up prompts, adding an account) are never diverted. During an active call, recovery is never run silently (it would end the call): the user is asked whether to sign in now, after the call, or not at all. auth.clientCertificate.pinDialog.enabled (Linux only) shows a PIN dialog for smartcard / PKCS#11 client certificates and is off by default. auth.webLogin.* pre-fills the Microsoft/federated web sign-in page so you don't retype credentials each launch: auth.webLogin.user pre-fills the email/account field, auth.webLogin.passwordCommand runs a shell command (e.g. 'pass show teams') and pre-fills its first stdout line into the password field (the app stores no secret), auth.webLogin.autoSubmit clicks through the steps, auth.webLogin.verifyMethod clicks the matching option on the MFA 'Verify your identity' page (e.g. 'Text'), and auth.webLogin.extraHosts adds login hosts beyond the Microsoft defaults. All off/empty by default. Distinct from ssoBasicAuth*, which drive the native HTTP Basic/NTLM dialog, not the web form.",
+        describe: "Authentication configuration. auth.webauthn.enabled turns on hardware security key support on Linux (requires fido2-tools). auth.webauthn.debug enables verbose diagnostic logs, intended for beta testers only. auth.webauthn.extraOrigins adds exact https sign-in origins allowed to use hardware keys, for federated tenants whose FIDO2 prompt is served off the Microsoft login hosts. auth.reauthRecovery.enabled opts into the in-app re-authentication recovery feature and is off by default; while off, renderer auth-failure signals are ignored and Teams' own stale 'sign in again' banner is left untouched (you re-authenticate by relaunching, as before this feature existed). When on, a reliable MSAL InteractionRequired signal automatically clears stale auth state and reloads to force a fresh interactive login, and clicking the stale 'sign in again' banner is intercepted to recover in-app instead of opening the login popup externally. Uncaught Teams worker 'UPR' errors are noisy and fire on healthy sessions, so they never trigger an automatic reload on their own; they only help recognise a genuinely broken session for the banner interception. Interception only happens when the session has emitted a trusted auth-failure signal within the last hour, so login popups from healthy flows (initial sign-in, consent and step-up prompts, adding an account) are never diverted. During an active call, recovery is never run silently (it would end the call): the user is asked whether to sign in now, after the call, or not at all. auth.clientCertificate.pinDialog.enabled (Linux only) shows a PIN dialog for smartcard / PKCS#11 client certificates and is off by default. auth.webLogin.* pre-fills the Microsoft/federated web sign-in page so you don't retype credentials each launch: auth.webLogin.user pre-fills the email/account field, auth.webLogin.passwordCommand runs a shell command (e.g. 'pass show teams') and pre-fills its first stdout line into the password field (the app stores no secret), auth.webLogin.autoSubmit clicks through the steps, auth.webLogin.verifyMethod clicks the matching option on the MFA 'Verify your identity' page (e.g. 'Text'), and auth.webLogin.extraHosts adds login hosts beyond the Microsoft defaults. All off/empty by default. Distinct from ssoBasicAuth*, which drive the native HTTP Basic/NTLM dialog, not the web form.",
         type: "object",
         fields: {
           "intune.enabled": {
@@ -987,6 +988,11 @@ module.exports = {
             type: "boolean",
             describe:
               "Enable verbose WebAuthn diagnostic logging, intended for beta testers troubleshooting key registration.",
+          },
+          "webauthn.extraOrigins": {
+            type: "array",
+            describe:
+              "Extra sign-in origins allowed to use hardware security keys, in addition to the built-in Microsoft login origins (https://login.microsoftonline.com, https://login.microsoft.com, https://login.live.com). Add your federated IdP origin if the FIDO2 prompt happens off the Microsoft hosts. Exact https origins only (scheme and host, e.g. 'https://sso.example.com'); wildcards, paths and http entries are ignored.",
           },
           "reauthRecovery.enabled": {
             type: "boolean",
