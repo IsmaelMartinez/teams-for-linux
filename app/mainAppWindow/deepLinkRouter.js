@@ -117,8 +117,10 @@ async function navigateInPage(window, url, teamsUrl) {
     return await frame.executeJavaScript(
       `new Promise((resolve) => {
          let timer;
+         const target = ${JSON.stringify(route)};
          const previous = location.hash;
-         location.hash = ${JSON.stringify(route)};
+         if (previous === target) { resolve(true); return; }
+         location.hash = target;
          const assigned = location.hash;
          const settle = (consumed) => {
            clearTimeout(timer);
