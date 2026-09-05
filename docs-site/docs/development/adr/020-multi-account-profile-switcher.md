@@ -6,9 +6,9 @@ id: 020-multi-account-profile-switcher
 
 ## Status
 
-✅ Implemented (Phase 1, v2.10.0)
+✅ Implemented (Phase 1, v2.9.0 onwards)
 
-Phase 1 shipped behind the opt-in `multiAccount.enabled` flag: the add-profile dialog with first-run bootstrap ([#2496](https://github.com/IsmaelMartinez/teams-for-linux/pull/2496)) and the manage-profiles dialog with rename and remove ([#2510](https://github.com/IsmaelMartinez/teams-for-linux/pull/2510)). Phases 2 and 3 remain open in the tracking issue [#2495](https://github.com/IsmaelMartinez/teams-for-linux/issues/2495), and [#2947](https://github.com/IsmaelMartinez/teams-for-linux/issues/2947) is an open Phase 1 bug where the secondary profile view is not resized after maximize/restore on XWayland.
+Phase 1 landed incrementally starting in v2.9.0: the `multiAccount.enabled` flag and Intune mutex ([#2450](https://github.com/IsmaelMartinez/teams-for-linux/pull/2450)), the add-profile dialog with first-run bootstrap ([#2496](https://github.com/IsmaelMartinez/teams-for-linux/pull/2496)), the manage-profiles dialog with rename and remove ([#2510](https://github.com/IsmaelMartinez/teams-for-linux/pull/2510)), and the Profiles menu ([#2489](https://github.com/IsmaelMartinez/teams-for-linux/pull/2489)), followed by the switcher pill ([#2661](https://github.com/IsmaelMartinez/teams-for-linux/pull/2661)) in v2.14.0 and the `Ctrl+Alt+1…5` pinned-profile shortcuts ([#2787](https://github.com/IsmaelMartinez/teams-for-linux/pull/2787)) in v2.16.0. Phase 2 has started with the sender-to-profile attribution map ([#2865](https://github.com/IsmaelMartinez/teams-for-linux/pull/2865), v2.19.0), and per-profile unread aggregation is next in open PR [#2916](https://github.com/IsmaelMartinez/teams-for-linux/pull/2916). Phase 3 is untouched. Both remaining phases are tracked in [#2495](https://github.com/IsmaelMartinez/teams-for-linux/issues/2495), and [#2947](https://github.com/IsmaelMartinez/teams-for-linux/issues/2947) is an open Phase 1 bug where the secondary profile view is not resized after maximize/restore on XWayland.
 
 ## Context
 

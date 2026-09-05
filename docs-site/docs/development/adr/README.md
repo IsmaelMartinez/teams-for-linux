@@ -23,17 +23,17 @@ Architecture Decision Records capture important architectural decisions along wi
 
 | ADR | Title | Status | Date | Version |
 |-----|-------|--------|------|---------|
-| [001](001-desktopcapturer-source-id-format.md) | DesktopCapturer Source ID Format | ✅ Implemented | 2024-09-15 | v2.3.0+ |
-| [002](002-token-cache-secure-storage.md) | Token Cache Secure Storage | ✅ Implemented | 2024-09-08 | v2.5.9 |
-| [003](003-token-refresh-implementation.md) | Token Refresh Implementation | ✅ Implemented | 2024-09-22 | v2.6.0 |
+| [001](001-desktopcapturer-source-id-format.md) | DesktopCapturer Source ID Format | ✅ Implemented | 2025-09-15 | v2.3.0+ |
+| [002](002-token-cache-secure-storage.md) | Token Cache Secure Storage | ✅ Implemented | 2025-09-08 | v2.5.9 |
+| [003](003-token-refresh-implementation.md) | Token Refresh Implementation | ✅ Implemented | 2025-09-22 | v2.6.0 |
 | [004](004-agents-md-standard-investigation.md) | agents.md Standard Investigation | ❌ Rejected | 2025-11-16 | N/A |
-| [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | ✅ Implemented | 2025-11-17 | v2.6.15 |
+| [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | 🔄 Superseded by [023](023-release-automation-tooling.md) | 2025-11-17 | v2.6.15 |
 | [006](006-cli-argument-parsing-library.md) | CLI Argument Parsing Library | ✅ Implemented | 2025-11-19 | N/A |
 | [007](007-embedded-mqtt-broker.md) | Embedded MQTT Broker | ❌ Rejected | 2025-11-19 | N/A |
 | [008](008-usesystempicker-electron-38.md) | useSystemPicker Feature for Electron 38 | ❌ Rejected | 2025-11-24 | N/A |
 | [009](009-automated-testing-strategy.md) | Automated Testing Strategy | ✅ Implemented | 2025-12-13 | v2.7.4+ |
 | [010](010-multiple-windows-support.md) | Multiple Windows Support | ❌ Rejected | 2025-11-26 | N/A |
-| [011](011-appimage-update-info.md) | AppImage Update Info for Third-Party Managers | ✅ Implemented | 2026-01-25 | v2.7.1 |
+| [011](011-appimage-update-info.md) | AppImage Update Info for Third-Party Managers | 🔄 Superseded | 2026-01-25 | v2.7.1 |
 | [012](012-intune-sso-broker-compatibility.md) | Intune SSO Broker Compatibility | ✅ Implemented | 2026-01-25 | v2.7.1 |
 | [013](013-pii-log-sanitization.md) | PII Log Sanitization | ✅ Implemented | 2026-01-31 | v2.7.3 |
 | [014](014-quick-chat-deep-link-approach.md) | Quick Chat Deep Link Approach | ✅ Implemented | 2026-01-31 | v2.7.3 |
@@ -42,8 +42,8 @@ Architecture Decision Records capture important architectural decisions along wi
 | [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | ✅ Implemented | 2026-02-26 | N/A |
 | [018](018-issue-triage-bot-github-app-migration.md) | Issue Triage Bot GitHub App Migration | ✅ Implemented | 2026-03-06 | N/A |
 | [019](019-repo-activity-dashboard.md) | Repository Activity Dashboard | ✅ Implemented | 2026-03-11 | N/A |
-| [020](020-multi-account-profile-switcher.md) | Multi-Account Profile Switcher | ✅ Implemented | 2026-04-16 | v2.10.0 |
-| [021](021-webauthn-fido2-linux.md) | WebAuthn / FIDO2 Hardware Security Keys on Linux | ✅ Implemented | 2026-04-21 | N/A |
+| [020](020-multi-account-profile-switcher.md) | Multi-Account Profile Switcher | ✅ Implemented | 2026-04-16 | v2.9.0+ |
+| [021](021-webauthn-fido2-linux.md) | WebAuthn / FIDO2 Hardware Security Keys on Linux | ✅ Implemented | 2026-04-21 | v2.10.0 |
 | [022](022-custom-notification-toast-scope.md) | Custom Notification Toast Scope | ✅ Implemented | 2025-11-16 | v2.6.16 |
 | [023](023-release-automation-tooling.md) | Release Automation Tooling | ✅ Implemented | 2026-03-13 | N/A |
 | [024](024-smartcard-pkcs11-pin-dialog.md) | Smartcard PKCS#11 PIN Dialog | ✅ Implemented | 2026-06-09 | v2.14.0 |
@@ -53,6 +53,7 @@ Architecture Decision Records capture important architectural decisions along wi
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
+- ✅ **Accepted** - Decision accepted, implementation pending or partial
 - ❌ **Rejected** - Decision evaluated and declined with rationale
 - 🚧 **Proposed** - Under review, not yet accepted
 - 🔄 **Superseded** - Replaced by a newer decision
@@ -188,7 +189,7 @@ Architecture Decision Records capture important architectural decisions along wi
 - Inline message sending via Graph API ChatMessage.Send scope
 - Chat resolution via Teams entityCommanding + DOM scanning + member verification
 - Keyboard shortcut toggles quick chat modal
-- Multi-account profile switcher proposed for tenant/guest switching
+- Multi-account profile switcher shipped Phase 1 from v2.9.0; Phase 2 in progress
 
 ### Distribution & Packaging
 
@@ -365,10 +366,11 @@ When referencing code in ADRs:
 ## ADR Statistics
 
 - **Total ADRs**: 27
-- **Implemented**: 20
+- **Implemented**: 18
 - **Accepted**: 2
 - **Proposed**: 0
 - **Rejected**: 5
+- **Superseded**: 2
 - **Average length**: ~1050 words
 - **Topics covered**: 10 (Authentication & Security, Screen Sharing, Testing & Quality, Performance, Documentation & Standards, Release Process & Automation, Community & Metrics, MQTT & Integration, UI Features, Distribution & Packaging)
 
