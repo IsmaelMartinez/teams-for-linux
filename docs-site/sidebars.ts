@@ -107,7 +107,6 @@ const sidebars: SidebarsConfig = {
             'development/research/README',
             'development/research/custom-stickers-online-import-research',
             'development/research/documentation-and-config-ux-research',
-            'development/research/fido2-touch-prompt-research',
             'development/research/graph-api-integration-research',
           ],
         },

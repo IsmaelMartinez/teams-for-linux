@@ -25,17 +25,13 @@ Everything listed here describes work that has **not** fully shipped. Once a pie
   - URL paste shipped in v1. Telegram sticker pack import is the proposed next phase, AI generation via a user-configured backend is the speculative one
   - AI path mirrors the `customBackground` pattern, so the wrapper holds no opinion about which backend sits at the other end
 
-- **[FIDO2 Touch Prompt UI](fido2-touch-prompt-research.md)**, surface a "touch your security key now" prompt during the user-presence wait ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631), PR [#2779](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779))
-  - The FIDO2 beta only built the PIN-entry UI, so the touch wait was silent (`fido2Backend.js` blocks at `spawn` until the key is touched)
-  - Honest limit: a prompt spanning the whole security-key call, not a touch-instant signal
-  - Shipped for the `auth.webauthn.enabled` path; the flag-off path is still open
-
 ### Implemented Features (Research Removed)
 
 Research documents are deleted once a feature is fully shipped and the document provides no ongoing reference value. The ADRs and git history preserve the decisions and context.
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
+| FIDO2 Touch Prompt | v2.18.0 | Prompt shown around the security-key call, with a Cancel that aborts the fido2 child; decision folded into [ADR-021](../adr/021-webauthn-fido2-linux.md) ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631), [PR #2779](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779)) |
 | System Performance Audit | --- | Ten findings closed as fixed, fixed differently, or not planned. Decision in [ADR-026](../adr/026-performance-audit-outcomes.md) |
 | Configuration Organization | --- | Decision-only closeout (no feature shipped): naming convention and the resolved flat-to-nested rename mapping now live in [ADR-025](../adr/025-config-option-naming-convention.md); migration stays opportunistic, `docs-site/static/config-schema.json` is the live inventory |
 | Smartcard / NSS PIN Dialog | v2.14.0 | Opt-in PIN dialog behind `auth.clientCertificate.pinDialog.enabled`, built on `app/_shared/securePrompt.js`. Decision in [ADR-024](../adr/024-smartcard-pkcs11-pin-dialog.md) ([#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639)) |
