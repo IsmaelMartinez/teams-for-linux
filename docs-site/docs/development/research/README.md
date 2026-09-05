@@ -56,7 +56,7 @@ Research documents are deleted once a feature is fully shipped and the document 
 | External Browser Authentication | --- | Not feasible; Teams manages OAuth internally ([#2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017)) |
 | GNOME Search Provider | --- | Not recommended; latency too high for acceptable UX ([#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075)) |
 | Code Quality Hardening (Phases 1-3) | v2.7.5 | Logging hygiene, resilience, input handling, IPC hardening, CI/CD gates |
-| Wayland/X11 Ozone Platform | v2.7.4 | Force X11 by default due to Electron 38+ Wayland regressions |
+| Wayland/X11 Ozone Platform | v2.7.4 | Force X11 by default due to Electron 38+ Wayland regressions; re-affirmed June 2026 after [#2601](https://github.com/IsmaelMartinez/teams-for-linux/pull/2601) and [#2508](https://github.com/IsmaelMartinez/teams-for-linux/issues/2508) were closed, decision now in [ADR-031](../adr/031-ozone-platform-x11-default.md) |
 | Quick Chat / Chat Modal | v2.7.4 | [ADR-014](../adr/014-quick-chat-deep-link-approach.md), [ADR-015](../adr/015-quick-chat-inline-messaging.md) |
 | PII Log Sanitization | v2.7.2 | [ADR-013](../adr/013-pii-log-sanitization.md) |
 | DOM Access Restoration | v2.5.2 | Hybrid API + DOM approach for React compatibility |

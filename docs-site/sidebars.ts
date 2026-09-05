@@ -98,6 +98,7 @@ const sidebars: SidebarsConfig = {
             'development/adr/025-config-option-naming-convention',
             'development/adr/026-performance-audit-outcomes',
             'development/adr/028-third-party-idp-otc-prefill',
+            'development/adr/031-ozone-platform-x11-default',
           ],
         },
         {
