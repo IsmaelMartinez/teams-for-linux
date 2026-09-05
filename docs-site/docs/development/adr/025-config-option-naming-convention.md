@@ -120,7 +120,7 @@ Migration is not full equivalence. A flat option declares a type and yargs coerc
 
 ### Neutral
 
-A permanent alias layer stays rejected. The codemod no longer does: `toNestedConfigFile` in `app/config/renames.js` rewrites a config file onto the nested names, and [#2913](https://github.com/IsmaelMartinez/teams-for-linux/issues/2913) tracks the surface that offers it to users. Renames proceed namespace by namespace as tracked in [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842), and the four occupied namespaces will mix long-shipped and newly-arrived leaves.
+A permanent alias layer stays rejected. The codemod no longer does: `toNestedConfigFile` in `app/config/renames.js` rewrites a config file onto the nested names, and the surface that offers it to users shipped in v2.19.0 as the Settings menu's "Show Updated Config…" entry ([#2913](https://github.com/IsmaelMartinez/teams-for-linux/issues/2913)). Renames proceed namespace by namespace as tracked in [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842), and the four occupied namespaces will mix long-shipped and newly-arrived leaves.
 
 ## Related
 

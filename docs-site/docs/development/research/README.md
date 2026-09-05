@@ -16,7 +16,7 @@ No research is open at the moment. New investigations are added here while they 
 
 ### Implemented Features (Research Removed)
 
-Research documents are deleted once a feature is fully shipped and the document provides no ongoing reference value. The ADRs and git history preserve the decisions and context.
+Research documents are deleted once their decision has moved to an ADR, whether the feature shipped, was rejected, or has remaining phases tracked in the roadmap. The ADRs and git history preserve the decisions and context.
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
