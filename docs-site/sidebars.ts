@@ -98,6 +98,7 @@ const sidebars: SidebarsConfig = {
             'development/adr/025-config-option-naming-convention',
             'development/adr/026-performance-audit-outcomes',
             'development/adr/028-third-party-idp-otc-prefill',
+            'development/adr/030-graph-api-teams-session-token',
             'development/adr/031-ozone-platform-x11-default',
           ],
         },
@@ -107,7 +108,6 @@ const sidebars: SidebarsConfig = {
           items: [
             'development/research/README',
             'development/research/documentation-and-config-ux-research',
-            'development/research/graph-api-integration-research',
           ],
         },
       ],
