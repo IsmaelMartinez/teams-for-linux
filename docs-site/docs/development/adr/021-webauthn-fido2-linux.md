@@ -42,7 +42,9 @@ Ferdium shipped a conceptually identical approach via `electron-webauthn-linux` 
 
 Issue #2631 asked for a "touch your security key now" prompt during the user-presence wait, since the PIN dialog closes and nothing else appears on screen while `fido2-assert` / `fido2-cred` block. [PR #2779](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779) added `app/webauthn/touchPrompt.js`, a window shown around the security-key call and dismissed in a `finally` once the call settles, whichever way it resolves. Cancel is wired through an `AbortSignal` that `spawnFido2` reuses for the same detached-process-group kill the 60s timeout already used, so cancelling cannot leave a `fido2` child holding the device.
 
-Hardware validation by @spthiel on PR #2779 confirmed the prompt appears with no visible gap after the PIN dialog closes, and that both Cancel and the timeout land on Microsoft's "We couldn't sign you in" page with no `fido2-assert` process left behind. The `auth.webauthn.enabled` off path remains open: Electron's native WebAuthn draws no UI on Linux, and it is not yet clear what Cancel would mean when the underlying Chromium call cannot be aborted.
+This deviates from the retired research note, which recommended building the prompt on the shared `app/_shared/securePrompt.js` helper; the shipped window instead follows `pinDialog.js` as its own standalone, always-on-top `BrowserWindow`, so folding it into the shared secure prompt remains open and belongs in the same migration the roadmap already tracks for the PIN dialog.
+
+Hardware validation by [@spthiel on PR #2779](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779#issuecomment-5163132960) confirmed the prompt appears with no visible gap after the PIN dialog closes, and that both Cancel and the timeout land on Microsoft's "We couldn't sign you in" page with no `fido2-assert` process left behind. The `auth.webauthn.enabled` off path remains open: Electron's native WebAuthn draws no UI on Linux, and it is not yet clear what Cancel would mean when the underlying Chromium call cannot be aborted.
 
 ## Alternatives Considered
 
