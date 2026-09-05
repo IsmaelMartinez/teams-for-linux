@@ -50,6 +50,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [025](025-config-option-naming-convention.md) | Configuration Option Naming Convention | ✅ Accepted | 2026-08-11 | N/A |
 | [026](026-performance-audit-outcomes.md) | Performance Audit Outcomes | ✅ Accepted | 2026-08-11 | N/A |
 | [028](028-third-party-idp-otc-prefill.md) | One-Time-Code Pre-fill on Third-Party IdPs | ❌ Rejected | 2026-08-19 | N/A |
+| [031](031-ozone-platform-x11-default.md) | Keep the ozone-platform x11 Default on Wayland | ✅ Accepted | 2026-09-05 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -92,6 +93,17 @@ Architecture Decision Records capture important architectural decisions along wi
 - Standardized source identification
 - Improved cross-platform compatibility
 - Deferred native picker until Linux support available
+
+### Linux Desktop & Display Server
+
+| ADR | Title | Summary |
+|-----|-------|---------|
+| [031](031-ozone-platform-x11-default.md) | Keep the ozone-platform x11 Default on Wayland | Ship `--ozone-platform=x11` as the default on every Linux packaging format; two removal attempts (#2506, #2601) were reverted on regressions, with concrete reopen triggers recorded |
+
+**Key Outcomes:**
+- Predictable default rendering path across deb, rpm, AppImage, tar.gz and snap
+- `electronCLIFlags` cannot override the flag; only a genuine command-line or `.desktop` override can
+- Reopen triggers tied to a working snap core24 migration, a verified Electron/Chromium fix, and ADR-016 matrix validation
 
 ### Testing & Quality
 
@@ -365,14 +377,14 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 27
+- **Total ADRs**: 28
 - **Implemented**: 18
-- **Accepted**: 2
+- **Accepted**: 3
 - **Proposed**: 0
 - **Rejected**: 5
 - **Superseded**: 2
 - **Average length**: ~1050 words
-- **Topics covered**: 10 (Authentication & Security, Screen Sharing, Testing & Quality, Performance, Documentation & Standards, Release Process & Automation, Community & Metrics, MQTT & Integration, UI Features, Distribution & Packaging)
+- **Topics covered**: 11 (Authentication & Security, Screen Sharing, Linux Desktop & Display Server, Testing & Quality, Performance, Documentation & Standards, Release Process & Automation, Community & Metrics, MQTT & Integration, UI Features, Distribution & Packaging)
 
 ## Related Documentation
 
