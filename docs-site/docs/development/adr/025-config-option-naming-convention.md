@@ -127,6 +127,6 @@ A permanent alias layer stays rejected. The codemod no longer does: `toNestedCon
 - [ADR-024](024-smartcard-pkcs11-pin-dialog.md): shipped the `auth.clientCertificate` namespace this ADR aligns with
 - Roadmap: [Config Schema as Single Source of Truth](../plan/roadmap.md) (#2597), where the in-app settings window is tracked
 - [#2841](https://github.com/IsmaelMartinez/teams-for-linux/issues/2841), the deprecation window decision that must precede the first rename, and [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842), which tracks the migration itself
-- [Documentation, Contributing, and Config UX research](../research/documentation-and-config-ux-research.md), which builds on this convention
+- [ADR-029](029-config-schema-single-source-of-truth.md): the one-schema-three-consumers decision that builds on this convention
 - `app/config/options.js` and `docs-site/static/config-schema.json`, the live inventory
 - Research history: see git history for `docs-site/docs/development/research/configuration-organization-research.md`
