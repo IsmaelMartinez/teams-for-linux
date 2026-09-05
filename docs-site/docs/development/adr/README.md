@@ -50,6 +50,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [025](025-config-option-naming-convention.md) | Configuration Option Naming Convention | ✅ Accepted | 2026-08-11 | N/A |
 | [026](026-performance-audit-outcomes.md) | Performance Audit Outcomes | ✅ Accepted | 2026-08-11 | N/A |
 | [028](028-third-party-idp-otc-prefill.md) | One-Time-Code Pre-fill on Third-Party IdPs | ❌ Rejected | 2026-08-19 | N/A |
+| [030](030-graph-api-teams-session-token.md) | Graph API Access via the Teams Session Token | ✅ Implemented | 2026-09-05 | v2.7.4 |
 | [031](031-ozone-platform-x11-default.md) | Keep the `--ozone-platform=x11` Default on Wayland | ✅ Accepted | 2026-09-05 | N/A |
 
 **Legend:**
@@ -179,12 +180,14 @@ Architecture Decision Records capture important architectural decisions along wi
 |-----|-------|---------|
 | [006](006-cli-argument-parsing-library.md) | CLI Argument Parsing Library | Keep yargs for config parsing, use MQTT for action commands instead of CLI subcommands |
 | [007](007-embedded-mqtt-broker.md) | Embedded MQTT Broker | Rejected bundling Aedes broker - users still need client tools, better alternatives exist |
+| [030](030-graph-api-teams-session-token.md) | Graph API Access via the Teams Session Token | Reuse the Teams web app's own Graph token instead of a custom Azure app registration; powers the MQTT `get-calendar` command and Quick Chat |
 
 **Key Outcomes:**
 - Avoid fragile CLI argument bypass layer
 - MQTT commands provide clean architecture for external triggers
 - Users provide own MQTT broker (localhost or Home Assistant)
 - Consider HTTP server for zero-dependency alternative (future)
+- Graph API token reuse needs no app registration or admin consent, but caps scopes at what Teams web already holds (`/me/presence` returns 403)
 
 ### UI Features
 
@@ -377,8 +380,8 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 28
-- **Implemented**: 18
+- **Total ADRs**: 29
+- **Implemented**: 19
 - **Accepted**: 3
 - **Proposed**: 0
 - **Rejected**: 5

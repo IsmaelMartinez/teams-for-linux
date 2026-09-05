@@ -397,7 +397,7 @@ Use `jq` to format the JSON output for better readability. Install with `apt-get
 
 **Related Research:**
 
-- [Graph API Integration](development/research/graph-api-integration-research.md)
+- [Graph API Integration](development/adr/030-graph-api-teams-session-token.md)
 
 ## Published Topics
 

@@ -17,16 +17,13 @@ Everything listed here describes work that has **not** fully shipped. Once a pie
   - **Phases 3a and 4 implemented**: per-option `applyMode` and nested-field metadata with a hard-failing generator lint, plus warn-only startup validation in `app/config/validator.js`
   - **Remaining**: Phase 3b, the in-app settings window, now unblocked by the 3a schema metadata
 
-- **[Graph API Integration Research](graph-api-integration-research.md)**, Microsoft Graph API for enhanced features
-  - **Phase 1 shipped (v2.7.4)**: token acquisition plus 7 IPC channels. People search and send chat power Quick Chat (ADR-014, ADR-015)
-  - **Phases 2 and 3 not started**: calendar widget, mail preview, presence, settings UI
-
 ### Implemented Features (Research Removed)
 
 Research documents are deleted once a feature is fully shipped and the document provides no ongoing reference value. The ADRs and git history preserve the decisions and context.
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
+| Graph API Integration | v2.7.4 | Phase 1 shipped ([PR #2119](https://github.com/IsmaelMartinez/teams-for-linux/pull/2119)); token route recorded in [ADR-030](../adr/030-graph-api-teams-session-token.md), implementation reference in app/graphApi/README.md; Phases 2 and 3 parked in the roadmap |
 | Custom Stickers | v2.11.0 | Local-folder MVP plus HTTPS URL import and a one-level subfolder scan shipped ([#2476](https://github.com/IsmaelMartinez/teams-for-linux/issues/2476), [PR #2550](https://github.com/IsmaelMartinez/teams-for-linux/pull/2550)); the closed Telegram and GIPHY attempts and the untried generation idea are recorded in the roadmap |
 | FIDO2 Touch Prompt | v2.18.0 | Prompt shown around the security-key call, with a Cancel that aborts the fido2 child; decision folded into [ADR-021](../adr/021-webauthn-fido2-linux.md) ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631), [PR #2779](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779)) |
 | System Performance Audit | --- | Ten findings closed as fixed, fixed differently, or not planned. Decision in [ADR-026](../adr/026-performance-audit-outcomes.md) |
