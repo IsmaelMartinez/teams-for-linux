@@ -6,7 +6,7 @@ id: 030-graph-api-teams-session-token
 
 ## Status
 
-✅ Implemented (v2.7.4)
+✅ Implemented (v2.6.17; first consumer Quick Chat in v2.7.4)
 
 ## Context
 
@@ -35,9 +35,14 @@ No separate consent screen appears because no separate application exists.
 
 `GraphApiClient` (`app/graphApi/index.js`) caches the returned token in memory and requires a 5-minute
 buffer before its recorded expiry before reusing it; inside that buffer it acquires a fresh one rather
-than risk a request expiring mid-flight. The client exposes one method per supported endpoint —
-profile, calendar CRUD, mail, People API search, and the chat resolve/send pair Quick Chat needs — and
-nothing else is reachable.
+than risk a request expiring mid-flight. The client exposes one method per supported Graph endpoint —
+profile, calendar (read, create, update, delete), mail, and People API search — plus a chat
+resolve/send pair for Quick Chat. Only seven of those methods are wired to an IPC channel;
+`updateCalendarEvent` and `deleteCalendarEvent` exist on the client but neither has one yet. Chat
+resolution is the one deliberate exception to "Graph token in, Graph response out": before
+`sendChatMessage` can call `POST /chats/{id}/messages`, `resolveConversation()` calls Teams' internal
+`entityCommanding.chat.chatWithUsers()` and scans the DOM for candidate thread IDs, because no Graph
+endpoint can find or create a 1:1 chat by user ID. ADR-015 records why that exception exists.
 
 The renderer never sees a token. `app/graphApi/ipcHandlers.js` exposes exactly seven `ipcMain.handle`
 channels, each returning a parsed response rather than raw credentials, and all seven are the only
@@ -75,29 +80,33 @@ handler short-circuits to an explicit "not enabled" error.
 A separate Azure AD application with its own MSAL flow, giving each tenant's administrators a Graph
 identity they control independently of the browser session Teams itself uses.
 
-PR [#2845](https://github.com/IsmaelMartinez/teams-for-linux/pull/2845) attempted exactly this to
-solve a different problem (avoiding forced daily re-authentication under a Conditional Access sign-in
-frequency policy). Review found the design could not deliver what it promised: the MSAL result was
-assigned and only null-checked, so nothing it returned ever reached the Electron session; the
-interactive flow appeared to work only because it opened a normal login window on the shared session
-partition, which would have authenticated the session regardless of the app registration; and the
-silent flow returned before any window opened, so from the second launch onward the session received
-nothing at all. The reviewer pointed the contributor at Intune SSO
-([ADR-012](012-intune-sso-broker-compatibility.md)), which uses a device's existing Primary Refresh
-Token with no app registration and no admin action, as the maintained path for that problem instead.
-That review is independent confirmation that a second, app-registration-backed identity does not
-solve the class of problem it looks like it should, and it does not remove the Presence scope gap
-either, since Presence.Read still needs its own admin consent regardless of which application asks
-for it.
+PR [#2845](https://github.com/IsmaelMartinez/teams-for-linux/pull/2845) is open, awaiting the
+contributor's reply. It attempts exactly this, to solve a different problem: avoiding forced daily
+re-authentication under a Conditional Access sign-in frequency policy. The maintainer's review found
+the design could not yet deliver what it promised: the MSAL result was assigned and only
+null-checked, so nothing it returned ever reached the Electron session; the interactive flow appeared
+to work only because it opened a normal login window on the shared session partition, which would
+have authenticated the session regardless of the app registration; and the silent flow returned
+before any window opened, so from the second launch onward the session received nothing at all. In
+the same review comment, the maintainer suggested Intune SSO
+([ADR-012](012-intune-sso-broker-compatibility.md)) as a possibly simpler fit instead: on an
+Entra-joined machine with `microsoft-identity-broker` running, `auth.intune.enabled` uses the
+device's existing Primary Refresh Token, with no app registration and no admin action needed. That
+review is independent evidence that a second, app-registration-backed identity may not be necessary
+for the class of problem it looks like it should solve, though it would not remove the Presence scope
+gap either way, since Presence.Read still needs its own admin consent regardless of which application
+asks for it.
 
 ### Teams' Undocumented Internal APIs
 
-Reach further into Teams' internals — the IC3 chat service, its presence service — instead of stopping
-at the Graph token boundary. ADR-015 explored this for message sending and found the IC3 endpoint
-accepted messages that never reached the recipient, likely missing worker/trouter state unavailable
-outside Teams' own renderer context. Going deeper trades a documented Microsoft Graph API for an
-undocumented one with a worse reliability track record and no public contract at all; the Graph token
-this ADR reuses is at least the same API surface Teams' own client depends on.
+Reach further into Teams' internals than the Graph token plus the chat-resolve exception above — for
+example sending messages through the IC3 chat service directly, or reading presence from an internal
+service instead of accepting the `Presence.Read` scope gap. ADR-015 explored the IC3 route for message
+sending and found the endpoint accepted messages that never reached the recipient, likely missing
+worker/trouter state unavailable outside Teams' own renderer context. Going further trades a
+documented Microsoft Graph API for an undocumented one with a worse reliability track record and no
+public contract at all; the Graph token this ADR reuses, plus the one DOM-scanning exception already
+made for chat resolution, is as far into Teams' internals as this integration goes.
 
 ## Related
 
@@ -105,7 +114,9 @@ this ADR reuses is at least the same API surface Teams' own client depends on.
 - [ADR-014](014-quick-chat-deep-link-approach.md) — Quick Chat deep link approach
 - [ADR-015](015-quick-chat-inline-messaging.md) — Quick Chat inline messaging
 - Issue [#1832](https://github.com/IsmaelMartinez/teams-for-linux/issues/1832) — original request
-- PR [#2119](https://github.com/IsmaelMartinez/teams-for-linux/pull/2119) — Phase 1 implementation
-- PR [#2845](https://github.com/IsmaelMartinez/teams-for-linux/pull/2845) — rejected app-registration
-  alternative
+- PR [#1958](https://github.com/IsmaelMartinez/teams-for-linux/pull/1958) — Phase 1 implementation
+- PR [#2119](https://github.com/IsmaelMartinez/teams-for-linux/pull/2119) — Quick Chat inline-messaging
+  consumer (ADR-015)
+- PR [#2845](https://github.com/IsmaelMartinez/teams-for-linux/pull/2845) — open, awaiting the
+  contributor's reply to the maintainer's review of the app-registration alternative
 - Implementation reference: `app/graphApi/README.md`

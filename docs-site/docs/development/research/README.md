@@ -23,7 +23,7 @@ Research documents are deleted once a feature is fully shipped and the document 
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
-| Graph API Integration | v2.7.4 | Phase 1 shipped ([PR #2119](https://github.com/IsmaelMartinez/teams-for-linux/pull/2119)); token route recorded in [ADR-030](../adr/030-graph-api-teams-session-token.md), implementation reference in app/graphApi/README.md; Phases 2 and 3 parked in the roadmap |
+| Graph API Integration | v2.6.17 | Phase 1 shipped ([PR #1958](https://github.com/IsmaelMartinez/teams-for-linux/pull/1958)); token route recorded in [ADR-030](../adr/030-graph-api-teams-session-token.md), implementation reference in app/graphApi/README.md; Phases 2 and 3 parked in the roadmap |
 | Custom Stickers | v2.11.0 | Local-folder MVP plus HTTPS URL import and a one-level subfolder scan shipped ([#2476](https://github.com/IsmaelMartinez/teams-for-linux/issues/2476), [PR #2550](https://github.com/IsmaelMartinez/teams-for-linux/pull/2550)); the closed Telegram and GIPHY attempts and the untried generation idea are recorded in the roadmap |
 | FIDO2 Touch Prompt | v2.18.0 | Prompt shown around the security-key call, with a Cancel that aborts the fido2 child; decision folded into [ADR-021](../adr/021-webauthn-fido2-linux.md) ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631), [PR #2779](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779)) |
 | System Performance Audit | --- | Ten findings closed as fixed, fixed differently, or not planned. Decision in [ADR-026](../adr/026-performance-audit-outcomes.md) |

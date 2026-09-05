@@ -32,22 +32,24 @@ short-circuits to `{ success: false, error: 'Graph API not enabled' }`.
 `acquireToken('https://graph.microsoft.com', ...)`, the same call Teams' own UI makes for its Graph
 requests. The result is cached in memory and reused until it is within 5 minutes of its recorded
 expiry, at which point a fresh token is acquired instead of risking a request expiring mid-flight. The
-token itself never crosses into the renderer; only parsed API responses do.
+token is minted by Teams' own auth provider inside the renderer and read back into the main process
+by that `executeJavaScript` call, where it is cached. It is never returned through the
+renderer-facing IPC responses, which carry only `{ success, data }`.
 
 ## IPC Channels
 
 All seven channels below are the complete Graph API allowlist entries in
 `app/security/ipcValidator.js`.
 
-| Channel | Purpose |
-|---------|---------|
-| `graph-api-get-user-profile` | Get the current user profile (`/me`) |
-| `graph-api-get-calendar-events` | List calendar events with OData options |
-| `graph-api-get-calendar-view` | List events in a date range (`/me/calendar/calendarView`) |
-| `graph-api-create-calendar-event` | Create a calendar event |
-| `graph-api-get-mail-messages` | List mail messages with OData options |
-| `graph-api-search-people` | People API search (Quick Chat contact search) |
-| `graph-api-send-chat-message` | Resolve a 1:1 chat and send a message (Quick Chat) |
+| Channel | Type | Purpose |
+|---------|------|---------|
+| `graph-api-get-user-profile` | handle | Get the current user profile (`/me`) |
+| `graph-api-get-calendar-events` | handle | List calendar events with OData options |
+| `graph-api-get-calendar-view` | handle | List events in a date range (`/me/calendar/calendarView`) |
+| `graph-api-create-calendar-event` | handle | Create a calendar event |
+| `graph-api-get-mail-messages` | handle | List mail messages with OData options |
+| `graph-api-search-people` | handle | People API search (Quick Chat contact search) |
+| `graph-api-send-chat-message` | handle | Resolve a 1:1 chat and send a message (Quick Chat) |
 
 `GraphApiClient` also implements `updateCalendarEvent` and `deleteCalendarEvent`, but neither is
 currently wired to an IPC channel.
@@ -99,6 +101,15 @@ scope without Teams itself asking for it:
 The token path also depends on Teams' internal React service names, which Microsoft can change
 without notice; when that happens `acquireToken` returns an explicit error rather than a token.
 
+## Not Implemented
+
+Earlier research for this integration scoped a longer backlog that never got built: presence
+indicators (blocked on the `Presence.Read` scope above), retry with exponential backoff, calendar
+sync with desktop notifications, a calendar widget with meeting quick actions, mail preview
+notifications, a settings UI for Graph API options, and batch requests, delta queries, and webhooks.
+`updateCalendarEvent` and `deleteCalendarEvent` also exist on `GraphApiClient` already, but neither
+has an IPC channel wired up in `ipcHandlers.js` (see IPC Channels above).
+
 ## Consumers
 
 - Quick Chat modal — People API search and inline messaging
@@ -112,4 +123,6 @@ without notice; when that happens `acquireToken` returns an explicit error rathe
 - [ADR-030](../../docs-site/docs/development/adr/030-graph-api-teams-session-token.md) — decision to
   reuse the Teams session token instead of a custom Azure app registration
 - Issue [#1832](https://github.com/IsmaelMartinez/teams-for-linux/issues/1832)
-- PR [#2119](https://github.com/IsmaelMartinez/teams-for-linux/pull/2119) — Phase 1 implementation
+- PR [#1958](https://github.com/IsmaelMartinez/teams-for-linux/pull/1958) — Phase 1 implementation
+- PR [#2119](https://github.com/IsmaelMartinez/teams-for-linux/pull/2119) — Quick Chat inline-messaging
+  consumer (ADR-015)

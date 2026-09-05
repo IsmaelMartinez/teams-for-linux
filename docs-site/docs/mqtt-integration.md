@@ -395,7 +395,7 @@ Use `jq` to format the JSON output for better readability. Install with `apt-get
 - Check Microsoft 365 permissions for your account
 - Verify Graph API scopes are granted (Calendars.Read)
 
-**Related Research:**
+**Related:**
 
 - [Graph API Integration](development/adr/030-graph-api-teams-session-token.md)
 

@@ -132,7 +132,6 @@ Versioned docs are not worth it while release-please ships frequently and the ap
 ## References
 
 - [ADR-025](../adr/025-config-option-naming-convention.md) — option naming, flat-versus-nested, and the resolved rename mapping (formerly the configuration organization research document).
-- [ADR-030](../adr/030-graph-api-teams-session-token.md) — references a deferred settings UI.
 - `app/config/index.js`, `app/config/defaults.js` — the 76 option definitions.
 - `app/appConfiguration/index.js` — the three stores.
 - `app/security/ipcValidator.js` — the IPC allowlist and payload sanitizer.
