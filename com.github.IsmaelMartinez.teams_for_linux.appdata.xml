@@ -14,6 +14,21 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.20.1" date="2026-09-05">
+      <description>
+        <ul>
+          <li>adr: ADR-029 configuration schema as single source of truth (#2956)</li>
+          <li>adr: ADR-030 Graph API access via the Teams session token (#2957)</li>
+          <li>adr: ADR-031 keep the ozone-platform x11 default on Wayland (#2958)</li>
+          <li>adr: fold the FIDO2 touch prompt research into ADR-021 (#2952)</li>
+          <li>adr: update statuses for ADR-012, 014, 019, 020, 021, 022 and refresh the index (#2955)</li>
+          <li>mqtt: retire the incoming-call plan now meeting-start detection has shipped (#2954)</li>
+          <li>research: retire the custom stickers external-sources research (#2953)</li>
+          <li>stale: exempt good first issue and help wanted issues from auto-close (#2960)</li>
+          <li>deps: update qs and fast-uri to clear six Dependabot alerts (#2951)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.20.0" date="2026-09-03">
       <description>
         <ul>
