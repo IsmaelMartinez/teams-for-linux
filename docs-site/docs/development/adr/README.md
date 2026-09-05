@@ -50,7 +50,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [025](025-config-option-naming-convention.md) | Configuration Option Naming Convention | ✅ Accepted | 2026-08-11 | N/A |
 | [026](026-performance-audit-outcomes.md) | Performance Audit Outcomes | ✅ Accepted | 2026-08-11 | N/A |
 | [028](028-third-party-idp-otc-prefill.md) | One-Time-Code Pre-fill on Third-Party IdPs | ❌ Rejected | 2026-08-19 | N/A |
-| [031](031-ozone-platform-x11-default.md) | Keep the ozone-platform x11 Default on Wayland | ✅ Accepted | 2026-09-05 | N/A |
+| [031](031-ozone-platform-x11-default.md) | Keep the `--ozone-platform=x11` Default on Wayland | ✅ Accepted | 2026-09-05 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -98,7 +98,7 @@ Architecture Decision Records capture important architectural decisions along wi
 
 | ADR | Title | Summary |
 |-----|-------|---------|
-| [031](031-ozone-platform-x11-default.md) | Keep the ozone-platform x11 Default on Wayland | Ship `--ozone-platform=x11` as the default on every Linux packaging format; two removal attempts (#2506, #2601) were reverted on regressions, with concrete reopen triggers recorded |
+| [031](031-ozone-platform-x11-default.md) | Keep the `--ozone-platform=x11` Default on Wayland | Ship `--ozone-platform=x11` as the default on deb, rpm, AppImage and snap; #2506 was reverted the same day as an accidental merge, and #2601 was closed unmerged after a regression, with concrete reopen triggers recorded |
 
 **Key Outcomes:**
 - Predictable default rendering path across deb, rpm, AppImage, tar.gz and snap
