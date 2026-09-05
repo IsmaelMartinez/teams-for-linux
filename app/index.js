@@ -35,6 +35,30 @@ const WebAuthn = require("./webauthn");
 const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
+// Name notifications "Teams for Linux" instead of the raw app name.
+// Desktop environments read two different fields for the header: KDE shows
+// the notification's app_name (which Electron takes from app.name), GNOME
+// resolves the desktop-entry hint and shows that entry's Name. Cover both.
+// app.name also seeds the default userData path, so pin the path first or
+// existing installs would silently switch config directory.
+if (process.platform === "linux") {
+  const userDataPath = app.getPath("userData");
+  app.setName("Teams for Linux");
+  app.setPath("userData", userDataPath);
+
+  // The desktop-entry hint must be set unconditionally: Electron pre-sets
+  // CHROME_DESKTOP itself before app code runs, so guarding on the env var
+  // being absent would be a no-op. Sandboxed installs export the entry
+  // under their own id.
+  if (process.env.FLATPAK_ID) {
+    app.setDesktopName(`${process.env.FLATPAK_ID}.desktop`);
+  } else if (process.env.SNAP_INSTANCE_NAME) {
+    app.setDesktopName(`${process.env.SNAP_INSTANCE_NAME}_teams-for-linux.desktop`);
+  } else {
+    app.setDesktopName("teams-for-linux.desktop");
+  }
+}
+
 const { NETWORK_ERROR_PATTERNS } = require("./config/defaults");
 
 function isNetworkError(message) {
