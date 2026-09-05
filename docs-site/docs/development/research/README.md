@@ -27,7 +27,7 @@ Research documents are deleted once a feature is fully shipped and the document 
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
-| Custom Stickers | v2.11.0 | Local-folder MVP plus HTTPS URL import and a one-level subfolder scan shipped ([#2476](https://github.com/IsmaelMartinez/teams-for-linux/issues/2476), [PR #2550](https://github.com/IsmaelMartinez/teams-for-linux/pull/2550)); Telegram pack import and prompt-driven generation parked until requested, research preserved in git history |
+| Custom Stickers | v2.11.0 | Local-folder MVP plus HTTPS URL import and a one-level subfolder scan shipped ([#2476](https://github.com/IsmaelMartinez/teams-for-linux/issues/2476), [PR #2550](https://github.com/IsmaelMartinez/teams-for-linux/pull/2550)); the closed Telegram and GIPHY attempts and the untried generation idea are recorded in the roadmap |
 | FIDO2 Touch Prompt | v2.18.0 | Prompt shown around the security-key call, with a Cancel that aborts the fido2 child; decision folded into [ADR-021](../adr/021-webauthn-fido2-linux.md) ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631), [PR #2779](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779)) |
 | System Performance Audit | --- | Ten findings closed as fixed, fixed differently, or not planned. Decision in [ADR-026](../adr/026-performance-audit-outcomes.md) |
 | Configuration Organization | --- | Decision-only closeout (no feature shipped): naming convention and the resolved flat-to-nested rename mapping now live in [ADR-025](../adr/025-config-option-naming-convention.md); migration stays opportunistic, `docs-site/static/config-schema.json` is the live inventory |
