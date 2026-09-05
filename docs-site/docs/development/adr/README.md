@@ -50,6 +50,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [025](025-config-option-naming-convention.md) | Configuration Option Naming Convention | ✅ Accepted | 2026-08-11 | N/A |
 | [026](026-performance-audit-outcomes.md) | Performance Audit Outcomes | ✅ Accepted | 2026-08-11 | N/A |
 | [028](028-third-party-idp-otc-prefill.md) | One-Time-Code Pre-fill on Third-Party IdPs | ❌ Rejected | 2026-08-19 | N/A |
+| [029](029-config-schema-single-source-of-truth.md) | Configuration Schema as Single Source of Truth | ✅ Accepted | 2026-09-05 | v2.12.0+ |
 | [030](030-graph-api-teams-session-token.md) | Graph API Access via the Teams Session Token | ✅ Implemented | 2025-11-21 | v2.6.17 |
 | [031](031-ozone-platform-x11-default.md) | Keep the `--ozone-platform=x11` Default on Wayland | ✅ Accepted | 2026-09-05 | N/A |
 
@@ -141,12 +142,14 @@ Architecture Decision Records capture important architectural decisions along wi
 |-----|-------|---------|
 | [004](004-agents-md-standard-investigation.md) | agents.md Standard Investigation | Investigated and rejected agents.md standard in favor of tool-specific standards (CLAUDE.md, copilot-instructions.md) |
 | [025](025-config-option-naming-convention.md) | Configuration Option Naming Convention | Nesting criteria, positive naming, and the resolved flat-to-nested rename mapping for configuration options |
+| [029](029-config-schema-single-source-of-truth.md) | Configuration Schema as Single Source of Truth | One-schema-three-consumers thesis: `app/config/options.js` feeds the generated docs, the docs explorer, and startup validation |
 
 **Key Outcomes:**
 - Consolidated instruction files (removed 28% duplication)
 - Centralized markdown standards in contributing.md
 - Maintained tool-specific official standards
 - Configuration option naming convention and rename mapping owned by ADR-025
+- Configuration schema treated as single source of truth for generated docs, the docs explorer, and startup validation, owned by ADR-029
 
 ### Release Process & Automation
 
@@ -380,9 +383,9 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 29
+- **Total ADRs**: 30
 - **Implemented**: 19
-- **Accepted**: 3
+- **Accepted**: 4
 - **Proposed**: 0
 - **Rejected**: 5
 - **Superseded**: 2

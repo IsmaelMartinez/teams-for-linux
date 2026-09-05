@@ -12,17 +12,15 @@ Everything listed here describes work that has **not** fully shipped. Once a pie
 
 ### Open Work
 
-- **[Documentation, Contributing, and Config UX](documentation-and-config-ux-research.md)**, `app/config/options.js` as the single source of truth feeding generated docs, an in-app settings UI, and startup validation ([#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597))
-  - **Phases 0 to 2 shipped (v2.12.0)**: drift fixes ([PR #2602](https://github.com/IsmaelMartinez/teams-for-linux/pull/2602)), generated config reference plus `config-schema.json` with CI drift guard ([PR #2604](https://github.com/IsmaelMartinez/teams-for-linux/pull/2604)), interactive config explorer in the docs site ([PR #2606](https://github.com/IsmaelMartinez/teams-for-linux/pull/2606))
-  - **Phases 3a and 4 implemented**: per-option `applyMode` and nested-field metadata with a hard-failing generator lint, plus warn-only startup validation in `app/config/validator.js`
-  - **Remaining**: Phase 3b, the in-app settings window, now unblocked by the 3a schema metadata
+No research is open at the moment. New investigations are added here while they are active.
 
 ### Implemented Features (Research Removed)
 
-Research documents are deleted once a feature is fully shipped and the document provides no ongoing reference value. The ADRs and git history preserve the decisions and context.
+Research documents are deleted once their decision has moved to an ADR, whether the feature shipped, was rejected, or has remaining phases tracked in the roadmap. The ADRs and git history preserve the decisions and context.
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
+| Config Schema as Single Source of Truth | v2.12.0 onwards | Phases 0 to 2, 3a and 4 shipped ([#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597)); decision in [ADR-029](../adr/029-config-schema-single-source-of-truth.md); the in-app settings window (3b) stays in the roadmap |
 | Graph API Integration | v2.6.17 | Phase 1 shipped ([PR #1958](https://github.com/IsmaelMartinez/teams-for-linux/pull/1958)); token route recorded in [ADR-030](../adr/030-graph-api-teams-session-token.md), implementation reference in app/graphApi/README.md; Phases 2 and 3 parked in the roadmap |
 | Custom Stickers | v2.11.0 | Local-folder MVP plus HTTPS URL import and a one-level subfolder scan shipped ([#2476](https://github.com/IsmaelMartinez/teams-for-linux/issues/2476), [PR #2550](https://github.com/IsmaelMartinez/teams-for-linux/pull/2550)); the closed Telegram and GIPHY attempts and the untried generation idea are recorded in the roadmap |
 | FIDO2 Touch Prompt | v2.18.0 | Prompt shown around the security-key call, with a Cancel that aborts the fido2 child; decision folded into [ADR-021](../adr/021-webauthn-fido2-linux.md) ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631), [PR #2779](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779)) |
