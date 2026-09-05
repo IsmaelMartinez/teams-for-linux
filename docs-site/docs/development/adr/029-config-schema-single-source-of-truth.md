@@ -34,7 +34,7 @@ The settings window (Phase 3b) is not built. When it is, it must persist edits t
 
 ### Positive
 
-A single edit to `app/config/options.js` now propagates to the reference docs, `config-schema.json`, and the docs explorer, and will reach the settings window and validator the same way once 3b ships, closing the class of bug that motivated this decision. The generator's lint makes schema completeness self-enforcing rather than reviewer-dependent: a PR that adds an option without `describe`, `type`, or `applyMode` fails CI outright. Reusing the IPC docs precedent also means contributors who already know that workflow have one fewer pattern to learn.
+A single edit to `app/config/options.js` now propagates to the reference docs, `config-schema.json`, and the docs explorer, and will reach the settings window and validator the same way once 3b ships, closing the class of bug that motivated this decision. The generator's lint makes schema completeness self-enforcing rather than reviewer-dependent: a PR that adds an option without `describe`, `type`, or `applyMode` fails CI outright. Reusing the IPC docs precedent also means contributors who already know that workflow have one fewer pattern to learn. The same schema now also drives the migration transform, so the ADR-025 rename mapping is applied by code rather than by hand.
 
 ### Negative
 
@@ -53,7 +53,7 @@ Rejected: release-please ships frequently and the app auto-updates, so nearly al
 Rejected: Docusaurus 3.10 already provides offline local search, MDX with React, Mermaid diagrams, and a working static GitHub Pages deploy; migrating would re-solve already-solved problems for no reader-visible win.
 
 ### Runtime in-process auto-migration of `config.json`
-Rejected: silently rewriting a user's config file at boot is too risky for a file users hand-edit and often keep in version control. An opt-in, user-invoked codemod that prints a diff before writing is preferred instead.
+Rejected: silently rewriting a user's config file at boot is too risky for a file users hand-edit and often keep in version control. An opt-in, user-invoked codemod that prints a diff before writing is preferred instead. That codemod shipped in v2.19.0 as the Settings menu's "Show Updated Config…" entry ([#2913](https://github.com/IsmaelMartinez/teams-for-linux/issues/2913), [PR #2914](https://github.com/IsmaelMartinez/teams-for-linux/pull/2914), [PR #2915](https://github.com/IsmaelMartinez/teams-for-linux/pull/2915)): it rewrites the user's flat keys onto their ADR-025 nested targets and writes the result to `config.migrated.json` alongside the original for review, never touching `config.json` itself, and the startup deprecation warning now points users at that entry.
 
 ### Enabling Docusaurus `fasterByDefault`
 Rejected: it would force rewriting HTML comments to JSX across existing documentation pages for no reader-visible benefit.
@@ -67,4 +67,5 @@ Rejected as scope creep for now: the docs explorer ships read, filter, and copy 
 - [#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597), the umbrella issue for this thesis
 - [PR #2602](https://github.com/IsmaelMartinez/teams-for-linux/pull/2602) (Phase 0 drift fixes), [PR #2604](https://github.com/IsmaelMartinez/teams-for-linux/pull/2604) (Phase 1 generator, `config-schema.json`, CI drift guard), [PR #2606](https://github.com/IsmaelMartinez/teams-for-linux/pull/2606) (Phase 2 docs config explorer)
 - [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842), the flat-to-nested config migration this schema work makes possible
+- [#2913](https://github.com/IsmaelMartinez/teams-for-linux/issues/2913), [PR #2914](https://github.com/IsmaelMartinez/teams-for-linux/pull/2914) and [PR #2915](https://github.com/IsmaelMartinez/teams-for-linux/pull/2915): the opt-in migration codemod and its "Show Updated Config…" Settings entry
 - `app/config/options.js`, `docs-site/static/config-schema.json`, `scripts/generateConfigDocs.js`, `app/config/validator.js`, `app/security/ipcValidator.js`
