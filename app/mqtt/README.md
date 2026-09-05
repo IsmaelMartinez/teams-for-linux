@@ -56,11 +56,9 @@ The MQTT module is configured through the main application configuration. Add th
 - **homeAssistant.enabled**: `boolean` - Enable Home Assistant MQTT auto-discovery (default: false)
 - **homeAssistant.discoveryPrefix**: `string` - HA discovery topic prefix (default: "homeassistant")
 - **homeAssistant.deviceName**: `string` - Device name shown in Home Assistant (default: "Teams for Linux")
-- **meetingStartDetection.enabled**: `boolean` - Enable detection of a scheduled meeting starting, published as a pulse to `{topicPrefix}/meeting-started` (default: false, experimental — see issue #2587)
+- **meetingStartDetection.enabled**: `boolean` - Enable detection of a scheduled meeting starting, published as a pulse to `{topicPrefix}/meeting-started` (default: false, experimental — see issue #2587). Both the primary and DOM-fallback detection paths are described in [app/browser/tools/README.md](../browser/tools/README.md); an earlier calendar-polling design was dropped in favor of this approach and lives in git history under `docs-site/docs/development/plan/mqtt-incoming-call-plan.md`.
 - **meetingStartDetection.patterns**: `string[]` - Case-insensitive regular expressions for the DOM fallback path (default: `["meeting started", "started the meeting"]`; English-only — override for other Teams UI languages). Primary detection uses Teams' internal command stream and ignores these.
 - **meetingStartDetection.resetSeconds**: `number` - Seconds before the meeting-started topic auto-resets to `false` (default: 10)
-
-Detection listens to Teams' own command-reporting stream (the `meeting-started` event in `app/browser/tools/activityHub.js`) rather than predicting a meeting's start from the calendar. An earlier calendar-polling design was considered and dropped in favor of this approach; see git history under `docs-site/docs/development/plan/mqtt-incoming-call-plan.md` for that design.
 
 ## MQTT Topics
 
