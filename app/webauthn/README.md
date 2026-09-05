@@ -64,4 +64,4 @@ None of these carry credential material: no credential IDs, user handles, challe
 - Browser override: `app/browser/tools/webauthnOverride.js`
 - Issue: [#802](https://github.com/IsmaelMartinez/teams-for-linux/issues/802)
 - Community validation: [#2332](https://github.com/IsmaelMartinez/teams-for-linux/issues/2332)
-- Touch prompt: [#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631), [research note](../../docs-site/docs/development/research/fido2-touch-prompt-research.md)
+- Touch prompt: [#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631), [ADR-021](../../docs-site/docs/development/adr/021-webauthn-fido2-linux.md)

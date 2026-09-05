@@ -38,6 +38,12 @@ The opt-in default keeps the blast radius minimal. Users who do not set `auth.we
 
 Ferdium shipped a conceptually identical approach via `electron-webauthn-linux` (Apache 2.0, Copyright nicholascross), which served as the template for our adaptation. The Ferdium code is not a drop-in fit for our codebase but the shape of the solution translated cleanly.
 
+### Addendum (2026-09): touch prompt
+
+Issue #2631 asked for a "touch your security key now" prompt during the user-presence wait, since the PIN dialog closes and nothing else appears on screen while `fido2-assert` / `fido2-cred` block. [PR #2779](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779) added `app/webauthn/touchPrompt.js`, a window shown around the security-key call and dismissed in a `finally` once the call settles, whichever way it resolves. Cancel is wired through an `AbortSignal` that `spawnFido2` reuses for the same detached-process-group kill the 60s timeout already used, so cancelling cannot leave a `fido2` child holding the device.
+
+Hardware validation by @spthiel on PR #2779 confirmed the prompt appears with no visible gap after the PIN dialog closes, and that both Cancel and the timeout land on Microsoft's "We couldn't sign you in" page with no `fido2-assert` process left behind. The `auth.webauthn.enabled` off path remains open: Electron's native WebAuthn draws no UI on Linux, and it is not yet clear what Cancel would mean when the underlying Chromium call cannot be aborted.
+
 ## Alternatives Considered
 
 ### Wait for Chromium Linux WebAuthn
@@ -75,7 +81,7 @@ The v1 implementation uses only the first connected FIDO2 device. Users with mul
 - First-device-only: `fido2-token -L` returns all connected devices; we use `devices[0]`. Multi-device selection is a future enhancement.
 - Assertion echo-offset heuristic: libfido2 1.16.0+ echoes two lines of input back on stdout before the actual assertion data; older versions do not. We detect by checking whether line 1 matches the `rpId` we passed. This heuristic has been validated against 1.16.0 on Arch; behaviour on older libfido2 builds or future divergent builds is untested.
 - PIN-prompt stderr pattern matching: we detect readiness for PIN input by scanning stderr for the literal string `Enter PIN for`. Localised libfido2 builds could emit a translated prompt and break detection.
-- Touch prompt spans the whole call: `fido2-assert` / `fido2-cred` print the PIN prompt to stderr but emit nothing at the user-presence step, so the "touch your security key" window (#2631) covers the entire security-key call rather than firing at the instant the key's LED starts blinking.
+- Touch prompt spans the whole call: `fido2-assert` / `fido2-cred` print the PIN prompt to stderr but emit nothing at the user-presence step, so the "touch your security key" window (`app/webauthn/touchPrompt.js`, #2631) covers the entire security-key call rather than firing at the instant the key's LED starts blinking. Cancel aborts the fido2 child rather than merely closing the window.
 - No resident-key / passkey enrollment UI: we pass through whatever the caller asks for, but no in-app affordance exists for managing discoverable credentials.
 
 ## References
@@ -87,6 +93,9 @@ The v1 implementation uses only the first connected FIDO2 device. Users with mul
 - [electron/electron#24573 upstream tracking](https://github.com/electron/electron/issues/24573)
 - [libfido2 / fido2-tools upstream](https://github.com/Yubico/libfido2)
 - [Ferdium electron-webauthn-linux precedent](https://github.com/ferdium/ferdium-app/pull/2337)
+- [#2631 touch prompt request](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631)
+- [PR #2779 touch prompt implementation](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779)
 - [WebAuthn Level 3 W3C spec](https://www.w3.org/TR/webauthn-3/)
 - Local design notes: removed once the implementation shipped; see git history for `docs-site/docs/development/research/webauthn-fido2-implementation-plan.md`
+- Touch prompt research notes: removed once the implementation shipped; see git history for `docs-site/docs/development/research/fido2-touch-prompt-research.md`
 - Related ADR: [ADR 013: PII Log Sanitisation](./013-pii-log-sanitization.md) — governs the `[WEBAUTHN]` structured logging introduced in PR #2357
