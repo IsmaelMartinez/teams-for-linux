@@ -80,8 +80,15 @@ this stays a manual check.
 
 1. Set `graphApi.enabled: true` in `config.json`.
 2. Launch the app and wait for Teams to load fully authenticated.
-3. Open DevTools and invoke a handler directly, e.g.
-   `await require('electron').ipcRenderer.invoke('graph-api-get-user-profile')`.
+3. Open DevTools on the main window and invoke a handler directly, e.g.
+   `await window.electronAPI.graphApi.getUserProfile()`. The main window's preload
+   (`app/browser/preload.js`) exposes `getUserProfile`, `getCalendarEvents`, `getCalendarView`,
+   `createCalendarEvent` and `getMailMessages` this way. `require('electron')` is not available in
+   that DevTools console: the window runs with `nodeIntegration: false`
+   (`app/mainAppWindow/browserWindowManager.js`). `graph-api-search-people` and
+   `graph-api-send-chat-message` aren't exposed there either; they're only reachable through the
+   Quick Chat modal's own preload (`app/quickChat/quickChatModalPreload.js`) as
+   `window.quickChatApi`, so test those by opening Quick Chat and searching for a contact.
 4. Confirm the response and check the application logs for `[GRAPH_API]` lines.
 
 ## Limitations
