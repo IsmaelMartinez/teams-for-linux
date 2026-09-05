@@ -47,7 +47,7 @@ Phase 2 work depending on a user trigger.
 - **Smartcard PIN Dialog** ([#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639), merged in [#2659](https://github.com/IsmaelMartinez/teams-for-linux/pull/2659), opt-in via `auth.clientCertificate.pinDialog.enabled`): WebAuthn PIN dialog migration onto the shared secure prompt.
 - **SSO Web Sign-in Pre-fill** ([#2794](https://github.com/IsmaelMartinez/teams-for-linux/issues/2794), merged in [#2761](https://github.com/IsmaelMartinez/teams-for-linux/pull/2761), opt-in via `auth.webLogin.*`): account and password pre-fill on the Microsoft/federated web login form, with optional auto-advance and MFA method selection. Broader host coverage and passkey-aware flows only if requested.
 - **Graph API Enhanced Features** ([research](../research/graph-api-integration-research.md)): calendar sync, mail preview notifications. Presence endpoint returns 403 because the Teams token lacks `Presence.Read` scope.
-- **MQTT call topics** ([#2370](https://github.com/IsmaelMartinez/teams-for-linux/issues/2370), shipped): caller identity or meeting subject in the payload, separate topics per call kind, and a per-topic retain or TTL setting, only if a second user asks.
+- **MQTT call topics** (#2370, incoming-call topic shipped in [PR #2572](https://github.com/IsmaelMartinez/teams-for-linux/pull/2572)): caller identity or meeting subject in the payload, separate topics per call kind, and a per-topic retain or TTL setting, only if a second user asks.
 
 ---
 
