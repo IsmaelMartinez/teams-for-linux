@@ -106,7 +106,6 @@ const sidebars: SidebarsConfig = {
           label: 'Research & Analysis',
           items: [
             'development/research/README',
-            'development/research/custom-stickers-online-import-research',
             'development/research/documentation-and-config-ux-research',
             'development/research/graph-api-integration-research',
           ],
