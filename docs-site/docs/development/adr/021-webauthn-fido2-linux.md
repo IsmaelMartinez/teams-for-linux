@@ -6,7 +6,9 @@ id: 021-webauthn-fido2-linux
 
 ## Status
 
-✅ Proposed — shipping as an opt-in beta behind the `auth.webauthn.enabled` config flag.
+✅ Implemented (opt-in beta behind `auth.webauthn.enabled`)
+
+Shipped in [PR #2357](https://github.com/IsmaelMartinez/teams-for-linux/pull/2357) (v2.10.0); [#2944](https://github.com/IsmaelMartinez/teams-for-linux/issues/2944) requests enabling it by default on Linux, and [#2714](https://github.com/IsmaelMartinez/teams-for-linux/issues/2714) (phone and QR passkey sign-in via hybrid transport) is blocked upstream.
 
 ## Context
 
@@ -26,7 +28,7 @@ Layer 1 lives in the preload script at `app/browser/tools/webauthnOverride.js` a
 
 Layer 2 lives in the main process at `app/webauthn/index.js` and addresses the subframe case: Microsoft's login flow may trigger the WebAuthn ceremony from a child frame where the preload does not run. For subframes whose origin matches the Microsoft login allowlist, the main process injects a sibling override via `webFrameMain.executeJavaScript()`. The injected script relays requests to the parent frame using `window.parent.postMessage` with an origin-gated listener in the parent preload.
 
-The main-process handler at `app/webauthn/handleWebauthnRequest()` validates the request origin against the allowlist (`login.microsoftonline.com`, `login.microsoft.com`, `login.live.com`), collects the PIN if `userVerification === "required"` (via a `contextIsolation: true` BrowserWindow so the PIN never enters page JS context), and delegates to `app/webauthn/fido2Backend.js` to spawn `fido2-cred` / `fido2-assert`. PIN is written to the child's stdin only after the stderr `Enter PIN for` prompt is detected, avoiding a race with libfido2's readpassphrase fallback logic.
+The main-process handler at `app/webauthn/handleWebauthnRequest()` validates the request origin against the allowlist (`login.microsoftonline.com`, `login.microsoft.com`, `login.live.com`), collects the PIN if `userVerification === "required"` (via a `contextIsolation: true` BrowserWindow so the PIN never enters page JS context), and delegates to `app/webauthn/fido2Backend.js` to spawn `fido2-cred` / `fido2-assert`. PIN is written to the child's stdin only after the stderr `Enter PIN for` prompt is detected, avoiding a race with libfido2's readpassphrase fallback logic. `auth.webauthn.extraOrigins` ([#2945](https://github.com/IsmaelMartinez/teams-for-linux/pull/2945), v2.20.0) unions extra login origins into this allowlist via `app/webauthn/originAllowlist.js`, so third-party IdPs and GovCloud login hosts can be added without a code change.
 
 ### Rationale
 

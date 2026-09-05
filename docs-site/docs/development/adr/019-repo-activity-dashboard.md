@@ -6,7 +6,7 @@ id: 019-repo-activity-dashboard
 
 ## Status
 
-Accepted
+Implemented
 
 ## Context
 
