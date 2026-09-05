@@ -24,3 +24,5 @@ jobs:
           days-before-stale: 30
           days-before-close: 5
           days-before-pr-close: -1
+          # Issues kept open on purpose for contributors must not be auto-closed.
+          exempt-issue-labels: "good first issue,help wanted"
