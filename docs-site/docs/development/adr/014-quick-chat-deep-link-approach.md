@@ -6,7 +6,7 @@ id: 014-quick-chat-deep-link-approach
 
 ## Status
 
-Accepted
+Implemented
 
 ## Context
 

@@ -2,7 +2,7 @@
 title: "Architecture Decision Records"
 sidebar_position: 1
 type: reference
-last_updated: 2026-08-11
+last_updated: 2026-09-05
 tags: [adr, architecture, decisions]
 ---
 
@@ -34,17 +34,17 @@ Architecture Decision Records capture important architectural decisions along wi
 | [009](009-automated-testing-strategy.md) | Automated Testing Strategy | ✅ Implemented | 2025-12-13 | v2.7.4+ |
 | [010](010-multiple-windows-support.md) | Multiple Windows Support | ❌ Rejected | 2025-11-26 | N/A |
 | [011](011-appimage-update-info.md) | AppImage Update Info for Third-Party Managers | ✅ Implemented | 2026-01-25 | v2.7.1 |
-| [012](012-intune-sso-broker-compatibility.md) | Intune SSO Broker Compatibility | ✅ Accepted | 2026-01-25 | v2.7.1 |
+| [012](012-intune-sso-broker-compatibility.md) | Intune SSO Broker Compatibility | ✅ Implemented | 2026-01-25 | v2.7.1 |
 | [013](013-pii-log-sanitization.md) | PII Log Sanitization | ✅ Implemented | 2026-01-31 | v2.7.3 |
-| [014](014-quick-chat-deep-link-approach.md) | Quick Chat Deep Link Approach | ✅ Accepted | 2026-01-31 | v2.7.3 |
+| [014](014-quick-chat-deep-link-approach.md) | Quick Chat Deep Link Approach | ✅ Implemented | 2026-01-31 | v2.7.3 |
 | [015](015-quick-chat-inline-messaging.md) | Quick Chat Inline Messaging | ✅ Implemented | 2026-02-04 | N/A |
 | [016](016-cross-distro-testing-environment.md) | Cross-Distro Testing Environment | ✅ Implemented | 2026-02-25 | v2.7.9 |
 | [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | ✅ Implemented | 2026-02-26 | N/A |
 | [018](018-issue-triage-bot-github-app-migration.md) | Issue Triage Bot GitHub App Migration | ✅ Implemented | 2026-03-06 | N/A |
-| [019](019-repo-activity-dashboard.md) | Repository Activity Dashboard | ✅ Accepted | 2026-03-11 | N/A |
-| [020](020-multi-account-profile-switcher.md) | Multi-Account Profile Switcher | ✅ Implemented | 2026-04-16 | v2.9.0+ |
-| [021](021-webauthn-fido2-linux.md) | WebAuthn / FIDO2 Hardware Security Keys on Linux | 🚧 Proposed | 2026-04-21 | N/A |
-| [022](022-custom-notification-toast-scope.md) | Custom Notification Toast Scope | ✅ Accepted | 2025-11-16 | v2.6.16 |
+| [019](019-repo-activity-dashboard.md) | Repository Activity Dashboard | ✅ Implemented | 2026-03-11 | N/A |
+| [020](020-multi-account-profile-switcher.md) | Multi-Account Profile Switcher | ✅ Implemented | 2026-04-16 | v2.10.0 |
+| [021](021-webauthn-fido2-linux.md) | WebAuthn / FIDO2 Hardware Security Keys on Linux | ✅ Implemented | 2026-04-21 | N/A |
+| [022](022-custom-notification-toast-scope.md) | Custom Notification Toast Scope | ✅ Implemented | 2025-11-16 | v2.6.16 |
 | [023](023-release-automation-tooling.md) | Release Automation Tooling | ✅ Implemented | 2026-03-13 | N/A |
 | [024](024-smartcard-pkcs11-pin-dialog.md) | Smartcard PKCS#11 PIN Dialog | ✅ Implemented | 2026-06-09 | v2.14.0 |
 | [025](025-config-option-naming-convention.md) | Configuration Option Naming Convention | ✅ Accepted | 2026-08-11 | N/A |
@@ -365,9 +365,9 @@ When referencing code in ADRs:
 ## ADR Statistics
 
 - **Total ADRs**: 27
-- **Implemented**: 14
-- **Accepted**: 6
-- **Proposed**: 2
+- **Implemented**: 20
+- **Accepted**: 2
+- **Proposed**: 0
 - **Rejected**: 5
 - **Average length**: ~1050 words
 - **Topics covered**: 10 (Authentication & Security, Screen Sharing, Testing & Quality, Performance, Documentation & Standards, Release Process & Automation, Community & Metrics, MQTT & Integration, UI Features, Distribution & Packaging)

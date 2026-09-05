@@ -9,6 +9,12 @@ This directory contains technical documentation for Teams for Linux developers a
 - **[security-architecture.md](security-architecture.md)** - Security architecture, threat model, and compensating controls
 - **[ADR-002: Token Cache Secure Storage](adr/002-token-cache-secure-storage.md)** - Architecture decision for secure token storage implementation
 - **[ADR-003: Token Refresh Implementation](adr/003-token-refresh-implementation.md)** - Architecture decision for authentication persistence
+- **[contributing.md](contributing.md)** - Full contributing guide and development patterns
+- **[module-index.md](module-index.md)** - Catalog of all application modules
+- **[ipc-api.md](ipc-api.md)** - Inter-process communication reference
+- **[ADR Index](adr/README.md)** - All architecture decision records
+- **[Research Index](research/README.md)** - Feature research and investigations
+- **[plan/roadmap.md](plan/roadmap.md)** - Development priorities and feature status
 
 ## For Contributors
 
@@ -19,7 +25,7 @@ When working on Teams for Linux:
 3. **Review research documents** in `research/` for context on current implementation choices
 4. **Check ADR documents** for architecture decisions and rationale
 5. **Check planning documents** for background on feature decisions and research
-6. **Run E2E tests** before submitting PRs with `npm run test:e2e`
+6. **Run `npm run lint` and `npm run test:unit`** before submitting PRs; CI runs the Playwright e2e suite
 
 ### Key Development Patterns
 

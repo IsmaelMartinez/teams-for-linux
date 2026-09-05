@@ -6,7 +6,9 @@ id: 021-webauthn-fido2-linux
 
 ## Status
 
-✅ Proposed — shipping as an opt-in beta behind the `auth.webauthn.enabled` config flag.
+✅ Implemented (opt-in beta behind `auth.webauthn.enabled`)
+
+Shipped in [PR #2357](https://github.com/IsmaelMartinez/teams-for-linux/pull/2357); [#2944](https://github.com/IsmaelMartinez/teams-for-linux/issues/2944) requests enabling it by default on Linux, and [#2714](https://github.com/IsmaelMartinez/teams-for-linux/issues/2714) (phone and QR passkey sign-in via hybrid transport) is blocked upstream.
 
 ## Context
 

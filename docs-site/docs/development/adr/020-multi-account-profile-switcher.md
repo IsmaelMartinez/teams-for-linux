@@ -6,9 +6,9 @@ id: 020-multi-account-profile-switcher
 
 ## Status
 
-✅ Implemented (Phase 1, v2.9.0)
+✅ Implemented (Phase 1, v2.10.0)
 
-Phase 1 shipped behind the opt-in `multiAccount.enabled` flag. Phase 2 (per-profile unread aggregation) is in progress and Phase 3 (per-profile launch) is untouched; both are tracked in [#2495](https://github.com/IsmaelMartinez/teams-for-linux/issues/2495).
+Phase 1 shipped behind the opt-in `multiAccount.enabled` flag: the add-profile dialog with first-run bootstrap ([#2496](https://github.com/IsmaelMartinez/teams-for-linux/pull/2496)) and the manage-profiles dialog with rename and remove ([#2510](https://github.com/IsmaelMartinez/teams-for-linux/pull/2510)). Phases 2 and 3 remain open in the tracking issue [#2495](https://github.com/IsmaelMartinez/teams-for-linux/issues/2495), and [#2947](https://github.com/IsmaelMartinez/teams-for-linux/issues/2947) is an open Phase 1 bug where the secondary profile view is not resized after maximize/restore on XWayland.
 
 ## Context
 
