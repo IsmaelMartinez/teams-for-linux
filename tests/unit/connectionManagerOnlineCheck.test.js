@@ -277,9 +277,11 @@ describe('ConnectionManager refresh on a loaded page', () => {
 			config: { url: 'https://teams.cloud.microsoft' },
 		});
 		manager.refresh = realRefresh;
-		manager.isOnline = async () => true;
+		let online = true;
+		manager.isOnline = async () => online;
 		return {
-			refresh: () => manager.refresh(),
+			refresh: (force) => manager.refresh(force),
+			setOnline: (value) => { online = value; },
 			didFailLoad: listeners['did-fail-load'],
 			reloadCount: () => reloads,
 		};
@@ -298,5 +300,22 @@ describe('ConnectionManager refresh on a loaded page', () => {
 		assert.strictEqual(reloadCount(), 1);
 		await refresh();
 		assert.strictEqual(reloadCount(), 1, 'a successful reload must not queue another');
+	});
+
+	it('keeps the reload pending while the network is still down', async () => {
+		const { refresh, setOnline, didFailLoad, reloadCount } = loadedManager();
+		didFailLoad({}, -106, 'ERR_INTERNET_DISCONNECTED', 'https://teams.cloud.microsoft/', true);
+		setOnline(false);
+		await refresh();
+		assert.strictEqual(reloadCount(), 0);
+		setOnline(true);
+		await refresh();
+		assert.strictEqual(reloadCount(), 1, 'the failed page must still be reloaded once online');
+	});
+
+	it('always reloads on an explicit user request', async () => {
+		const { refresh, reloadCount } = loadedManager();
+		await refresh(true);
+		assert.strictEqual(reloadCount(), 1);
 	});
 });

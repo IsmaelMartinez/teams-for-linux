@@ -94,7 +94,9 @@ class ConnectionManager {
     return this.window && !this.window.isDestroyed();
   }
 
-  async refresh() {
+  // `force` is for an explicit user reload (menu, Ctrl+R): it bypasses the
+  // healthy-page check below.
+  async refresh(force = false) {
     if (!this.isWindowAvailable()) {
       console.warn("Window is not available. Cannot refresh.");
       return;
@@ -112,11 +114,10 @@ class ConnectionManager {
 
       const currentUrl = this.window?.webContents?.getURL() || "";
       const hasUrl = currentUrl?.startsWith("https://");
-      if (hasUrl && !_ConnectionManager_needsReload.get(this)) {
+      if (hasUrl && !force && !_ConnectionManager_needsReload.get(this)) {
         console.debug("[CONNECTION] Page is loaded and healthy, skipping reload");
         return;
       }
-      _ConnectionManager_needsReload.set(this, false);
       this.window?.setTitle("Waiting for network...");
       console.debug("Waiting for network...");
       const connected = await this.isOnline();
@@ -128,34 +129,36 @@ class ConnectionManager {
         return;
       }
 
-      if (connected) {
-        if (hasUrl) {
-          console.debug("Reloading current page...");
-          try {
-            this.window.reload();
-          } catch (err) {
-            console.error(`[CONNECTION] Failed to reload page: ${err.message}`);
-            _ConnectionManager_needsReload.set(this, true);
-            this.debouncedRefresh();
-          }
-        } else {
-          console.debug("Loading initial URL...");
-          try {
-            await this.window.loadURL(this.currentUrl, {
-              userAgent: this.config.chromeUserAgent,
-            });
-          } catch (err) {
-            console.error(`[CONNECTION] Failed to load URL: ${err.message}`);
-            _ConnectionManager_needsReload.set(this, true);
-            this.debouncedRefresh();
-          }
-        }
-      } else {
+      if (!connected) {
+        // needsReload is left as it was, so a later resume or retry still
+        // reloads a page that failed.
         this.window?.setTitle("No internet connection");
         console.error("No internet connection");
+        return;
       }
+
+      _ConnectionManager_needsReload.set(this, false);
+      await this.load(hasUrl);
     } finally {
       _ConnectionManager_isRefreshing.set(this, false);
+    }
+  }
+
+  async load(hasUrl) {
+    try {
+      if (hasUrl) {
+        console.debug("Reloading current page...");
+        this.window.reload();
+      } else {
+        console.debug("Loading initial URL...");
+        await this.window.loadURL(this.currentUrl, {
+          userAgent: this.config.chromeUserAgent,
+        });
+      }
+    } catch (err) {
+      console.error(`[CONNECTION] Failed to load page: ${err.message}`);
+      _ConnectionManager_needsReload.set(this, true);
+      this.debouncedRefresh();
     }
   }
 
