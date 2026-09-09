@@ -10,6 +10,11 @@ let _ConnectionManager_isRefreshing = new WeakMap();
 let _ConnectionManager_refreshTimeout = new WeakMap();
 let _ConnectionManager_boundRefresh = new WeakMap();
 let _ConnectionManager_boundDidFailLoad = new WeakMap();
+// Set by a main-frame network failure; cleared when refresh() attempts a load.
+// While unset, a page that is already loaded is left alone: Teams keeps
+// working from its local cache when the network drops, and a suspend/resume
+// no longer replaces a healthy page with a blank one (#2611).
+let _ConnectionManager_needsReload = new WeakMap();
 
 class ConnectionManager {
   get window() {
@@ -34,6 +39,7 @@ class ConnectionManager {
     _ConnectionManager_currentUrl.set(this, url || this.config.url);
     _ConnectionManager_isRefreshing.set(this, false);
     _ConnectionManager_refreshTimeout.set(this, null);
+    _ConnectionManager_needsReload.set(this, false);
 
     // Bind methods to preserve 'this' context
     const boundRefresh = this.debouncedRefresh.bind(this);
@@ -106,6 +112,11 @@ class ConnectionManager {
 
       const currentUrl = this.window?.webContents?.getURL() || "";
       const hasUrl = currentUrl?.startsWith("https://");
+      if (hasUrl && !_ConnectionManager_needsReload.get(this)) {
+        console.debug("[CONNECTION] Page is loaded and healthy, skipping reload");
+        return;
+      }
+      _ConnectionManager_needsReload.set(this, false);
       this.window?.setTitle("Waiting for network...");
       console.debug("Waiting for network...");
       const connected = await this.isOnline();
@@ -124,6 +135,7 @@ class ConnectionManager {
             this.window.reload();
           } catch (err) {
             console.error(`[CONNECTION] Failed to reload page: ${err.message}`);
+            _ConnectionManager_needsReload.set(this, true);
             this.debouncedRefresh();
           }
         } else {
@@ -134,6 +146,7 @@ class ConnectionManager {
             });
           } catch (err) {
             console.error(`[CONNECTION] Failed to load URL: ${err.message}`);
+            _ConnectionManager_needsReload.set(this, true);
             this.debouncedRefresh();
           }
         }
@@ -227,6 +240,7 @@ function assignOnDidFailLoadEventHandler(cm) {
       console.error(`[CONNECTION] Main frame failed to load: ${description} (code: ${code})`);
       if (RECOVERABLE_NETWORK_ERRORS.has(description)) {
         console.debug(`Network error detected: ${description}, scheduling debounced refresh...`);
+        _ConnectionManager_needsReload.set(cm, true);
         cm.debouncedRefresh();
       }
     } else {

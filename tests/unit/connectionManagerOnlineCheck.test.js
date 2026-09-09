@@ -235,3 +235,68 @@ describe('ConnectionManager did-fail-load retry scheduling', () => {
 		assert.strictEqual(scheduledCount(), 0);
 	});
 });
+
+// A loaded page must survive a network drop or a suspend/resume: Teams keeps
+// working from its local cache, and reloading it while the network is still
+// down is what produced the blank window (#2611). Only a main-frame network
+// failure earns a reload.
+describe('ConnectionManager refresh on a loaded page', () => {
+	before(() => {
+		installElectronMock();
+	});
+
+	after(() => {
+		delete require.cache[electronPath];
+		delete require.cache[require.resolve('../../app/connectionManager')];
+	});
+
+	beforeEach(() => {
+		installElectronMock();
+		delete require.cache[require.resolve('../../app/connectionManager')];
+	});
+
+	function loadedManager() {
+		const ConnectionManager = require('../../app/connectionManager');
+		const manager = new ConnectionManager();
+		const listeners = {};
+		let reloads = 0;
+		const window = {
+			isDestroyed: () => false,
+			setTitle() {},
+			reload() { reloads += 1; },
+			webContents: {
+				on(event, fn) { listeners[event] = fn; },
+				removeListener() {},
+				getURL: () => 'https://teams.cloud.microsoft/v2/',
+			},
+		};
+		const realRefresh = manager.refresh;
+		manager.refresh = () => {};
+		manager.start('https://teams.cloud.microsoft', {
+			window,
+			config: { url: 'https://teams.cloud.microsoft' },
+		});
+		manager.refresh = realRefresh;
+		manager.isOnline = async () => true;
+		return {
+			refresh: () => manager.refresh(),
+			didFailLoad: listeners['did-fail-load'],
+			reloadCount: () => reloads,
+		};
+	}
+
+	it('leaves a healthy page alone (e.g. on resume from sleep)', async () => {
+		const { refresh, reloadCount } = loadedManager();
+		await refresh();
+		assert.strictEqual(reloadCount(), 0);
+	});
+
+	it('reloads once after a main-frame network failure, then leaves it alone again', async () => {
+		const { refresh, didFailLoad, reloadCount } = loadedManager();
+		didFailLoad({}, -106, 'ERR_INTERNET_DISCONNECTED', 'https://teams.cloud.microsoft/', true);
+		await refresh();
+		assert.strictEqual(reloadCount(), 1);
+		await refresh();
+		assert.strictEqual(reloadCount(), 1, 'a successful reload must not queue another');
+	});
+});
