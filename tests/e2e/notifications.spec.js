@@ -68,6 +68,59 @@ async function cleanup(electronApp, userDataDir) {
   }
 }
 
+// Shared browser-side function to capture the title each notification method
+// actually forwards. The three methods surface the title on different IPC
+// channels, so we spy on the one matching `method` and return what it
+// received. This guards against a regression of issue #2768, where the web
+// and custom paths forwarded the page title (the open conversation) instead
+// of the sender name Teams places in `options.title`.
+//
+// Serialised as a string so it can be passed to evaluate() without duplication.
+function captureForwardedTitle(method) {
+  const api = globalThis.electronAPI;
+  let captured = undefined;
+
+  if (method === 'electron') {
+    const orig = api.showNotification;
+    api.showNotification = (options) => {
+      captured = options?.title;
+      return Promise.resolve();
+    };
+    new globalThis.Notification('Page title that should be ignored', {
+      title: 'Sender Name',
+      body: 'hi',
+    });
+    api.showNotification = orig;
+  } else if (method === 'custom') {
+    const orig = api.sendNotificationToast;
+    api.sendNotificationToast = (data) => {
+      captured = data?.title;
+    };
+    new globalThis.Notification('Page title that should be ignored', {
+      title: 'Sender Name',
+      body: 'hi',
+    });
+    api.sendNotificationToast = orig;
+  } else {
+    // web path: the native Notification is constructed with the title, and
+    // the same title is forwarded to playNotificationSound for the sound
+    // metadata. Spy there since the native Notification itself is not easily
+    // interceptable from the renderer after preload overrides it.
+    const orig = api.playNotificationSound;
+    api.playNotificationSound = (options) => {
+      captured = options?.title;
+      return Promise.resolve();
+    };
+    new globalThis.Notification('Page title that should be ignored', {
+      title: 'Sender Name',
+      body: 'hi',
+    });
+    api.playNotificationSound = orig;
+  }
+
+  return captured;
+}
+
 // Shared browser-side function to inspect a Notification stub's shape.
 // Serialised as a string so it can be passed to evaluate() without duplication.
 function checkStubShape() {
@@ -205,6 +258,11 @@ test.describe('Notification override', () => {
         expect(stub.hasClose).toBe(true);
       }
     });
+
+    test('forwards options.title (sender) instead of the page title', async () => {
+      const forwardedTitle = await ctx.mainWindow.evaluate(captureForwardedTitle, 'electron');
+      expect(forwardedTitle).toBe('Sender Name');
+    });
   });
 
   describeMethod('custom', (ctx) => {
@@ -214,6 +272,11 @@ test.describe('Notification override', () => {
       expect(shape.hasRemoveEventListener).toBe(true);
       expect(shape.hasClose).toBe(true);
       expect(shape.hasDispatchEvent).toBe(true);
+    });
+
+    test('forwards options.title (sender) instead of the page title', async () => {
+      const forwardedTitle = await ctx.mainWindow.evaluate(captureForwardedTitle, 'custom');
+      expect(forwardedTitle).toBe('Sender Name');
     });
   });
 
@@ -231,6 +294,11 @@ test.describe('Notification override', () => {
       expect(result.didNotThrow).toBe(true);
       expect(result.type).toBe('object');
       expect(result.hasOnclick).toBe(true);
+    });
+
+    test('forwards options.title (sender) instead of the page title', async () => {
+      const forwardedTitle = await ctx.mainWindow.evaluate(captureForwardedTitle, 'web');
+      expect(forwardedTitle).toBe('Sender Name');
     });
   });
 });
