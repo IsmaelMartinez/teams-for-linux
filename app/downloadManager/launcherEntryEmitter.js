@@ -38,11 +38,45 @@
 
 const dbus = require("@homebridge/dbus-native");
 
-const DESKTOP_URI = "application://teams-for-linux.desktop";
-const PATH_ID = simpleHash(DESKTOP_URI);
-const SIGNAL_PATH = `/com/canonical/unity/launcherentry/${PATH_ID}`;
 const INTERFACE = "com.canonical.Unity.LauncherEntry";
 const MEMBER = "Update";
+
+/**
+ * Desktop URI the receivers match the signal against. It must name the
+ * desktop file as the *host* sees it, which depends on the packaging:
+ * snapd exports desktop files as `<instance>_<file>.desktop` and Flatpak
+ * as `<app-id>.desktop`, so the plain app name only matches for deb/rpm/
+ * AppImage installs. A mismatched URI is silently dropped by the dock —
+ * the badge/progress just never shows (#2620 follow-up).
+ *
+ * @param {string} appName
+ * @param {NodeJS.ProcessEnv} env
+ * @returns {string}
+ */
+function computeDesktopUri(appName, env) {
+  if (env.SNAP_INSTANCE_NAME) {
+    return `application://${env.SNAP_INSTANCE_NAME}_${appName}.desktop`;
+  }
+  if (env.FLATPAK_ID) {
+    return `application://${env.FLATPAK_ID}.desktop`;
+  }
+  return `application://${appName}.desktop`;
+}
+
+let desktopUri = null;
+let signalPath = null;
+
+function getEntry() {
+  if (!desktopUri) {
+    // Lazy: `app.name` may still change while startup switches are applied
+    // (config `class` calls app.setName()), and this module is only used
+    // after the app is ready.
+    const { app } = require("electron");
+    desktopUri = computeDesktopUri(app.name, process.env);
+    signalPath = `/com/canonical/unity/launcherentry/${simpleHash(desktopUri)}`;
+  }
+  return { desktopUri, signalPath };
+}
 
 let bus = null;
 let busDisabled = false;
@@ -95,8 +129,9 @@ function update(props = {}) {
     // buffers pre-handshake and writes post-handshake. (A previous attempt
     // that set the serial manually crashed with "Missing or invalid serial"
     // when the message was marshalled during the handshake window.)
-    sessionBus.sendSignal(SIGNAL_PATH, INTERFACE, MEMBER, "sa{sv}", [
-      DESKTOP_URI,
+    const entry = getEntry();
+    sessionBus.sendSignal(entry.signalPath, INTERFACE, MEMBER, "sa{sv}", [
+      entry.desktopUri,
       properties,
     ]);
   } catch (error) {
@@ -121,4 +156,4 @@ function simpleHash(input) {
   return h;
 }
 
-module.exports = { update };
+module.exports = { update, computeDesktopUri };
