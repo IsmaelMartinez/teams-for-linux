@@ -18,15 +18,38 @@ describe('launcherEntryEmitter.computeDesktopUri', () => {
 
 	it('prefixes the snap instance name the way snapd exports desktop files', () => {
 		assert.strictEqual(
-			computeDesktopUri('teams-for-linux', { SNAP_INSTANCE_NAME: 'teams-for-linux' }),
+			computeDesktopUri('teams-for-linux', {
+				SNAP_NAME: 'teams-for-linux',
+				SNAP_INSTANCE_NAME: 'teams-for-linux',
+			}),
 			'application://teams-for-linux_teams-for-linux.desktop',
 		);
 	});
 
 	it('keeps parallel snap instances distinct', () => {
 		assert.strictEqual(
-			computeDesktopUri('teams-for-linux', { SNAP_INSTANCE_NAME: 'teams-for-linux_work' }),
+			computeDesktopUri('teams-for-linux', {
+				SNAP_NAME: 'teams-for-linux',
+				SNAP_INSTANCE_NAME: 'teams-for-linux_work',
+			}),
 			'application://teams-for-linux_work_teams-for-linux.desktop',
+		);
+	});
+
+	it('ignores a custom app name under snap, where the desktop basename is fixed at build time', () => {
+		assert.strictEqual(
+			computeDesktopUri('my-teams', {
+				SNAP_NAME: 'teams-for-linux',
+				SNAP_INSTANCE_NAME: 'teams-for-linux',
+			}),
+			'application://teams-for-linux_teams-for-linux.desktop',
+		);
+	});
+
+	it('falls back to the app name when SNAP_NAME is missing', () => {
+		assert.strictEqual(
+			computeDesktopUri('teams-for-linux', { SNAP_INSTANCE_NAME: 'teams-for-linux' }),
+			'application://teams-for-linux_teams-for-linux.desktop',
 		);
 	});
 
@@ -42,6 +65,7 @@ describe('launcherEntryEmitter.computeDesktopUri', () => {
 	it('lets the snap prefix win when both snap and flatpak variables are present', () => {
 		assert.strictEqual(
 			computeDesktopUri('teams-for-linux', {
+				SNAP_NAME: 'teams-for-linux',
 				SNAP_INSTANCE_NAME: 'teams-for-linux',
 				FLATPAK_ID: 'com.example.ignored',
 			}),

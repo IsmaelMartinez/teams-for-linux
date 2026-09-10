@@ -50,7 +50,7 @@ is intentionally out of scope.
 - `config` - Application configuration (`config.download.*` keys are read)
 - `mainAppWindow` - Main window module exposing `getWindow()` for taskbar progress updates and window-title prefix
 - `jobViewEmitter` (Linux only) - Optional sibling module talking to `org.kde.JobViewServer`
-- `launcherEntryEmitter` (Linux only) - Optional sibling module broadcasting `com.canonical.Unity.LauncherEntry` signals for the dock icon (Ubuntu Dock / Dash-to-Dock). Also reused by `app/index.js` to publish the unread badge count, since Electron's `app.setBadgeCount()` depends on `libunity` and is a silent no-op in every packaging we ship. The desktop URI it emits follows the packaging (`<instance>_<app>.desktop` under snap, `<app-id>.desktop` under Flatpak, `<app>.desktop` otherwise) — a mismatched URI is dropped by the dock without any error.
+- `launcherEntryEmitter` (Linux only) - Optional sibling module broadcasting `com.canonical.Unity.LauncherEntry` signals for the dock icon (Ubuntu Dock / Dash-to-Dock). Also reused by `app/index.js` to publish the unread badge count, since Electron's `app.setBadgeCount()` depends on `libunity` and is a silent no-op in every packaging we ship. The desktop URI it emits follows the packaging (`<instance>_<snap-name>.desktop` under snap, `<app-id>.desktop` under Flatpak, `<app>.desktop` otherwise — only the last one follows a custom `class`, since sandboxed packagings fix the desktop file name at build time) — a mismatched URI is dropped by the dock without any error.
 
 **Usage:**
 ```javascript

@@ -44,9 +44,9 @@ const MEMBER = "Update";
 /**
  * Desktop URI the receivers match the signal against. It must name the
  * desktop file as the *host* sees it, which depends on the packaging:
- * snapd exports desktop files as `<instance>_<file>.desktop` and Flatpak
- * as `<app-id>.desktop`, so the plain app name only matches for deb/rpm/
- * AppImage installs. A mismatched URI is silently dropped by the dock —
+ * snapd exports desktop files as `<instance>_<snap-name>.desktop` and
+ * Flatpak as `<app-id>.desktop`, so the plain app name only matches for
+ * deb/rpm/AppImage installs. A mismatched URI is silently dropped by the dock —
  * the badge/progress just never shows (#2620 follow-up).
  *
  * @param {string} appName
@@ -55,7 +55,10 @@ const MEMBER = "Update";
  */
 function computeDesktopUri(appName, env) {
   if (env.SNAP_INSTANCE_NAME) {
-    return `application://${env.SNAP_INSTANCE_NAME}_${appName}.desktop`;
+    // The basename is fixed at build time to the snap name; a runtime
+    // app.setName() (config `class`) cannot change the exported file, so
+    // appName must not leak into the snap URI.
+    return `application://${env.SNAP_INSTANCE_NAME}_${env.SNAP_NAME || appName}.desktop`;
   }
   if (env.FLATPAK_ID) {
     return `application://${env.FLATPAK_ID}.desktop`;
