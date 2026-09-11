@@ -67,6 +67,18 @@ describe('createProfileWindowOpenHandler', () => {
     assert.deepStrictEqual(loads, [chat]);
   });
 
+  it('degrades a malformed meetupJoinRegEx to no interception instead of throwing (user-configurable value)', () => {
+    const { handler, loads } = build({ config: { meetupJoinRegEx: '[' } });
+    // Before this policy existed, profile views had no handler at all — a
+    // bad pattern must reproduce that default (allow), never throw inside
+    // the window-open handler (an uncaught main-process exception is fatal).
+    assert.deepStrictEqual(
+      handler({ url: 'https://teams.microsoft.com/l/meetup-join/x' }),
+      { action: 'allow' }
+    );
+    assert.deepStrictEqual(loads, []);
+  });
+
   it('tolerates a missing meetupJoinRegEx and malformed details', () => {
     const { handler, loads } = build({ config: { meetupJoinRegEx: '' } });
     assert.deepStrictEqual(handler({}), { action: 'allow' });
@@ -86,6 +98,7 @@ describe('installProfileWindowOpenHandler', () => {
       },
       loadURL(url, opts) {
         this.loads.push({ url, opts });
+        return Promise.resolve(); // real Electron loadURL returns a promise
       },
       isDestroyed() {
         return this.destroyed;
@@ -121,6 +134,32 @@ describe('installProfileWindowOpenHandler', () => {
     installProfileWindowOpenHandler(view, { config });
     view.handler({ url: meeting });
     assert.strictEqual(view.loads.length, 1);
+  });
+
+  it('catches a rejecting loadURL (ERR_ABORTED is normal use) and still activates', async () => {
+    const popup = fakeWc();
+    const profileView = fakeWc();
+    let rejected;
+    profileView.loadURL = () => {
+      rejected = Promise.reject(
+        Object.assign(new Error('ERR_ABORTED (-3) loading url'), {
+          code: 'ERR_ABORTED',
+        })
+      );
+      return rejected;
+    };
+    let activated = 0;
+    installProfileWindowOpenHandler(popup, {
+      config,
+      loadTargetWebContents: profileView,
+      activate: () => activated++,
+    });
+    popup.handler({ url: meeting });
+    assert.strictEqual(activated, 1);
+    // Give the microtask queue a turn: if the rejection were unhandled, the
+    // node:test runner would fail this file with an unhandledRejection.
+    await new Promise((resolve) => setImmediate(resolve));
+    await rejected.catch(() => {});
   });
 
   it('does not load into (or activate for) a destroyed originating view', () => {

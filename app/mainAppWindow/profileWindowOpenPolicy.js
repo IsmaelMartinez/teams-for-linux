@@ -30,9 +30,24 @@
  * targets a real webContents.
  */
 function createProfileWindowOpenHandler({ config, loadInView }) {
+  // Compiled once, not per window.open. `meetupJoinRegEx` is user-configurable
+  // and the config validator only checks it is a string — a malformed pattern
+  // must degrade to "no deep-link interception" (the pre-policy default),
+  // never throw inside the window-open handler (an uncaught main-process
+  // exception is fatal, app/index.js).
+  let deepLinkRe = null;
+  if (config.meetupJoinRegEx) {
+    try {
+      deepLinkRe = new RegExp(config.meetupJoinRegEx);
+    } catch {
+      console.warn(
+        "[ProfileWindowOpenPolicy] Invalid meetupJoinRegEx; deep-link interception disabled for profile views"
+      );
+    }
+  }
   return (details) => {
     const url = typeof details?.url === "string" ? details.url : "";
-    if (config.meetupJoinRegEx && new RegExp(config.meetupJoinRegEx).test(url)) {
+    if (deepLinkRe?.test(url)) {
       if (config.onNewWindowOpenMeetupJoinUrlInApp) {
         loadInView(url);
       }
@@ -64,9 +79,19 @@ function installProfileWindowOpenHandler(
       config,
       loadInView: (url) => {
         if (loadTargetWebContents.isDestroyed?.()) return;
-        loadTargetWebContents.loadURL(url, {
-          userAgent: config.chromeUserAgent,
-        });
+        // Not awaited: the SPA taking over the navigation rejects this with
+        // ERR_ABORTED in normal use (#2950), and the process-wide
+        // unhandledRejection handler exits on anything it cannot classify —
+        // so the rejection must be caught, and activation must not depend on
+        // the promise resolving.
+        loadTargetWebContents
+          .loadURL(url, { userAgent: config.chromeUserAgent })
+          .catch((error) => {
+            console.debug(
+              "[ProfileWindowOpenPolicy] Deep-link navigation interrupted",
+              { code: error?.code ?? error?.errno }
+            );
+          });
         activate?.();
       },
     })
