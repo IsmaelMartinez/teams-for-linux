@@ -14,6 +14,13 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.21.1" date="2026-09-11">
+      <description>
+        <ul>
+          <li>deps-dev: bump electron from 42.9.3 to 43.7.0 (#2975) (7657aa8), closes #2927</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.21.0" date="2026-09-11">
       <description>
         <ul>
