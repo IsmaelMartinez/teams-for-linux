@@ -4,8 +4,8 @@ Provides custom styling capabilities for the Teams interface.
 
 ## Configuration Options
 
-- **`customCSSLocation`**: Path to custom CSS file
-- **`customCSSName`**: Built-in theme name
+- **`appearance.cssLocation`**: Path to custom CSS file
+- **`appearance.cssName`**: Built-in theme name
 
 ## Available Themes
 
