@@ -23,6 +23,7 @@ const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
 const deepLinkRouter = require("./deepLinkRouter");
 const os = require("node:os");
 const path = require("node:path");
+const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
 
 const DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG = {
   enabled: true,
@@ -53,6 +54,20 @@ const isMac = os.platform() === "darwin";
 function setupScreenSharing(selectedSource) {
   screenSharingService.setSelectedSource(selectedSource);
   createScreenSharePreviewWindow();
+}
+
+// Install the profile-view window-open policy on a webContents (a profile
+// view or one of its descendants). Teams deep links load into
+// `loadTargetWebContents` — the originating profile view — never the root
+// window, which is a different profile. Profile views previously had no
+// handler at all; see profileWindowOpenPolicy.js for what is deliberately
+// still left on Electron's default and why.
+function bindWindowOpenHandler(targetWebContents, loadTargetWebContents, activate) {
+  installProfileWindowOpenHandler(targetWebContents, {
+    config,
+    loadTargetWebContents,
+    activate,
+  });
 }
 
 // Register the in-app screen-share picker on a given session. `setDisplayMediaRequestHandler`
@@ -858,6 +873,7 @@ exports.getWindow = function () {
 };
 
 exports.bindDisplayMediaHandler = bindDisplayMediaHandler;
+exports.bindWindowOpenHandler = bindWindowOpenHandler;
 
 exports.setQuickChatManager = function (quickChatManager) {
   if (menus) {
