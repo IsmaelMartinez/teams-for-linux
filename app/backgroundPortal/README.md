@@ -21,14 +21,17 @@ What this does and does not change:
 - Native, deb, AppImage and snap installs are unaffected: the portal's
   background monitor only tracks Flatpak instances and `SetStatus` rejects
   host callers.
-- Autostart is left exactly as the user set it. `RequestBackground` conflates
-  background permission with autostart management, and the portal reads a
-  missing `autostart` option as an explicit `false`, so it unlinked
+- Autostart is never switched on or off behind the user's back.
+  `RequestBackground` conflates background permission with autostart
+  management, and the portal reads a missing `autostart` option as an
+  explicit `false`, so it unlinked
   `~/.config/autostart/<app-id>.desktop` on every launch
   ([#2936](https://github.com/IsmaelMartinez/teams-for-linux/issues/2936)).
   There is no way to opt out of that, so the module reads whether the user has
   autostart on, counting `Hidden=true` and `X-GNOME-Autostart-enabled=false` as
-  off, and sends the same state back. No `commandline` goes with it: the
+  off, and sends the same state back. An entry that is present but disabled is
+  still removed, because the option is a boolean and the only way to keep the
+  file would be to switch autostart back on. No `commandline` goes with it: the
   portal's `rewrite_commandline` always prepends `flatpak run` and turns the
   first element into `--command=`, so echoing back an `Exec` the portal wrote
   double-wraps it, and `enable_autostart_sync` rebuilds the file from scratch
