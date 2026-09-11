@@ -70,6 +70,22 @@ function createProfileWindowOpenHandler({ config, loadInView }) {
  * @param {{ config: object, loadTargetWebContents?: Electron.WebContents,
  *           activate?: () => void }} deps
  */
+// Fire-and-forget navigation into the originating profile view. The SPA
+// taking over the route rejects the load with ERR_ABORTED in normal use
+// (#2950), and the process-wide unhandledRejection handler exits on anything
+// it cannot classify — so the failure is handled HERE and the function never
+// rejects; callers do not await it.
+async function navigateDeepLink(webContents, url, userAgent) {
+  try {
+    await webContents.loadURL(url, { userAgent });
+  } catch (error) {
+    console.debug(
+      "[ProfileWindowOpenPolicy] Deep-link navigation interrupted",
+      { code: error?.code ?? error?.errno }
+    );
+  }
+}
+
 function installProfileWindowOpenHandler(
   targetWebContents,
   { config, loadTargetWebContents = targetWebContents, activate }
@@ -79,19 +95,9 @@ function installProfileWindowOpenHandler(
       config,
       loadInView: (url) => {
         if (loadTargetWebContents.isDestroyed?.()) return;
-        // Not awaited: the SPA taking over the navigation rejects this with
-        // ERR_ABORTED in normal use (#2950), and the process-wide
-        // unhandledRejection handler exits on anything it cannot classify —
-        // so the rejection must be caught, and activation must not depend on
-        // the promise resolving.
-        loadTargetWebContents
-          .loadURL(url, { userAgent: config.chromeUserAgent })
-          .catch((error) => {
-            console.debug(
-              "[ProfileWindowOpenPolicy] Deep-link navigation interrupted",
-              { code: error?.code ?? error?.errno }
-            );
-          });
+        // Deliberately not awaited: the window-open handler is synchronous,
+        // and activation must not depend on the navigation resolving.
+        navigateDeepLink(loadTargetWebContents, url, config.chromeUserAgent);
         activate?.();
       },
     })
