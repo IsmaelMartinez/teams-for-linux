@@ -20,25 +20,27 @@ const { BrowserWindow, ipcMain, webFrameMain } = require("electron");
 const fido2Backend = require("./fido2Backend");
 const { requestPinPreCollect, requestPinModal } = require("./pinDialog");
 const { showTouchPrompt } = require("./touchPrompt");
+const { DEFAULT_ORIGINS, buildAllowedOrigins } = require("./originAllowlist");
 const log = require("./log");
 
-// Defense-in-depth: only allow WebAuthn requests from known Microsoft login origins.
+// Defense-in-depth: only allow WebAuthn requests from known login origins.
 // The IPC allowlist is the primary control; this is a secondary check.
-const ALLOWED_ORIGINS = new Set([
-  "https://login.microsoftonline.com",
-  "https://login.microsoft.com",
-  "https://login.live.com",
-]);
+//
+// Federated tenants sign in on their own IdP host, which is never one of the
+// Microsoft defaults, so the ceremony was blocked outright (#2931). Extended at
+// initialize() from auth.webauthn.extraOrigins. The subframe relay in
+// app/browser/tools/webauthnOverride.js builds the same set.
+let allowedOrigins = new Set(DEFAULT_ORIGINS);
 
 let initialized = false;
 
 /**
- * Validate that the request origin is an expected Microsoft login domain.
+ * Validate that the request origin is an allowed login origin.
  * @param {string} origin
  * @returns {boolean}
  */
 function isAllowedOrigin(origin) {
-  return ALLOWED_ORIGINS.has(origin);
+  return allowedOrigins.has(origin);
 }
 
 /**
@@ -101,6 +103,7 @@ async function handleWebauthnRequest(operation, event, options) {
       op: operation,
       reason: "origin-not-allowed",
       originClass: log.classifyOrigin(origin),
+      hint: "if this is your federated IdP sign-in page, add it to auth.webauthn.extraOrigins",
     });
     return { success: false, error: "SecurityError: origin not allowed" };
   }
@@ -333,11 +336,13 @@ function injectIntoFrame(wf) {
  *
  * @param {Electron.BrowserWindow} [mainWindow] - Main window for frame injection
  * @param {object} [config] - App config; auth.webauthn.debug enables verbose logs
+ *   and auth.webauthn.extraOrigins adds login origins beyond the Microsoft defaults
  */
 async function initialize(mainWindow, config) {
   if (initialized) return;
 
   log.setDebug(config?.auth?.webauthn?.debug);
+  allowedOrigins = buildAllowedOrigins(config?.auth?.webauthn?.extraOrigins);
 
   const available = await fido2Backend.isAvailable();
   if (!available) {
@@ -373,7 +378,17 @@ async function initialize(mainWindow, config) {
   }
 
   initialized = true;
-  log.info("[WEBAUTHN] Hardware security key support initialized");
+  log.info("[WEBAUTHN] Hardware security key support initialized", {
+    extraOrigins: allowedOrigins.size - DEFAULT_ORIGINS.length,
+  });
 }
 
-module.exports = { initialize };
+module.exports = {
+  initialize,
+  // Exported for tests: the allowlist is the security gate, so it is asserted
+  // on directly rather than through a replica.
+  _applyExtraOrigins: (extraOrigins) => {
+    allowedOrigins = buildAllowedOrigins(extraOrigins);
+  },
+  _isAllowedOrigin: isAllowedOrigin,
+};

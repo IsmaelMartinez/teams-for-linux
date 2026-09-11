@@ -12,30 +12,18 @@ Everything listed here describes work that has **not** fully shipped. Once a pie
 
 ### Open Work
 
-- **[Documentation, Contributing, and Config UX](documentation-and-config-ux-research.md)**, `app/config/options.js` as the single source of truth feeding generated docs, an in-app settings UI, and startup validation ([#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597))
-  - **Phases 0 to 2 shipped (v2.12.0)**: drift fixes ([PR #2602](https://github.com/IsmaelMartinez/teams-for-linux/pull/2602)), generated config reference plus `config-schema.json` with CI drift guard ([PR #2604](https://github.com/IsmaelMartinez/teams-for-linux/pull/2604)), interactive config explorer in the docs site ([PR #2606](https://github.com/IsmaelMartinez/teams-for-linux/pull/2606))
-  - **Phases 3a and 4 implemented**: per-option `applyMode` and nested-field metadata with a hard-failing generator lint, plus warn-only startup validation in `app/config/validator.js`
-  - **Remaining**: Phase 3b, the in-app settings window, now unblocked by the 3a schema metadata
-
-- **[Graph API Integration Research](graph-api-integration-research.md)**, Microsoft Graph API for enhanced features
-  - **Phase 1 shipped (v2.7.4)**: token acquisition plus 7 IPC channels. People search and send chat power Quick Chat (ADR-014, ADR-015)
-  - **Phases 2 and 3 not started**: calendar widget, mail preview, presence, settings UI
-
-- **[Custom Stickers, External Sources](custom-stickers-online-import-research.md)**, follow-up to the v1 ship ([#2476](https://github.com/IsmaelMartinez/teams-for-linux/issues/2476), PR [#2550](https://github.com/IsmaelMartinez/teams-for-linux/pull/2550))
-  - URL paste shipped in v1. Telegram sticker pack import is the proposed next phase, AI generation via a user-configured backend is the speculative one
-  - AI path mirrors the `customBackground` pattern, so the wrapper holds no opinion about which backend sits at the other end
-
-- **[FIDO2 Touch Prompt UI](fido2-touch-prompt-research.md)**, surface a "touch your security key now" prompt during the user-presence wait ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631), PR [#2779](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779))
-  - The FIDO2 beta only built the PIN-entry UI, so the touch wait was silent (`fido2Backend.js` blocks at `spawn` until the key is touched)
-  - Honest limit: a prompt spanning the whole security-key call, not a touch-instant signal
-  - Shipped for the `auth.webauthn.enabled` path; the flag-off path is still open
+No research is open at the moment. New investigations are added here while they are active.
 
 ### Implemented Features (Research Removed)
 
-Research documents are deleted once a feature is fully shipped and the document provides no ongoing reference value. The ADRs and git history preserve the decisions and context.
+Research documents are deleted once their decision has moved to an ADR, whether the feature shipped, was rejected, or has remaining phases tracked in the roadmap. The ADRs and git history preserve the decisions and context.
 
 | Feature | Version | Reference |
 |---------|---------|-----------|
+| Config Schema as Single Source of Truth | v2.12.0 onwards | Phases 0 to 2, 3a and 4 shipped ([#2597](https://github.com/IsmaelMartinez/teams-for-linux/issues/2597)); decision in [ADR-029](../adr/029-config-schema-single-source-of-truth.md); the in-app settings window (3b) stays in the roadmap |
+| Graph API Integration | v2.6.17 | Phase 1 shipped ([PR #1958](https://github.com/IsmaelMartinez/teams-for-linux/pull/1958)); token route recorded in [ADR-030](../adr/030-graph-api-teams-session-token.md), implementation reference in app/graphApi/README.md; Phases 2 and 3 parked in the roadmap |
+| Custom Stickers | v2.11.0 | Local-folder MVP plus HTTPS URL import and a one-level subfolder scan shipped ([#2476](https://github.com/IsmaelMartinez/teams-for-linux/issues/2476), [PR #2550](https://github.com/IsmaelMartinez/teams-for-linux/pull/2550)); the closed Telegram and GIPHY attempts and the untried generation idea are recorded in the roadmap |
+| FIDO2 Touch Prompt | v2.18.0 | Prompt shown around the security-key call, with a Cancel that aborts the fido2 child; decision folded into [ADR-021](../adr/021-webauthn-fido2-linux.md) ([#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631), [PR #2779](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779)) |
 | System Performance Audit | --- | Ten findings closed as fixed, fixed differently, or not planned. Decision in [ADR-026](../adr/026-performance-audit-outcomes.md) |
 | Configuration Organization | --- | Decision-only closeout (no feature shipped): naming convention and the resolved flat-to-nested rename mapping now live in [ADR-025](../adr/025-config-option-naming-convention.md); migration stays opportunistic, `docs-site/static/config-schema.json` is the live inventory |
 | Smartcard / NSS PIN Dialog | v2.14.0 | Opt-in PIN dialog behind `auth.clientCertificate.pinDialog.enabled`, built on `app/_shared/securePrompt.js`. Decision in [ADR-024](../adr/024-smartcard-pkcs11-pin-dialog.md) ([#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639)) |
@@ -60,7 +48,7 @@ Research documents are deleted once a feature is fully shipped and the document 
 | External Browser Authentication | --- | Not feasible; Teams manages OAuth internally ([#2017](https://github.com/IsmaelMartinez/teams-for-linux/issues/2017)) |
 | GNOME Search Provider | --- | Not recommended; latency too high for acceptable UX ([#2075](https://github.com/IsmaelMartinez/teams-for-linux/issues/2075)) |
 | Code Quality Hardening (Phases 1-3) | v2.7.5 | Logging hygiene, resilience, input handling, IPC hardening, CI/CD gates |
-| Wayland/X11 Ozone Platform | v2.7.4 | Force X11 by default due to Electron 38+ Wayland regressions |
+| Wayland/X11 Ozone Platform | v2.7.4 | Force X11 by default due to Electron 38+ Wayland regressions; re-affirmed June 2026 after [#2601](https://github.com/IsmaelMartinez/teams-for-linux/pull/2601) and [#2508](https://github.com/IsmaelMartinez/teams-for-linux/issues/2508) were closed, decision now in [ADR-031](../adr/031-ozone-platform-x11-default.md) |
 | Quick Chat / Chat Modal | v2.7.4 | [ADR-014](../adr/014-quick-chat-deep-link-approach.md), [ADR-015](../adr/015-quick-chat-inline-messaging.md) |
 | PII Log Sanitization | v2.7.2 | [ADR-013](../adr/013-pii-log-sanitization.md) |
 | DOM Access Restoration | v2.5.2 | Hybrid API + DOM approach for React compatibility |

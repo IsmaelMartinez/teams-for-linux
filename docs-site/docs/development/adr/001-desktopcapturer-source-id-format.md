@@ -6,7 +6,7 @@ id: 001-desktopcapturer-source-id-format
 
 ## Status
 
-Accepted
+Implemented
 
 ## Context
 

@@ -74,7 +74,8 @@ jobs:
             const linuxX64 = buildArtifacts.find(a => a.name.includes('linux-x64'));
             const linuxArm64 = buildArtifacts.find(a => a.name.includes('linux-arm64'));
             const linuxArmv7l = buildArtifacts.find(a => a.name.includes('linux-armv7l'));
-            const macos = buildArtifacts.find(a => a.name.includes('macos'));
+            const macosX64 = buildArtifacts.find(a => a.name.includes('macos-x64'));
+            const macosArm64 = buildArtifacts.find(a => a.name.includes('macos-arm64'));
             const windows = buildArtifacts.find(a => a.name.includes('windows'));
 
             let body = '## 📦 PR Build Artifacts\n\n✅ **Build successful!** Download artifacts:\n\n';
@@ -98,11 +99,18 @@ jobs:
             }
 
             // macOS section
-            if (macos) {
-              const sizeMB = (macos.size_in_bytes / 1024 / 1024).toFixed(2);
+            if (macosX64 || macosArm64) {
               body += '### 🍎 macOS\n\n';
-              body += `**x86_64** (${sizeMB} MB) - Contains: .dmg\n`;
-              body += `- [${macos.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${macos.id})\n\n`;
+            }
+            if (macosX64) {
+              const sizeMB = (macosX64.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += `**x86_64 (Intel)** (${sizeMB} MB) - Contains: .dmg\n`;
+              body += `- [${macosX64.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${macosX64.id})\n\n`;
+            }
+            if (macosArm64) {
+              const sizeMB = (macosArm64.size_in_bytes / 1024 / 1024).toFixed(2);
+              body += `**arm64 (Apple Silicon)** (${sizeMB} MB) - Contains: .dmg\n`;
+              body += `- [${macosArm64.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${macosArm64.id})\n\n`;
             }
 
             // Windows section

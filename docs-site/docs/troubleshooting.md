@@ -45,6 +45,20 @@ When the app feels slow or heavy, seven configuration options are the first-line
     *   Download the latest installer from the official GitHub releases page.
     *   Perform a clean installation.
 
+#### Issue: Snap exits immediately with status 1 and no output
+
+**Description:** `snap run teams-for-linux` returns exit code 1 with completely empty stdout and stderr. No window appears and nothing is written to the journal. Affects snap revisions from 2396 onwards on `core22` ([#2946](https://github.com/IsmaelMartinez/teams-for-linux/issues/2946)).
+
+**Potential Causes:**
+*   The snap launcher runs a desktop-integration script under `set -e` that calls `rmdir` on an XDG user directory. `rmdir` fails on a non-empty directory, its error is discarded, and the launcher aborts before Electron ever starts.
+*   Triggered when `~/.config/user-dirs.locale` is missing, or when an XDG user directory (Documents, Downloads, and so on) points somewhere the snap cannot read, such as a path under `/mnt` that needs the `removable-media` interface.
+
+**Solutions/Workarounds:**
+
+1.  **Update the snap.** Revisions built after this issue was fixed launch normally: `sudo snap refresh teams-for-linux`.
+
+2.  **If you cannot update yet**, either create the missing locale file with `touch ~/.config/user-dirs.locale`, connect the interface your XDG directories need with `sudo snap connect teams-for-linux:removable-media`, or roll back with `sudo snap revert teams-for-linux`.
+
 #### Issue: No History after Electron version update
 
 **Description:** When updating the Electron version, the channel history may sometimes disappear. This issue is typically related to a change in the user agent.
@@ -67,19 +81,25 @@ When the app feels slow or heavy, seven configuration options are the first-line
     | From source | `~/.config/Electron/` | `rm -rf ~/.config/Electron/` |
 
 
-#### Issue: No Apple Silicon Mac build
+#### Issue: macOS refuses to open the app ("unverified developer" or "damaged")
 
-**Description:** Only Intel Mac builds are provided in GitHub releases, and Apple Silicon Macs cannot run unsigned code without an Apple Developer account.
+**Description:** Releases now ship both an Intel (`teams-for-linux-<version>.dmg`) and an Apple Silicon (`teams-for-linux-<version>-arm64.dmg`) build. Neither is notarized, so Gatekeeper blocks the first launch of a downloaded copy.
 
 **Potential Causes:**
-*   Apple's code signing requirements for ARM-based Macs.
-*   Cost associated with Apple Developer Program for distributing signed binaries.
+*   The project has no Apple Developer Program membership, so the builds carry only an ad-hoc signature. That satisfies Apple Silicon's requirement that every arm64 binary be signed, but not Gatekeeper's requirement that downloaded apps be notarized.
+*   Downloads are tagged with the `com.apple.quarantine` attribute, which is what triggers the block.
 
 **Solutions/Workarounds:**
 
-1.  **Use Intel Build:** The Intel build works on Apple Silicon via emulation (albeit slowly).
+1.  **Approve it once in System Settings:** Open the app, dismiss the warning, then go to System Settings → Privacy & Security and click **Open Anyway** next to the entry for `teams-for-linux`. Confirm on the second prompt. This is only needed once per installed version.
 
-2.  **Build Your Own:** You can build an Apple Silicon version from source, signing it with your own developer keys. This process is free, but the keys will only work on your Mac.
+2.  **Clear the quarantine attribute:** If macOS reports the app as "damaged" instead of offering an **Open Anyway** button, remove the quarantine flag directly:
+
+    ```bash
+    xattr -dr com.apple.quarantine /Applications/teams-for-linux.app
+    ```
+
+3.  **Build and sign it yourself:** You can build from source and sign with your own developer keys. This is free, but the keys only work on your Mac.
 
     **Steps to Build Your Own:**
     1.  Download and open Xcode from the App Store.
@@ -93,6 +113,8 @@ When the app feels slow or heavy, seven configuration options are the first-line
         ```
         You should see a signing step in the output (ignore the "skipped macOS notarization" warning).
         The app will be built in the `dist/mac-arm64/` folder. Copy it to your Applications folder.
+
+        Use `npm run dist:mac:x64` for an Intel build. `npm run dist:mac` — the script CI uses — builds both architectures but forces an ad-hoc signature, so it ignores any certificate you have installed.
 
 **Related GitHub Issues:** [Issue #1225](https://github.com/IsmaelMartinez/teams-for-linux/issues/1225)
 

@@ -6,7 +6,7 @@ id: 012-intune-sso-broker-compatibility
 
 ## Status
 
-Accepted
+Implemented
 
 ## Context
 

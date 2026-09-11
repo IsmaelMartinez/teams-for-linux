@@ -10,6 +10,11 @@
  * Linux-only: on macOS/Windows, Electron's Chromium handles WebAuthn natively.
  */
 
+// Same allowlist the main process enforces, built from the same config, so a
+// ceremony relayed out of a login iframe is not blocked here after the main
+// process would have allowed it (#2931).
+const { buildAllowedOrigins } = require("../../webauthn/originAllowlist");
+
 function init(config, ipcRenderer) {
   if (process.platform !== "linux") {
     console.debug("[WEBAUTHN] Skipping: not Linux");
@@ -123,16 +128,12 @@ function init(config, ipcRenderer) {
   // Layer 2 relay: listen for postMessage from subframes that were injected
   // via executeJavaScript in the main process. This bridges the gap between
   // frames (no ipcRenderer) and the main process (needs IPC).
-  const ALLOWED_RELAY_ORIGINS = new Set([
-    "https://login.microsoftonline.com",
-    "https://login.microsoft.com",
-    "https://login.live.com",
-  ]);
+  const ALLOWED_RELAY_ORIGINS = buildAllowedOrigins(config?.auth?.webauthn?.extraOrigins);
 
   window.addEventListener("message", async (event) => {
     if (event.data?.type !== "webauthn-request") return;
     if (!ALLOWED_RELAY_ORIGINS.has(event.origin)) {
-      console.warn("[WEBAUTHN] Blocked relay: origin not allowed");
+      console.warn("[WEBAUTHN] Blocked relay: origin not allowed. If this is your federated IdP sign-in page, add it to auth.webauthn.extraOrigins.");
       return;
     }
     const { id, channel, data } = event.data;

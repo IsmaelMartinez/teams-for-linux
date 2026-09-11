@@ -8,7 +8,7 @@
  * because Teams' React internals don't expose presence services and the
  * Graph API /me/presence endpoint returns 403 (Teams token lacks Presence.Read
  * scope). When Microsoft changes their DOM structure, selectors will break.
- * See: docs-site/docs/development/research/graph-api-integration-research.md
+ * See: docs-site/docs/development/adr/030-graph-api-teams-session-token.md
  *
  * Status Detection Strategy:
  * 1. CSS selectors targeting known Teams presence elements

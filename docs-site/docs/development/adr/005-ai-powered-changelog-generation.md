@@ -6,7 +6,9 @@ id: 005-ai-powered-changelog-generation
 
 ## Status
 
-Accepted
+Superseded by [ADR-023](023-release-automation-tooling.md)
+
+The `.changelog/*.txt` staging approach and `changelog-generator.yml` workflow described below were removed when the project adopted release-please; see ADR-023 for the current release automation.
 
 ## Context
 

@@ -14,6 +14,21 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.20.0" date="2026-09-03">
+      <description>
+        <ul>
+          <li>ci: open the Flathub beta bump PR automatically after a pre-release (#2930) (b2029d5), closes #2880</li>
+          <li>build: macOS Build System &amp; architecture (#2900)</li>
+          <li>snap: stop the desktop launcher aborting before Electron starts (#2948)</li>
+          <li>webauthn: allow extra login origins via auth.webauthn.extraOrigins (#2945)</li>
+          <li>deps-dev: bump @humanfs/node from 0.16.7 to 0.16.8 (#2941)</li>
+          <li>deps-dev: bump @xmldom/xmldom from 0.8.13 to 0.8.15 (#2943)</li>
+          <li>deps: bump browserslist from 4.28.6 to 4.28.8 in /docs-site (#2940)</li>
+          <li>deps: bump fast-uri from 3.1.5 to 3.1.7 (#2942)</li>
+          <li>deps: bump github/codeql-action from 4.37.8 to 4.37.9 (#2932)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.19.0" date="2026-09-01">
       <description>
         <ul>
