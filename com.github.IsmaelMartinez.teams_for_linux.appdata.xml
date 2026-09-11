@@ -14,6 +14,30 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.20.1" date="2026-09-11">
+      <description>
+        <ul>
+          <li>flatpak: keep the background portal from deleting autostart entries (#2937)</li>
+          <li>network: don't show blank page on network drop, and dont reload on network resume (#2969)</li>
+          <li>deeplink: route deep links in page instead of reloading (#2950)</li>
+          <li>adr: ADR-029 configuration schema as single source of truth (#2956)</li>
+          <li>adr: ADR-030 Graph API access via the Teams session token (#2957)</li>
+          <li>adr: ADR-031 keep the ozone-platform x11 default on Wayland (#2958)</li>
+          <li>adr: fold the FIDO2 touch prompt research into ADR-021 (#2952)</li>
+          <li>adr: update statuses for ADR-012, 014, 019, 020, 021, 022 and refresh the index (#2955)</li>
+          <li>mqtt: retire the incoming-call plan now meeting-start detection has shipped (#2954)</li>
+          <li>research: retire the custom stickers external-sources research (#2953)</li>
+          <li>stale: exempt good first issue and help wanted issues from auto-close (#2960)</li>
+          <li>deps-dev: bump the minor-and-patch group with 2 updates (#2961)</li>
+          <li>deps: bump @swc/html from 1.15.43 to 1.16.2 in /docs-site (#2965)</li>
+          <li>deps: bump colord from 2.9.3 to 2.10.0 in /docs-site (#2966)</li>
+          <li>deps: bump joi from 17.13.4 to 17.13.7 in /docs-site (#2967)</li>
+          <li>deps: bump js-yaml from 4.3.1 to 4.3.2 in both lockfiles (#2972)</li>
+          <li>deps: bump svgo from 3.3.4 to 3.3.5 in /docs-site (#2968)</li>
+          <li>deps: update qs and fast-uri to clear six Dependabot alerts (#2951)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.20.0" date="2026-09-03">
       <description>
         <ul>

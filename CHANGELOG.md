@@ -40,6 +40,10 @@
 * **deps:** bump svgo from 3.3.4 to 3.3.5 in /docs-site ([#2968](https://github.com/IsmaelMartinez/teams-for-linux/issues/2968)) ([2d4cc77](https://github.com/IsmaelMartinez/teams-for-linux/commit/2d4cc77e719ccfdccdcbf728fc7a149f7600ac34))
 * **deps:** update qs and fast-uri to clear six Dependabot alerts ([#2951](https://github.com/IsmaelMartinez/teams-for-linux/issues/2951)) ([339e13b](https://github.com/IsmaelMartinez/teams-for-linux/commit/339e13bf462d316c8d211d6b2dff9a938faca9c0))
 
+### Thanks
+
+Big thanks to @allmeta, @app/dependabot, @glima for contributing to this release.
+
 ## [2.20.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.19.0...v2.20.0) (2026-09-03)
 
 
