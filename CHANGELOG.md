@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.21.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.20.1...v2.21.0) (2026-09-11)
+
+
+### Features
+
+* **config:** add the ten remaining new nested namespaces and deprecate their flat names ([#2897](https://github.com/IsmaelMartinez/teams-for-linux/issues/2897)) ([b5ee296](https://github.com/IsmaelMartinez/teams-for-linux/commit/b5ee2966379dde72a73e8ca82911478bcfd2fc74))
+
 ## [2.20.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.20.0...v2.20.1) (2026-09-11)
 
 
