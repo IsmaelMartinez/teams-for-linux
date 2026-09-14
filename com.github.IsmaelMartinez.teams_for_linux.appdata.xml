@@ -14,6 +14,15 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.22.0" date="2026-09-14">
+      <description>
+        <ul>
+          <li>multi-account: attribute descendants + profile-view window-open policy (ADR-020 Phase 2) (#2916)</li>
+          <li>publish unread count over LauncherEntry with packaging-aware desktop URI (badge) (#2970)</li>
+          <li>deps-dev: bump electron from 42.9.3 to 43.7.0 (#2975) (7657aa8), closes #2927</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.21.0" date="2026-09-11">
       <description>
         <ul>

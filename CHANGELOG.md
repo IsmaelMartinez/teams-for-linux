@@ -17,6 +17,10 @@
 
 * **deps-dev:** bump electron from 42.9.3 to 43.7.0 ([#2975](https://github.com/IsmaelMartinez/teams-for-linux/issues/2975)) ([7657aa8](https://github.com/IsmaelMartinez/teams-for-linux/commit/7657aa8bf884aede24b3211e1f46277c29f9bd6a)), closes [#2927](https://github.com/IsmaelMartinez/teams-for-linux/issues/2927)
 
+### Thanks
+
+Big thanks to @jorge-buggy, @jpenberthy for contributing to this release.
+
 ## [2.21.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.20.1...v2.21.0) (2026-09-11)
 
 
