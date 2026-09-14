@@ -62,7 +62,68 @@
     }
   }
 
+  // Teams requests screen share video capped to a fixed resolution (commonly
+  // 1080p), which blurs high-density/ultrawide monitors that get downscaled
+  // then upscaled by the compositor. Strip those caps so the capture uses the
+  // native resolution of the shared screen/window instead.
+  function stripResolutionConstraint(video) {
+    if (!video || typeof video !== "object") return video;
+
+    for (const name of ["width", "height"]) {
+      delete video[name];
+    }
+    if (video.mandatory) {
+      for (const name of ["minWidth", "maxWidth", "minHeight", "maxHeight"]) {
+        delete video.mandatory[name];
+      }
+    }
+    if (Array.isArray(video.optional)) {
+      video.optional = video.optional.filter(
+        (opt) =>
+          !("minWidth" in opt) &&
+          !("maxWidth" in opt) &&
+          !("minHeight" in opt) &&
+          !("maxHeight" in opt)
+      );
+    }
+    if (Array.isArray(video.advanced)) {
+      video.advanced = video.advanced.filter(
+        (opt) => !("width" in opt) && !("height" in opt)
+      );
+    }
+    return video;
+  }
+
+  function removeResolutionCapsInConstraints(constraints, context) {
+    const video = constraints?.video;
+    if (!video || typeof video !== "object") return;
+    stripResolutionConstraint(video);
+    console.debug(`[SCREEN_SHARE_DIAG] Resolution caps removed for ${context}`);
+  }
+
+  // Teams also re-applies a resolution cap on the *already-running*
+  // screen-share track via track.applyConstraints() to adapt quality on the
+  // fly (see #2432/#2437, where this same mechanism let a camera-resolution
+  // override leak into screen-share tracks). The constraints payload here
+  // never carries chromeMediaSource, so a display-capture track can only be
+  // recognised via getSettings().displaySurface.
+  function patchApplyConstraintsForScreenShare() {
+    if (typeof MediaStreamTrack === "undefined") return;
+    const original = MediaStreamTrack.prototype.applyConstraints;
+    if (!original) return;
+
+    MediaStreamTrack.prototype.applyConstraints = function (constraints) {
+      if (this.kind === "video" && this.getSettings?.().displaySurface && constraints) {
+        stripResolutionConstraint(constraints);
+        console.debug("[SCREEN_SHARE_DIAG] Resolution caps removed for applyConstraints");
+      }
+      return original.call(this, constraints);
+    };
+  }
+
   function monitorScreenSharing() {
+    patchApplyConstraintsForScreenShare();
+
     // Guard against missing mediaDevices API (e.g. on Chrome error pages)
     if (!navigator.mediaDevices?.getDisplayMedia) {
       console.debug("[SCREEN_SHARE_DIAG] navigator.mediaDevices.getDisplayMedia not available, skipping");
@@ -83,6 +144,8 @@
 
       // Force disable all audio in screen sharing to prevent echo issues
       disableAudioInConstraints(constraints, "getDisplayMedia");
+      // Ensure capture uses the screen/window's native resolution (#quality)
+      removeResolutionCapsInConstraints(constraints, "getDisplayMedia");
 
       // Delegate picking to the platform's native flow:
       //   X11 / Win / macOS: Chromium calls our setDisplayMediaRequestHandler,
@@ -125,6 +188,8 @@
 
         // Force disable audio for screen sharing streams to prevent echo
         disableAudioInConstraints(constraints, "getUserMedia screen sharing");
+        // Ensure capture uses the screen/window's native resolution
+        removeResolutionCapsInConstraints(constraints, "getUserMedia screen sharing");
       }
 
       return originalGetUserMedia(constraints)
