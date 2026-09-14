@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.22.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.21.0...v2.22.0) (2026-09-14)
+
+
+### Features
+
+* **multi-account:** attribute descendants + profile-view window-open policy (ADR-020 Phase 2) ([#2916](https://github.com/IsmaelMartinez/teams-for-linux/issues/2916)) ([d03f02d](https://github.com/IsmaelMartinez/teams-for-linux/commit/d03f02d311860cf86b331ffd2b8e508837d69983))
+
+
+### Bug Fixes
+
+* publish unread count over LauncherEntry with packaging-aware desktop URI (badge) ([#2970](https://github.com/IsmaelMartinez/teams-for-linux/issues/2970)) ([f79a179](https://github.com/IsmaelMartinez/teams-for-linux/commit/f79a17952f76ecfd3621c8d09254f261f4b1dc81))
+
+
+### Maintenance
+
+* **deps-dev:** bump electron from 42.9.3 to 43.7.0 ([#2975](https://github.com/IsmaelMartinez/teams-for-linux/issues/2975)) ([7657aa8](https://github.com/IsmaelMartinez/teams-for-linux/commit/7657aa8bf884aede24b3211e1f46277c29f9bd6a)), closes [#2927](https://github.com/IsmaelMartinez/teams-for-linux/issues/2927)
+
 ## [2.21.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.20.1...v2.21.0) (2026-09-11)
 
 
