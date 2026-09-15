@@ -19,6 +19,10 @@
   let periodicCheckInterval = null;
   let streamInactiveHandlers = [];
   let activeFrameRelay = null;
+  const resolutionConfig = globalThis.__tflScreenSharingResolution || {
+    enabled: false,
+    mode: "native",
+  };
 
   // Known translations of "Stop sharing" / "Stop presenting" button text.
   // Used as fallback when CSS attribute selectors don't match (non-English locales).
@@ -94,10 +98,27 @@
     return video;
   }
 
+  function configureResolutionConstraint(video) {
+    if (!resolutionConfig.enabled || !video || typeof video !== "object") {
+      return video;
+    }
+
+    stripResolutionConstraint(video);
+    if (
+      resolutionConfig.mode === "override" &&
+      Number.isFinite(resolutionConfig.width) &&
+      Number.isFinite(resolutionConfig.height)
+    ) {
+      video.width = { ideal: resolutionConfig.width };
+      video.height = { ideal: resolutionConfig.height };
+    }
+    return video;
+  }
+
   function removeResolutionCapsInConstraints(constraints, context) {
     const video = constraints?.video;
-    if (!video || typeof video !== "object") return;
-    stripResolutionConstraint(video);
+    if (!resolutionConfig.enabled || !video || typeof video !== "object") return;
+    configureResolutionConstraint(video);
     console.debug(`[SCREEN_SHARE_DIAG] Resolution caps removed for ${context}`);
   }
 
@@ -113,8 +134,13 @@
     if (!original) return;
 
     MediaStreamTrack.prototype.applyConstraints = function (constraints) {
-      if (this.kind === "video" && this.getSettings?.().displaySurface && constraints) {
-        stripResolutionConstraint(constraints);
+      if (
+        resolutionConfig.enabled &&
+        this.kind === "video" &&
+        this.getSettings?.().displaySurface &&
+        constraints
+      ) {
+        configureResolutionConstraint(constraints);
         console.debug("[SCREEN_SHARE_DIAG] Resolution caps removed for applyConstraints");
       }
       return original.call(this, constraints);

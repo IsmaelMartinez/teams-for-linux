@@ -11,7 +11,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 | Option | Type | Default | Description | Apply |
 |--------|------|---------|-------------|-------|
 | `appActiveCheckInterval` | `number` | `2` | A numeric value in seconds as poll interval to check if the system is active from being idle | `restart` |
-| `screenSharing` | `object` | `{"thumbnail":{"enabled":true,"alwaysOnTop":true},"lockInhibitionMethod":"Electron"}` | Screen sharing configuration. thumbnail: controls the preview window shown during active sharing. lockInhibitionMethod: screen lock inhibition method (Electron/WakeLockSentinel). | `restart` |
+| `screenSharing` | `object` | `{"thumbnail":{"enabled":true,"alwaysOnTop":true},"resolution":{"enabled":false,"mode":"native"},"lockInhibitionMethod":"Electron"}` | Screen sharing configuration. thumbnail: controls the preview window shown during active sharing. lockInhibitionMethod: screen lock inhibition method (Electron/WakeLockSentinel). | `restart` |
 | `appIcon` | `string` | `""` | Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu | `live` |
 | `appIconType` | `string` | `"default"` | Type of tray icon to be used | `restart` |
 | `appIdleTimeout` | `number` | `300` | A numeric value in seconds as duration before app considers the system as idle | `restart` |
@@ -95,6 +95,10 @@ Object options group several related settings. The tables below list each nested
 |-------|------|---------|-------------|
 | `screenSharing.thumbnail.enabled` | `boolean` | `true` | Automatically show the preview thumbnail window when screen sharing starts. |
 | `screenSharing.thumbnail.alwaysOnTop` | `boolean` | `true` | Keep the screen sharing thumbnail window always on top. |
+| `screenSharing.resolution.enabled` | `boolean` | `false` | Enable screen sharing resolution control. When false, Teams' resolution constraints are left unchanged. |
+| `screenSharing.resolution.mode` | `string` | `"native"` | Resolution mode: native removes Teams' screen sharing limits so capture can use its native resolution; override requests the configured width and height as a ceiling. |
+| `screenSharing.resolution.width` | `number` | `undefined` | Target screen sharing width when mode is override; used with height as the maximum requested resolution. |
+| `screenSharing.resolution.height` | `number` | `undefined` | Target screen sharing height when mode is override; used with width as the maximum requested resolution. |
 | `screenSharing.lockInhibitionMethod` | `string` | `"Electron"` | Screen lock inhibition method used while sharing. |
 
 ### idleDetection

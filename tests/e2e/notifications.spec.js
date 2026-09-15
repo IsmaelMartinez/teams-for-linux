@@ -3,6 +3,7 @@ import { _electron as electron } from 'playwright';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { getE2EPlatformArgs } from './helpers/electronApp.js';
 
 /**
  * Notification lifecycle tests.
@@ -22,8 +23,10 @@ async function launchApp(notificationMethod) {
   const userDataDir = mkdtempSync(join(tmpdir(), 'teams-e2e-notif-'));
   const electronApp = await electron.launch({
     args: [
-      './app/index.js',
-      `--notificationMethod=${notificationMethod}`,
+      ...getE2EPlatformArgs([
+        './app/index.js',
+        `--notificationMethod=${notificationMethod}`,
+      ]),
       ...(process.env.CI ? ['--no-sandbox'] : []),
     ],
     env: { ...process.env, E2E_USER_DATA_DIR: userDataDir },

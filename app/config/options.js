@@ -41,6 +41,10 @@ module.exports = {
             enabled: true,
             alwaysOnTop: true,
           },
+          resolution: {
+            enabled: false,
+            mode: "native",
+          },
           lockInhibitionMethod: "Electron",
         },
         describe:
@@ -55,6 +59,25 @@ module.exports = {
           "thumbnail.alwaysOnTop": {
             type: "boolean",
             describe: "Keep the screen sharing thumbnail window always on top.",
+          },
+          "resolution.enabled": {
+            type: "boolean",
+            describe:
+              "Enable screen sharing resolution control. When false, Teams' resolution constraints are left unchanged.",
+          },
+          "resolution.mode": {
+            type: "string",
+            describe:
+              "Resolution mode: native removes Teams' screen sharing limits so capture can use its native resolution; override requests the configured width and height as a ceiling.",
+            choices: ["native", "override"],
+          },
+          "resolution.width": {
+            type: "number",
+            describe: "Target screen sharing width when mode is override; used with height as the maximum requested resolution.",
+          },
+          "resolution.height": {
+            type: "number",
+            describe: "Target screen sharing height when mode is override; used with width as the maximum requested resolution.",
           },
           "lockInhibitionMethod": {
             type: "string",

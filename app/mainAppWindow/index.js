@@ -964,7 +964,12 @@ function injectScreenSharingLogic() {
   );
   try {
     const script = fs.readFileSync(scriptPath, "utf8");
-    window.webContents.executeJavaScript(script).catch((err) => {
+    const resolutionConfig = config?.screenSharing?.resolution ?? {
+      enabled: false,
+      mode: "native",
+    };
+    const configScript = `globalThis.__tflScreenSharingResolution = ${JSON.stringify(resolutionConfig)};`;
+    window.webContents.executeJavaScript(`${configScript}\n${script}`).catch((err) => {
       console.error("[SCREEN_SHARE] Failed to execute injected script:", err.message);
     });
   } catch (err) {

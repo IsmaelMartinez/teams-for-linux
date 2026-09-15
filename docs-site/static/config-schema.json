@@ -18,6 +18,10 @@
           "enabled": true,
           "alwaysOnTop": true
         },
+        "resolution": {
+          "enabled": false,
+          "mode": "native"
+        },
         "lockInhibitionMethod": "Electron"
       },
       "description": "Screen sharing configuration. thumbnail: controls the preview window shown during active sharing. lockInhibitionMethod: screen lock inhibition method (Electron/WakeLockSentinel).",
@@ -34,6 +38,32 @@
           "type": "boolean",
           "default": true,
           "description": "Keep the screen sharing thumbnail window always on top."
+        },
+        {
+          "path": "resolution.enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable screen sharing resolution control. When false, Teams' resolution constraints are left unchanged."
+        },
+        {
+          "path": "resolution.mode",
+          "type": "string",
+          "default": "native",
+          "description": "Resolution mode: native removes Teams' screen sharing limits so capture can use its native resolution; override requests the configured width and height as a ceiling.",
+          "choices": [
+            "native",
+            "override"
+          ]
+        },
+        {
+          "path": "resolution.width",
+          "type": "number",
+          "description": "Target screen sharing width when mode is override; used with height as the maximum requested resolution."
+        },
+        {
+          "path": "resolution.height",
+          "type": "number",
+          "description": "Target screen sharing height when mode is override; used with width as the maximum requested resolution."
         },
         {
           "path": "lockInhibitionMethod",
