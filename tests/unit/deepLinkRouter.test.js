@@ -127,6 +127,22 @@ test("navigateInPage short-circuits when the fragment already holds the route", 
   assert.match(script, /if \(previous === target\) \{ resolve\(true\); return; \}/);
 });
 
+test("navigateInPage also takes a document title change as consumption", async () => {
+  let script = null;
+  const win = windowWith("https://teams.cloud.microsoft/", async (source) => {
+    script = source;
+    return true;
+  });
+
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, TEAMS_URL), true);
+  // Teams can open the target without rewriting the fragment; it always
+  // retitles the document for it, so the title is watched as a second signal.
+  assert.match(script, /const previousTitle = document\.title;/);
+  assert.match(script, /new MutationObserver\(\(\) => \{\s*if \(document\.title !== previousTitle\) settle\(true\);/);
+  assert.match(script, /titleWatch\.disconnect\(\);/);
+  assert.doesNotThrow(() => new Function(`return ${script}`));
+});
+
 test("navigateInPage falls back when the fragment is left untouched", async () => {
   const win = windowWith("https://teams.cloud.microsoft/", async () => false);
 

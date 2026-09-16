@@ -110,15 +110,18 @@ async function navigateInPage(window, url, teamsUrl) {
 
   try {
     // Assigning the fragment always sticks, so the assignment proves nothing.
-    // The SPA signals that it handled the route by rewriting the fragment, and
-    // a fragment still holding the assigned value was never consumed. The
-    // previous fragment goes back before giving up, so an aborted fallback
-    // navigation does not strand the page on a route nothing answered.
+    // The SPA signals that it handled the route by rewriting the fragment or,
+    // on builds that leave the fragment alone, by retitling the document for
+    // the target; a fragment still holding the assigned value under the old
+    // title was never consumed. The previous fragment goes back before giving
+    // up, so an aborted fallback navigation does not strand the page on a
+    // route nothing answered.
     return await frame.executeJavaScript(
       `new Promise((resolve) => {
          let timer;
          const target = ${JSON.stringify(route)};
          const previous = location.hash;
+         const previousTitle = document.title;
          // Re-assigning an identical fragment fires no \`hashchange\`, so the
          // wait below would time out and reload a page already on the route.
          if (previous === target) { resolve(true); return; }
@@ -127,6 +130,7 @@ async function navigateInPage(window, url, teamsUrl) {
          const settle = (consumed) => {
            clearTimeout(timer);
            removeEventListener("hashchange", onHashChange);
+           titleWatch.disconnect();
            if (!consumed) {
              history.replaceState(null, "", previous || location.pathname + location.search);
            }
@@ -135,6 +139,13 @@ async function navigateInPage(window, url, teamsUrl) {
          const onHashChange = () => {
            if (location.hash !== assigned) settle(true);
          };
+         const titleWatch = new MutationObserver(() => {
+           if (document.title !== previousTitle) settle(true);
+         });
+         const titleNode = document.querySelector("title");
+         if (titleNode) {
+           titleWatch.observe(titleNode, { childList: true, characterData: true, subtree: true });
+         }
          // \`hashchange\` is queued as a task, so it cannot dispatch until this
          // block returns: registering after the assignment misses nothing.
          addEventListener("hashchange", onHashChange);
