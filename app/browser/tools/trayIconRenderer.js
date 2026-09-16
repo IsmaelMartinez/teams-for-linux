@@ -21,6 +21,26 @@ class TrayIconRenderer {
     // Read the new path from the delta, not from this.config: preload's own
     // config-changed listener registers after this one, so this.config still
     // holds the previous value when we run.
+    // ADR-020 Phase 2: main cannot composite the aggregate badge (no
+    // canvas), so it asks a live renderer to draw the summed count using the
+    // exact pipeline organic updates use. Fire-and-forget from main's side;
+    // the requestId lets it discard stale replies. Flag-gated: with
+    // multi-account off main never asks, so no listener is registered.
+    if (config.multiAccount?.enabled) {
+      ipcRenderer.on('render-aggregate-badge', async (_event, { requestId, count }) => {
+        let icon = null;
+        if (count > 0) {
+          try {
+            icon = await this.render(count);
+          } catch (error) {
+            console.error("[TRAY_DIAG] Aggregate render failed", {
+              message: error.message,
+            });
+          }
+        }
+        ipcRenderer.send('aggregate-badge-rendered', { requestId, icon });
+      });
+    }
     ipcRenderer.on('config-changed', (_event, changes) => {
       if ('appIcon' in changes && changes.appIcon !== this.config.appIcon) {
         const chooser = new TrayIconChooser({ ...this.config, appIcon: changes.appIcon });

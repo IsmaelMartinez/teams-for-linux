@@ -106,6 +106,12 @@ class ProfileViewManager {
   #chromeView = null;
   #chromeExpanded = false; // dropdown open (transient)
   #setExpandedHandler = null;
+  // Cached active profile id, refreshed on the (rare) add/switch/remove
+  // events so hot-path callers never touch the settings store.
+  #activeProfileId = null;
+  // Callbacks fired when a profile view's webContents dies OUTSIDE profile
+  // removal (Phase 2's unread aggregator drops that profile's stale count).
+  #viewGoneListeners = new Set();
 
   /**
    * @param {Electron.BrowserWindow} window  Main app window
@@ -157,12 +163,23 @@ class ProfileViewManager {
     this.#registry.setRootProfileId(
       this.#profilesManager.getLegacyProfile()?.id ?? null
     );
+    this.#activeProfileId = this.#profilesManager.getActive()?.id ?? null;
 
     this.#handlers = {
-      add: (profile) => this.#onAdd(profile),
+      add: (profile) => {
+        // add() may take the active slot when none was set.
+        this.#activeProfileId = this.#profilesManager.getActive()?.id ?? null;
+        this.#onAdd(profile);
+      },
       update: () => this.#pushSwitcherState(),
-      switch: (profile) => this.#onSwitch(profile),
-      remove: (result) => this.#onRemove(result),
+      switch: (profile) => {
+        this.#activeProfileId = profile?.id ?? null;
+        this.#onSwitch(profile);
+      },
+      remove: (result) => {
+        this.#activeProfileId = result?.activeId ?? null;
+        this.#onRemove(result);
+      },
     };
     this.#profilesManager.on("add", this.#handlers.add);
     this.#profilesManager.on("update", this.#handlers.update);
@@ -355,6 +372,7 @@ class ProfileViewManager {
     this.#registry.clear();
     this.#viewMeta.clear();
     this.#descendants.clear();
+    this.#viewGoneListeners.clear();
     this.#initialized = false;
   }
 
@@ -373,6 +391,51 @@ class ProfileViewManager {
   resolveProfileId(webContents) {
     if (!webContents || typeof webContents.id !== "number") return null;
     return this.#registry.resolveProfileId(webContents.id);
+  }
+
+  /**
+   * The webContents of the profile surface the user is currently looking at:
+   * the active profile's view, or the root window (Profile 0, and the
+   * fallback whenever no overlay is materialized). Phase 2 uses it to pick a
+   * live renderer for aggregate badge rendering; #2867's rerouting will need
+   * the same accessor.
+   * @returns {Electron.WebContents}
+   */
+  getActiveWebContents() {
+    if (this.#activeProfileId) {
+      const view = this.#views.get(this.#activeProfileId);
+      if (view?.webContents && !view.webContents.isDestroyed()) {
+        return view.webContents;
+      }
+    }
+    return this.#window.webContents;
+  }
+
+  /**
+   * True only for a profile's PRIMARY surface: the root window or a
+   * registered profile view — never a popup or webview guest. The unread
+   * pipeline runs in every surface that loads the preload, but only the
+   * main Teams SPA's title carries the real unread count; a popup's title
+   * ("Chat | Microsoft Teams") scrapes to 0 and must not overwrite it.
+   * @param {Electron.IpcMainEvent|Electron.IpcMainInvokeEvent} event
+   */
+  isPrimaryProfileSurface(event) {
+    const senderId = event?.sender?.id;
+    if (typeof senderId !== "number") return false;
+    if (senderId === this.#window.webContents.id) return true;
+    for (const meta of this.#viewMeta.values()) {
+      if (meta.wcId === senderId) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Register a callback for a profile view dying outside profile removal
+   * (page-initiated window.close(), renderer crash cleanup). Removal itself
+   * is observable via ProfilesManager's "remove" event.
+   */
+  onProfileViewGone(callback) {
+    this.#viewGoneListeners.add(callback);
   }
 
   /**
@@ -469,6 +532,15 @@ class ProfileViewManager {
       this.#views.delete(profileId);
       this.#registry.unregister(wcId);
       this.#teardownDescendants(profileId);
+      for (const callback of this.#viewGoneListeners) {
+        try {
+          callback(profileId);
+        } catch (error) {
+          console.warn("[ProfileViewManager] view-gone listener failed", {
+            message: error.message,
+          });
+        }
+      }
     });
     // Attribute anything this view spawns to its profile. A popup genuinely
     // shares the view's partition and preload (window.open inherits them from
