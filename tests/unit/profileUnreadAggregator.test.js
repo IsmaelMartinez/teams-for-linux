@@ -200,14 +200,19 @@ describe('ProfileUnreadAggregator', () => {
     });
   });
 
-  it('an out-of-band badge change (no tray-update) still refreshes the tray tooltip', async () => {
+  it('an out-of-band badge change re-renders the single-profile icon (stored one shows the old number)', async () => {
     const agg = build({ resolve: () => 'p-a', names: { 'p-a': 'Work' } });
     agg.onTrayUpdate(senderEvent(1), { icon: 'data:a', flash: false, count: 2 });
     await settle();
+    assert.deepStrictEqual(renders, []); // organic path: stored icon reused
+    assert.strictEqual(applied.at(-1).icon, 'data:a');
     agg.onBadgeCount(senderEvent(1), 6); // page script calling setBadgeCount directly
     await settle();
     assert.strictEqual(badges.at(-1), 6);
     assert.strictEqual(applied.at(-1).tooltip, 'Teams (6)');
+    // The stored icon has "2" baked in — a re-render with 6 was requested.
+    assert.deepStrictEqual(renders, [6]);
+    assert.strictEqual(applied.at(-1).icon, 'data:agg');
   });
 
   it('a throwing dependency never escapes #refreshTray (fatal unhandledRejection policy)', async () => {

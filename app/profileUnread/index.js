@@ -109,6 +109,9 @@ class ProfileUnreadAggregator {
     if (count !== undefined && count !== null) {
       bucket.count = Number.isFinite(count) && count > 0 ? count : 0;
     }
+    // What number the icon has baked in — an out-of-band badge change makes
+    // it stale, and the refresh below must re-render rather than reuse it.
+    bucket.iconCount = bucket.count;
     this.#refreshTray();
   }
 
@@ -184,7 +187,19 @@ class ProfileUnreadAggregator {
     if (unread.length === 0) {
       icon = null; // tray falls back to the base icon, exactly like today
     } else if (unread.length === 1) {
-      icon = unread[0][1].icon; // the sender's own composited icon, unchanged
+      const [, bucket] = unread[0];
+      if (bucket.icon !== null && bucket.iconCount === bucket.count) {
+        icon = bucket.icon; // the sender's own composited icon, unchanged
+      } else {
+        // The stored icon shows a different number (out-of-band badge
+        // change) or the bucket never carried one — re-render.
+        icon =
+          (await this.#deps.requestBadgeRender(
+            Math.min(bucket.count, 9999)
+          )) ?? null;
+        if (token !== this.#renderToken) return;
+        icon ??= bucket.icon ?? this.#lastBadgedIcon;
+      }
     } else {
       // Aggregate: rendered by a live renderer. Coalesce — only the newest
       // request may apply. On failure fall back to the highest-count

@@ -529,9 +529,14 @@ class ProfileViewManager {
     // and a later remove must clear the partition's storage (ADR-020 remove
     // contract) even though the view is gone.
     view.webContents.once("destroyed", () => {
-      this.#views.delete(profileId);
+      // On the removal path #destroyView has already dropped the view from
+      // #views before close() — the delete returns false and the listeners
+      // stay silent (removal is observable via ProfilesManager's "remove").
+      // Only a SELF-destroyed view (still tracked here) notifies.
+      const wasTracked = this.#views.delete(profileId);
       this.#registry.unregister(wcId);
       this.#teardownDescendants(profileId);
+      if (!wasTracked) return;
       for (const callback of this.#viewGoneListeners) {
         try {
           callback(profileId);

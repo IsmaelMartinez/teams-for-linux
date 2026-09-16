@@ -789,12 +789,20 @@ async function userStatusChangedHandler(_event, options) {
   }
 }
 
+// Badge counts that arrive before the aggregator attaches, kept so the
+// attach can replay them — renderers dedupe and never re-send an unchanged
+// count, so a pre-attach report would otherwise be missing from the sum.
+const preAggregatorBadgeCounts = new Map();
+
 async function setBadgeCountHandler(event, count) {
   if (unreadAggregator) {
     // Multi-account: every profile view reports its own count; the
     // aggregator applies the SUM instead of last-write-wins.
     unreadAggregator.onBadgeCount(event, count);
     return;
+  }
+  if (config.multiAccount?.enabled && typeof event?.sender?.id === "number") {
+    preAggregatorBadgeCounts.set(event.sender.id, count);
   }
   applyBadgeCount(count);
 }
@@ -871,7 +879,13 @@ function createUnreadAggregator(viewManager) {
     aggregator.removeProfile(profileId)
   );
 
+  // Replay anything that raced the attach: the tray replays its last direct
+  // update inside setAggregator; badge counts are replayed here.
   mainAppWindow.getTray()?.setAggregator(aggregator);
+  for (const [senderId, count] of preAggregatorBadgeCounts) {
+    aggregator.onBadgeCount({ sender: { id: senderId } }, count);
+  }
+  preAggregatorBadgeCounts.clear();
   return aggregator;
 }
 

@@ -109,6 +109,18 @@ describe('ApplicationTray aggregation', () => {
     assert.strictEqual(trayInstances[0].images.length, 0);
   });
 
+  it('setAggregator replays the last pre-attach direct update so no count is lost to the race', () => {
+    const { tray } = build();
+    trayUpdateHandler({ sender: { id: 4 } }, { icon: 'data:x', flash: false, count: 2 });
+    trayUpdateHandler({ sender: { id: 4 } }, { icon: 'data:y', flash: true, count: 5 });
+    const seen = [];
+    tray.setAggregator({ onTrayUpdate: (event, data) => seen.push([event.sender.id, data]) });
+    assert.deepStrictEqual(seen, [[4, { icon: 'data:y', flash: true, count: 5 }]]);
+    // Replay happens once, not again on a second attach.
+    tray.setAggregator({ onTrayUpdate: (event, data) => seen.push(['again', data]) });
+    assert.strictEqual(seen.length, 1);
+  });
+
   it('applyAggregate applies the composed icon, flash, and tooltip; null icon falls back to base', () => {
     const { tray, window } = build();
     tray.applyAggregate({ icon: 'data:agg', flash: true, tooltip: 'Teams (9)\nWork: 7' });
