@@ -46,3 +46,34 @@ describe('screen-sharing script injection target (#2979)', () => {
 		);
 	});
 });
+
+// Second half of #2979: the preview relay port was posted to the root window
+// regardless of which renderer started the share, so a second-profile share
+// opened a preview with no frame source and painted black.
+describe('screen-share preview port routing (#2979)', () => {
+	const source = readFileSync(INDEX_PATH, 'utf8');
+	const handler = source.match(
+		/ipcMain\.on\("screen-sharing-started",\s*\((\w*)\)\s*=>\s*\{([\s\S]*?)\n  \}\);/,
+	);
+
+	it('posts the relay port to the renderer that started the share', () => {
+		assert.ok(handler, 'screen-sharing-started handler must exist');
+		const [, eventParam, body] = handler;
+		assert.ok(eventParam, 'handler must take the IPC event to reach its sender');
+		assert.match(
+			body,
+			new RegExp(`${eventParam}\\.sender`),
+			'handler must read the sender off the IPC event',
+		);
+		assert.match(
+			body,
+			new RegExp(`(?:${eventParam}\\.)?sender\\.postMessage\\("screen-share-port", null, \\[port1\\]\\)`),
+			'port1 must go to the sending webContents',
+		);
+		assert.doesNotMatch(
+			body,
+			/window\.webContents\.postMessage\("screen-share-port"/,
+			'port1 must not be routed to the root window',
+		);
+	});
+});
