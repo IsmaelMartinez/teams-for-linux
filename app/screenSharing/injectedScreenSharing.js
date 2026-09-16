@@ -109,8 +109,14 @@
       Number.isFinite(resolutionConfig.width) &&
       Number.isFinite(resolutionConfig.height)
     ) {
-      video.width = { ideal: resolutionConfig.width };
-      video.height = { ideal: resolutionConfig.height };
+      if (video.mandatory || video.optional) {
+        video.mandatory = video.mandatory || {};
+        video.mandatory.maxWidth = resolutionConfig.width;
+        video.mandatory.maxHeight = resolutionConfig.height;
+      } else {
+        video.width = { ideal: resolutionConfig.width, max: resolutionConfig.width };
+        video.height = { ideal: resolutionConfig.height, max: resolutionConfig.height };
+      }
     }
     return video;
   }
