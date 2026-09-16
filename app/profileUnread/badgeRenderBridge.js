@@ -4,7 +4,7 @@ const crypto = require("node:crypto");
 // a hostile renderer's reply (the compositor is the Teams page's preload —
 // same trust level as the organic tray-update path, but a new channel should
 // not be looser than it has to be).
-const DATA_URL_RE = /^data:image\//;
+const DATA_URL_PREFIX = "data:image/";
 const MAX_ICON_LENGTH = 2 * 1024 * 1024;
 
 /**
@@ -37,7 +37,7 @@ function createBadgeRenderBridge({ ipcMain, getTarget, timeoutMs = 2000 }) {
     const icon = payload.icon;
     entry.resolve(
       typeof icon === "string" &&
-        DATA_URL_RE.test(icon) &&
+        icon.startsWith(DATA_URL_PREFIX) &&
         icon.length <= MAX_ICON_LENGTH
         ? icon
         : null
