@@ -83,6 +83,7 @@ class ProfileViewManager {
   #config;
   #bindDisplayMediaHandler;
   #bindWindowOpenHandler;
+  #onViewDidFinishLoad;
   #views = new Map();
   // Phase 2 foundation: webContents → profile attribution for main-process
   // IPC handlers (tray/badge/notification aggregation consumes this next).
@@ -122,19 +123,25 @@ class ProfileViewManager {
    *   `loadTarget`, the originating profile view, and `activate` then makes
    *   that profile the visible one. Profile views previously had no handler
    *   at all; see mainAppWindow/profileWindowOpenPolicy.js.
+   * @param {(webContents: Electron.WebContents) => void} [onViewDidFinishLoad]
+   *   Called on every `did-finish-load` of each profile view, mirroring the
+   *   root window's listener. Main uses it to inject the screen-sharing
+   *   script, which otherwise only reaches Profile 0 (#2979).
    */
   constructor(
     window,
     profilesManager,
     config,
     bindDisplayMediaHandler,
-    bindWindowOpenHandler = () => {}
+    bindWindowOpenHandler = () => {},
+    onViewDidFinishLoad = () => {}
   ) {
     this.#window = window;
     this.#profilesManager = profilesManager;
     this.#config = config;
     this.#bindDisplayMediaHandler = bindDisplayMediaHandler;
     this.#bindWindowOpenHandler = bindWindowOpenHandler;
+    this.#onViewDidFinishLoad = onViewDidFinishLoad;
     this.#registry = new SenderProfileMap(profilesManager);
   }
 
@@ -451,6 +458,13 @@ class ProfileViewManager {
     this.#bindDisplayMediaHandler(view.webContents.session);
     this.#bindWindowOpenHandler(view.webContents, view.webContents, () =>
       this.#activate(profileId)
+    );
+    // The root window injects the screen-sharing script on every
+    // did-finish-load of its own webContents; profile views need the same,
+    // or a share from a second profile runs with Teams' raw constraints
+    // (audio kept, no preview relay) (#2979).
+    view.webContents.on("did-finish-load", () =>
+      this.#onViewDidFinishLoad(view.webContents)
     );
 
     const wcId = view.webContents.id;

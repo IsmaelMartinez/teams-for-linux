@@ -710,7 +710,8 @@ async function handleAppReady() {
           profilesManager,
           config,
           mainAppWindow.bindDisplayMediaHandler,
-          mainAppWindow.bindWindowOpenHandler
+          mainAppWindow.bindWindowOpenHandler,
+          mainAppWindow.injectScreenSharingLogic
         );
         profileViewManager.initialize();
         await profileViewManager.bootstrapProfileZeroIfNeeded();
