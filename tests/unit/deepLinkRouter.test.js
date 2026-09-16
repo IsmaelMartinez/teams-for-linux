@@ -155,10 +155,9 @@ test("navigateInPage ignores an unread-count-only title change", async () => {
 
   // The injected comparison strips the "(N) " unread prefix that
   // mutationTitle.js reads, so a counter update alone is not consumption.
-  const bare = new Function(
-    "document",
-    `${script.match(/const bareTitle = \(\) => (document\.title\.replace\([^;]+\));/)[1]}; return document.title.replace(/^\\(\\d+\\)\\s*/, "");`
-  );
+  // Evaluate the production expression itself, lifted out of the script.
+  const normalize = script.match(/const bareTitle = \(\) => (document\.title\.replace\([^;]+\));/)[1];
+  const bare = new Function("document", `return ${normalize};`);
   assert.strictEqual(bare({ title: "(3) Calendar | Microsoft Teams" }), "Calendar | Microsoft Teams");
   assert.strictEqual(bare({ title: "Calendar | Microsoft Teams" }), "Calendar | Microsoft Teams");
   assert.notStrictEqual(bare({ title: "(3) Calendar | Someone | Microsoft Teams" }), "Calendar | Microsoft Teams");
