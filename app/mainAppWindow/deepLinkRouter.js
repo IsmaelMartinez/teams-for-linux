@@ -121,7 +121,10 @@ async function navigateInPage(window, url, teamsUrl) {
          let timer;
          const target = ${JSON.stringify(route)};
          const previous = location.hash;
-         const previousTitle = document.title;
+         // The unread counter also rewrites the title ("(3) Calendar | …"), so
+         // only the part after it tells whether the SPA moved to the target.
+         const bareTitle = () => document.title.replace(/^\\(\\d+\\)\\s*/, "");
+         const previousTitle = bareTitle();
          // Re-assigning an identical fragment fires no \`hashchange\`, so the
          // wait below would time out and reload a page already on the route.
          if (previous === target) { resolve(true); return; }
@@ -140,12 +143,12 @@ async function navigateInPage(window, url, teamsUrl) {
            if (location.hash !== assigned) settle(true);
          };
          const titleWatch = new MutationObserver(() => {
-           if (document.title !== previousTitle) settle(true);
+           if (bareTitle() !== previousTitle) settle(true);
          });
-         const titleNode = document.querySelector("title");
-         if (titleNode) {
-           titleWatch.observe(titleNode, { childList: true, characterData: true, subtree: true });
-         }
+         // Observed on <head>: Teams replaces the <title> element outright on
+         // React remounts (see browser/tools/mutationTitle.js), which would
+         // strand an observer attached to the old node.
+         titleWatch.observe(document.head, { childList: true, characterData: true, subtree: true });
          // \`hashchange\` is queued as a task, so it cannot dispatch until this
          // block returns: registering after the assignment misses nothing.
          addEventListener("hashchange", onHashChange);

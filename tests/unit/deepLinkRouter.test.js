@@ -137,10 +137,31 @@ test("navigateInPage also takes a document title change as consumption", async (
   assert.strictEqual(await navigateInPage(win, DEEP_LINK, TEAMS_URL), true);
   // Teams can open the target without rewriting the fragment; it always
   // retitles the document for it, so the title is watched as a second signal.
-  assert.match(script, /const previousTitle = document\.title;/);
-  assert.match(script, /new MutationObserver\(\(\) => \{\s*if \(document\.title !== previousTitle\) settle\(true\);/);
+  assert.match(script, /const previousTitle = bareTitle\(\);/);
+  assert.match(script, /new MutationObserver\(\(\) => \{\s*if \(bareTitle\(\) !== previousTitle\) settle\(true\);/);
+  // Observed on <head>, not on the current <title>: Teams replaces the element on remounts.
+  assert.match(script, /titleWatch\.observe\(document\.head, \{ childList: true, characterData: true, subtree: true \}\);/);
   assert.match(script, /titleWatch\.disconnect\(\);/);
   assert.doesNotThrow(() => new Function(`return ${script}`));
+});
+
+test("navigateInPage ignores an unread-count-only title change", async () => {
+  let script = null;
+  const win = windowWith("https://teams.cloud.microsoft/", async (source) => {
+    script = source;
+    return true;
+  });
+  await navigateInPage(win, DEEP_LINK, TEAMS_URL);
+
+  // The injected comparison strips the "(N) " unread prefix that
+  // mutationTitle.js reads, so a counter update alone is not consumption.
+  const bare = new Function(
+    "document",
+    `${script.match(/const bareTitle = \(\) => (document\.title\.replace\([^;]+\));/)[1]}; return document.title.replace(/^\\(\\d+\\)\\s*/, "");`
+  );
+  assert.strictEqual(bare({ title: "(3) Calendar | Microsoft Teams" }), "Calendar | Microsoft Teams");
+  assert.strictEqual(bare({ title: "Calendar | Microsoft Teams" }), "Calendar | Microsoft Teams");
+  assert.notStrictEqual(bare({ title: "(3) Calendar | Someone | Microsoft Teams" }), "Calendar | Microsoft Teams");
 });
 
 test("navigateInPage falls back when the fragment is left untouched", async () => {
