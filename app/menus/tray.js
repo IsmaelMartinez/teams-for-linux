@@ -29,11 +29,13 @@ class ApplicationTray {
       this.aggregator.onTrayUpdate(event, data);
       return;
     }
-    // Remember the last direct update (sender id is all the aggregator
-    // needs): an unread count that arrives before the aggregator attaches
+    // Remember the last direct update PER SENDER (the id is all the
+    // aggregator needs): counts arriving before the aggregator attaches
     // would otherwise be lost to it — renderers dedupe and never re-send an
-    // unchanged count.
-    this.lastDirectUpdate = { senderId: event?.sender?.id, data };
+    // unchanged count, and with disableBadgeCount there is no set-badge-count
+    // fallback, so a single slot would keep only the last profile.
+    this.lastDirectUpdates ??= new Map();
+    this.lastDirectUpdates.set(event?.sender?.id, data);
     // Handle both old format { icon, flash } and new format { icon, flash, count }
     const { icon, flash, count } = data;
     this.updateTrayImage(icon, flash, count);
@@ -41,10 +43,12 @@ class ApplicationTray {
 
   setAggregator(aggregator) {
     this.aggregator = aggregator;
-    if (this.lastDirectUpdate) {
-      const { senderId, data } = this.lastDirectUpdate;
-      this.lastDirectUpdate = null;
-      aggregator.onTrayUpdate({ sender: { id: senderId } }, data);
+    if (this.lastDirectUpdates) {
+      const replays = this.lastDirectUpdates;
+      this.lastDirectUpdates = null;
+      for (const [senderId, data] of replays) {
+        aggregator.onTrayUpdate({ sender: { id: senderId } }, data);
+      }
     }
   }
 
