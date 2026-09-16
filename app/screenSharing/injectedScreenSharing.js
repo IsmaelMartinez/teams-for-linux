@@ -81,19 +81,20 @@
         delete video.mandatory[name];
       }
     }
+    const dropKeys = (opt, keys) => {
+      const rest = { ...opt };
+      for (const k of keys) delete rest[k];
+      return rest;
+    };
     if (Array.isArray(video.optional)) {
-      video.optional = video.optional.filter(
-        (opt) =>
-          !("minWidth" in opt) &&
-          !("maxWidth" in opt) &&
-          !("minHeight" in opt) &&
-          !("maxHeight" in opt)
-      );
+      video.optional = video.optional
+        .map((opt) => dropKeys(opt, ["minWidth", "maxWidth", "minHeight", "maxHeight"]))
+        .filter((opt) => Object.keys(opt).length > 0);
     }
     if (Array.isArray(video.advanced)) {
-      video.advanced = video.advanced.filter(
-        (opt) => !("width" in opt) && !("height" in opt)
-      );
+      video.advanced = video.advanced
+        .map((opt) => dropKeys(opt, ["width", "height"]))
+        .filter((opt) => Object.keys(opt).length > 0);
     }
     return video;
   }
