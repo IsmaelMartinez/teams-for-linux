@@ -23,11 +23,8 @@ async function launchApp(notificationMethod) {
   const userDataDir = mkdtempSync(join(tmpdir(), 'teams-e2e-notif-'));
   const electronApp = await electron.launch({
     args: [
-      ...getE2EPlatformArgs([
-        './app/index.js',
-        `--notificationMethod=${notificationMethod}`,
-      ]),
-      ...(process.env.CI ? ['--no-sandbox'] : []),
+      './app/index.js',
+      `--notificationMethod=${notificationMethod}`,
     ],
     env: { ...process.env, E2E_USER_DATA_DIR: userDataDir },
     timeout: 30000,

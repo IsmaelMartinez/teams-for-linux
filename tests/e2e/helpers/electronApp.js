@@ -38,20 +38,6 @@ export const SWITCHER_HANDLE_CHANNELS = ['profile-switcher-set-expanded'];
 // Mirrors SWITCHER_PILL_SIZE in app/mainAppWindow/profileViewManager.js.
 export const SWITCHER_PILL_SIZE = 56;
 
-export function getE2EPlatformArgs(args = []) {
-  const hasOzonePlatform = args.some(
-    (arg) => arg === '--ozone-platform' || arg.startsWith('--ozone-platform=')
-  );
-  if (
-    process.platform === 'linux' &&
-    process.env.XDG_SESSION_TYPE === 'wayland' &&
-    !hasOzonePlatform
-  ) {
-    return [...args, '--ozone-platform=x11'];
-  }
-  return args;
-}
-
 /**
  * Launch the app with an isolated userData dir and the supplied config.
  *
@@ -78,7 +64,7 @@ export async function startApp({ prefix, config, allowEval = false }) {
   }
   const electronApp = await electron.launch({
     args: [
-      ...getE2EPlatformArgs(['./app/index.js']),
+      './app/index.js',
       ...(process.env.CI ? ['--no-sandbox'] : []),
     ],
     env,

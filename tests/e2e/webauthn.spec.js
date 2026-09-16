@@ -3,7 +3,6 @@ import { _electron as electron } from 'playwright';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { getE2EPlatformArgs } from './helpers/electronApp.js';
 
 test.describe("WebAuthn FIDO2 Support", () => {
   test("WebAuthn API is available in Electron", async () => {
@@ -15,7 +14,7 @@ test.describe("WebAuthn FIDO2 Support", () => {
 
       electronApp = await electron.launch({
         args: [
-          ...getE2EPlatformArgs(['./app/index.js']),
+          './app/index.js',
           ...(process.env.CI ? ['--no-sandbox'] : [])
         ],
         env: {

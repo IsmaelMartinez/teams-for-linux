@@ -1,5 +1,3 @@
-const { spawn } = require("node:child_process");
-
 const electronPath = require("electron");
 const appArgs = process.argv.slice(2);
 const hasOzonePlatform = appArgs.some(

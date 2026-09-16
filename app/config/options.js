@@ -43,7 +43,7 @@ module.exports = {
           },
           resolution: {
             enabled: false,
-            mode: "native",
+            mode: "remove",
           },
           lockInhibitionMethod: "Electron",
         },
