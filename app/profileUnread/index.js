@@ -190,10 +190,13 @@ class ProfileUnreadAggregator {
       // request may apply. On failure fall back to the highest-count
       // bucket's own icon, then to the last badge-carrying icon, so the
       // tray never regresses to a bare base icon while counts are non-zero.
-      icon = await this.#deps.requestBadgeRender(Math.min(sum, 9999));
+      icon = (await this.#deps.requestBadgeRender(Math.min(sum, 9999))) ?? null;
       if (token !== this.#renderToken) return;
-      if (icon === null || icon === undefined) {
-        const best = unread.reduce((a, b) => (b[1].count > a[1].count ? b : a));
+      if (icon === null) {
+        const best = unread.reduce(
+          (a, b) => (b[1].count > a[1].count ? b : a),
+          unread[0]
+        );
         icon = best[1].icon ?? this.#lastBadgedIcon;
       }
     }
