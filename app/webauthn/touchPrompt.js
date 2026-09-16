@@ -12,7 +12,7 @@
  * prompt to stderr but emit nothing at the user-presence step, so the honest
  * thing to show is "waiting for your security key" across the whole call
  * rather than a message that claims to know when the LED started blinking.
- * See docs-site/docs/development/research/fido2-touch-prompt-research.md.
+ * See docs-site/docs/development/adr/021-webauthn-fido2-linux.md.
  *
  * The window follows pinDialog.js: a standalone, always-on-top BrowserWindow
  * with contextIsolation so the page cannot reach it.

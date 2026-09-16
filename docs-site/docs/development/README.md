@@ -9,6 +9,10 @@ This directory contains technical documentation for Teams for Linux developers a
 - **[security-architecture.md](security-architecture.md)** - Security architecture, threat model, and compensating controls
 - **[ADR-002: Token Cache Secure Storage](adr/002-token-cache-secure-storage.md)** - Architecture decision for secure token storage implementation
 - **[ADR-003: Token Refresh Implementation](adr/003-token-refresh-implementation.md)** - Architecture decision for authentication persistence
+- **[module-index.md](module-index.md)** - Catalog of all application modules
+- **[ADR Index](adr/README.md)** - All architecture decision records
+- **[Research Index](research/README.md)** - Feature research and investigations
+- **[plan/roadmap.md](plan/roadmap.md)** - Development priorities and feature status
 
 ## For Contributors
 
@@ -19,7 +23,7 @@ When working on Teams for Linux:
 3. **Review research documents** in `research/` for context on current implementation choices
 4. **Check ADR documents** for architecture decisions and rationale
 5. **Check planning documents** for background on feature decisions and research
-6. **Run E2E tests** before submitting PRs with `npm run test:e2e`
+6. **Run `npm run lint` and `npm run test:unit`** before submitting PRs; CI runs the Playwright e2e suite
 
 ### Key Development Patterns
 
@@ -38,8 +42,8 @@ When working with authentication-related features:
 
 ## Documentation Standards
 
-Follow the project's Copilot Instructions (`.github/copilot-instructions.md`) for documentation standards, including:
-- Use GitHub's alert syntax for callouts (`> [!NOTE]`, `> [!WARNING]`)  
+Follow the project's Markdown Standards in [contributing.md](contributing.md#markdown-standards), including:
+- Use Docusaurus admonitions for callouts (`:::note`, `:::tip`, `:::warning`, `:::danger`, `:::info`)
 - Include table of contents with `<!-- toc -->`
 - Use proper markdown standards and syntax highlighting
 
@@ -48,7 +52,7 @@ Follow the project's Copilot Instructions (`.github/copilot-instructions.md`) fo
 - [Configuration Options](../configuration.md) - User-facing configuration documentation
 - [IPC API](ipc-api.md) - Inter-process communication reference
 - [Contributing Guidelines](contributing.md) - General contribution guidelines
-- [Architecture Decision Records](#adr-index) - Technical decisions and rationale
+- [Architecture Decision Records](adr/README.md) - Technical decisions and rationale
 
 ### Testing
 
@@ -57,7 +61,10 @@ Teams for Linux uses automated end-to-end testing with Playwright to ensure appl
 #### Running Tests
 
 ```bash
-# Run all E2E tests
+# Run the unit suite first (fast, run before every commit)
+npm run test:unit
+
+# Run all E2E tests locally; CI runs this suite automatically on PRs
 npm run test:e2e
 
 # Run in debug mode
@@ -74,8 +81,3 @@ The project uses a multi-layered testing approach:
 For comprehensive testing documentation, see:
 - [Contributing Guide - Testing Section](contributing.md#testing)
 - [ADR-009: Automated Testing Strategy](adr/009-automated-testing-strategy.md)
-
-### ADR Index
-- [ADR-001: DesktopCapturer Source ID Format](adr/001-desktopcapturer-source-id-format.md) - Decision on screen sharing source identification format
-- [ADR-002: Token Cache Secure Storage](adr/002-token-cache-secure-storage.md) - Decision to implement OS-level secure storage for authentication tokens
-- [ADR-003: Token Refresh Implementation](adr/003-token-refresh-implementation.md) - Decision on token refresh strategy and implementation

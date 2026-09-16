@@ -9,7 +9,7 @@ const {
   buildDeprecationWarning,
   isMigrationMenuAvailable,
 } = require("./deprecation");
-const { applyRenamedOptions } = require("./renames");
+const { applyRenamedOptions, isOptionSetByUser } = require("./renames");
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
@@ -114,12 +114,19 @@ function checkUsedDeprecatedValues(yargsInstance, configObject, config) {
   );
   if (!message) return;
 
+  // Log only, on purpose. Appending to `config.warnings` makes
+  // showConfigurationDialogs in app/index.js open a blocking modal at startup,
+  // and the ADR-025 batches deprecate keys as common as `url` and `appTitle`,
+  // so nearly every customised config would meet one. The flat names keep
+  // working until 2.30.0 (#2842), so there is nothing to act on yet.
+  // The message points at "Settings > Show Updated Config…" (#2913) when that
+  // menu is reachable, which is the action to take; the remaining gap is that
+  // with the file transport off by default the warning itself reaches nobody,
+  // so a real surface is still needed before the flat names are removed.
+  // Wait until every rename has landed: the acknowledgement is keyed on a hash
+  // of this message, so prompting once per batch re-prompts people who already
+  // dismissed it.
   console.warn(message);
-  // Single entry on purpose; see app/config/deprecation.js for why.
-  // `warnings` is not a declared option, so a config file containing that key
-  // lands here verbatim; only extend it when it is already a list.
-  const existing = Array.isArray(config["warnings"]) ? config["warnings"] : [];
-  config["warnings"] = [...existing, message];
 }
 
 function argv(configPath, appVersion) {
@@ -154,15 +161,23 @@ function argv(configPath, appVersion) {
   }
 
   // Track whether disableGpu was explicitly set via CLI or config file
-  // This allows Wayland detection to use smart defaults while respecting user preferences
-  const wasSetInCli = process.argv.some(arg => arg.startsWith('--disableGpu'));
-  const wasSetInFile = configObject.configFile && "disableGpu" in configObject.configFile;
-  config.disableGpuExplicitlySet = wasSetInCli || wasSetInFile;
+  // This allows Wayland detection to use smart defaults while respecting user preferences.
+  // Counts both names: since ADR-025 the option is also spelled
+  // performance.disableGpu, and missing that spelling would let the Wayland
+  // default overwrite the choice of a user who opted back into the GPU.
+  config.disableGpuExplicitlySet = isOptionSetByUser(
+    configObject.configFile,
+    process.argv,
+    "disableGpu"
+  );
 
   logger.init(config.logConfig);
 
   // Runs after logger.init so the warning reaches the log file and not just
-  // stdout; users attaching a log to a bug report need to see it.
+  // stdout, for the users who have file logging on. It is deliberately quiet
+  // for everyone else: the file transport is off by default and a desktop
+  // launch discards stdout, so nothing surfaces this today. That is only
+  // acceptable while there is nothing to act on; see checkUsedDeprecatedValues.
   // Pass yargs instance to access getDeprecatedOptions() in v18
   checkUsedDeprecatedValues(yargsInstance, configObject, config);
 

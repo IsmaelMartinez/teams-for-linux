@@ -570,8 +570,13 @@ const credentialResponse = {
 	userHandle: null,
 };
 
+// The tool is loaded by the preload with a plain CommonJS require, so its own
+// relative requires have to resolve from its real directory, not the test's.
+const TOOLS_DIR = path.join(__dirname, '..', '..', 'app', 'browser', 'tools');
+const requireFromTools = (id) => require(id.startsWith('.') ? path.resolve(TOOLS_DIR, id) : id);
+
 describe('WebAuthn main-frame override', () => {
-	const override = readFileSync(path.join(__dirname, '..', '..', 'app', 'browser', 'tools', 'webauthnOverride.js'), 'utf8');
+	const override = readFileSync(path.join(TOOLS_DIR, 'webauthnOverride.js'), 'utf8');
 
 	it('returns PublicKeyCredential instances for create and get', async () => {
 		class PublicKeyCredential {}
@@ -591,6 +596,7 @@ describe('WebAuthn main-frame override', () => {
 			module,
 			navigator: { credentials },
 			process: { platform: 'linux' },
+			require: requireFromTools,
 			window: { addEventListener: () => {} },
 		});
 		module.exports.init(
@@ -1051,5 +1057,294 @@ describe('getAssertion allowCredentials loop', () => {
 		} finally {
 			process.env.FIDO2_STUB_RK_LINES = saved;
 		}
+	});
+});
+
+// ─── Configurable login origins (issue #2931) ────────────────────────────────
+
+// Federated tenants sign in on their own IdP host, so the hardcoded Microsoft
+// allowlist blocked the ceremony outright. The gate lives in two places and
+// both have to honour the config, or a subframe relay stays blocked.
+describe('WebAuthn origin allowlist - auth.webauthn.extraOrigins', () => {
+	const webauthn = require('../../app/webauthn');
+	const overrideSrc = readFileSync(path.join(TOOLS_DIR, 'webauthnOverride.js'), 'utf8');
+
+	const MICROSOFT_ORIGINS = [
+		'https://login.microsoftonline.com',
+		'https://login.microsoft.com',
+		'https://login.live.com',
+	];
+	const CORPORATE_ORIGIN = 'https://sso.example.com';
+
+	// Drive the preload relay for real: build it with the given config, then
+	// dispatch a subframe message and report whether it reached IPC.
+	function loadRelay(extraOrigins) {
+		let messageListener;
+		const relayed = [];
+		const module = { exports: {} };
+
+		new vm.Script(overrideSrc, { filename: 'webauthnOverride.js' }).runInNewContext({
+			DOMException,
+			atob: () => '',
+			btoa: () => '',
+			console: { debug: () => {}, error: () => {}, info: () => {}, warn: () => {} },
+			module,
+			navigator: { credentials: { create: () => {}, get: () => {} } },
+			process: { platform: 'linux' },
+			require: requireFromTools,
+			window: { addEventListener: (_type, listener) => { messageListener = listener; } },
+		});
+		module.exports.init(
+			{ auth: { webauthn: { enabled: true, extraOrigins } } },
+			{ invoke: async () => ({ success: true, data: credentialResponse }) },
+		);
+
+		return async function relayAccepts(origin) {
+			const before = relayed.length;
+			await messageListener({
+				origin,
+				data: { type: 'webauthn-request', id: 'request-id', channel: 'webauthn:get', data: {} },
+				source: { postMessage: () => relayed.push(origin) },
+			});
+			return relayed.length > before;
+		};
+	}
+
+	after(() => webauthn._applyExtraOrigins([]));
+
+	it('allows only the Microsoft origins when nothing is configured', async () => {
+		webauthn._applyExtraOrigins([]);
+		const relayAccepts = loadRelay([]);
+
+		for (const origin of MICROSOFT_ORIGINS) {
+			assert.ok(webauthn._isAllowedOrigin(origin), `${origin} should be allowed`);
+			assert.ok(await relayAccepts(origin), `relay should accept ${origin}`);
+		}
+		assert.ok(!webauthn._isAllowedOrigin(CORPORATE_ORIGIN));
+		assert.ok(!(await relayAccepts(CORPORATE_ORIGIN)));
+	});
+
+	it('allows a configured origin in the main allowlist and the relay', async () => {
+		webauthn._applyExtraOrigins([CORPORATE_ORIGIN]);
+		const relayAccepts = loadRelay([CORPORATE_ORIGIN]);
+
+		assert.ok(webauthn._isAllowedOrigin(CORPORATE_ORIGIN));
+		assert.ok(await relayAccepts(CORPORATE_ORIGIN));
+		// The Microsoft defaults are added to, never replaced.
+		assert.ok(webauthn._isAllowedOrigin('https://login.microsoftonline.com'));
+		assert.ok(await relayAccepts('https://login.microsoftonline.com'));
+	});
+
+	// An IdP off 443 has the port in its origin, so the configured entry needs it too.
+	it('keeps a non-default port and drops a redundant one', async () => {
+		webauthn._applyExtraOrigins(['https://sso.example.com:8443', 'https://idp.example.com:443']);
+		const relayAccepts = loadRelay(['https://sso.example.com:8443', 'https://idp.example.com:443']);
+
+		assert.ok(webauthn._isAllowedOrigin('https://sso.example.com:8443'));
+		assert.ok(await relayAccepts('https://sso.example.com:8443'));
+		assert.ok(!webauthn._isAllowedOrigin('https://sso.example.com'));
+		// :443 is the default, so the browser reports the origin without it.
+		assert.ok(webauthn._isAllowedOrigin('https://idp.example.com'));
+		assert.ok(await relayAccepts('https://idp.example.com'));
+	});
+
+	// Exact match only: neither a sibling host nor a subdomain of a configured
+	// origin may ride in on it.
+	it('still blocks an origin that was not configured', async () => {
+		webauthn._applyExtraOrigins([CORPORATE_ORIGIN]);
+		const relayAccepts = loadRelay([CORPORATE_ORIGIN]);
+
+		const blocked = [
+			'https://evil.example.com',
+			'https://sso.example.com.evil.test',
+			'https://idp.sso.example.com',
+			'http://sso.example.com',
+		];
+		for (const origin of blocked) {
+			assert.ok(!webauthn._isAllowedOrigin(origin), `${origin} should be blocked`);
+			assert.ok(!(await relayAccepts(origin)), `relay should block ${origin}`);
+		}
+	});
+
+	it('ignores malformed entries instead of allowing them', async () => {
+		const malformed = [
+			'sso.example.com',
+			'http://sso.example.com',
+			'https://*.example.com',
+			'https://sso.example.com/login',
+			'https://user:pw@sso.example.com',
+			'',
+			'   ',
+			42,
+			null,
+		];
+		webauthn._applyExtraOrigins(malformed);
+		const relayAccepts = loadRelay(malformed);
+
+		for (const entry of malformed) {
+			if (typeof entry !== 'string') continue;
+			assert.ok(!webauthn._isAllowedOrigin(entry), `${entry} should not be allowed`);
+			assert.ok(!(await relayAccepts(entry)), `relay should block ${entry}`);
+		}
+		// A path or credentials mistake must not be quietly promoted to its origin.
+		assert.ok(!webauthn._isAllowedOrigin(CORPORATE_ORIGIN));
+		assert.ok(!(await relayAccepts(CORPORATE_ORIGIN)));
+		// The Microsoft defaults survive a config full of junk.
+		assert.ok(webauthn._isAllowedOrigin('https://login.live.com'));
+		assert.ok(await relayAccepts('https://login.live.com'));
+	});
+
+	it('accepts a non-array config without throwing', () => {
+		webauthn._applyExtraOrigins('https://sso.example.com');
+		assert.ok(webauthn._isAllowedOrigin('https://login.live.com'));
+		assert.ok(!webauthn._isAllowedOrigin(CORPORATE_ORIGIN));
+	});
+});
+
+// ─── The combined origin gate on a relayed ceremony (issue #2931) ─────────────
+
+// handleWebauthnRequest() checks BOTH the IPC sender's origin and the inner
+// frame's origin. Nothing asserted on that pairing, so the AND could quietly
+// become an OR. These tests drive the real IPC handler registered by
+// initialize() and pin the three topologies a federated tenant can hit.
+describe('WebAuthn IPC gate - relayed ceremony origins', () => {
+	const CORPORATE_ORIGIN = 'https://sso.example.com';
+	const MICROSOFT_LOGIN_ORIGIN = 'https://login.microsoftonline.com';
+	const TEAMS_ORIGIN = 'https://teams.microsoft.com';
+
+	const handlers = new Map();
+	const backendCalls = [];
+
+	// Load a private copy of app/webauthn with electron and the security-key
+	// backend stubbed, so invoking the handler exercises the gate without a
+	// BrowserWindow or a real fido2-tools spawn. The stubs go in and come
+	// straight back out: the copy binds them at require time, and the other
+	// describes in this file keep the real modules.
+	const webauthnMain = (() => {
+		const stubbed = {
+			[require.resolve('electron')]: {
+				BrowserWindow: { fromWebContents: () => null },
+				ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
+				webFrameMain: { fromId: () => null },
+			},
+			[require.resolve('../../app/webauthn/fido2Backend')]: {
+				CANCELLED_MESSAGE: 'Operation cancelled by user',
+				isAvailable: async () => true,
+				createCredential: async (options) => { backendCalls.push(options); return credentialResponse; },
+				getAssertion: async (options) => { backendCalls.push(options); return credentialResponse; },
+			},
+			[require.resolve('../../app/webauthn/touchPrompt')]: {
+				showTouchPrompt: () => ({ dismiss: () => {} }),
+			},
+			[require.resolve('../../app/webauthn/pinDialog')]: {
+				requestPinPreCollect: async () => '1234',
+				requestPinModal: async () => '1234',
+			},
+		};
+
+		const indexPath = require.resolve('../../app/webauthn');
+		const saved = new Map();
+		for (const modulePath of [...Object.keys(stubbed), indexPath]) {
+			saved.set(modulePath, require.cache[modulePath]);
+		}
+		for (const [modulePath, exports] of Object.entries(stubbed)) {
+			require.cache[modulePath] = { id: modulePath, filename: modulePath, loaded: true, exports };
+		}
+		delete require.cache[indexPath];
+
+		try {
+			return require('../../app/webauthn');
+		} finally {
+			for (const [modulePath, entry] of saved) {
+				if (entry) require.cache[modulePath] = entry;
+				else delete require.cache[modulePath];
+			}
+		}
+	})();
+
+	// A get with a non-empty allowCredentials and no required user verification
+	// skips PIN collection, so the request reaches the gate and then the backend.
+	const GET_OPTIONS = {
+		challenge: 'Y2hhbGxlbmdl',
+		rpId: 'example.com',
+		userVerification: 'preferred',
+		allowCredentials: [{ id: 'Y3JlZA', type: 'public-key' }],
+	};
+
+	/**
+	 * Invoke the real webauthn:get handler the way the IPC layer would.
+	 * @param {string} senderOrigin - origin of the main frame that sent the IPC
+	 * @param {string} [frameOrigin] - origin of the subframe that started the
+	 *   ceremony; omitted for a non-relayed, main-frame ceremony
+	 */
+	async function invokeGet(senderOrigin, frameOrigin) {
+		backendCalls.length = 0;
+		const event = { senderFrame: { origin: senderOrigin }, sender: { getURL: () => senderOrigin } };
+		const options = frameOrigin ? { ...GET_OPTIONS, frameOrigin } : { ...GET_OPTIONS };
+		return handlers.get('webauthn:get')(event, options);
+	}
+
+	before(async () => {
+		await webauthnMain.initialize(null, {
+			auth: { webauthn: { enabled: true, extraOrigins: [CORPORATE_ORIGIN] } },
+		});
+		assert.ok(handlers.has('webauthn:get'), 'webauthn:get handler should be registered');
+	});
+
+	// Topology 2: the corporate IdP runs in an iframe inside a Microsoft login
+	// page. The sender is a built-in origin, the inner frame is the configured
+	// one, so both halves of the gate pass and the key signs the inner origin.
+	it('allows a relay from a Microsoft login page into a configured extra origin', async () => {
+		const result = await invokeGet(MICROSOFT_LOGIN_ORIGIN, CORPORATE_ORIGIN);
+
+		assert.strictEqual(result.success, true);
+		assert.strictEqual(backendCalls.length, 1);
+		// The assertion is signed for the frame that called navigator.credentials.
+		assert.strictEqual(backendCalls[0].origin, CORPORATE_ORIGIN);
+		assert.strictEqual(backendCalls[0].topOrigin, MICROSOFT_LOGIN_ORIGIN);
+	});
+
+	// Topology 3: the same corporate IdP in an iframe inside the Teams SPA.
+	// This stays blocked ON PURPOSE. teams.microsoft.com is not on the allowlist
+	// and never has been, so the same block already applies to a Microsoft login
+	// iframe hosted there; it is not a regression introduced by extraOrigins.
+	// Loosening it would mean trusting the Teams origin as an IPC sender, which
+	// lets anything running in the Teams SPA drive the security key. That is a
+	// deliberate security decision, taken outside this config option.
+	it('blocks a relay whose sender origin is the Teams SPA, even for a configured frame origin', async () => {
+		const result = await invokeGet(TEAMS_ORIGIN, CORPORATE_ORIGIN);
+
+		assert.strictEqual(result.success, false);
+		assert.match(result.error, /SecurityError/);
+		assert.strictEqual(backendCalls.length, 0, 'the security key must never be reached');
+	});
+
+	// The gate is an AND in both directions: an allowlisted sender cannot lend
+	// its standing to an unconfigured inner frame.
+	it('blocks a relay into an unconfigured frame origin from an allowed sender', async () => {
+		const result = await invokeGet(MICROSOFT_LOGIN_ORIGIN, 'https://evil.example.com');
+
+		assert.strictEqual(result.success, false);
+		assert.match(result.error, /SecurityError/);
+		assert.strictEqual(backendCalls.length, 0);
+	});
+
+	// Topology 1: the corporate IdP is the top-level page, which is what #2931
+	// actually reports. Sender and frame origin are the same configured origin.
+	it('allows a non-relayed ceremony whose sender is a configured extra origin', async () => {
+		const result = await invokeGet(CORPORATE_ORIGIN);
+
+		assert.strictEqual(result.success, true);
+		assert.strictEqual(backendCalls.length, 1);
+		assert.strictEqual(backendCalls[0].origin, CORPORATE_ORIGIN);
+		assert.strictEqual(backendCalls[0].topOrigin, CORPORATE_ORIGIN);
+	});
+
+	it('blocks a non-relayed ceremony from an origin that was never configured', async () => {
+		const result = await invokeGet(TEAMS_ORIGIN);
+
+		assert.strictEqual(result.success, false);
+		assert.match(result.error, /SecurityError/);
+		assert.strictEqual(backendCalls.length, 0);
 	});
 });

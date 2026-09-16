@@ -1,0 +1,314 @@
+name: Flathub Beta Bump
+
+# Opens a version-bump PR against the packaging repo's `beta` branch after a
+# pre-release. Flathub's external-data-checker only runs against a repo's
+# default branch (`master`), so the `update-*` PRs it opens never cover `beta`,
+# and the branch silently falls behind stable until someone bumps it by hand
+# (#2880). Beta sat on 2.17.0 while stable shipped 2.18.1 for exactly this
+# reason, which left the pre-release channel serving something older than
+# stable.
+#
+# The merge is left manual on purpose. Flathub's own `builds/x86_64` runs on
+# PRs into `beta` and gates publication, so an automated PR still gets a real
+# build in front of a human before anything ships.
+#
+# Only pre-releases are bumped here. Stable releases reach `master` through
+# Flathub's own checker, so this exits early on a non-pre-release rather than
+# trying to drive both branches.
+#
+# Pushing to the packaging repo needs a FLATHUB_TOKEN secret carrying contents
+# and pull-request write access there; the repo-scoped GITHUB_TOKEN cannot
+# write to another repository. Without that secret the run still computes the
+# bump and writes the diff to the job summary, so the values can be applied by
+# hand rather than recomputed.
+#
+# All release-controlled values reach the shell through env: and are quoted at
+# use, never interpolated into a run: body.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to bump beta to (defaults to the newest published release)"
+        required: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  PACKAGING_REPO: flathub/com.github.IsmaelMartinez.teams_for_linux
+  APP_ID: com.github.IsmaelMartinez.teams_for_linux
+
+jobs:
+  bump_beta:
+    name: bump the beta manifest
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Resolve the release tag
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_TAG: ${{ inputs.tag }}
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          TAG="${INPUT_TAG:-${EVENT_TAG:-}}"
+          if [ -z "$TAG" ]; then
+            # `gh release view` with no tag resolves via releases/latest, which
+            # skips pre-releases, and pre-releases are the only thing this
+            # workflow acts on. --exclude-drafts matters: a merged release PR
+            # leaves a draft with no git tag, and the metainfo fetch below
+            # addresses the tag, so picking a draft would 404.
+            TAG=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1 \
+              --exclude-drafts --json tagName --jq '.[0].tagName')
+          fi
+          if [ -z "$TAG" ]; then
+            echo "::error::Could not resolve a release tag to bump"
+            exit 1
+          fi
+
+          PRERELEASE=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --json isPrerelease --jq .isPrerelease)
+
+          # Asset filenames carry the bare version; URLs addressing the git ref
+          # keep the leading v.
+          VERSION="${TAG#v}"
+
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=${PRERELEASE}" >> "$GITHUB_OUTPUT"
+
+          if [ "$PRERELEASE" != "true" ]; then
+            echo "${TAG} is not a pre-release, so beta is left alone."
+            echo "Stable releases reach master through Flathub's own checker."
+          fi
+
+      - name: Collect the new sources
+        id: sources
+        if: steps.release.outputs.prerelease == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          # The deb checksums come straight off the release asset `digest`
+          # field, so neither 100MB+ file has to be downloaded. Only the
+          # metainfo is fetched, and it is a few hundred KB.
+          #
+          # The asset list is matched in awk rather than by interpolating the
+          # filename into the jq filter, so a tag can never inject jq syntax.
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" \
+            --jq '.assets[] | "\(.name)\t\(.digest // "")"' > assets.tsv
+
+          for ARCH in amd64 arm64; do
+            ASSET="teams-for-linux_${VERSION}_${ARCH}.deb"
+            DIGEST=$(awk -F'\t' -v want="$ASSET" '$1 == want { print $2 }' assets.tsv)
+            if [ -z "$DIGEST" ]; then
+              echo "::error::Release ${TAG} has no asset named ${ASSET}"
+              exit 1
+            fi
+            # An absent digest would otherwise become an empty sha256 and only
+            # fail much later inside Flathub's builder, so require the prefix.
+            case "$DIGEST" in
+              sha256:*) ;;
+              *) echo "::error::Unexpected digest format for ${ASSET}: ${DIGEST}"; exit 1 ;;
+            esac
+            echo "${ARCH}_sha=${DIGEST#sha256:}" >> "$GITHUB_OUTPUT"
+          done
+
+          curl --proto '=https' --proto-redir '=https' --tlsv1.2 -fsSL -o metainfo.xml \
+            "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${TAG}/${APP_ID}.appdata.xml"
+          echo "metainfo_sha=$(sha256sum metainfo.xml | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Check out the packaging repo's beta branch
+        if: steps.release.outputs.prerelease == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: flathub/com.github.IsmaelMartinez.teams_for_linux
+          ref: beta
+          path: packaging
+          # Falls back to the repo-scoped token so the checkout still succeeds
+          # and the job can report the intended bump; pushing needs
+          # FLATHUB_TOKEN and is skipped without it.
+          token: ${{ secrets.FLATHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+
+      - name: Rewrite the manifest
+        id: rewrite
+        if: steps.release.outputs.prerelease == 'true'
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+          AMD64_SHA: ${{ steps.sources.outputs.amd64_sha }}
+          ARM64_SHA: ${{ steps.sources.outputs.arm64_sha }}
+          METAINFO_SHA: ${{ steps.sources.outputs.metainfo_sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import re
+          import sys
+
+          app_id = os.environ["APP_ID"]
+          repo = os.environ["GITHUB_REPOSITORY"]
+          tag = os.environ["TAG"]
+          version = tag[1:] if tag.startswith("v") else tag
+
+          path = f"packaging/{app_id}.yml"
+          with open(path) as fh:
+              lines = fh.readlines()
+
+          # Deliberately a line-wise edit rather than a YAML round-trip. The
+          # beta manifest carries a long header comment explaining why the
+          # branch is bumped by hand, and yaml.safe_dump would drop it along
+          # with every other comment and reflow the file, turning a six-line
+          # change into a whole-file rewrite nobody can review.
+          #
+          # Each source is matched on the URL it currently holds rather than on
+          # a line number, and its sha256 is the next one beneath it. Only
+          # sources the manifest actually references are touched: releases also
+          # carry an armv7l deb that beta does not use, so a blind version
+          # find-and-replace would invent a fourth source.
+          targets = [
+              (
+                  re.compile(
+                      r"^(\s*url:\s*)https://github\.com/" + re.escape(repo)
+                      + r"/releases/download/[^/]+/teams-for-linux_[^_/]+_amd64\.deb\s*$"
+                  ),
+                  f"https://github.com/{repo}/releases/download/{tag}/teams-for-linux_{version}_amd64.deb",
+                  os.environ["AMD64_SHA"],
+              ),
+              (
+                  re.compile(
+                      r"^(\s*url:\s*)https://github\.com/" + re.escape(repo)
+                      + r"/releases/download/[^/]+/teams-for-linux_[^_/]+_arm64\.deb\s*$"
+                  ),
+                  f"https://github.com/{repo}/releases/download/{tag}/teams-for-linux_{version}_arm64.deb",
+                  os.environ["ARM64_SHA"],
+              ),
+              (
+                  re.compile(
+                      r"^(\s*url:\s*)https://raw\.githubusercontent\.com/" + re.escape(repo)
+                      + r"/[^/]+/" + re.escape(app_id) + r"\.appdata\.xml\s*$"
+                  ),
+                  f"https://raw.githubusercontent.com/{repo}/{tag}/{app_id}.appdata.xml",
+                  os.environ["METAINFO_SHA"],
+              ),
+          ]
+
+          sha_re = re.compile(r"^(\s*sha256:\s*)\S+\s*$")
+          changed = 0
+
+          for pattern, new_url, new_sha in targets:
+              matches = [i for i, line in enumerate(lines) if pattern.match(line)]
+              if len(matches) != 1:
+                  sys.exit(
+                      f"::error::Expected exactly one source matching {pattern.pattern!r}, "
+                      f"found {len(matches)}. The manifest shape changed, so bump it by hand."
+                  )
+              i = matches[0]
+              indent = pattern.match(lines[i]).group(1)
+              if lines[i] != f"{indent}{new_url}\n":
+                  lines[i] = f"{indent}{new_url}\n"
+                  changed += 1
+
+              # Look only a few lines ahead: the sha256 sits directly under its
+              # url in every source block, and scanning further could capture
+              # the next source's checksum if a block ever lost its own.
+              for j in range(i + 1, min(i + 5, len(lines))):
+                  sha_match = sha_re.match(lines[j])
+                  if sha_match:
+                      replacement = f"{sha_match.group(1)}{new_sha}\n"
+                      if lines[j] != replacement:
+                          lines[j] = replacement
+                          changed += 1
+                      break
+              else:
+                  sys.exit(f"::error::No sha256 found beneath the url on line {i + 1}")
+
+          with open(path, "w") as fh:
+              fh.writelines(lines)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"changed={changed}\n")
+          PY
+
+          echo "::group::manifest diff"
+          git -C packaging --no-pager diff
+          echo "::endgroup::"
+
+      - name: Open the bump PR
+        if: steps.release.outputs.prerelease == 'true' && steps.rewrite.outputs.changed != '0'
+        env:
+          GH_TOKEN: ${{ secrets.FLATHUB_TOKEN }}
+          HAS_TOKEN: ${{ secrets.FLATHUB_TOKEN != '' }}
+          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          if [ "$HAS_TOKEN" != "true" ]; then
+            {
+              echo "### Flathub beta bump for ${TAG}"
+              echo
+              echo "No \`FLATHUB_TOKEN\` secret is set, so no PR was opened."
+              echo "This change applies cleanly to the packaging repo's \`beta\` branch:"
+              echo
+              echo '```diff'
+              git -C packaging --no-pager diff
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::FLATHUB_TOKEN is not set, so the bump was written to the job summary instead."
+            exit 0
+          fi
+
+          BRANCH="bump-beta-${VERSION}"
+
+          # Body written to a file rather than passed inline: an indented
+          # heredoc inside the YAML would carry its leading spaces into the
+          # body, and markdown renders four-space-indented lines as code.
+          cat > pr-body.md <<EOF
+          Bumps the beta branch to ${TAG}, published as a pre-release.
+
+          This is automated because Flathub's external-data-checker only runs against the default branch, so the update PRs it opens never cover \`beta\`.
+
+          Both deb checksums come from the GitHub release asset digests and the metainfo checksum was computed from the file at the tag. Merging is left to a maintainer once the Flathub build reports.
+          EOF
+          sed -i 's/^          //' pr-body.md
+
+          cd packaging
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git commit -am "chore: bump beta to ${VERSION}"
+          # Plain --force rather than --force-with-lease: the branch is owned by
+          # this workflow and regenerated from beta on every run, and a fresh
+          # checkout has no remote-tracking ref for the lease to compare against.
+          git push --force origin "$BRANCH"
+
+          EXISTING=$(gh pr list --repo "$PACKAGING_REPO" --head "$BRANCH" \
+            --state open --json number --jq '.[0].number // ""')
+          if [ -n "$EXISTING" ]; then
+            echo "PR #${EXISTING} is already open for ${BRANCH} and now carries the new push."
+            exit 0
+          fi
+
+          gh pr create \
+            --repo "$PACKAGING_REPO" \
+            --base beta \
+            --head "$BRANCH" \
+            --title "chore: bump beta to ${VERSION}" \
+            --body-file ../pr-body.md
+
+      - name: Report when there is nothing to do
+        if: steps.release.outputs.prerelease == 'true' && steps.rewrite.outputs.changed == '0'
+        run: echo "The beta manifest already points at this release, so there is nothing to bump."

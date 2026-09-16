@@ -8,6 +8,7 @@ On Linux, Chromium's WebAuthn implementation lacks hardware support. This module
 - `fido2Backend.js`: Spawns Yubico `fido2-tools` CLI processes for device discovery, credential creation, and assertion.
 - `pinDialog.js`: PIN prompt using standard Electron UI patterns (BrowserWindow + contextBridge + HTML form).
 - `touchPrompt.js`: "Waiting for your security key" prompt shown for the duration of the security-key call, with a Cancel that aborts it. Same BrowserWindow + contextBridge pattern as `pinDialog.js`.
+- `originAllowlist.js`: Builds the set of origins a ceremony may be served for, from the built-in Microsoft origins plus `auth.webauthn.extraOrigins`. Shared with the preload relay so both gates agree.
 - `index.js`: Sets up `ipcMain` handlers, origin validation, and PIN callback wiring.
 
 ## Prerequisites
@@ -39,6 +40,14 @@ Enable in `config.json`:
 }
 ```
 
+Ceremonies are only served for the built-in Microsoft login origins. A federated
+tenant whose key prompt is served by its own identity provider logs
+`[WEBAUTHN] Blocked request { reason: 'origin-not-allowed' }`; add that origin to
+`auth.webauthn.extraOrigins` (an array of exact `https` origins, no wildcards or
+paths) and restart. The allowlist gates two places, `index.js` and the
+postMessage relay in `app/browser/tools/webauthnOverride.js`; both build it from
+`originAllowlist.js`, so neither can drift.
+
 ## Reading a sign-in log
 
 Every ceremony logs a `[WEBAUTHN]` line at each step, so `grep WEBAUTHN` over a session log shows the whole flow. Four fields matter when a sign-in fails but the ceremony itself reports success:
@@ -55,4 +64,4 @@ None of these carry credential material: no credential IDs, user handles, challe
 - Browser override: `app/browser/tools/webauthnOverride.js`
 - Issue: [#802](https://github.com/IsmaelMartinez/teams-for-linux/issues/802)
 - Community validation: [#2332](https://github.com/IsmaelMartinez/teams-for-linux/issues/2332)
-- Touch prompt: [#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631), [research note](../../docs-site/docs/development/research/fido2-touch-prompt-research.md)
+- Touch prompt: [#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631), [ADR-021](../../docs-site/docs/development/adr/021-webauthn-fido2-linux.md)

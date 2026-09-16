@@ -157,7 +157,7 @@ class Menus {
       this.window.show();
     }
 
-    this.connectionManager.refresh();
+    this.connectionManager.refresh(true);
   }
 
   debug() {

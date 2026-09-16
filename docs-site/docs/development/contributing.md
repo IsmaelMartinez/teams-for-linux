@@ -428,7 +428,8 @@ teams-for-linux
 
 - [ ] Code follows style guidelines
 - [ ] `npm run lint` passes without errors
-- [ ] `npm run test:e2e` passes (E2E tests)
+- [ ] `npm run test:unit` passes (unit tests)
+- [ ] `npm run test:e2e` passes locally, or let CI run it (E2E tests)
 - [ ] Manual testing completed
 - [ ] Documentation updated if needed
 - [ ] Commit messages are descriptive

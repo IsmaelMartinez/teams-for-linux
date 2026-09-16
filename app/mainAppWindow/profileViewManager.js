@@ -82,6 +82,7 @@ class ProfileViewManager {
   #profilesManager;
   #config;
   #bindDisplayMediaHandler;
+  #bindWindowOpenHandler;
   #views = new Map();
   // Phase 2 foundation: webContents → profile attribution for main-process
   // IPC handlers (tray/badge/notification aggregation consumes this next).
@@ -90,6 +91,11 @@ class ProfileViewManager {
   // never depends on the WebContents still being reachable (a page can
   // destroy its own webContents, e.g. an auth flow calling window.close()).
   #viewMeta = new Map();
+  // profileId → Map<webContents.id, webContents> of live popups / webview
+  // guests spawned by that profile's view (recursively). Drained — and the
+  // windows closed — when the profile is removed, so no surface keeps running
+  // an account the user just deleted, and no id resolves to a gone profile.
+  #descendants = new Map();
   #handlers = null;
   #resizeHandler = null;
   #navigationHandler = null;
@@ -110,12 +116,25 @@ class ProfileViewManager {
    *   Binds the in-app screen-share picker to a session. Called for each
    *   profile view's partition session so multi-account screen-share
    *   matches Profile 0's behaviour (#2529).
+   * @param {(target: Electron.WebContents, loadTarget: Electron.WebContents, activate: () => void) => void} [bindWindowOpenHandler]
+   *   Installs the profile-view window-open policy on `target` (a profile
+   *   view or one of its descendants); Teams deep links load into
+   *   `loadTarget`, the originating profile view, and `activate` then makes
+   *   that profile the visible one. Profile views previously had no handler
+   *   at all; see mainAppWindow/profileWindowOpenPolicy.js.
    */
-  constructor(window, profilesManager, config, bindDisplayMediaHandler) {
+  constructor(
+    window,
+    profilesManager,
+    config,
+    bindDisplayMediaHandler,
+    bindWindowOpenHandler = () => {}
+  ) {
     this.#window = window;
     this.#profilesManager = profilesManager;
     this.#config = config;
     this.#bindDisplayMediaHandler = bindDisplayMediaHandler;
+    this.#bindWindowOpenHandler = bindWindowOpenHandler;
     this.#registry = new SenderProfileMap(profilesManager);
   }
 
@@ -123,8 +142,14 @@ class ProfileViewManager {
     if (this.#initialized) return;
     this.#initialized = true;
 
-    // The root window hosts Profile 0 (legacy partition).
+    // The root window hosts Profile 0 (legacy partition). Its popups and
+    // webview guests attribute to whatever Profile 0 is at lookup time.
     this.#registry.setRootWebContentsId(this.#window.webContents.id);
+    this.#watchDescendants(this.#window.webContents, {
+      root: true,
+      loadTarget: this.#window.webContents,
+      activate: () => this.#activate(this.#profilesManager.getLegacyProfile()?.id),
+    });
     // Seed the cached root profile id; afterwards the add/remove handlers
     // keep it current, so resolution never touches the settings store
     // (electron-store re-reads its JSON file on every access — too costly
@@ -329,6 +354,7 @@ class ProfileViewManager {
     }
     this.#registry.clear();
     this.#viewMeta.clear();
+    this.#descendants.clear();
     this.#initialized = false;
   }
 
@@ -336,12 +362,11 @@ class ProfileViewManager {
 
   /**
    * Resolve a webContents to the id of the profile that owns it: a profile
-   * view's id, or the root window's Profile 0. Returns null for any
-   * unattributed sender: the switcher pill, dialog windows, the root window
-   * while Profile 0 does not exist (pre-bootstrap, or after its removal) —
-   * and, for now, child windows / webview guests spawned by a profile view
-   * (see the KNOWN GAP note in senderProfileMap.js). Null means
-   * "unattributed", never "safe to ignore".
+   * view, the root window's Profile 0, or any popup / webview guest either
+   * of them spawned (tracked recursively). Returns null for unattributed
+   * senders: the switcher pill, dialog windows, and the root window or its
+   * descendants while Profile 0 does not exist (pre-bootstrap, or after its
+   * removal). Null means "unattributed", never "safe to ignore".
    * @param {Electron.WebContents} webContents
    * @returns {string|null}
    */
@@ -424,6 +449,9 @@ class ProfileViewManager {
     // `setDisplayMediaRequestHandler` is per-session and the root window's
     // binding does not carry across to profile partitions (#2529).
     this.#bindDisplayMediaHandler(view.webContents.session);
+    this.#bindWindowOpenHandler(view.webContents, view.webContents, () =>
+      this.#activate(profileId)
+    );
 
     const wcId = view.webContents.id;
     const profileId = profile.id;
@@ -440,6 +468,16 @@ class ProfileViewManager {
     view.webContents.once("destroyed", () => {
       this.#views.delete(profileId);
       this.#registry.unregister(wcId);
+      this.#teardownDescendants(profileId);
+    });
+    // Attribute anything this view spawns to its profile. A popup genuinely
+    // shares the view's partition and preload (window.open inherits them from
+    // the opener); a <webview> guest has its own, but it lives inside this
+    // profile's surface, so its IPC still belongs to this profile.
+    this.#watchDescendants(view.webContents, {
+      profileId,
+      loadTarget: view.webContents,
+      activate: () => this.#activate(profileId),
     });
     this.#applyBounds(view);
 
@@ -447,6 +485,84 @@ class ProfileViewManager {
     view.webContents.loadURL(url, {
       userAgent: this.#config.chromeUserAgent,
     });
+  }
+
+  // Make `profileId` the visible profile (no-op if it already is, or if it
+  // no longer exists). Used when a deep link loads into a profile view that
+  // may currently be in the background.
+  #activate(profileId) {
+    if (!profileId) return;
+    if (this.#profilesManager.getActive()?.id === profileId) return;
+    try {
+      this.#profilesManager.switch(profileId);
+    } catch (error) {
+      console.warn("[ProfileViewManager] activate after deep link failed", {
+        message: error.message,
+      });
+    }
+  }
+
+  // Listen for popups and webview guests spawned by `webContents` and
+  // attribute them to the same owner. `owner` is { profileId } for a profile
+  // view or { root: true } for the root window (Profile 0, whose id is
+  // mutable so descendants resolve through the map's root profile id).
+  #watchDescendants(webContents, owner) {
+    webContents.on("did-create-window", (child) =>
+      this.#trackDescendant(child?.webContents, owner)
+    );
+    webContents.on("did-attach-webview", (_event, guest) =>
+      this.#trackDescendant(guest, owner)
+    );
+  }
+
+  // Attribute a child window / webview guest to its owner for its lifetime,
+  // give it the same window-open policy (deep links still load into the
+  // ORIGINATING view, not the popup), and recurse so grandchildren are
+  // covered — `setWindowOpenHandler` and these events are per-webContents,
+  // not inherited. Id captured up front — same reasoning as the view itself.
+  #trackDescendant(webContents, owner) {
+    if (!webContents || typeof webContents.id !== "number") return;
+    const id = webContents.id;
+    if (owner.root) {
+      this.#registry.registerRootDescendant(id);
+      webContents.once("destroyed", () =>
+        this.#registry.unregisterRootDescendant(id)
+      );
+    } else {
+      this.#registry.register(id, owner.profileId);
+      let siblings = this.#descendants.get(owner.profileId);
+      if (!siblings) {
+        siblings = new Map();
+        this.#descendants.set(owner.profileId, siblings);
+      }
+      siblings.set(id, webContents);
+      webContents.once("destroyed", () => {
+        this.#registry.unregister(id);
+        this.#descendants.get(owner.profileId)?.delete(id);
+      });
+    }
+    this.#bindWindowOpenHandler(webContents, owner.loadTarget, owner.activate);
+    this.#watchDescendants(webContents, owner);
+  }
+
+  // Remove a profile's descendants from attribution and close any that are
+  // still alive: a popup left running after its profile is removed would keep
+  // an authenticated surface for a deleted account (and its partition is
+  // about to be cleared underneath it).
+  #teardownDescendants(profileId) {
+    const siblings = this.#descendants.get(profileId);
+    if (!siblings) return;
+    this.#descendants.delete(profileId);
+    for (const [id, wc] of siblings) {
+      this.#registry.unregister(id);
+      if (wc && !wc.isDestroyed?.()) {
+        try {
+          wc.close();
+        } catch {
+          // Already going away; ignore.
+        }
+      }
+    }
   }
 
   #destroyView(profileId) {
@@ -459,6 +575,7 @@ class ProfileViewManager {
     this.#viewMeta.delete(profileId);
     if (!view && !meta) return;
     if (meta) this.#registry.unregister(meta.wcId);
+    this.#teardownDescendants(profileId);
 
     if (view) {
       try {

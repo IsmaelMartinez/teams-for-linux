@@ -263,6 +263,19 @@ jobs:
     runs-on: macos-latest
     permissions:
       contents: write
+    env:
+      # Apple Silicon refuses to exec an arm64 binary without a valid code
+      # signature, and afterpack.js invalidates the one Electron ships by
+      # flipping fuses — so the arm64 .app has to be re-signed or it will not
+      # launch at all. `dist:mac` asks electron-builder for an ad-hoc signature
+      # (-c.mac.identity=-), which needs no certificate.
+      #
+      # electron-builder skips every signing step on pull requests (it treats
+      # GITHUB_BASE_REF as a PR marker) unless this is set. No signing
+      # certificates are configured for this project, so the only thing it can
+      # re-enable is that ad-hoc signature — there is no secret to leak to a
+      # fork PR here.
+      CSC_FOR_PULL_REQUEST: "true"
 
     steps:
       - name: Check out Git repository
@@ -284,22 +297,42 @@ jobs:
       - name: Validate Release Notes
         run: npm run generate-release-info
 
+      # Both architectures are built in a single electron-builder run on
+      # purpose. macOS update metadata is not arch-suffixed the way Linux's is,
+      # so every mac build writes the same `latest-mac.yml`; two runs would
+      # each emit a single-arch copy and the second publish would overwrite the
+      # first. One run merges both arches into that file instead. The in-app
+      # updater is AppImage-only today (app/autoUpdater/index.js), so nothing
+      # reads it yet — this just keeps it correct if that ever changes.
       - name: Build for Release
         if: github.ref == 'refs/heads/main'
-        run: npm run dist:mac:x64 -- --publish always
+        run: npm run dist:mac -- --publish always
 
       - name: Build for PR
         if: github.ref != 'refs/heads/main'
-        run: npm run dist:mac:x64 -- --publish never
+        run: npm run dist:mac -- --publish never
 
-      - name: Upload PR artifacts
+      - name: Upload PR artifacts (x64)
         if: github.ref != 'refs/heads/main'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: teams-for-linux-macos-x64
-          path: dist/*.dmg
+          path: |
+            dist/*.dmg
+            !dist/*-arm64.dmg
           retention-days: 30
-          compression-level: 6
+          # A .dmg is already compressed, and GitHub always wraps artifacts in
+          # a zip on download — store it rather than pay to recompress it.
+          compression-level: 0
+
+      - name: Upload PR artifacts (arm64)
+        if: github.ref != 'refs/heads/main'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: teams-for-linux-macos-arm64
+          path: dist/*-arm64.dmg
+          retention-days: 30
+          compression-level: 0
 
   exe:
     needs: [lint_and_audit]

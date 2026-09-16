@@ -6,13 +6,13 @@ id: 014-quick-chat-deep-link-approach
 
 ## Status
 
-Accepted
+Implemented
 
 ## Context
 
 Issue [#2109](https://github.com/IsmaelMartinez/teams-for-linux/issues/2109) (originally [#1984](https://github.com/IsmaelMartinez/teams-for-linux/issues/1984)) requested quick access to chat functionality without requiring full navigation through the Teams UI.
 
-**Investigation Date:** January 2025
+**Investigation Date:** January 2026
 **Requested Features:**
 - Quick access to start/open chat conversations
 - User search functionality

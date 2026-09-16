@@ -709,7 +709,8 @@ async function handleAppReady() {
           mainWindow,
           profilesManager,
           config,
-          mainAppWindow.bindDisplayMediaHandler
+          mainAppWindow.bindDisplayMediaHandler,
+          mainAppWindow.bindWindowOpenHandler
         );
         profileViewManager.initialize();
         await profileViewManager.bootstrapProfileZeroIfNeeded();
@@ -785,6 +786,22 @@ async function userStatusChangedHandler(_event, options) {
 async function setBadgeCountHandler(_event, count) {
   if (!config.disableBadgeCount) {
     app.setBadgeCount(count);
+    // Electron's own Linux badge path loads libunity at runtime, which none
+    // of our packagings ship, so setBadgeCount is a silent no-op there.
+    // Mirror the count over the LauncherEntry broadcast the docks actually
+    // listen to — the same route downloads use for dock progress.
+    if (os.platform() === "linux") {
+      try {
+        require("./downloadManager/launcherEntryEmitter").update({
+          count,
+          countVisible: count > 0,
+        });
+      } catch (error) {
+        console.warn("[Badge] LauncherEntry emit failed", {
+          message: error.message,
+        });
+      }
+    }
   }
 }
 
