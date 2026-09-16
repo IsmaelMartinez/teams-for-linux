@@ -600,13 +600,18 @@ class ProfileViewManager {
       } catch {
         // Window already gone; nothing to detach from.
       }
-      this.#views.delete(profileId);
+      // On the removal path #destroyView has already dropped the view from
+      // #views before close() — the delete returns false and the listeners
+      // stay silent (removal is observable via ProfilesManager's "remove").
+      // Only a SELF-destroyed view (still tracked here) notifies.
+      const wasTracked = this.#views.delete(profileId);
       this.#registry.unregister(wcId);
       this.#teardownDescendants(profileId);
       // Profile 0 now shows through, so hand the title back to it (#3068).
       if (this.#profilesManager.getActive()?.id === profileId) {
         this.#setTitleOverride(null);
       }
+      if (!wasTracked) return;
       for (const callback of this.#viewGoneListeners) {
         try {
           callback(profileId);
