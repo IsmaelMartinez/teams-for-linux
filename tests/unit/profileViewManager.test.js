@@ -49,6 +49,10 @@ class FakeWebContents {
   }
   close() {
     this.closed = true;
+    // Model Electron: closing a webContents destroys it, so the production
+    // 'destroyed' listener runs on the removal path too. Synchronous here —
+    // stricter than Electron's async delivery, which catches reentrancy.
+    this.emitOnce('destroyed');
   }
 }
 
@@ -422,8 +426,12 @@ describe('ProfileViewManager sender attribution wiring', () => {
     pvm.onProfileViewGone((profileId) => gone.push(profileId));
     createdViews[0].destroyWebContents(); // PROFILE_A's view dies on its own
     assert.deepStrictEqual(gone, ['profile-a']);
+    // Removal closes the view's webContents, which DOES fire 'destroyed'
+    // (the fake models that) — but the removal path must stay silent here:
+    // it is already observable via ProfilesManager's "remove" event.
     pm.emit('remove', { removedId: 'profile-b', activeId: 'profile-0' });
-    assert.deepStrictEqual(gone, ['profile-a']); // removal path does not fire it
+    assert.strictEqual(createdViews[1].webContents.closed, true);
+    assert.deepStrictEqual(gone, ['profile-a']);
   });
 
   it('dispose clears all attribution including the root window', () => {

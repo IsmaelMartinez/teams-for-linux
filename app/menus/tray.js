@@ -29,6 +29,11 @@ class ApplicationTray {
       this.aggregator.onTrayUpdate(event, data);
       return;
     }
+    // Remember the last direct update (sender id is all the aggregator
+    // needs): an unread count that arrives before the aggregator attaches
+    // would otherwise be lost to it — renderers dedupe and never re-send an
+    // unchanged count.
+    this.lastDirectUpdate = { senderId: event?.sender?.id, data };
     // Handle both old format { icon, flash } and new format { icon, flash, count }
     const { icon, flash, count } = data;
     this.updateTrayImage(icon, flash, count);
@@ -36,6 +41,11 @@ class ApplicationTray {
 
   setAggregator(aggregator) {
     this.aggregator = aggregator;
+    if (this.lastDirectUpdate) {
+      const { senderId, data } = this.lastDirectUpdate;
+      this.lastDirectUpdate = null;
+      aggregator.onTrayUpdate({ sender: { id: senderId } }, data);
+    }
   }
 
   // Aggregator-driven update: the tooltip is composed by the aggregator
