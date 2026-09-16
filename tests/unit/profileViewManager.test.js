@@ -385,6 +385,47 @@ describe('ProfileViewManager sender attribution wiring', () => {
     assert.strictEqual(pvm.resolveProfileId(child.webContents), null);
   });
 
+  it('getActiveWebContents returns the root window while Profile 0 is active', () => {
+    const { win, pvm } = build([LEGACY, PROFILE_A]);
+    assert.strictEqual(pvm.getActiveWebContents(), win.webContents);
+  });
+
+  it('getActiveWebContents returns the active profile view, falling back to root when it is gone', () => {
+    const { win, pm, pvm } = build([LEGACY, PROFILE_A]);
+    pm.switch('profile-a');
+    const profileView = createdViews[0];
+    assert.strictEqual(pvm.getActiveWebContents(), profileView.webContents);
+    profileView.destroyWebContents();
+    assert.strictEqual(pvm.getActiveWebContents(), win.webContents);
+  });
+
+  it('isPrimaryProfileSurface: true for root and profile views, false for pill, descendants, and dead views', () => {
+    const { win, pvm } = build([LEGACY, PROFILE_A]);
+    const profileView = createdViews[0];
+    const pillView = createdViews[createdViews.length - 1];
+    const popup = { webContents: new FakeWebContents() };
+    profileView.webContents.emit('did-create-window', popup);
+
+    const eventFor = (wc) => ({ sender: { id: wc.id } });
+    assert.strictEqual(pvm.isPrimaryProfileSurface(eventFor(win.webContents)), true);
+    assert.strictEqual(pvm.isPrimaryProfileSurface(eventFor(profileView.webContents)), true);
+    assert.strictEqual(pvm.isPrimaryProfileSurface(eventFor(pillView.webContents)), false);
+    // The popup attributes to the profile but is NOT a primary surface.
+    assert.strictEqual(pvm.resolveProfileId(popup.webContents), 'profile-a');
+    assert.strictEqual(pvm.isPrimaryProfileSurface(eventFor(popup.webContents)), false);
+    assert.strictEqual(pvm.isPrimaryProfileSurface({}), false);
+  });
+
+  it('onProfileViewGone fires when a view self-destroys, not on profile removal', () => {
+    const { pm, pvm } = build([LEGACY, PROFILE_A, PROFILE_B]);
+    const gone = [];
+    pvm.onProfileViewGone((profileId) => gone.push(profileId));
+    createdViews[0].destroyWebContents(); // PROFILE_A's view dies on its own
+    assert.deepStrictEqual(gone, ['profile-a']);
+    pm.emit('remove', { removedId: 'profile-b', activeId: 'profile-0' });
+    assert.deepStrictEqual(gone, ['profile-a']); // removal path does not fire it
+  });
+
   it('dispose clears all attribution including the root window', () => {
     const { win, pvm } = build([LEGACY, PROFILE_A]);
     const profileView = createdViews[0];

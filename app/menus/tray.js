@@ -20,10 +20,32 @@ class ApplicationTray {
     ipcMain.on("tray-update", this.#handleTrayUpdate.bind(this));
   }
 
-  #handleTrayUpdate(_event, data) {
+  #handleTrayUpdate(event, data) {
+    // Multi-account (ADR-020 Phase 2): updates arrive from EVERY profile
+    // view, so applying them directly is last-write-wins across profiles.
+    // With an aggregator attached it becomes the authority for what the
+    // tray shows; without one (flag off) behaviour is unchanged.
+    if (this.aggregator) {
+      this.aggregator.onTrayUpdate(event, data);
+      return;
+    }
     // Handle both old format { icon, flash } and new format { icon, flash, count }
     const { icon, flash, count } = data;
     this.updateTrayImage(icon, flash, count);
+  }
+
+  setAggregator(aggregator) {
+    this.aggregator = aggregator;
+  }
+
+  // Aggregator-driven update: the tooltip is composed by the aggregator
+  // (total plus top profiles), not derived from a single count.
+  applyAggregate({ icon, flash, tooltip }) {
+    if (!this.tray || this.tray.isDestroyed()) return;
+    const image = this.getIconImage(icon || this.iconPath);
+    this.tray.setImage(image);
+    this.window.flashFrame(flash);
+    this.tray.setToolTip(tooltip);
   }
 
   getIconImage(iconPath) {
