@@ -3,7 +3,6 @@ import { _electron as electron } from 'playwright';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { getE2EPlatformArgs } from './helpers/electronApp.js';
 
 /**
  * Notification lifecycle tests.
@@ -25,6 +24,7 @@ async function launchApp(notificationMethod) {
     args: [
       './app/index.js',
       `--notificationMethod=${notificationMethod}`,
+      ...(process.env.CI ? ['--no-sandbox'] : []),
     ],
     env: { ...process.env, E2E_USER_DATA_DIR: userDataDir },
     timeout: 30000,
