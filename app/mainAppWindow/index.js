@@ -966,7 +966,7 @@ function injectScreenSharingLogic() {
     const script = fs.readFileSync(scriptPath, "utf8");
     const resolutionConfig = config?.screenSharing?.resolution ?? {
       enabled: false,
-      mode: "native",
+      mode: "remove",
     };
     const configScript = `globalThis.__tflScreenSharingResolution = ${JSON.stringify(resolutionConfig)};`;
     window.webContents.executeJavaScript(`${configScript}\n${script}`).catch((err) => {

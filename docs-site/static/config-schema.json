@@ -20,7 +20,7 @@
         },
         "resolution": {
           "enabled": false,
-          "mode": "native"
+          "mode": "remove"
         },
         "lockInhibitionMethod": "Electron"
       },
@@ -48,10 +48,10 @@
         {
           "path": "resolution.mode",
           "type": "string",
-          "default": "native",
-          "description": "Resolution mode: native removes Teams' screen sharing limits so capture can use its native resolution; override requests the configured width and height as a ceiling.",
+          "default": "remove",
+          "description": "Resolution mode: remove removes Teams' screen sharing limits so capture can use its native resolution; override requests the configured width and height as a ceiling.",
           "choices": [
-            "native",
+            "remove",
             "override"
           ]
         },

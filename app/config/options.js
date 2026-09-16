@@ -68,8 +68,8 @@ module.exports = {
           "resolution.mode": {
             type: "string",
             describe:
-              "Resolution mode: native removes Teams' screen sharing limits so capture can use its native resolution; override requests the configured width and height as a ceiling.",
-            choices: ["native", "override"],
+              "Resolution mode: remove disables Teams' screen sharing limits so capture can use its native resolution; override requests the configured width and height as a ceiling.",
+            choices: ["remove", "override"],
           },
           "resolution.width": {
             type: "number",

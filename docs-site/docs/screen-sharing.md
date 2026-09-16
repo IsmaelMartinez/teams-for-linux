@@ -30,7 +30,7 @@ To find your config file [see the “Configuration” section](configuration.md#
 
 Resolution control is disabled by default. When `screenSharing.resolution.enabled` is `false`, the app leaves Teams' resolution constraints unchanged, this can result in a lower resolution screen share than your native resolution. Enable it when you want to control the resolution sent by screen sharing, particularly on high-resolution or ultrawide displays.
 
-- `native` removes Teams' screen-share resolution constraints so the selected screen or window can be captured at its native resolution. This may increase CPU, bandwidth, and encoder usage.
+- `remove` removes Teams' screen-share resolution constraints so the selected screen or window can be captured at its native resolution. This may increase CPU, bandwidth, and encoder usage.
 - `override` requests the configured `width` and `height` as a maximum sharing resolution. This is useful when native resolution is unnecessarily expensive or when a known ceiling gives better results for a meeting.
 
 For example, cap a 3440x1440 display at 2560x1080:
@@ -55,7 +55,7 @@ To request native resolution instead:
   "screenSharing": {
     "resolution": {
       "enabled": true,
-      "mode": "native"
+      "mode": "remove"
     }
   }
 }

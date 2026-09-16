@@ -21,7 +21,7 @@
   let activeFrameRelay = null;
   const resolutionConfig = globalThis.__tflScreenSharingResolution || {
     enabled: false,
-    mode: "native",
+    mode: "remove",
   };
 
   // Known translations of "Stop sharing" / "Stop presenting" button text.

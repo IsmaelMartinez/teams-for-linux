@@ -483,7 +483,7 @@ Screen sharing settings are organized under the `screenSharing` configuration ob
     },
     "resolution": {
       "enabled": false,
-      "mode": "native",
+      "mode": "remove",
       "width": 3440,
       "height": 1440
     },
@@ -497,12 +497,12 @@ Screen sharing settings are organized under the `screenSharing` configuration ob
 | `screenSharing.thumbnail.enabled` | `boolean` | `true` | Automatically show thumbnail window when screen sharing |
 | `screenSharing.thumbnail.alwaysOnTop` | `boolean` | `true` | Keep thumbnail window always on top |
 | `screenSharing.resolution.enabled` | `boolean` | `false` | Enable screen sharing resolution control |
-| `screenSharing.resolution.mode` | `string` | `"native"` | `native` removes Teams' resolution constraints so capture can use the source's native resolution. `override` requests the configured width and height as a ceiling. |
+|| `screenSharing.resolution.mode` | `string` | `"remove"` | `remove` removes Teams' resolution constraints so capture can use the source's native resolution. `override` requests the configured width and height as a ceiling. |
 | `screenSharing.resolution.width` | `number` | - | Target width used with `override` |
 | `screenSharing.resolution.height` | `number` | - | Target height used with `override` |
 | `screenSharing.lockInhibitionMethod` | `string` | `"Electron"` | Screen lock inhibition method. Choices: `Electron`, `WakeLockSentinel` |
 
-Screen sharing resolution control is disabled by default. When `enabled` is `false`, the app leaves Teams' resolution constraints unchanged, including constraints applied later during the sharing session. With `mode: "native"`, the app removes Teams' screen-share resolution limits, allowing the compositor/capture backend to use the native resolution of the selected screen or window. With `mode: "override"`, set `width` and `height` to request a maximum sharing resolution, which can reduce CPU, bandwidth, and encoder load on high-resolution displays. Both enabled modes also protect the active share from later Teams `applyConstraints()` changes.
+Screen sharing resolution control is disabled by default. When `enabled` is `false`, the app leaves Teams' resolution constraints unchanged, including constraints applied later during the sharing session. With `mode: "remove"`, the app removes Teams' screen-share resolution limits, allowing the compositor/capture backend to use the native resolution of the selected screen or window. With `mode: "override"`, set `width` and `height` to request a maximum sharing resolution, which can reduce CPU, bandwidth, and encoder load on high-resolution displays. Both enabled modes also protect the active share from later Teams `applyConstraints()` changes.
 
 For example, to cap a 3440x1440 display at 2560x1080:
 
@@ -519,14 +519,14 @@ For example, to cap a 3440x1440 display at 2560x1080:
 }
 ```
 
-To request native resolution instead:
+To request removal of Teams' resolution constraints (native resolution) instead:
 
 ```json
 {
   "screenSharing": {
     "resolution": {
       "enabled": true,
-      "mode": "native"
+      "mode": "remove"
     }
   }
 }
