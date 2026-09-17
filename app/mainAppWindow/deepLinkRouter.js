@@ -152,7 +152,12 @@ async function navigateInPage(window, url, teamsUrl) {
          // \`hashchange\` is queued as a task, so it cannot dispatch until this
          // block returns: registering after the assignment misses nothing.
          addEventListener("hashchange", onHashChange);
-         timer = setTimeout(() => settle(false), ${ROUTE_CONSUMED_TIMEOUT_MS});
+         // Current SPA builds keep no route in the fragment and clear the
+         // assigned one through the history API, which fires no hashchange
+         // (measured: gone at every sample, 342-1198 ms after assignment);
+         // a fragment that no longer holds the assigned value at the deadline
+         // was consumed all the same, retitled or not.
+         timer = setTimeout(() => settle(location.hash !== assigned), ${ROUTE_CONSUMED_TIMEOUT_MS});
        })`
     );
   } catch {

@@ -163,6 +163,21 @@ test("navigateInPage ignores an unread-count-only title change", async () => {
   assert.notStrictEqual(bare({ title: "(3) Calendar | Someone | Microsoft Teams" }), "Calendar | Microsoft Teams");
 });
 
+test("navigateInPage re-checks the fragment at the deadline", async () => {
+  let script = null;
+  const win = windowWith("https://teams.cloud.microsoft/", async (source) => {
+    script = source;
+    return true;
+  });
+  await navigateInPage(win, DEEP_LINK, TEAMS_URL);
+
+  // The SPA can clear the assigned fragment through the history API, which
+  // fires no hashchange and may leave the title alone (a link to the
+  // conversation already open): at the deadline, a fragment that no longer
+  // holds the assigned value counts as consumed, an untouched one as declined.
+  assert.match(script, /timer = setTimeout\(\(\) => settle\(location\.hash !== assigned\), 750\);/);
+});
+
 test("navigateInPage falls back when the fragment is left untouched", async () => {
   const win = windowWith("https://teams.cloud.microsoft/", async () => false);
 
