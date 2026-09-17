@@ -926,7 +926,7 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
  * @param {string} url - Deep link URL resolved from the launch argument
  */
 async function openDeepLink(url) {
-  const routed = await deepLinkRouter.navigateInPage(window, url, config.url);
+  const routed = await deepLinkRouter.navigateInPage(window, url);
   if (routed) {
     console.debug("[DEEPLINK] routed in page");
     return;

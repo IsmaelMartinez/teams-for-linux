@@ -14,6 +14,8 @@
 // `/l/meetup-join/...` or `/l/channel/...`. The set is deliberately open: the
 // SPA decides which routes it resolves, and whatever it declines reaches the
 // target through the full navigation instead.
+const { isTeamsHost } = require("../helpers/teamsHosts");
+
 const LAUNCHER_ROUTE = /^(\/l\/[^/?#]+\/[^?#]+?)\/?(\?.*)?$/;
 
 // A chat launcher naming neither a thread nor recipients has nothing to
@@ -56,18 +58,21 @@ function toHashRoute(url) {
   return `#${route}${query}`;
 }
 
-function isSameOrigin(frameUrl, origin) {
+function isTeamsOrigin(frameUrl) {
   try {
-    return new URL(frameUrl).origin === origin;
+    const { protocol, hostname } = new URL(frameUrl);
+    return protocol === "https:" && isTeamsHost(hostname);
   } catch {
     return false;
   }
 }
 
-// The SPA occupies the main frame. The origin check keeps the fragment off
-// unrelated content, such as the login origin mid-auth.
-function findRouterFrame(mainFrame, teamsOrigin) {
-  return isSameOrigin(mainFrame.url, teamsOrigin) ? mainFrame : null;
+// The SPA occupies the main frame. The host check keeps the fragment off
+// unrelated content, such as the login origin mid-auth. It is not compared
+// to the configured URL: Teams redirects `teams.microsoft.com` sessions to
+// `teams.cloud.microsoft`, and a session on any Teams host routes the same.
+function findRouterFrame(mainFrame) {
+  return isTeamsOrigin(mainFrame.url) ? mainFrame : null;
 }
 
 // The SPA rewrote the fragment within 26ms when measured. This budget is only
@@ -79,20 +84,12 @@ const ROUTE_CONSUMED_TIMEOUT_MS = 750;
  *
  * @param {Electron.BrowserWindow} window - Main application window
  * @param {string} url - Deep link URL resolved from the launch argument
- * @param {string} teamsUrl - Configured Teams URL, used for the origin check
  * @returns {Promise<boolean>} True when the SPA consumed the route; false
  *   means the caller should fall back to a full navigation
  */
-async function navigateInPage(window, url, teamsUrl) {
+async function navigateInPage(window, url) {
   const route = toHashRoute(url);
   if (!route) {
-    return false;
-  }
-
-  let teamsOrigin;
-  try {
-    teamsOrigin = new URL(teamsUrl).origin;
-  } catch {
     return false;
   }
 
@@ -101,7 +98,7 @@ async function navigateInPage(window, url, teamsUrl) {
   // fallback instead of rejecting out of the module.
   let frame;
   try {
-    frame = findRouterFrame(window.webContents.mainFrame, teamsOrigin);
+    frame = findRouterFrame(window.webContents.mainFrame);
   } catch {
     return false;
   }
