@@ -394,3 +394,33 @@ describe('ProfileViewManager sender attribution wiring', () => {
     assert.strictEqual(pvm.resolveProfileId(profileWc), null);
   });
 });
+
+describe('ProfileViewManager per-view load hook (#2979)', () => {
+  it('runs the load hook on every did-finish-load of each profile view, never for the pill', () => {
+    const loaded = [];
+    const pvm = new ProfileViewManager(
+      fakeWindow(),
+      fakeProfilesManager([LEGACY, PROFILE_A, PROFILE_B]),
+      { url: 'https://teams.cloud.microsoft' },
+      () => {},
+      () => {},
+      (webContents) => loaded.push(webContents)
+    );
+    pvm.initialize();
+    const [viewA, viewB] = createdViews;
+    const pillView = createdViews[createdViews.length - 1];
+
+    viewA.webContents.emit('did-finish-load');
+    viewB.webContents.emit('did-finish-load');
+    // A reload fires did-finish-load again and must re-run the hook, as the
+    // root window's own did-finish-load listener does.
+    viewA.webContents.emit('did-finish-load');
+    pillView.webContents.emit('did-finish-load');
+
+    assert.deepStrictEqual(loaded, [
+      viewA.webContents,
+      viewB.webContents,
+      viewA.webContents,
+    ]);
+  });
+});
