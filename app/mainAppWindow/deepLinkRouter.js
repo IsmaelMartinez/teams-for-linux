@@ -16,9 +16,10 @@
 // target through the full navigation instead.
 const LAUNCHER_ROUTE = /^(\/l\/[^/?#]+\/[^?#]+?)\/?(\?.*)?$/;
 
-// A chat launcher without recipients has nothing to resolve, and the SPA lands
-// on an empty chat surface rather than declining the route.
-const CHAT_ROUTE_PREFIX = "/l/chat/";
+// A chat launcher naming neither a thread nor recipients has nothing to
+// resolve, and the SPA lands on an empty chat surface rather than declining
+// the route. A thread id (`/l/chat/<thread>/conversations`) resolves in page.
+const EMPTY_CHAT_ROUTE = "/l/chat/0/0";
 
 /**
  * Converts a Teams deep link into the equivalent client-side route.
@@ -48,7 +49,7 @@ function toHashRoute(url) {
   }
 
   const [, route, query = ""] = match;
-  if (route.startsWith(CHAT_ROUTE_PREFIX) && !/[?&]users=[^&]/.test(query)) {
+  if (route === EMPTY_CHAT_ROUTE && !/[?&]users=[^&]/.test(query)) {
     return null;
   }
 

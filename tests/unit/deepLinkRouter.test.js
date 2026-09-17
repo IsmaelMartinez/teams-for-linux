@@ -55,6 +55,16 @@ test("toHashRoute routes a channel link", () => {
   );
 });
 
+test("toHashRoute keeps a chat link that names its thread", () => {
+  // The widget/launcher form for a conversation without a message to land on;
+  // declining it made the client reload, which drops an active call.
+  const thread = "19%3A9e2b1a16123744ca8b6159cb33348835%40thread.v2";
+  assert.strictEqual(
+    toHashRoute(`https://teams.cloud.microsoft/l/chat/${thread}/conversations?context=%7B%7D`),
+    `#/l/chat/${thread}/conversations?context=%7B%7D`
+  );
+});
+
 test("toHashRoute declines links the SPA route cannot resolve", () => {
   const declined = [
     "https://teams.cloud.microsoft/l/chat/0/0",
