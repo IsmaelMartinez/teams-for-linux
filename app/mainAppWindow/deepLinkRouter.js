@@ -110,15 +110,21 @@ async function navigateInPage(window, url, teamsUrl) {
 
   try {
     // Assigning the fragment always sticks, so the assignment proves nothing.
-    // The SPA signals that it handled the route by rewriting the fragment, and
-    // a fragment still holding the assigned value was never consumed. The
-    // previous fragment goes back before giving up, so an aborted fallback
-    // navigation does not strand the page on a route nothing answered.
+    // The SPA signals that it handled the route by rewriting the fragment or,
+    // on builds that leave the fragment alone, by retitling the document for
+    // the target; a fragment still holding the assigned value under the old
+    // title was never consumed. The previous fragment goes back before giving
+    // up, so an aborted fallback navigation does not strand the page on a
+    // route nothing answered.
     return await frame.executeJavaScript(
       `new Promise((resolve) => {
          let timer;
          const target = ${JSON.stringify(route)};
          const previous = location.hash;
+         // The unread counter also rewrites the title ("(3) Calendar | …"), so
+         // only the part after it tells whether the SPA moved to the target.
+         const bareTitle = () => document.title.replace(/^\\(\\d+\\)\\s*/, "");
+         const previousTitle = bareTitle();
          // Re-assigning an identical fragment fires no \`hashchange\`, so the
          // wait below would time out and reload a page already on the route.
          if (previous === target) { resolve(true); return; }
@@ -127,6 +133,7 @@ async function navigateInPage(window, url, teamsUrl) {
          const settle = (consumed) => {
            clearTimeout(timer);
            removeEventListener("hashchange", onHashChange);
+           titleWatch.disconnect();
            if (!consumed) {
              history.replaceState(null, "", previous || location.pathname + location.search);
            }
@@ -135,10 +142,22 @@ async function navigateInPage(window, url, teamsUrl) {
          const onHashChange = () => {
            if (location.hash !== assigned) settle(true);
          };
+         const titleWatch = new MutationObserver(() => {
+           if (bareTitle() !== previousTitle) settle(true);
+         });
+         // Observed on <head>: Teams replaces the <title> element outright on
+         // React remounts (see browser/tools/mutationTitle.js), which would
+         // strand an observer attached to the old node.
+         titleWatch.observe(document.head, { childList: true, characterData: true, subtree: true });
          // \`hashchange\` is queued as a task, so it cannot dispatch until this
          // block returns: registering after the assignment misses nothing.
          addEventListener("hashchange", onHashChange);
-         timer = setTimeout(() => settle(false), ${ROUTE_CONSUMED_TIMEOUT_MS});
+         // Current SPA builds keep no route in the fragment and clear the
+         // assigned one through the history API, which fires no hashchange
+         // (measured: gone at every sample, 342-1198 ms after assignment);
+         // a fragment that no longer holds the assigned value at the deadline
+         // was consumed all the same, retitled or not.
+         timer = setTimeout(() => settle(location.hash !== assigned), ${ROUTE_CONSUMED_TIMEOUT_MS});
        })`
     );
   } catch {

@@ -1072,6 +1072,10 @@ function restoreWindow() {
   }
 
   window.focus();
+  // A second instance has no user activation, so window.focus() alone can be
+  // refused as focus stealing; app.focus() raises the first visible window on
+  // X11 (Wayland may only flash the icon, which is the platform's call).
+  app.focus();
 }
 
 /**
