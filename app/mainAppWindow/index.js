@@ -21,6 +21,7 @@ const ConnectionManager = require("../connectionManager");
 const ssoPasswordPrefill = require("../ssoPasswordPrefill");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
 const deepLinkRouter = require("./deepLinkRouter");
+const { DeferredDeepLink } = require("./deferredDeepLink");
 const os = require("node:os");
 const path = require("node:path");
 const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
@@ -529,7 +530,12 @@ let reauthPromptOpen = false;
 let recoveryQueuedForCallEnd = false;
 // A deep link the SPA declined during a call: the fallback reload would end
 // the call, so the link waits for the call to end, as auth recovery does.
-let deepLinkQueuedForCallEnd = null;
+// Same teardown delay as the queued recovery.
+const CALL_TEARDOWN_DELAY_MS = 5000;
+const deferredDeepLink = new DeferredDeepLink(
+  (url) => openDeepLink(url).catch(() => console.debug('[DEEPLINK] deferred navigation failed')),
+  CALL_TEARDOWN_DELAY_MS
+);
 // A single transient worker UPR must not prompt (#2428); require the worker
 // signals to persist this long into the same call before treating them as a
 // genuine mid-call auth failure.
@@ -821,12 +827,13 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   app.on('teams-call-disconnected', () => {
     callActive = false;
     resetMidCallAuthState();
-    if (deepLinkQueuedForCallEnd) {
-      const url = deepLinkQueuedForCallEnd;
-      deepLinkQueuedForCallEnd = null;
+    if (recoveryQueuedForCallEnd) {
+      // Recovery clears the session and reloads at the same deadline; a link
+      // opened alongside it would be replaced mid-load, so recovery wins.
+      deferredDeepLink.cancel();
+    } else if (deferredDeepLink.pending) {
       console.info('[DEEPLINK] Call ended, opening the deferred link');
-      // Same teardown delay as the queued recovery below.
-      setTimeout(() => openDeepLink(url).catch(() => console.debug('[DEEPLINK] deferred navigation failed')), 5000);
+      deferredDeepLink.release();
     }
     if (recoveryQueuedForCallEnd) {
       recoveryQueuedForCallEnd = false;
@@ -849,9 +856,9 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     callActive = false;
     resetMidCallAuthState();
     recoveryQueuedForCallEnd = false;
-    // The reload ended the call the link was waiting on; kept, it would open
-    // 5 s after the end of some later, unrelated call.
-    deepLinkQueuedForCallEnd = null;
+    // The window moved on: a link still waiting, or released and not yet
+    // opened, would land on top of wherever this navigation went.
+    deferredDeepLink.cancel();
   });
   window.webContents.on('console-message', (event) => {
     maybeScheduleAuthRecovery(event.message, event.sourceId);
@@ -942,13 +949,16 @@ async function openDeepLink(url) {
   const routed = await deepLinkRouter.navigateInPage(window, url);
   if (routed) {
     console.debug("[DEEPLINK] routed in page");
+    // The newest link wins: one deferred earlier in this call must not open
+    // over this destination when the call ends.
+    deferredDeepLink.cancel();
     return;
   }
 
   if (callActive) {
     // Only the URL is kept, never logged: it carries the recipient or meeting.
     console.info("[DEEPLINK] in-page routing unavailable during a call, deferring to the call end");
-    deepLinkQueuedForCallEnd = url;
+    deferredDeepLink.defer(url);
     return;
   }
 

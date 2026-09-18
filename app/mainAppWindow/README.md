@@ -24,5 +24,7 @@ replaces the document and cold-boots the SPA. Launcher links avoid that:
 instead, guarded by a Teams-host check on the main frame. The SPA rewrites the
 fragment or retitles the document when it handles the route, and anything left
 unconsumed falls back to the full navigation — except during a call, where the
-reload would end it: the link then waits for `teams-call-disconnected`, like a
-queued auth recovery.
+reload would end it: the link then waits in `deferredDeepLink` for `teams-call-disconnected`, like a
+queued auth recovery. That slot holds one link and the newest navigation wins: a
+later link routed in page, any `did-navigate`, or a queued auth recovery cancels
+it, up to the moment it opens.
