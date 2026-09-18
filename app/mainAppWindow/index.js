@@ -946,12 +946,14 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
  * @param {string} url - Deep link URL resolved from the launch argument
  */
 async function openDeepLink(url) {
+  // The newest link wins, whichever way it ends up opening: one held from
+  // earlier must not open over it, and the full navigation below can outlast
+  // the release delay before `did-navigate` would get to cancel it.
+  deferredDeepLink.cancel();
+
   const routed = await deepLinkRouter.navigateInPage(window, url);
   if (routed) {
     console.debug("[DEEPLINK] routed in page");
-    // The newest link wins: one deferred earlier in this call must not open
-    // over this destination when the call ends.
-    deferredDeepLink.cancel();
     return;
   }
 
