@@ -100,7 +100,8 @@ Then:
 1. Promote GitHub draft → full release
    - This triggers the **Snap Release** workflow, which builds and publishes the release version to the **candidate** channel
    - This triggers the **Flatpak Smoke Build**, which builds the Flathub manifest against the released deb
-2. Bump the [Flathub beta branch](#flathub-beta-branch) so Flatpak users can test the pre-release
+   - This triggers the **Flathub Beta Bump**, which opens a version-bump PR against the packaging repo's `beta` branch
+2. Merge the [Flathub beta bump PR](#flathub-beta-branch) once flathubbot's test build passes, so Flatpak users can test the pre-release
 3. Test the Snap candidate version
 4. Manually promote Snap candidate → stable: `snapcraft release teams-for-linux <revision> stable`
 5. Clear the pre-release flag once the release has soaked: `gh release edit vX.Y.Z --prerelease=false`
@@ -117,21 +118,13 @@ The Flathub manifest tracks `releases/latest`, and that endpoint skips pre-relea
 
 ### Flathub beta branch
 
-The Flathub packaging repo has a `beta` branch that Flathub builds into the `flathub-beta` remote, which is how Flatpak users test a pre-release before it reaches stable. Bumping it is manual: Flathub's hosted update checker only runs against a repo's default branch (`master`), so flathubbot never touches `beta`. The `x-checker-data` queries on that branch describe what it should track, but nothing executes them.
+The Flathub packaging repo has a `beta` branch that Flathub builds into the `flathub-beta` remote, which is how Flatpak users test a pre-release before it reaches stable. Flathub's hosted update checker only runs against a repo's default branch (`master`), so flathubbot never touches `beta`; the `x-checker-data` queries on that branch describe what it should track, but nothing executes them.
 
-Collect the three checksums, two of which the release already publishes:
+The bump itself is automated. The **Flathub Beta Bump** workflow (`.github/workflows/flathub-beta-bump.yml`) runs when a release is published, exits early unless it is a pre-release, takes the two deb checksums from the release asset digests and computes the metainfo checksum from the file at the tag, rewrites the three sources in the `beta` manifest, pushes a `bump-beta-<version>` branch to `flathub/com.github.IsmaelMartinez.teams_for_linux` and opens a `chore: bump beta to <version>` PR against `beta`. The push needs the `FLATHUB_TOKEN` repository secret; without it the workflow still computes the bump and writes the diff to the job summary so it can be applied by hand.
 
-```bash
-TAG=v2.16.0
-gh release view "$TAG" --repo IsmaelMartinez/teams-for-linux --json assets \
-  --jq '.assets[] | select(.name | test("_(amd64|arm64)\\.deb$")) | "\(.name) \(.digest)"'
-curl -sL "https://raw.githubusercontent.com/IsmaelMartinez/teams-for-linux/$TAG/com.github.IsmaelMartinez.teams_for_linux.appdata.xml" \
-  | sha256sum
-```
+Merging that PR is left to the maintainer on purpose: Flathub's own `builds/x86_64` runs on PRs into `beta` and is the first real build of the manifest, so wait for flathubbot's "Test build succeeded" comment before merging. The merge is what publishes to `flathub-beta`.
 
-The deb digests come back prefixed with `sha256:`, which the manifest does not want, so paste only the hex part.
-
-Then on the packaging repo's `beta` branch, point the two deb sources and the metainfo source at `$TAG` and paste the matching `sha256` values. Push that branch to the Flathub repo itself, not to a fork, since the buildbot only watches `flathub/com.github.IsmaelMartinez.teams_for_linux`. In the maintainer's checkout that remote is named `upstream` (`origin` being the fork), so the push is `git push upstream beta`; check `git remote -v` if you are unsure which name points where. That push is what triggers the buildbot, so it publishes to `flathub-beta` on its own from there.
+If the run was missed or needs repeating, dispatch it by hand with the tag: `gh workflow run flathub-beta-bump.yml -f tag=vX.Y.Z`. Re-running against a version the manifest already points at is a no-op.
 
 Keep `beta` otherwise in sync with `master`, since the only intended difference is the version it points at plus any packaging change deliberately under test.
 
@@ -181,7 +174,9 @@ Build triggers automatically
      ↓
 Publish → Draft release, Snap edge (with commit SHA suffix)
      ↓
-Promote draft → Full release, Snap candidate, Flatpak
+Promote draft → Full release, Snap candidate, Flatpak smoke build, Flathub beta bump PR
+     ↓
+Merge beta bump PR once flathubbot builds → flathub-beta
      ↓
 Test candidate → Promote Snap candidate → stable
 ```
