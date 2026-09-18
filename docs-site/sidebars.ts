@@ -101,6 +101,7 @@ const sidebars: SidebarsConfig = {
             'development/adr/029-config-schema-single-source-of-truth',
             'development/adr/030-graph-api-teams-session-token',
             'development/adr/031-ozone-platform-x11-default',
+            'development/adr/032-secondary-window-for-calls',
           ],
         },
         {
