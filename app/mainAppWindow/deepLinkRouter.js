@@ -15,6 +15,7 @@
 // SPA decides which routes it resolves, and whatever it declines reaches the
 // target through the full navigation instead.
 const { isTeamsHost } = require("../helpers/teamsHosts");
+const { COMPOSE_SELECTORS, findCompose } = require("../helpers/composeBox");
 
 const LAUNCHER_ROUTE = /^(\/l\/[^/?#]+\/[^?#]+?)\/?(\?.*)?$/;
 
@@ -76,6 +77,18 @@ function findRouterFrame(mainFrame, configuredOrigin) {
   return isTeamsOrigin(mainFrame.url, configuredOrigin) ? mainFrame : null;
 }
 
+// An unparsable configured URL only loses its own acceptance: a session on a
+// known Teams host still routes. Opaque origins (`file:`, `data:`) all
+// serialise to the string "null" and would match any `about:blank` frame.
+function configuredOriginOf(teamsUrl) {
+  try {
+    const { origin } = new URL(teamsUrl);
+    return origin === "null" ? null : origin;
+  } catch {
+    return null;
+  }
+}
+
 // The SPA rewrote the fragment within 26ms when measured. This budget is only
 // ever spent when it declines the route, delaying the fallback reload.
 const ROUTE_CONSUMED_TIMEOUT_MS = 750;
@@ -96,16 +109,7 @@ async function navigateInPage(window, url, teamsUrl) {
     return false;
   }
 
-  // An unparsable configured URL only loses its own acceptance: a session on
-  // a known Teams host still routes. Opaque origins (`file:`, `data:`) all
-  // serialise to the string "null" and would match any `about:blank` frame.
-  let configuredOrigin = null;
-  try {
-    const { origin } = new URL(teamsUrl);
-    configuredOrigin = origin === "null" ? null : origin;
-  } catch {
-    // keep null
-  }
+  const configuredOrigin = configuredOriginOf(teamsUrl);
 
   // Electron throws "Object has been destroyed" rather than returning
   // undefined when the window is torn down mid-flight, so this reaches the
@@ -178,4 +182,80 @@ async function navigateInPage(window, url, teamsUrl) {
   }
 }
 
-module.exports = { toHashRoute, findRouterFrame, navigateInPage };
+// Routes that land on a conversation, where the caret belongs in the compose
+// box. The SPA opens the conversation but leaves focus wherever it was, so
+// typing right after following a link goes nowhere.
+const CONVERSATION_ROUTE = /^#\/l\/(chat|message)\//;
+
+// The target conversation mounts its editor after the route is consumed, and
+// switching from another chat replaces the previous editor with it.
+const COMPOSE_FOCUS_TIMEOUT_MS = 1500;
+
+/**
+ * Runs in the renderer (serialised by `focusCompose`). Focuses the compose box
+ * and keeps it focused while the conversation view settles: an editor focused
+ * too early belongs to the chat being left and is removed with it. Backs off
+ * at the first key or pointer input, so it never fights the user.
+ *
+ * @param {(doc: Document, selectors: string[]) => Element|null} find -
+ *   `findCompose` from helpers/composeBox, passed in because this runs serialised
+ * @param {string[]} selectors - Compose box selectors, most specific first
+ * @param {number} timeoutMs - How long the view is given to settle
+ * @returns {Promise<boolean>} Whether the compose box holds focus at the end
+ */
+function focusComposeBox(find, selectors, timeoutMs) {
+  return new Promise((resolve) => {
+    let focused = null;
+    const refocus = () => {
+      if (focused?.isConnected && document.activeElement === focused) return;
+      const el = find(document, selectors);
+      if (el) {
+        el.focus();
+        focused = el;
+      }
+    };
+    const observer = new MutationObserver(refocus);
+    const stop = () => {
+      observer.disconnect();
+      clearTimeout(timer);
+      removeEventListener("keydown", stop, true);
+      removeEventListener("pointerdown", stop, true);
+      resolve(focused !== null && document.activeElement === focused);
+    };
+    const timer = setTimeout(stop, timeoutMs);
+    addEventListener("keydown", stop, true);
+    addEventListener("pointerdown", stop, true);
+    observer.observe(document.body, { childList: true, subtree: true });
+    refocus();
+  });
+}
+
+/**
+ * Puts the caret in the compose box after an in-page route to a conversation.
+ * Best effort: a miss (meeting link, renamed selectors, torn-down window) is
+ * not an error and changes nothing.
+ *
+ * @param {Electron.BrowserWindow} window - Main application window
+ * @param {string} url - The deep link that was just routed in page
+ * @param {string} teamsUrl - Configured Teams URL, as for `navigateInPage`
+ * @returns {Promise<boolean>} Whether a compose box was focused
+ */
+async function focusCompose(window, url, teamsUrl) {
+  const route = toHashRoute(url);
+  if (!route || !CONVERSATION_ROUTE.test(route)) {
+    return false;
+  }
+  try {
+    const frame = findRouterFrame(window.webContents.mainFrame, configuredOriginOf(teamsUrl));
+    if (!frame) {
+      return false;
+    }
+    return await frame.executeJavaScript(
+      `(${focusComposeBox.toString()})(${findCompose.toString()}, ${JSON.stringify(COMPOSE_SELECTORS)}, ${COMPOSE_FOCUS_TIMEOUT_MS})`
+    );
+  } catch {
+    return false;
+  }
+}
+
+module.exports = { toHashRoute, findRouterFrame, navigateInPage, focusCompose, focusComposeBox };
