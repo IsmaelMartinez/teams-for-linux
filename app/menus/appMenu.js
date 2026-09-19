@@ -130,6 +130,17 @@ function getSettingsMenu(Menus) {
             }),
           ),
       },
+      // Most config options are restart-only, so the file is the interface.
+      // Its directory differs per packaging format (deb, snap, flatpak,
+      // source), which is not something anyone should have to look up.
+      {
+        label: "Open config file",
+        click: () => Menus.openConfigFile(),
+      },
+      {
+        label: "Open config folder",
+        click: () => Menus.openConfigFolder(),
+      },
     ],
   };
 }
