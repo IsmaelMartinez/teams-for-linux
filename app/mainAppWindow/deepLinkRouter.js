@@ -14,11 +14,15 @@
 // `/l/meetup-join/...` or `/l/channel/...`. The set is deliberately open: the
 // SPA decides which routes it resolves, and whatever it declines reaches the
 // target through the full navigation instead.
+const { isTeamsHost } = require("../helpers/teamsHosts");
+const { COMPOSE_SELECTORS, findCompose } = require("../helpers/composeBox");
+
 const LAUNCHER_ROUTE = /^(\/l\/[^/?#]+\/[^?#]+?)\/?(\?.*)?$/;
 
-// A chat launcher without recipients has nothing to resolve, and the SPA lands
-// on an empty chat surface rather than declining the route.
-const CHAT_ROUTE_PREFIX = "/l/chat/";
+// A chat launcher naming neither a thread nor recipients has nothing to
+// resolve, and the SPA lands on an empty chat surface rather than declining
+// the route. A thread id (`/l/chat/<thread>/conversations`) resolves in page.
+const EMPTY_CHAT_ROUTE = "/l/chat/0/0";
 
 /**
  * Converts a Teams deep link into the equivalent client-side route.
@@ -48,25 +52,41 @@ function toHashRoute(url) {
   }
 
   const [, route, query = ""] = match;
-  if (route.startsWith(CHAT_ROUTE_PREFIX) && !/[?&]users=[^&]/.test(query)) {
+  if (route === EMPTY_CHAT_ROUTE && !/[?&]users=[^&]/.test(query)) {
     return null;
   }
 
   return `#${route}${query}`;
 }
 
-function isSameOrigin(frameUrl, origin) {
+function isTeamsOrigin(frameUrl, configuredOrigin) {
   try {
-    return new URL(frameUrl).origin === origin;
+    const { protocol, hostname, origin } = new URL(frameUrl);
+    return origin === configuredOrigin || (protocol === "https:" && isTeamsHost(hostname));
   } catch {
     return false;
   }
 }
 
-// The SPA occupies the main frame. The origin check keeps the fragment off
-// unrelated content, such as the login origin mid-auth.
-function findRouterFrame(mainFrame, teamsOrigin) {
-  return isSameOrigin(mainFrame.url, teamsOrigin) ? mainFrame : null;
+// The SPA occupies the main frame. The check keeps the fragment off unrelated
+// content, such as the login origin mid-auth. Two acceptances: the configured
+// origin, which covers a `url` override outside the known hosts (GovCloud's
+// `gov.teams.microsoft.us`, ADR-020), and any Teams host, since Teams redirects
+// `teams.microsoft.com` sessions to `teams.cloud.microsoft`.
+function findRouterFrame(mainFrame, configuredOrigin) {
+  return isTeamsOrigin(mainFrame.url, configuredOrigin) ? mainFrame : null;
+}
+
+// An unparsable configured URL only loses its own acceptance: a session on a
+// known Teams host still routes. Opaque origins (`file:`, `data:`) all
+// serialise to the string "null" and would match any `about:blank` frame.
+function configuredOriginOf(teamsUrl) {
+  try {
+    const { origin } = new URL(teamsUrl);
+    return origin === "null" ? null : origin;
+  } catch {
+    return null;
+  }
 }
 
 // The SPA rewrote the fragment within 26ms when measured. This budget is only
@@ -78,7 +98,8 @@ const ROUTE_CONSUMED_TIMEOUT_MS = 750;
  *
  * @param {Electron.BrowserWindow} window - Main application window
  * @param {string} url - Deep link URL resolved from the launch argument
- * @param {string} teamsUrl - Configured Teams URL, used for the origin check
+ * @param {string} teamsUrl - Configured Teams URL, accepted as the frame's
+ *   origin alongside the known Teams hosts
  * @returns {Promise<boolean>} True when the SPA consumed the route; false
  *   means the caller should fall back to a full navigation
  */
@@ -88,19 +109,14 @@ async function navigateInPage(window, url, teamsUrl) {
     return false;
   }
 
-  let teamsOrigin;
-  try {
-    teamsOrigin = new URL(teamsUrl).origin;
-  } catch {
-    return false;
-  }
+  const configuredOrigin = configuredOriginOf(teamsUrl);
 
   // Electron throws "Object has been destroyed" rather than returning
   // undefined when the window is torn down mid-flight, so this reaches the
   // fallback instead of rejecting out of the module.
   let frame;
   try {
-    frame = findRouterFrame(window.webContents.mainFrame, teamsOrigin);
+    frame = findRouterFrame(window.webContents.mainFrame, configuredOrigin);
   } catch {
     return false;
   }
@@ -166,4 +182,80 @@ async function navigateInPage(window, url, teamsUrl) {
   }
 }
 
-module.exports = { toHashRoute, findRouterFrame, navigateInPage };
+// Routes that land on a conversation, where the caret belongs in the compose
+// box. The SPA opens the conversation but leaves focus wherever it was, so
+// typing right after following a link goes nowhere.
+const CONVERSATION_ROUTE = /^#\/l\/(chat|message)\//;
+
+// The target conversation mounts its editor after the route is consumed, and
+// switching from another chat replaces the previous editor with it.
+const COMPOSE_FOCUS_TIMEOUT_MS = 1500;
+
+/**
+ * Runs in the renderer (serialised by `focusCompose`). Focuses the compose box
+ * and keeps it focused while the conversation view settles: an editor focused
+ * too early belongs to the chat being left and is removed with it. Backs off
+ * at the first key or pointer input, so it never fights the user.
+ *
+ * @param {(doc: Document, selectors: string[]) => Element|null} find -
+ *   `findCompose` from helpers/composeBox, passed in because this runs serialised
+ * @param {string[]} selectors - Compose box selectors, most specific first
+ * @param {number} timeoutMs - How long the view is given to settle
+ * @returns {Promise<boolean>} Whether the compose box holds focus at the end
+ */
+function focusComposeBox(find, selectors, timeoutMs) {
+  return new Promise((resolve) => {
+    let focused = null;
+    const refocus = () => {
+      if (focused?.isConnected && document.activeElement === focused) return;
+      const el = find(document, selectors);
+      if (el) {
+        el.focus();
+        focused = el;
+      }
+    };
+    const observer = new MutationObserver(refocus);
+    const stop = () => {
+      observer.disconnect();
+      clearTimeout(timer);
+      removeEventListener("keydown", stop, true);
+      removeEventListener("pointerdown", stop, true);
+      resolve(focused !== null && document.activeElement === focused);
+    };
+    const timer = setTimeout(stop, timeoutMs);
+    addEventListener("keydown", stop, true);
+    addEventListener("pointerdown", stop, true);
+    observer.observe(document.body, { childList: true, subtree: true });
+    refocus();
+  });
+}
+
+/**
+ * Puts the caret in the compose box after an in-page route to a conversation.
+ * Best effort: a miss (meeting link, renamed selectors, torn-down window) is
+ * not an error and changes nothing.
+ *
+ * @param {Electron.BrowserWindow} window - Main application window
+ * @param {string} url - The deep link that was just routed in page
+ * @param {string} teamsUrl - Configured Teams URL, as for `navigateInPage`
+ * @returns {Promise<boolean>} Whether a compose box was focused
+ */
+async function focusCompose(window, url, teamsUrl) {
+  const route = toHashRoute(url);
+  if (!route || !CONVERSATION_ROUTE.test(route)) {
+    return false;
+  }
+  try {
+    const frame = findRouterFrame(window.webContents.mainFrame, configuredOriginOf(teamsUrl));
+    if (!frame) {
+      return false;
+    }
+    return await frame.executeJavaScript(
+      `(${focusComposeBox.toString()})(${findCompose.toString()}, ${JSON.stringify(COMPOSE_SELECTORS)}, ${COMPOSE_FOCUS_TIMEOUT_MS})`
+    );
+  } catch {
+    return false;
+  }
+}
+
+module.exports = { toHashRoute, findRouterFrame, navigateInPage, focusCompose, focusComposeBox };

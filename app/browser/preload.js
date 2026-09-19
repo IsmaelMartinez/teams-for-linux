@@ -14,18 +14,7 @@ const { ipcRenderer } = require("electron");
 // as a Blob with no path and is unaffected.
 try {
   const { webUtils } = require("electron");
-  const TEAMS_HOSTS = ["teams.cloud.microsoft", "teams.microsoft.com", "teams.live.com"];
-  const isTeamsHost = (hostname) => {
-    if (hostname.endsWith(".mcas.ms")) {
-      hostname = hostname.slice(0, -".mcas.ms".length);
-    }
-    return TEAMS_HOSTS.some(
-      (domain) =>
-        hostname === domain ||
-        (hostname.endsWith("." + domain) &&
-          !hostname.slice(0, -(domain.length + 1)).includes(".")),
-    );
-  };
+  const { isTeamsHost } = require("../helpers/teamsHosts");
   // Restore the non-standard `File.path` on every File in a FileList, in place.
   // No-op for blob-backed files (screenshots) since webUtils only resolves a
   // path for files that originated from the OS file list; those are left as-is.

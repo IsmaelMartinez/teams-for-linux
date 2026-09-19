@@ -5,9 +5,13 @@ const {
   toHashRoute,
   findRouterFrame,
   navigateInPage,
+  focusCompose,
+  focusComposeBox,
 } = require("../../app/mainAppWindow/deepLinkRouter");
+const { findCompose } = require("../../app/helpers/composeBox");
 
 const TEAMS_URL = "https://teams.cloud.microsoft";
+const TEAMS_ORIGIN = new URL(TEAMS_URL).origin;
 const DEEP_LINK = "https://teams.cloud.microsoft/l/chat/0/0?users=a@b.com";
 const MEETING_LINK =
   "https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc%40thread.v2/0?context=%7B%22Tid%22%3A%22t%22%7D";
@@ -55,6 +59,16 @@ test("toHashRoute routes a channel link", () => {
   );
 });
 
+test("toHashRoute keeps a chat link that names its thread", () => {
+  // The widget/launcher form for a conversation without a message to land on;
+  // declining it made the client reload, which drops an active call.
+  const thread = "19%3A9e2b1a16123744ca8b6159cb33348835%40thread.v2";
+  assert.strictEqual(
+    toHashRoute(`https://teams.cloud.microsoft/l/chat/${thread}/conversations?context=%7B%7D`),
+    `#/l/chat/${thread}/conversations?context=%7B%7D`
+  );
+});
+
 test("toHashRoute declines links the SPA route cannot resolve", () => {
   const declined = [
     "https://teams.cloud.microsoft/l/chat/0/0",
@@ -74,13 +88,40 @@ test("toHashRoute declines links the SPA route cannot resolve", () => {
 test("findRouterFrame returns the main frame when Teams is loaded", () => {
   const main = { url: "https://teams.cloud.microsoft/" };
 
-  assert.strictEqual(findRouterFrame(main, TEAMS_URL), main);
+  assert.strictEqual(findRouterFrame(main, TEAMS_ORIGIN), main);
+});
+
+test("findRouterFrame accepts the configured origin outside the known hosts", () => {
+  // GovCloud runs on `gov.teams.microsoft.us`, reached through the `url`
+  // override (ADR-020): not a known Teams host, accepted as the configured one.
+  const gov = { url: "https://gov.teams.microsoft.us/v2/" };
+
+  assert.strictEqual(findRouterFrame(gov, "https://gov.teams.microsoft.us"), gov);
+  assert.strictEqual(findRouterFrame(gov, TEAMS_ORIGIN), null, "only when it is the configured one");
+  assert.strictEqual(findRouterFrame(gov, null), null);
+});
+
+test("findRouterFrame accepts every Teams host, whatever the configured URL", () => {
+  // Teams redirects `teams.microsoft.com` sessions to `teams.cloud.microsoft`;
+  // comparing against the configured URL declined every route on such a
+  // session and reached the fallback reload (#2976).
+  for (const url of [
+    "https://teams.microsoft.com/",
+    "https://teams.live.com/v2/",
+    "https://teams.cloud.microsoft.mcas.ms/",
+  ]) {
+    const main = { url };
+    assert.strictEqual(findRouterFrame(main, TEAMS_ORIGIN), main, url);
+  }
+  for (const url of ["http://teams.microsoft.com/", "https://evil.com.teams.microsoft.com/", "not-a-url"]) {
+    assert.strictEqual(findRouterFrame({ url }, TEAMS_ORIGIN), null, url);
+  }
 });
 
 test("findRouterFrame declines while the window is on another origin", () => {
   const main = { url: "https://login.microsoftonline.com/common/oauth2/" };
 
-  assert.strictEqual(findRouterFrame(main, TEAMS_URL), null);
+  assert.strictEqual(findRouterFrame(main, TEAMS_ORIGIN), null);
 });
 
 function windowWith(frameUrl, executeJavaScript) {
@@ -210,7 +251,7 @@ test("navigateInPage declines when the window is torn down mid-flight", async ()
   };
 
   assert.strictEqual(
-    await navigateInPage(destroyed, DEEP_LINK, TEAMS_URL),
+    await navigateInPage(destroyed, DEEP_LINK),
     false
   );
 });
@@ -224,4 +265,183 @@ test("navigateInPage declines unsupported link shapes without touching the frame
     await navigateInPage(win, "https://teams.microsoft.com/meet/241", TEAMS_URL),
     false
   );
+});
+
+test("navigateInPage routes a GovCloud session through its configured URL", async () => {
+  let ran = 0;
+  const win = windowWith("https://gov.teams.microsoft.us/v2/", async () => {
+    ran += 1;
+    return true;
+  });
+  const link = "https://gov.teams.microsoft.us/l/chat/0/0?users=a@b.com";
+
+  assert.strictEqual(await navigateInPage(win, link, "https://gov.teams.microsoft.us"), true);
+  // Counted rather than asserted inside the callback: navigateInPage swallows
+  // a throw from the frame, which would read as a clean decline.
+  assert.strictEqual(await navigateInPage(win, link, TEAMS_URL), false);
+  assert.strictEqual(ran, 1, "declined without touching a frame that is not the configured one");
+});
+
+test("navigateInPage still routes on a Teams host when the configured URL is unusable", async () => {
+  const win = windowWith("https://teams.cloud.microsoft/", async () => true);
+
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, "not a url"), true);
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, undefined), true);
+});
+
+test("navigateInPage does not let an opaque configured origin match a blank frame", async () => {
+  // `file:` and `about:blank` both serialise their origin as "null".
+  let ran = 0;
+  const win = windowWith("about:blank", async () => {
+    ran += 1;
+    return true;
+  });
+
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, "file:///tmp/teams.html"), false);
+  assert.strictEqual(ran, 0);
+});
+
+test("focusCompose only targets conversation routes on a Teams frame", async () => {
+  let script = null;
+  const win = windowWith("https://teams.cloud.microsoft/", async (source) => {
+    script = source;
+    return true;
+  });
+
+  assert.strictEqual(await focusCompose(win, MEETING_LINK, TEAMS_URL), false);
+  assert.strictEqual(script, null, "a meeting link has no compose box to focus");
+  assert.strictEqual(await focusCompose(win, DEEP_LINK, TEAMS_URL), true);
+  // The renderer function travels as source: a syntax slip would only show
+  // up as a rejected promise, silently swallowed as "not found".
+  assert.doesNotThrow(() => new Function(`return ${script}`));
+  assert.match(script, /role=\\"textbox\\"/);
+
+  // Counted, not asserted inside the callback: focusCompose swallows a throw
+  // from the frame, so an assert.fail in there would read as a clean decline.
+  let ranOnLogin = 0;
+  const login = windowWith("https://login.microsoftonline.com/", async () => {
+    ranOnLogin += 1;
+    return true;
+  });
+  assert.strictEqual(await focusCompose(login, DEEP_LINK, TEAMS_URL), false);
+  assert.strictEqual(ranOnLogin, 0, "nothing is injected off a Teams host");
+  const rejecting = windowWith("https://teams.cloud.microsoft/", async () => {
+    throw new Error("frame disposed");
+  });
+  assert.strictEqual(await focusCompose(rejecting, DEEP_LINK, TEAMS_URL), false);
+});
+
+// Minimal renderer stand-in for focusComposeBox: one query result at a time,
+// a MutationObserver whose callback the test fires, and captured listeners.
+function fakeDom() {
+  const dom = { editor: null, mutate: null, listeners: {}, observing: false };
+  const document = {
+    body: {},
+    activeElement: null,
+    querySelector: () => dom.editor,
+  };
+  dom.mount = () => {
+    const el = { isConnected: true, focusCount: 0 };
+    el.focus = () => {
+      el.focusCount += 1;
+      document.activeElement = el;
+    };
+    dom.editor = el;
+    return el;
+  };
+  dom.unmount = (el) => {
+    el.isConnected = false;
+    if (dom.editor === el) dom.editor = null;
+    if (document.activeElement === el) document.activeElement = document.body;
+  };
+  const globals = {
+    document,
+    MutationObserver: class {
+      constructor(callback) {
+        dom.mutate = () => dom.observing && callback();
+      }
+      observe() {
+        dom.observing = true;
+      }
+      disconnect() {
+        dom.observing = false;
+      }
+    },
+    addEventListener: (type, handler) => {
+      dom.listeners[type] = handler;
+    },
+    removeEventListener: (type) => {
+      delete dom.listeners[type];
+    },
+  };
+  const saved = Object.fromEntries(Object.keys(globals).map((key) => [key, globalThis[key]]));
+  Object.assign(globalThis, globals);
+  dom.restore = () => Object.assign(globalThis, saved);
+  return dom;
+}
+
+test("focusComposeBox follows the editor while the conversation view settles", async (t) => {
+  const dom = fakeDom();
+  t.after(dom.restore);
+
+  const leaving = dom.mount();
+  const done = focusComposeBox(findCompose, ["any"], 30);
+  assert.strictEqual(leaving.focusCount, 1, "focuses what is there at once");
+
+  // The chat being left takes its editor with it; the target mounts its own.
+  dom.unmount(leaving);
+  const target = dom.mount();
+  dom.mutate();
+  assert.strictEqual(target.focusCount, 1);
+  dom.mutate();
+  assert.strictEqual(target.focusCount, 1, "an editor that kept focus is left alone");
+
+  assert.strictEqual(await done, true);
+  assert.deepStrictEqual(dom.listeners, {}, "listeners are removed on settle");
+  assert.strictEqual(dom.observing, false);
+});
+
+test("focusComposeBox backs off at the first user input", async (t) => {
+  const dom = fakeDom();
+  t.after(dom.restore);
+
+  const done = focusComposeBox(findCompose, ["any"], 30);
+  dom.listeners.pointerdown();
+  const late = dom.mount();
+  dom.mutate();
+
+  assert.strictEqual(late.focusCount, 0, "never fights the user for focus");
+  assert.strictEqual(await done, false);
+});
+
+test("focusComposeBox resolves false when no compose box ever mounts", async (t) => {
+  const dom = fakeDom();
+  t.after(dom.restore);
+
+  assert.strictEqual(await focusComposeBox(findCompose, ["a", "b"], 10), false);
+  assert.strictEqual(dom.observing, false);
+});
+
+test("focusCompose accepts the configured origin like navigateInPage", async () => {
+  let ran = 0;
+  const gov = windowWith("https://gov.teams.microsoft.us/v2/", async () => {
+    ran += 1;
+    return true;
+  });
+  const link = "https://gov.teams.microsoft.us/l/chat/0/0?users=a@b.com";
+
+  assert.strictEqual(await focusCompose(gov, link, "https://gov.teams.microsoft.us"), true);
+  assert.strictEqual(await focusCompose(gov, link, TEAMS_URL), false);
+  assert.strictEqual(ran, 1, "nothing is injected into a frame that is not the configured one");
+});
+
+test("focusComposeBox reports false when the match cannot take focus", async (t) => {
+  // The cascade also lists wrappers (`[data-tid*="message-area"]`): matching
+  // one is not the caret being in the compose box.
+  const dom = fakeDom();
+  t.after(dom.restore);
+  const wrapper = dom.mount();
+  wrapper.focus = () => {};
+
+  assert.strictEqual(await focusComposeBox(findCompose, ["any"], 10), false);
 });
