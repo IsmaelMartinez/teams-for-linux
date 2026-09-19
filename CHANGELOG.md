@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.22.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.22.0...v2.22.1) (2026-09-19)
+
+
+### Bug Fixes
+
+* **deeplink:** keep a running call through the fallback, on any Teams host ([#2988](https://github.com/IsmaelMartinez/teams-for-linux/issues/2988)) ([56e5b14](https://github.com/IsmaelMartinez/teams-for-linux/commit/56e5b1428e43c5ddd40825ea5add94d10150ae78))
+* **notifications:** show Teams for Linux as the notification title on Linux ([#2898](https://github.com/IsmaelMartinez/teams-for-linux/issues/2898)) ([e9c8795](https://github.com/IsmaelMartinez/teams-for-linux/commit/e9c87950380f45a76d2de7978be5605524d67eda))
+
+
+### Documentation
+
+* **release:** describe the automated Flathub beta bump ([#2989](https://github.com/IsmaelMartinez/teams-for-linux/issues/2989)) ([be313c0](https://github.com/IsmaelMartinez/teams-for-linux/commit/be313c07c211c7144c1ad4e950e9a8b272433c2d))
+
 ## [2.22.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.21.0...v2.22.0) (2026-09-18)
 
 
