@@ -20,8 +20,11 @@ require("../appConfiguration");
 const ConnectionManager = require("../connectionManager");
 const ssoPasswordPrefill = require("../ssoPasswordPrefill");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
+const deepLinkRouter = require("./deepLinkRouter");
+const { DeferredDeepLink } = require("./deferredDeepLink");
 const os = require("node:os");
 const path = require("node:path");
+const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
 
 const DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG = {
   enabled: true,
@@ -52,6 +55,20 @@ const isMac = os.platform() === "darwin";
 function setupScreenSharing(selectedSource) {
   screenSharingService.setSelectedSource(selectedSource);
   createScreenSharePreviewWindow();
+}
+
+// Install the profile-view window-open policy on a webContents (a profile
+// view or one of its descendants). Teams deep links load into
+// `loadTargetWebContents` — the originating profile view — never the root
+// window, which is a different profile. Profile views previously had no
+// handler at all; see profileWindowOpenPolicy.js for what is deliberately
+// still left on Electron's default and why.
+function bindWindowOpenHandler(targetWebContents, loadTargetWebContents, activate) {
+  installProfileWindowOpenHandler(targetWebContents, {
+    config,
+    loadTargetWebContents,
+    activate,
+  });
 }
 
 // Register the in-app screen-share picker on a given session. `setDisplayMediaRequestHandler`
@@ -331,7 +348,9 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
 // Set an expiration date for the cookie to promote it from a session cookie, so it survives restarts
 const MSAL_ENCRYPTION_COOKIE = 'msal.cache.encryption';
 function keepMsalEncryptionCookiePersistent(windowSession) {
-  if(!config?.auth?.keepMsalCacheEncryptionCookie?.enabled) return;
+  // undefined counts as enabled: a partial auth block in config.json replaces
+  // the defaults wholesale and must not silently disable this fix (#2722)
+  if (config?.auth?.keepMsalCacheEncryptionCookie?.enabled === false) return;
   windowSession.cookies.on('changed', (_event, cookie, _cause, removed) => {
     if (removed || cookie.name !== MSAL_ENCRYPTION_COOKIE || !cookie.session) {
       return;
@@ -509,6 +528,16 @@ let firstMidCallWorkerSignalAt = 0;
 let reauthPromptShownForCall = false;
 let reauthPromptOpen = false;
 let recoveryQueuedForCallEnd = false;
+// A deep link the SPA declined during a call: the fallback reload would end
+// the call, so the link waits for the call to end, as auth recovery does.
+// Same teardown delay as the queued recovery.
+const CALL_TEARDOWN_DELAY_MS = 5000;
+const deferredDeepLink = new DeferredDeepLink(
+  (url) => openDeepLink(url).catch(() => console.debug('[DEEPLINK] deferred navigation failed')),
+  CALL_TEARDOWN_DELAY_MS
+);
+// Bumped per `openDeepLink` call: after its await, only the newest call may fall back.
+let deepLinkGeneration = 0;
 // A single transient worker UPR must not prompt (#2428); require the worker
 // signals to persist this long into the same call before treating them as a
 // genuine mid-call auth failure.
@@ -730,7 +759,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // Teams renderer to it with a direct MessagePort so a single capture
   // feeds both windows (#2534). One of several listeners on this broadcast
   // channel; see the rationale above.
-  ipcMain.on("screen-sharing-started", () => {
+  ipcMain.on("screen-sharing-started", (event) => {
     if (!window || window.isDestroyed()) return;
     createScreenSharePreviewWindow();
     const previewWindow = screenSharingService.getPreviewWindow();
@@ -740,8 +769,18 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     }
     const postPorts = () => {
       try {
+        // The sharing renderer owns the capture and relays the snapshots, so
+        // the port must go to it, not to the root window: a share started in
+        // a multi-account profile view would otherwise leave the preview with
+        // no frame source and paint black (#2979). postPorts can be deferred
+        // to the preview window's did-finish-load, so the sender may be gone.
+        const sender = event.sender;
+        if (!sender || sender.isDestroyed()) {
+          console.debug("[SCREEN_SHARE_DIAG] Sharing renderer gone before port wiring - skipping");
+          return;
+        }
         const { port1, port2 } = new MessageChannelMain();
-        window.webContents.postMessage("screen-share-port", null, [port1]);
+        sender.postMessage("screen-share-port", null, [port1]);
         previewWindow.webContents.postMessage("screen-share-port", null, [port2]);
         console.debug("[SCREEN_SHARE_DIAG] Posted MessagePort to Teams renderer and preview window");
       } catch (error) {
@@ -791,6 +830,14 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     callActive = false;
     resetMidCallAuthState();
     if (recoveryQueuedForCallEnd) {
+      // Recovery clears the session and reloads at the same deadline; a link
+      // opened alongside it would be replaced mid-load, so recovery wins.
+      deferredDeepLink.cancel();
+    } else if (deferredDeepLink.pending) {
+      console.info('[DEEPLINK] Call ended, opening the deferred link');
+      deferredDeepLink.release();
+    }
+    if (recoveryQueuedForCallEnd) {
       recoveryQueuedForCallEnd = false;
       console.info('[AUTH_RECOVERY] Call ended, running queued recovery');
       // Short delay so the call teardown finishes before the reload
@@ -811,6 +858,9 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     callActive = false;
     resetMidCallAuthState();
     recoveryQueuedForCallEnd = false;
+    // The window moved on: a link still waiting, or released and not yet
+    // opened, would land on top of wherever this navigation went.
+    deferredDeepLink.cancel();
   });
   window.webContents.on('console-message', (event) => {
     maybeScheduleAuthRecovery(event.message, event.sourceId);
@@ -855,6 +905,8 @@ exports.getWindow = function () {
 };
 
 exports.bindDisplayMediaHandler = bindDisplayMediaHandler;
+exports.bindWindowOpenHandler = bindWindowOpenHandler;
+exports.injectScreenSharingLogic = injectScreenSharingLogic;
 
 exports.setQuickChatManager = function (quickChatManager) {
   if (menus) {
@@ -864,7 +916,7 @@ exports.setQuickChatManager = function (quickChatManager) {
 
 exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
   console.debug("second-instance started");
-  if (window) {
+  if (window && !window.isDestroyed()) {
     event.preventDefault();
     const url = processArgs(args);
     if (url && allowFurtherRequests) {
@@ -872,12 +924,59 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
       setTimeout(() => {
         allowFurtherRequests = true;
       }, 5000);
-      window.loadURL(url, { userAgent: config.chromeUserAgent });
+      // `loadURL` rejects with ERR_ABORTED whenever Teams redirects the
+      // navigation it started, and the main process exits on
+      // unhandledRejection. The error is dropped rather than logged because it
+      // carries the deep link, and with it the recipient or meeting.
+      openDeepLink(url).catch(() => {
+        console.debug("[DEEPLINK] navigation failed");
+      });
     }
 
     restoreWindow();
   }
 };
+
+/**
+ * Opens a deep link, preferring in-page routing over a full navigation.
+ *
+ * A full `loadURL` discards the running SPA and cold-boots it, which is the
+ * multi-second delay between activating a link and seeing the target. Launcher
+ * links route through the loaded SPA instead, and anything it does not consume
+ * falls back to the full navigation.
+ *
+ * @param {string} url - Deep link URL resolved from the launch argument
+ */
+async function openDeepLink(url) {
+  // The newest link wins, whichever way it ends up opening: one held from
+  // earlier must not open over it, and the full navigation below can outlast
+  // the release delay before `did-navigate` would get to cancel it.
+  deferredDeepLink.cancel();
+  const generation = ++deepLinkGeneration;
+
+  const routed = await deepLinkRouter.navigateInPage(window, url, config.url);
+  if (routed) {
+    console.debug("[DEEPLINK] routed in page");
+    return;
+  }
+
+  // A released link is not held off by the second-instance cooldown, so a
+  // newer one can arrive during the wait above; it owns the fallback then.
+  if (generation !== deepLinkGeneration) {
+    console.debug("[DEEPLINK] superseded by a newer link, fallback skipped");
+    return;
+  }
+
+  if (callActive) {
+    // Only the URL is kept, never logged: it carries the recipient or meeting.
+    console.info("[DEEPLINK] in-page routing unavailable during a call, deferring to the call end");
+    deferredDeepLink.defer(url);
+    return;
+  }
+
+  console.debug("[DEEPLINK] in-page routing unavailable, reloading");
+  await window.loadURL(url, { userAgent: config.chromeUserAgent });
+}
 
 function applyAppConfiguration(config, window) {
   applySpellCheckerConfiguration(config.spellCheckerLanguages, window);
@@ -946,13 +1045,17 @@ function onDidFinishLoad() {
 			tryAgainLink && tryAgainLink.click()
 		`).catch(() => {});
 
-  injectScreenSharingLogic();
+  injectScreenSharingLogic(window.webContents);
 
   customCSS.onDidFinishLoad(window.webContents, config);
   initSystemThemeFollow(config);
 }
 
-function injectScreenSharingLogic() {
+// Runs the screen-sharing script (audio stripping, preview relay, stop-button
+// monitoring) in the given Teams webContents. Called for the root window here
+// and for each multi-account profile view by ProfileViewManager, which
+// otherwise shared with Teams' raw constraints (#2979).
+function injectScreenSharingLogic(webContents) {
   const fs = require("node:fs");
   const scriptPath = path.join(
     __dirname,
@@ -962,7 +1065,7 @@ function injectScreenSharingLogic() {
   );
   try {
     const script = fs.readFileSync(scriptPath, "utf8");
-    window.webContents.executeJavaScript(script).catch((err) => {
+    webContents.executeJavaScript(script).catch((err) => {
       console.error("[SCREEN_SHARE] Failed to execute injected script:", err.message);
     });
   } catch (err) {
@@ -1011,6 +1114,10 @@ function restoreWindow() {
   }
 
   window.focus();
+  // A second instance has no user activation, so window.focus() alone can be
+  // refused as focus stealing; app.focus() raises the first visible window on
+  // X11 (Wayland may only flash the icon, which is the platform's call).
+  app.focus();
 }
 
 /**

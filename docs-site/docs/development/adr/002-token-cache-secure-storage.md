@@ -6,7 +6,7 @@ id: 002-token-cache-secure-storage
 
 ## Status
 
-**Accepted** - Implementation completed as of v2.5.9
+**Implemented** - Completed as of v2.5.9
 
 ## Context
 

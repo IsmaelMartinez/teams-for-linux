@@ -20,25 +20,27 @@ const { BrowserWindow, ipcMain, webFrameMain } = require("electron");
 const fido2Backend = require("./fido2Backend");
 const { requestPinPreCollect, requestPinModal } = require("./pinDialog");
 const { showTouchPrompt } = require("./touchPrompt");
+const { DEFAULT_ORIGINS, buildAllowedOrigins } = require("./originAllowlist");
 const log = require("./log");
 
-// Defense-in-depth: only allow WebAuthn requests from known Microsoft login origins.
+// Defense-in-depth: only allow WebAuthn requests from known login origins.
 // The IPC allowlist is the primary control; this is a secondary check.
-const ALLOWED_ORIGINS = new Set([
-  "https://login.microsoftonline.com",
-  "https://login.microsoft.com",
-  "https://login.live.com",
-]);
+//
+// Federated tenants sign in on their own IdP host, which is never one of the
+// Microsoft defaults, so the ceremony was blocked outright (#2931). Extended at
+// initialize() from auth.webauthn.extraOrigins. The subframe relay in
+// app/browser/tools/webauthnOverride.js builds the same set.
+let allowedOrigins = new Set(DEFAULT_ORIGINS);
 
 let initialized = false;
 
 /**
- * Validate that the request origin is an expected Microsoft login domain.
+ * Validate that the request origin is an allowed login origin.
  * @param {string} origin
  * @returns {boolean}
  */
 function isAllowedOrigin(origin) {
-  return ALLOWED_ORIGINS.has(origin);
+  return allowedOrigins.has(origin);
 }
 
 /**
@@ -101,6 +103,7 @@ async function handleWebauthnRequest(operation, event, options) {
       op: operation,
       reason: "origin-not-allowed",
       originClass: log.classifyOrigin(origin),
+      hint: "if this is your federated IdP sign-in page, add it to auth.webauthn.extraOrigins",
     });
     return { success: false, error: "SecurityError: origin not allowed" };
   }
@@ -125,14 +128,18 @@ async function handleWebauthnRequest(operation, event, options) {
   let touchMs = null;
 
   try {
-    // Determine if UV is required (PIN will be needed)
+    // Determine if UV is required (PIN will be needed). A get with no
+    // allowCredentials also needs the PIN: the discoverable flow lists the
+    // key's resident credentials via credential management, which is PIN-gated
+    // on most keys regardless of what userVerification asks for.
     const uvRequired = operation === "create"
       ? options.authenticatorSelection?.userVerification === "required"
       : options.userVerification === "required";
+    const discoverableGet = operation === "get" && (options.allowCredentials?.length ?? 0) === 0;
 
     let preCollectedPin = null;
-    if (uvRequired) {
-      log.info("[WEBAUTHN] userVerification=required, collecting PIN upfront");
+    if (uvRequired || discoverableGet) {
+      log.info("[WEBAUTHN] Collecting PIN upfront", { uvRequired, discoverableGet });
       const pinStartedAt = Date.now();
       preCollectedPin = await collectPin(event.sender);
       pinMs = Date.now() - pinStartedAt;
@@ -232,11 +239,15 @@ function injectIntoFrame(wf) {
         return Uint8Array.from(d, c => c.charCodeAt(0)).buffer;
       }
 
-      function createPublicKeyCredential(properties) {
+      function createWithPrototype(prototype, properties) {
         return Object.create(
-          PublicKeyCredential.prototype,
+          prototype,
           Object.getOwnPropertyDescriptors(properties)
         );
+      }
+
+      function createPublicKeyCredential(properties) {
+        return createWithPrototype(PublicKeyCredential.prototype, properties);
       }
 
       function serCreate(pk) {
@@ -282,9 +293,10 @@ function injectIntoFrame(wf) {
         const r = await ipcInvoke("webauthn:create", serCreate(opts.publicKey));
         const raw = b64urlToBuf(r.rawId);
         return createPublicKeyCredential({ id: r.credentialId, rawId: raw, type: r.type, authenticatorAttachment: "cross-platform",
-          response: { attestationObject: b64urlToBuf(r.attestationObject), clientDataJSON: b64urlToBuf(r.clientDataJson),
+          response: createWithPrototype(AuthenticatorAttestationResponse.prototype, {
+            attestationObject: b64urlToBuf(r.attestationObject), clientDataJSON: b64urlToBuf(r.clientDataJson),
             getAuthenticatorData: () => b64urlToBuf(r.authenticatorData), getTransports: () => r.transports || ["usb"],
-            getPublicKey: () => null, getPublicKeyAlgorithm: () => r.publicKeyAlgorithm || -7 },
+            getPublicKey: () => null, getPublicKeyAlgorithm: () => r.publicKeyAlgorithm || -7 }),
           getClientExtensionResults: () => ({}),
           toJSON: () => ({ id: r.credentialId, rawId: r.rawId, type: r.type,
             response: { attestationObject: r.attestationObject, clientDataJSON: r.clientDataJson } }) });
@@ -297,10 +309,13 @@ function injectIntoFrame(wf) {
         const r = await ipcInvoke("webauthn:get", serGet(opts.publicKey));
         const raw = b64urlToBuf(r.rawId);
         const authData = b64urlToBuf(r.authenticatorData);
+        // The real response prototype matters: the bridge/fido login page
+        // silently discards assertions failing an instanceof check (#2719).
         return createPublicKeyCredential({ id: r.credentialId, rawId: raw, type: r.type, authenticatorAttachment: "cross-platform",
-          response: { authenticatorData: authData, clientDataJSON: b64urlToBuf(r.clientDataJson),
+          response: createWithPrototype(AuthenticatorAssertionResponse.prototype, {
+            authenticatorData: authData, clientDataJSON: b64urlToBuf(r.clientDataJson),
             signature: b64urlToBuf(r.signature), userHandle: r.userHandle ? b64urlToBuf(r.userHandle) : null,
-            getAuthenticatorData: () => authData },
+            getAuthenticatorData: () => authData }),
           getClientExtensionResults: () => ({}),
           toJSON: () => ({ id: r.credentialId, rawId: r.rawId, type: r.type,
             authenticatorAttachment: "cross-platform", clientExtensionResults: {},
@@ -321,11 +336,13 @@ function injectIntoFrame(wf) {
  *
  * @param {Electron.BrowserWindow} [mainWindow] - Main window for frame injection
  * @param {object} [config] - App config; auth.webauthn.debug enables verbose logs
+ *   and auth.webauthn.extraOrigins adds login origins beyond the Microsoft defaults
  */
 async function initialize(mainWindow, config) {
   if (initialized) return;
 
   log.setDebug(config?.auth?.webauthn?.debug);
+  allowedOrigins = buildAllowedOrigins(config?.auth?.webauthn?.extraOrigins);
 
   const available = await fido2Backend.isAvailable();
   if (!available) {
@@ -361,7 +378,17 @@ async function initialize(mainWindow, config) {
   }
 
   initialized = true;
-  log.info("[WEBAUTHN] Hardware security key support initialized");
+  log.info("[WEBAUTHN] Hardware security key support initialized", {
+    extraOrigins: allowedOrigins.size - DEFAULT_ORIGINS.length,
+  });
 }
 
-module.exports = { initialize };
+module.exports = {
+  initialize,
+  // Exported for tests: the allowlist is the security gate, so it is asserted
+  // on directly rather than through a replica.
+  _applyExtraOrigins: (extraOrigins) => {
+    allowedOrigins = buildAllowedOrigins(extraOrigins);
+  },
+  _isAllowedOrigin: isAllowedOrigin,
+};

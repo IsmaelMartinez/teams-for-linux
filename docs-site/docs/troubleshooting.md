@@ -16,7 +16,7 @@ For configuration options, see [Configuration](configuration.md). For developmen
 
 ## Performance Tuning
 
-When the app feels slow or heavy, seven configuration options are the first-line knobs to check. `disableGpu` turns off GPU compositing and hardware acceleration, which helps on broken graphics drivers and hurts otherwise. `cacheManagement.maxCacheSizeMB` (default 600) and `cacheManagement.cacheCheckIntervalMs` (default one hour) govern automatic cache cleanup, while `electronCLIFlags` passes arbitrary Chromium flags for tuning memory, GPU, or rendering behaviour. `appIdleTimeout` and `appIdleTimeoutCheckInterval` control how often idle state is polled, and `wayland.xwaylandOptimizations` affects GPU behaviour under XWayland. See [Configuration](configuration.md) for details on each option.
+When the app feels slow or heavy, seven configuration options are the first-line knobs to check. `performance.disableGpu` turns off GPU compositing and hardware acceleration, which helps on broken graphics drivers and hurts otherwise. `cacheManagement.maxCacheSizeMB` (default 600) and `cacheManagement.cacheCheckIntervalMs` (default one hour) govern automatic cache cleanup, while `performance.electronCLIFlags` passes arbitrary Chromium flags for tuning memory, GPU, or rendering behaviour. `appIdleTimeout` and `appIdleTimeoutCheckInterval` control how often idle state is polled, and `wayland.xwaylandOptimizations` affects GPU behaviour under XWayland. See [Configuration](configuration.md) for details on each option.
 
 ---
 
@@ -45,6 +45,20 @@ When the app feels slow or heavy, seven configuration options are the first-line
     *   Download the latest installer from the official GitHub releases page.
     *   Perform a clean installation.
 
+#### Issue: Snap exits immediately with status 1 and no output
+
+**Description:** `snap run teams-for-linux` returns exit code 1 with completely empty stdout and stderr. No window appears and nothing is written to the journal. Affects snap revisions from 2396 onwards on `core22` ([#2946](https://github.com/IsmaelMartinez/teams-for-linux/issues/2946)).
+
+**Potential Causes:**
+*   The snap launcher runs a desktop-integration script under `set -e` that calls `rmdir` on an XDG user directory. `rmdir` fails on a non-empty directory, its error is discarded, and the launcher aborts before Electron ever starts.
+*   Triggered when `~/.config/user-dirs.locale` is missing, or when an XDG user directory (Documents, Downloads, and so on) points somewhere the snap cannot read, such as a path under `/mnt` that needs the `removable-media` interface.
+
+**Solutions/Workarounds:**
+
+1.  **Update the snap.** Revisions built after this issue was fixed launch normally: `sudo snap refresh teams-for-linux`.
+
+2.  **If you cannot update yet**, either create the missing locale file with `touch ~/.config/user-dirs.locale`, connect the interface your XDG directories need with `sudo snap connect teams-for-linux:removable-media`, or roll back with `sudo snap revert teams-for-linux`.
+
 #### Issue: No History after Electron version update
 
 **Description:** When updating the Electron version, the channel history may sometimes disappear. This issue is typically related to a change in the user agent.
@@ -67,19 +81,25 @@ When the app feels slow or heavy, seven configuration options are the first-line
     | From source | `~/.config/Electron/` | `rm -rf ~/.config/Electron/` |
 
 
-#### Issue: No Apple Silicon Mac build
+#### Issue: macOS refuses to open the app ("unverified developer" or "damaged")
 
-**Description:** Only Intel Mac builds are provided in GitHub releases, and Apple Silicon Macs cannot run unsigned code without an Apple Developer account.
+**Description:** Releases now ship both an Intel (`teams-for-linux-<version>.dmg`) and an Apple Silicon (`teams-for-linux-<version>-arm64.dmg`) build. Neither is notarized, so Gatekeeper blocks the first launch of a downloaded copy.
 
 **Potential Causes:**
-*   Apple's code signing requirements for ARM-based Macs.
-*   Cost associated with Apple Developer Program for distributing signed binaries.
+*   The project has no Apple Developer Program membership, so the builds carry only an ad-hoc signature. That satisfies Apple Silicon's requirement that every arm64 binary be signed, but not Gatekeeper's requirement that downloaded apps be notarized.
+*   Downloads are tagged with the `com.apple.quarantine` attribute, which is what triggers the block.
 
 **Solutions/Workarounds:**
 
-1.  **Use Intel Build:** The Intel build works on Apple Silicon via emulation (albeit slowly).
+1.  **Approve it once in System Settings:** Open the app, dismiss the warning, then go to System Settings → Privacy & Security and click **Open Anyway** next to the entry for `teams-for-linux`. Confirm on the second prompt. This is only needed once per installed version.
 
-2.  **Build Your Own:** You can build an Apple Silicon version from source, signing it with your own developer keys. This process is free, but the keys will only work on your Mac.
+2.  **Clear the quarantine attribute:** If macOS reports the app as "damaged" instead of offering an **Open Anyway** button, remove the quarantine flag directly:
+
+    ```bash
+    xattr -dr com.apple.quarantine /Applications/teams-for-linux.app
+    ```
+
+3.  **Build and sign it yourself:** You can build from source and sign with your own developer keys. This is free, but the keys only work on your Mac.
 
     **Steps to Build Your Own:**
     1.  Download and open Xcode from the App Store.
@@ -93,6 +113,8 @@ When the app feels slow or heavy, seven configuration options are the first-line
         ```
         You should see a signing step in the output (ignore the "skipped macOS notarization" warning).
         The app will be built in the `dist/mac-arm64/` folder. Copy it to your Applications folder.
+
+        Use `npm run dist:mac:x64` for an Intel build. `npm run dist:mac` — the script CI uses — builds both architectures but forces an ad-hoc signature, so it ignores any certificate you have installed.
 
 **Related GitHub Issues:** [Issue #1225](https://github.com/IsmaelMartinez/teams-for-linux/issues/1225)
 
@@ -370,7 +392,7 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 
     Logs are scrubbed of credential IDs, challenges, user handles, PINs, and raw origins before writing. Origins appear as one of `login.microsoftonline.com | login.microsoft.com | login.live.com | other` and errors as coarse buckets (`NO_CREDENTIALS | BAD_PIN | TIMEOUT | CANCELLED | NOT_ALLOWED | SECURITY | INVALID | OTHER`).
 
-**Beta notes:** This feature is opt-in while hardware coverage is still being validated. The single-device restriction, assertion echo-offset heuristic, and PIN-prompt stderr detection are all areas under active validation. Please report hardware combinations (key model, Linux distribution, libfido2 version) that work or fail on the umbrella issue so we can plan the GA rollout.
+**Beta notes:** This feature is opt-in while hardware coverage is still being validated. The single-device restriction, assertion echo-offset heuristic, and PIN-prompt stderr detection are all areas under active validation. Starting the sign-in from the passkey button (without typing your email first) uses the key's resident credentials, which requires a key that supports CTAP 2.1 credential management; if the key holds credentials for more than one account on the site, that flow stops with an error, as an account picker is not implemented yet. Typing your email address first works in both cases. Please report hardware combinations (key model, Linux distribution, libfido2 version) that work or fail on the umbrella issue so we can plan the GA rollout.
 
 **Related GitHub Issues:** [Issue #802](https://github.com/IsmaelMartinez/teams-for-linux/issues/802), [PR #2357](https://github.com/IsmaelMartinez/teams-for-linux/pull/2357), [ADR 021](./development/adr/021-webauthn-fido2-linux.md).
 
@@ -382,11 +404,13 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 
 **Solutions/Workarounds:**
 
-Set a custom `chromeUserAgent` in your `config.json` file (see the [Installation and Updates](#installation-and-updates) section for the configuration folder path corresponding to your installation method) so the user agent carries an application-identifier token, then restart the app. Take the default user agent from the [configuration reference](configuration.md) and insert a token such as `teams-for-linux/1.0` before the `Chrome/...` segment:
+Set a custom `platform.chromeUserAgent` in your `config.json` file (see the [Installation and Updates](#installation-and-updates) section for the configuration folder path corresponding to your installation method) so the user agent carries an application-identifier token, then restart the app. Take the default user agent from the [configuration reference](configuration.md) and insert a token such as `teams-for-linux/1.0` before the `Chrome/...` segment:
 
 ```json
 {
-  "chromeUserAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) teams-for-linux/1.0 Chrome/<your-chrome-version> Safari/537.36"
+  "platform": {
+    "chromeUserAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) teams-for-linux/1.0 Chrome/<your-chrome-version> Safari/537.36"
+  }
 }
 ```
 
@@ -493,10 +517,12 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
 
 **Solutions/Workarounds:**
 
-1. **Re-enable GPU acceleration** by setting `disableGpu` to `false` in your `config.json` file (see the [Installation and Updates](#installation-and-updates) section for the configuration folder path corresponding to your installation method):
+1. **Re-enable GPU acceleration** by setting `performance.disableGpu` to `false` in your `config.json` file (see the [Installation and Updates](#installation-and-updates) section for the configuration folder path corresponding to your installation method):
     ```json
     {
-      "disableGpu": false
+      "performance": {
+        "disableGpu": false
+      }
     }
     ```
 2. **Verify hardware acceleration** is active via **Debug → Open GPU Info** from the application menu (or `chrome://gpu` via DevTools), confirming the video decode/encode entries are hardware-accelerated.
@@ -512,10 +538,12 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
 
 **Solutions/Workarounds:**
 
-1. **Disable GPU acceleration** by setting `disableGpu` to `true` in `~/.config/teams-for-linux/config.json`:
+1. **Disable GPU acceleration** by setting `performance.disableGpu` to `true` in `~/.config/teams-for-linux/config.json`:
     ```json
     {
-      "disableGpu": true
+      "performance": {
+        "disableGpu": true
+      }
     }
     ```
 2. **Alternatively**, launch with `--disable-gpu` on the command line, or add it to the `Exec=` line of a custom copy of the `.desktop` entry under `~/.local/share/applications/teams-for-linux.desktop`.
@@ -523,7 +551,7 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
 **Related GitHub Issues:** [#2459](https://github.com/IsmaelMartinez/teams-for-linux/issues/2459)
 
 :::note Important
-The `electronCLIFlags` config option (`config.json`) **cannot** override `--ozone-platform` because the flag must be set before the Electron process starts, and config is loaded after. Use command-line arguments or `.desktop` file edits instead.
+The `performance.electronCLIFlags` config option (`config.json`) **cannot** override `--ozone-platform` because the flag must be set before the Electron process starts, and config is loaded after. Use command-line arguments or `.desktop` file edits instead.
 :::
 
 ---
