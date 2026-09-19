@@ -66,10 +66,10 @@ jobs:
           script: |
             const LABEL = 'awaiting user feedback';
             const { owner, repo } = context.repo;
-            let issue_numbers;
+            let issue_number;
             if (context.eventName === 'issue_comment') {
               // `issue` covers issues and pull requests alike.
-              issue_numbers = [context.payload.issue.number];
+              issue_number = context.payload.issue.number;
             } else {
               const run = context.payload.workflow_run;
               // `actor` is who sent the review event. `triggering_actor` is
@@ -104,29 +104,31 @@ jobs:
               // runs, so the head SHA is the one key that identifies the pull
               // request; it matched the PR head on every fork run inspected. A
               // push landing between the reply and this run moves the head and
-              // leaves the label on until the next reply.
-              issue_numbers = run.pull_requests.map((pr) => pr.number);
-              if (issue_numbers.length === 0) {
+              // leaves the label on until the next reply. Two open pull
+              // requests on one head cannot be told apart, so neither is
+              // touched: a label left on costs one click, a sibling cleared by
+              // mistake misleads the triage list silently.
+              let matches = run.pull_requests.map((pr) => pr.number);
+              if (matches.length === 0) {
                 const open = await github.paginate(github.rest.pulls.list, {
                   owner,
                   repo,
                   state: 'open',
                   per_page: 100,
                 });
-                issue_numbers = open.filter((pr) => pr.head.sha === run.head_sha).map((pr) => pr.number);
+                matches = open.filter((pr) => pr.head.sha === run.head_sha).map((pr) => pr.number);
               }
-              if (issue_numbers.length === 0) {
-                core.info('No open pull request matches the run, nothing to do.');
+              if (matches.length !== 1) {
+                core.info(`${matches.length} open pull requests match the run, nothing to do.`);
                 return;
               }
+              issue_number = matches[0];
             }
             // Labels are read back from the API rather than the payload: the
             // workflow_run route carries none, and the API is authoritative.
-            for (const issue_number of issue_numbers) {
-              const { data: target } = await github.rest.issues.get({ owner, repo, issue_number });
-              if (!target.labels.some((label) => label.name === LABEL)) {
-                core.info(`No "${LABEL}" label on #${issue_number}, nothing to do.`);
-                continue;
-              }
-              await github.rest.issues.removeLabel({ owner, repo, issue_number, name: LABEL });
+            const { data: target } = await github.rest.issues.get({ owner, repo, issue_number });
+            if (!target.labels.some((label) => label.name === LABEL)) {
+              core.info(`No "${LABEL}" label on #${issue_number}, nothing to do.`);
+              return;
             }
+            await github.rest.issues.removeLabel({ owner, repo, issue_number, name: LABEL });
