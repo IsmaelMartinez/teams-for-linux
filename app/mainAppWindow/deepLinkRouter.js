@@ -14,11 +14,14 @@
 // `/l/meetup-join/...` or `/l/channel/...`. The set is deliberately open: the
 // SPA decides which routes it resolves, and whatever it declines reaches the
 // target through the full navigation instead.
+const { isTeamsHost } = require("../helpers/teamsHosts");
+
 const LAUNCHER_ROUTE = /^(\/l\/[^/?#]+\/[^?#]+?)\/?(\?.*)?$/;
 
-// A chat launcher without recipients has nothing to resolve, and the SPA lands
-// on an empty chat surface rather than declining the route.
-const CHAT_ROUTE_PREFIX = "/l/chat/";
+// A chat launcher naming neither a thread nor recipients has nothing to
+// resolve, and the SPA lands on an empty chat surface rather than declining
+// the route. A thread id (`/l/chat/<thread>/conversations`) resolves in page.
+const EMPTY_CHAT_ROUTE = "/l/chat/0/0";
 
 /**
  * Converts a Teams deep link into the equivalent client-side route.
@@ -48,25 +51,29 @@ function toHashRoute(url) {
   }
 
   const [, route, query = ""] = match;
-  if (route.startsWith(CHAT_ROUTE_PREFIX) && !/[?&]users=[^&]/.test(query)) {
+  if (route === EMPTY_CHAT_ROUTE && !/[?&]users=[^&]/.test(query)) {
     return null;
   }
 
   return `#${route}${query}`;
 }
 
-function isSameOrigin(frameUrl, origin) {
+function isTeamsOrigin(frameUrl, configuredOrigin) {
   try {
-    return new URL(frameUrl).origin === origin;
+    const { protocol, hostname, origin } = new URL(frameUrl);
+    return origin === configuredOrigin || (protocol === "https:" && isTeamsHost(hostname));
   } catch {
     return false;
   }
 }
 
-// The SPA occupies the main frame. The origin check keeps the fragment off
-// unrelated content, such as the login origin mid-auth.
-function findRouterFrame(mainFrame, teamsOrigin) {
-  return isSameOrigin(mainFrame.url, teamsOrigin) ? mainFrame : null;
+// The SPA occupies the main frame. The check keeps the fragment off unrelated
+// content, such as the login origin mid-auth. Two acceptances: the configured
+// origin, which covers a `url` override outside the known hosts (GovCloud's
+// `gov.teams.microsoft.us`, ADR-020), and any Teams host, since Teams redirects
+// `teams.microsoft.com` sessions to `teams.cloud.microsoft`.
+function findRouterFrame(mainFrame, configuredOrigin) {
+  return isTeamsOrigin(mainFrame.url, configuredOrigin) ? mainFrame : null;
 }
 
 // The SPA rewrote the fragment within 26ms when measured. This budget is only
@@ -78,7 +85,8 @@ const ROUTE_CONSUMED_TIMEOUT_MS = 750;
  *
  * @param {Electron.BrowserWindow} window - Main application window
  * @param {string} url - Deep link URL resolved from the launch argument
- * @param {string} teamsUrl - Configured Teams URL, used for the origin check
+ * @param {string} teamsUrl - Configured Teams URL, accepted as the frame's
+ *   origin alongside the known Teams hosts
  * @returns {Promise<boolean>} True when the SPA consumed the route; false
  *   means the caller should fall back to a full navigation
  */
@@ -88,11 +96,15 @@ async function navigateInPage(window, url, teamsUrl) {
     return false;
   }
 
-  let teamsOrigin;
+  // An unparsable configured URL only loses its own acceptance: a session on
+  // a known Teams host still routes. Opaque origins (`file:`, `data:`) all
+  // serialise to the string "null" and would match any `about:blank` frame.
+  let configuredOrigin = null;
   try {
-    teamsOrigin = new URL(teamsUrl).origin;
+    const { origin } = new URL(teamsUrl);
+    configuredOrigin = origin === "null" ? null : origin;
   } catch {
-    return false;
+    // keep null
   }
 
   // Electron throws "Object has been destroyed" rather than returning
@@ -100,7 +112,7 @@ async function navigateInPage(window, url, teamsUrl) {
   // fallback instead of rejecting out of the module.
   let frame;
   try {
-    frame = findRouterFrame(window.webContents.mainFrame, teamsOrigin);
+    frame = findRouterFrame(window.webContents.mainFrame, configuredOrigin);
   } catch {
     return false;
   }

@@ -21,6 +21,11 @@ Manages the primary BrowserWindow that hosts the Teams web interface.
 `onAppSecondInstance` navigates the window to a resolved deep link, which
 replaces the document and cold-boots the SPA. Launcher links avoid that:
 `deepLinkRouter` assigns the equivalent `#/l/...` route to the main frame
-instead, guarded by an origin check. The SPA rewrites the fragment or retitles
-the document when it handles the route, and anything left unconsumed falls back
-to the full navigation.
+instead, guarded by a check on the main frame (the configured origin, or any
+known Teams host). The SPA rewrites the fragment or retitles the document when
+it handles the route, and anything left unconsumed falls back to the full
+navigation — except during a call, where the reload would end it: the link then
+waits in `deferredDeepLink` for `teams-call-disconnected`, like a queued auth
+recovery. That slot holds one link and the newest navigation wins: a later link
+(however it ends up opening), any `did-navigate`, or a queued auth recovery
+cancels it, up to the moment it opens.

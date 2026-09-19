@@ -8,6 +8,7 @@ const {
 } = require("../../app/mainAppWindow/deepLinkRouter");
 
 const TEAMS_URL = "https://teams.cloud.microsoft";
+const TEAMS_ORIGIN = new URL(TEAMS_URL).origin;
 const DEEP_LINK = "https://teams.cloud.microsoft/l/chat/0/0?users=a@b.com";
 const MEETING_LINK =
   "https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc%40thread.v2/0?context=%7B%22Tid%22%3A%22t%22%7D";
@@ -55,6 +56,16 @@ test("toHashRoute routes a channel link", () => {
   );
 });
 
+test("toHashRoute keeps a chat link that names its thread", () => {
+  // The widget/launcher form for a conversation without a message to land on;
+  // declining it made the client reload, which drops an active call.
+  const thread = "19%3A9e2b1a16123744ca8b6159cb33348835%40thread.v2";
+  assert.strictEqual(
+    toHashRoute(`https://teams.cloud.microsoft/l/chat/${thread}/conversations?context=%7B%7D`),
+    `#/l/chat/${thread}/conversations?context=%7B%7D`
+  );
+});
+
 test("toHashRoute declines links the SPA route cannot resolve", () => {
   const declined = [
     "https://teams.cloud.microsoft/l/chat/0/0",
@@ -74,13 +85,40 @@ test("toHashRoute declines links the SPA route cannot resolve", () => {
 test("findRouterFrame returns the main frame when Teams is loaded", () => {
   const main = { url: "https://teams.cloud.microsoft/" };
 
-  assert.strictEqual(findRouterFrame(main, TEAMS_URL), main);
+  assert.strictEqual(findRouterFrame(main, TEAMS_ORIGIN), main);
+});
+
+test("findRouterFrame accepts the configured origin outside the known hosts", () => {
+  // GovCloud runs on `gov.teams.microsoft.us`, reached through the `url`
+  // override (ADR-020): not a known Teams host, accepted as the configured one.
+  const gov = { url: "https://gov.teams.microsoft.us/v2/" };
+
+  assert.strictEqual(findRouterFrame(gov, "https://gov.teams.microsoft.us"), gov);
+  assert.strictEqual(findRouterFrame(gov, TEAMS_ORIGIN), null, "only when it is the configured one");
+  assert.strictEqual(findRouterFrame(gov, null), null);
+});
+
+test("findRouterFrame accepts every Teams host, whatever the configured URL", () => {
+  // Teams redirects `teams.microsoft.com` sessions to `teams.cloud.microsoft`;
+  // comparing against the configured URL declined every route on such a
+  // session and reached the fallback reload (#2976).
+  for (const url of [
+    "https://teams.microsoft.com/",
+    "https://teams.live.com/v2/",
+    "https://teams.cloud.microsoft.mcas.ms/",
+  ]) {
+    const main = { url };
+    assert.strictEqual(findRouterFrame(main, TEAMS_ORIGIN), main, url);
+  }
+  for (const url of ["http://teams.microsoft.com/", "https://evil.com.teams.microsoft.com/", "not-a-url"]) {
+    assert.strictEqual(findRouterFrame({ url }, TEAMS_ORIGIN), null, url);
+  }
 });
 
 test("findRouterFrame declines while the window is on another origin", () => {
   const main = { url: "https://login.microsoftonline.com/common/oauth2/" };
 
-  assert.strictEqual(findRouterFrame(main, TEAMS_URL), null);
+  assert.strictEqual(findRouterFrame(main, TEAMS_ORIGIN), null);
 });
 
 function windowWith(frameUrl, executeJavaScript) {
@@ -210,7 +248,7 @@ test("navigateInPage declines when the window is torn down mid-flight", async ()
   };
 
   assert.strictEqual(
-    await navigateInPage(destroyed, DEEP_LINK, TEAMS_URL),
+    await navigateInPage(destroyed, DEEP_LINK),
     false
   );
 });
@@ -224,4 +262,38 @@ test("navigateInPage declines unsupported link shapes without touching the frame
     await navigateInPage(win, "https://teams.microsoft.com/meet/241", TEAMS_URL),
     false
   );
+});
+
+test("navigateInPage routes a GovCloud session through its configured URL", async () => {
+  let ran = 0;
+  const win = windowWith("https://gov.teams.microsoft.us/v2/", async () => {
+    ran += 1;
+    return true;
+  });
+  const link = "https://gov.teams.microsoft.us/l/chat/0/0?users=a@b.com";
+
+  assert.strictEqual(await navigateInPage(win, link, "https://gov.teams.microsoft.us"), true);
+  // Counted rather than asserted inside the callback: navigateInPage swallows
+  // a throw from the frame, which would read as a clean decline.
+  assert.strictEqual(await navigateInPage(win, link, TEAMS_URL), false);
+  assert.strictEqual(ran, 1, "declined without touching a frame that is not the configured one");
+});
+
+test("navigateInPage still routes on a Teams host when the configured URL is unusable", async () => {
+  const win = windowWith("https://teams.cloud.microsoft/", async () => true);
+
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, "not a url"), true);
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, undefined), true);
+});
+
+test("navigateInPage does not let an opaque configured origin match a blank frame", async () => {
+  // `file:` and `about:blank` both serialise their origin as "null".
+  let ran = 0;
+  const win = windowWith("about:blank", async () => {
+    ran += 1;
+    return true;
+  });
+
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, "file:///tmp/teams.html"), false);
+  assert.strictEqual(ran, 0);
 });
