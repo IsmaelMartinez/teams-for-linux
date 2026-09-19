@@ -39,6 +39,7 @@ describe('launcherEntryEmitter.computeDesktopUri', () => {
 	it('ignores a custom app name under snap, where the desktop basename is fixed at build time', () => {
 		assert.strictEqual(
 			computeDesktopUri('my-teams', {
+				CHROME_DESKTOP: 'my-teams.desktop',
 				SNAP_NAME: 'teams-for-linux',
 				SNAP_INSTANCE_NAME: 'teams-for-linux',
 			}),
@@ -70,6 +71,15 @@ describe('launcherEntryEmitter.computeDesktopUri', () => {
 				FLATPAK_ID: 'com.example.ignored',
 			}),
 			'application://teams-for-linux_teams-for-linux.desktop',
+		);
+	});
+
+	it('follows the desktop entry Electron was given, not the display name', () => {
+		// app.name is "Teams for Linux" on Linux so notifications carry that
+		// header; the desktop file is still teams-for-linux.desktop.
+		assert.strictEqual(
+			computeDesktopUri('Teams for Linux', { CHROME_DESKTOP: 'teams-for-linux.desktop' }),
+			'application://teams-for-linux.desktop',
 		);
 	});
 
