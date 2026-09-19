@@ -13,6 +13,10 @@
 
 * **release:** describe the automated Flathub beta bump ([#2989](https://github.com/IsmaelMartinez/teams-for-linux/issues/2989)) ([be313c0](https://github.com/IsmaelMartinez/teams-for-linux/commit/be313c07c211c7144c1ad4e950e9a8b272433c2d))
 
+### Thanks
+
+Big thanks to @babs, @nikolainyegaard for contributing to this release.
+
 ## [2.22.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.21.0...v2.22.0) (2026-09-18)
 
 
