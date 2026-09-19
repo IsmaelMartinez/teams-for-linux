@@ -15,8 +15,12 @@ name: Remove awaiting feedback label on reply
 # Maintainer activity (OWNER / MEMBER / COLLABORATOR) and bot activity are
 # ignored: a maintainer asking the question must not clear the flag that says
 # the question is still outstanding. On the workflow_run route that is decided
-# again here from the triggering actor, because the marker's own gate ran on
-# the pull request's copy of its workflow file.
+# again here from the run's actor, because the marker's own gate ran on the
+# pull request's copy of its workflow file.
+#
+# Known gap: a first-time contributor's marker run parks in `action_required`
+# until a maintainer approves it, and only then does this route fire. Their
+# top-level comments still clear the label through issue_comment.
 
 on:
   issue_comment:
@@ -65,32 +69,39 @@ jobs:
               issue_numbers = [context.payload.issue.number];
             } else {
               const run = context.payload.workflow_run;
-              const actor = run.triggering_actor ?? run.actor;
+              // `actor` is who sent the review event. `triggering_actor` is
+              // whoever re-ran or approved the marker run, which for a
+              // first-time contributor is the maintainer.
+              const actor = run.actor;
               if (!actor || actor.type === 'Bot') {
                 core.info('Bot reply, nothing to do.');
                 return;
               }
-              // admin / write is what OWNER / MEMBER / COLLABORATOR amount to
-              // on this repository; anyone else reads as a contributor. A user
-              // with no access at all comes back 404, which means the same.
-              let permission = 'none';
+              // Anyone holding a role on the repository (admin, maintain,
+              // write, triage) is what OWNER / MEMBER / COLLABORATOR amount to.
+              // An outside contributor comes back 200 with `read` on a public
+              // repository; only a deleted account gives 404.
+              let role = 'none';
               try {
-                ({ data: { permission } } = await github.rest.repos.getCollaboratorPermissionLevel({
+                const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
                   owner,
                   repo,
                   username: actor.login,
-                }));
+                });
+                role = data.role_name ?? data.permission;
               } catch (error) {
                 if (error.status !== 404) throw error;
               }
-              if (permission === 'admin' || permission === 'write') {
+              if (role !== 'read' && role !== 'none') {
                 core.info('Maintainer reply, nothing to do.');
                 return;
               }
-              // `pull_requests` is empty for fork pull requests, so fall back
-              // to the run's head repository and branch, which identify the
-              // pull request; a head SHA alone does not, and one page of
-              // open pull requests may not hold it.
+              // `pull_requests` is empty for fork pull requests, and
+              // `head_repository` names the base repository on review-triggered
+              // runs, so the head SHA is the one key that identifies the pull
+              // request; it matched the PR head on every fork run inspected. A
+              // push landing between the reply and this run moves the head and
+              // leaves the label on until the next reply.
               issue_numbers = run.pull_requests.map((pr) => pr.number);
               if (issue_numbers.length === 0) {
                 const open = await github.paginate(github.rest.pulls.list, {
@@ -99,13 +110,7 @@ jobs:
                   state: 'open',
                   per_page: 100,
                 });
-                issue_numbers = open
-                  .filter(
-                    (pr) =>
-                      pr.head.repo?.full_name === run.head_repository?.full_name &&
-                      pr.head.ref === run.head_branch,
-                  )
-                  .map((pr) => pr.number);
+                issue_numbers = open.filter((pr) => pr.head.sha === run.head_sha).map((pr) => pr.number);
               }
               if (issue_numbers.length === 0) {
                 core.info('No open pull request matches the run, nothing to do.');
