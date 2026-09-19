@@ -226,11 +226,16 @@ test("navigateInPage falls back when the fragment is left untouched", async () =
 });
 
 test("navigateInPage declines when Teams is not the loaded origin", async () => {
-  const win = windowWith("https://login.microsoftonline.com/", async () =>
-    assert.fail("should not execute script")
-  );
+  // Counted, not asserted inside the callback: navigateInPage swallows a
+  // throw from the frame, so an assert.fail in there reads as a clean decline.
+  let ran = 0;
+  const win = windowWith("https://login.microsoftonline.com/", async () => {
+    ran += 1;
+    return true;
+  });
 
   assert.strictEqual(await navigateInPage(win, DEEP_LINK, TEAMS_URL), false);
+  assert.strictEqual(ran, 0, "nothing is injected off the Teams origin");
 });
 
 test("navigateInPage declines when the frame rejects", async () => {
@@ -257,14 +262,17 @@ test("navigateInPage declines when the window is torn down mid-flight", async ()
 });
 
 test("navigateInPage declines unsupported link shapes without touching the frame", async () => {
-  const win = windowWith("https://teams.cloud.microsoft/", async () =>
-    assert.fail("should not execute script")
-  );
+  let ran = 0;
+  const win = windowWith("https://teams.cloud.microsoft/", async () => {
+    ran += 1;
+    return true;
+  });
 
   assert.strictEqual(
     await navigateInPage(win, "https://teams.microsoft.com/meet/241", TEAMS_URL),
     false
   );
+  assert.strictEqual(ran, 0, "an unsupported shape never reaches the frame");
 });
 
 test("navigateInPage routes a GovCloud session through its configured URL", async () => {
