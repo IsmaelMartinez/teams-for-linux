@@ -466,7 +466,7 @@ test("focusComposeBox stops following the editor once the user types", async (t)
 
   tick(SETTLE);
   assert.strictEqual(editor.focusCount, 1);
-  dom.listeners.keydown({ target: editor });
+  dom.listeners.keydown({ key: "a", target: editor });
   dom.unmount(editor);
   const next = dom.mount();
   dom.mutate();
@@ -483,7 +483,7 @@ test("focusComposeBox keeps going when a key lands on a non-editable element", a
   t.after(dom.restore);
   const { done, tick } = focusing(t, dom);
 
-  dom.listeners.keydown({ target: { tagName: "DIV", isContentEditable: false } });
+  dom.listeners.keydown({ key: "a", target: { tagName: "DIV", isContentEditable: false } });
   const editor = dom.mount();
   dom.mutate();
   tick(SETTLE);
@@ -498,13 +498,40 @@ test("focusComposeBox backs off when the user types into another field", async (
   t.after(dom.restore);
   const { done, tick } = focusing(t, dom);
 
-  dom.listeners.keydown({ target: { tagName: "INPUT" } });
+  dom.listeners.keydown({ key: "a", target: { tagName: "INPUT" } });
   const editor = dom.mount();
   dom.mutate();
   tick(DEADLINE);
 
   assert.strictEqual(editor.focusCount, 0);
   assert.strictEqual((await done).focused, false);
+});
+
+test("focusComposeBox lets keyboard navigation and shortcuts through", async (t) => {
+  // Tab, arrows or Ctrl+… on the highlighted message move focus on purpose;
+  // the focusin they cause must not be snapped back to the compose box.
+  const message = { tagName: "DIV", isContentEditable: false };
+  for (const key of [
+    { key: "Tab", target: message },
+    { key: "ArrowDown", target: message },
+    { key: "k", ctrlKey: true, target: message },
+    { key: "Enter", target: message },
+  ]) {
+    const dom = fakeDom();
+    const editor = dom.mount();
+    const { done, tick } = focusing(t, dom);
+    tick(SETTLE);
+    assert.strictEqual(editor.focusCount, 1);
+
+    dom.listeners.keydown(key);
+    globalThis.document.activeElement = { tagName: "BUTTON" };
+    dom.listeners.focusin?.({ target: globalThis.document.activeElement });
+    assert.strictEqual(editor.focusCount, 1, `${key.key} moved focus and kept it`);
+    tick(DEADLINE);
+    await done;
+    dom.restore();
+    t.mock.timers.reset();
+  }
 });
 
 test("focusComposeBox takes focus back from the SPA's highlighted message", async (t) => {

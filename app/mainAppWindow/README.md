@@ -32,5 +32,6 @@ cancels it, up to the moment it opens. After an in-page route to a chat or a
 message, `focusCompose` puts the caret in the compose box (best effort,
 selector cascade, only once the view has stopped mutating so the caret never
 lands in the chat being left, takes focus back from the highlighted message, backs
-off when the user points elsewhere or types into another field): the SPA opens the
+off when the user points elsewhere, types into another field or navigates with
+the keyboard): the SPA opens the
 conversation but leaves focus wherever it was.

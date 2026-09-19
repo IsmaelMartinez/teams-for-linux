@@ -200,9 +200,10 @@ const COMPOSE_SETTLE_MS = 100;
  * deadline: the editor present right after the route belongs to the chat being
  * left, and a keystroke into it would land in the wrong conversation. Backs
  * off as soon as the user points somewhere or types into another field, so it
- * never fights the user; a keystroke that lands on a non-editable element (the
- * highlighted message) is the user reaching for the compose box, and the SPA
- * moving focus onto that message is taken back.
+ * never fights the user, and any navigation or shortcut key stops it too; only
+ * a printable character landing on a non-editable element (the highlighted
+ * message) is the user reaching for the compose box, and the SPA moving focus
+ * onto that message is taken back.
  *
  * @param {(doc: Document, selectors: string[]) => Element|null} find -
  *   `findCompose` from helpers/composeBox, passed in because this runs serialised
@@ -260,11 +261,15 @@ function focusComposeBox(find, selectors, timeoutMs, settleMs) {
       removeEventListener("focusin", onActivity, true);
       resolve({ focused: focused !== null && document.activeElement === focused, afterMs: firstFocusAt });
     };
-    // Typing into a field is the user's choice of target; a key on anything
-    // else (the highlighted message, the body) is a caret still looking for
-    // the compose box.
+    // Typing into a field is the user's choice of target, and so is any
+    // navigation or shortcut key (Tab, arrows, Ctrl+…): the focus it moves
+    // must not be snapped back. Only a bare printable character landing on a
+    // non-editable element (the highlighted message) is a caret still looking
+    // for the compose box.
+    const printable = (event) =>
+      event.key?.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey;
     const onKey = (event) => {
-      if (editable(event.target)) stop();
+      if (editable(event.target) || !printable(event)) stop();
     };
     const timer = setTimeout(stop, timeoutMs);
     addEventListener("keydown", onKey, true);
