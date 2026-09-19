@@ -507,6 +507,29 @@ test("focusComposeBox backs off when the user types into another field", async (
   assert.strictEqual((await done).focused, false);
 });
 
+test("focusComposeBox treats dead keys, IME and AltGr as typing", async (t) => {
+  // A French layout reaches @ [ ] { } through AltGr (Ctrl+Alt on Windows),
+  // accents through dead keys, and an IME composes: none of them is navigation.
+  const message = { tagName: "DIV", isContentEditable: false };
+  for (const key of [
+    { key: "Dead", target: message },
+    { key: "Process", isComposing: true, target: message },
+    { key: "@", ctrlKey: true, altKey: true, target: message },
+    { key: "é", target: message },
+  ]) {
+    const dom = fakeDom();
+    const { done, tick } = focusing(t, dom);
+    dom.listeners.keydown(key);
+    const editor = dom.mount();
+    dom.mutate();
+    assert.strictEqual(editor.focusCount, 1, `${key.key} kept the follow-up alive`);
+    tick(DEADLINE);
+    await done;
+    dom.restore();
+    t.mock.timers.reset();
+  }
+});
+
 test("focusComposeBox lets keyboard navigation and shortcuts through", async (t) => {
   // Tab, arrows or Ctrl+… on the highlighted message move focus on purpose;
   // the focusin they cause must not be snapped back to the compose box.
@@ -515,6 +538,8 @@ test("focusComposeBox lets keyboard navigation and shortcuts through", async (t)
     { key: "Tab", target: message },
     { key: "ArrowDown", target: message },
     { key: "k", ctrlKey: true, target: message },
+    { key: "f", altKey: true, target: message },
+    { key: "k", metaKey: true, target: message },
     { key: "Enter", target: message },
   ]) {
     const dom = fakeDom();

@@ -263,13 +263,17 @@ function focusComposeBox(find, selectors, timeoutMs, settleMs) {
     };
     // Typing into a field is the user's choice of target, and so is any
     // navigation or shortcut key (Tab, arrows, Ctrl+…): the focus it moves
-    // must not be snapped back. Only a bare printable character landing on a
-    // non-editable element (the highlighted message) is a caret still looking
-    // for the compose box.
-    const printable = (event) =>
-      event.key?.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey;
+    // must not be snapped back. Text input landing on a non-editable element
+    // (the highlighted message) is a caret still looking for the compose box:
+    // a printable character, a dead key, IME composition, or AltGr, which
+    // Windows reports as Ctrl+Alt together.
+    const typing = (event) => {
+      if (event.isComposing || event.key === "Dead" || event.key === "Process") return true;
+      if (event.key?.length !== 1 || event.metaKey) return false;
+      return !(event.ctrlKey || event.altKey) || (event.ctrlKey && event.altKey);
+    };
     const onKey = (event) => {
-      if (editable(event.target) || !printable(event)) stop();
+      if (editable(event.target) || !typing(event)) stop();
     };
     const timer = setTimeout(stop, timeoutMs);
     addEventListener("keydown", onKey, true);
