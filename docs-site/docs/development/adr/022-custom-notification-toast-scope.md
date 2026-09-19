@@ -6,7 +6,7 @@ id: 022-custom-notification-toast-scope
 
 ## Status
 
-✅ Accepted (Phase 1 implemented, Phase 2 dropped)
+✅ Implemented (Phase 1; Phase 2 dropped)
 
 ## Context
 

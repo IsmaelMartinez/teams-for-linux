@@ -24,9 +24,15 @@ For a custom configuration, drop a JSON file at `~/.config/teams-for-linux/confi
 
 ```json
 {
-  "closeAppOnCross": false,
-  "followSystemTheme": true,
-  "trayIconEnabled": true
+  "window": {
+    "closeOnCross": false
+  },
+  "appearance": {
+    "followSystemTheme": true
+  },
+  "tray": {
+    "enabled": true
+  }
 }
 ```
 

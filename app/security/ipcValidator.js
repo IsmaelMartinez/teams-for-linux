@@ -41,7 +41,12 @@ const allowedChannels = new Set([
   // Notifications and user interaction
   'play-notification-sound',
   'show-notification',
+  // main -> renderer only (webContents.send to the renderer that created the
+  // notification). Not gated by this validator, which wraps ipcMain
+  // handle/on/once only; listed so the allowlist stays authoritative. No
+  // ipcMain handler exists for either, so these entries grant a renderer nothing.
   'notification-closed',
+  'notification-clicked',
   'notification-show-toast',
   'notification-toast-click',
   'user-status-changed',
@@ -131,6 +136,7 @@ const allowedChannels = new Set([
   'webauthn:get',
   'webauthn:pin-submit',
   'webauthn:pin-cancel',
+  'webauthn:touch-cancel',
 
   // Shared secure-prompt dialog (smartcard / PKCS#11 client-certificate PIN)
   'secure-prompt:submit',

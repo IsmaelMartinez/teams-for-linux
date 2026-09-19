@@ -14,6 +14,103 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.22.0" date="2026-09-18">
+      <description>
+        <ul>
+          <li>multi-account: attribute descendants + profile-view window-open policy (ADR-020 Phase 2) (#2916)</li>
+          <li>deeplink: take a document title change as in-page route consumption (#2985)</li>
+          <li>multi-account: inject the screen-sharing script into profile views (#2981)</li>
+          <li>publish unread count over LauncherEntry with packaging-aware desktop URI (badge) (#2970)</li>
+          <li>deps-dev: bump @playwright/test in the minor-and-patch group (#2977)</li>
+          <li>deps-dev: bump electron from 42.9.3 to 43.7.0 (#2975) (7657aa8), closes #2927</li>
+          <li>deps: bump the minor-and-patch group in /docs-site with 2 updates (#2978)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.21.0" date="2026-09-11">
+      <description>
+        <ul>
+          <li>config: add the ten remaining new nested namespaces and deprecate their flat names (#2897)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.20.1" date="2026-09-11">
+      <description>
+        <ul>
+          <li>flatpak: keep the background portal from deleting autostart entries (#2937)</li>
+          <li>network: don't show blank page on network drop, and dont reload on network resume (#2969)</li>
+          <li>deeplink: route deep links in page instead of reloading (#2950)</li>
+          <li>adr: ADR-029 configuration schema as single source of truth (#2956)</li>
+          <li>adr: ADR-030 Graph API access via the Teams session token (#2957)</li>
+          <li>adr: ADR-031 keep the ozone-platform x11 default on Wayland (#2958)</li>
+          <li>adr: fold the FIDO2 touch prompt research into ADR-021 (#2952)</li>
+          <li>adr: update statuses for ADR-012, 014, 019, 020, 021, 022 and refresh the index (#2955)</li>
+          <li>mqtt: retire the incoming-call plan now meeting-start detection has shipped (#2954)</li>
+          <li>research: retire the custom stickers external-sources research (#2953)</li>
+          <li>stale: exempt good first issue and help wanted issues from auto-close (#2960)</li>
+          <li>deps-dev: bump the minor-and-patch group with 2 updates (#2961)</li>
+          <li>deps: bump @swc/html from 1.15.43 to 1.16.2 in /docs-site (#2965)</li>
+          <li>deps: bump colord from 2.9.3 to 2.10.0 in /docs-site (#2966)</li>
+          <li>deps: bump joi from 17.13.4 to 17.13.7 in /docs-site (#2967)</li>
+          <li>deps: bump js-yaml from 4.3.1 to 4.3.2 in both lockfiles (#2972)</li>
+          <li>deps: bump svgo from 3.3.4 to 3.3.5 in /docs-site (#2968)</li>
+          <li>deps: update qs and fast-uri to clear six Dependabot alerts (#2951)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.20.0" date="2026-09-03">
+      <description>
+        <ul>
+          <li>ci: open the Flathub beta bump PR automatically after a pre-release (#2930) (b2029d5), closes #2880</li>
+          <li>build: macOS Build System &amp; architecture (#2900)</li>
+          <li>snap: stop the desktop launcher aborting before Electron starts (#2948)</li>
+          <li>webauthn: allow extra login origins via auth.webauthn.extraOrigins (#2945)</li>
+          <li>deps-dev: bump @humanfs/node from 0.16.7 to 0.16.8 (#2941)</li>
+          <li>deps-dev: bump @xmldom/xmldom from 0.8.13 to 0.8.15 (#2943)</li>
+          <li>deps: bump browserslist from 4.28.6 to 4.28.8 in /docs-site (#2940)</li>
+          <li>deps: bump fast-uri from 3.1.5 to 3.1.7 (#2942)</li>
+          <li>deps: bump github/codeql-action from 4.37.8 to 4.37.9 (#2932)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.19.0" date="2026-09-01">
+      <description>
+        <ul>
+          <li>config: add toNestedConfigFile to migrate flat keys to nested (#2914)</li>
+          <li>config: offer the migrated config from the Settings menu (#2915)</li>
+          <li>multi-account: sender→profile attribution map (ADR-020 Phase 2 foundation) (#2865)</li>
+          <li>auth: keep msal cookie persistence on when a partial auth block omits it (#2928)</li>
+          <li>notifications: relay notification clicks so Teams opens the sending chat (#2903)</li>
+          <li>webauthn: ask for a single security key touch (#2889) (7291364), closes #2922</li>
+          <li>webauthn: resolve discoverable sign-ins via credential management (#2917)</li>
+          <li>webauthn: survive the FIDO2 PIN landing on an exited child (#2921)</li>
+          <li>correct stale ADR status and upstream claims, add multi-account roadmap entry (#2923)</li>
+          <li>deps: bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml (#2909)</li>
+          <li>deps: bump the minor-and-patch group with 2 updates (#2925)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.18.1" date="2026-08-25">
+      <description>
+        <ul>
+          <li>snap: revert core22 -&amp;gt; core24 migration (#2758) (#2906)</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.18.0" date="2026-08-24">
+      <description>
+        <ul>
+          <li>menus: add a menu option to choose a custom app icon (#2895)</li>
+          <li>webauthn: show a prompt while waiting for a security key touch (#2779)</li>
+          <li>packaging: recommend fido2-tools in deb and rpm packages (#2887)</li>
+          <li>webauthn: give reconstructed authenticator responses their real prototypes (#2890)</li>
+          <li>webauthn: return PublicKeyCredential-compatible responses (#2878)</li>
+          <li>adr: add ADR-028 to the docs sidebar (#2884) (cfe4ce9), closes #2609</li>
+          <li>labels: ignore maintainer replies and cover PRs in awaiting-feedback removal (#2896)</li>
+          <li>deps: bump the minor-and-patch group with 4 updates (#2901)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.17.1" date="2026-08-20">
       <description>
         <ul>

@@ -63,6 +63,7 @@ describe("Settings menu config entries", () => {
     assert.deepStrictEqual(labels, [
       "Save",
       "Restore",
+      "Show Updated Config…",
       "Open config file",
       "Open config folder",
     ]);

@@ -16,7 +16,8 @@ const MQTTMediaStatusService = require("./mqtt/mediaStatusService");
 const HomeAssistantDiscovery = require("./mqtt/homeAssistantDiscovery");
 const GraphApiClient = require("./graphApi");
 const { registerGraphApiHandlers } = require("./graphApi/ipcHandlers");
-const { validateIpcChannel, allowedChannels } = require("./security/ipcValidator");
+const { allowedChannels } = require("./security/ipcValidator");
+const { installIpcSecurity } = require("./security/ipcSecurity");
 const { sanitize: sanitizePii } = require("./utils/logSanitizer");
 const { register: registerGlobalShortcuts, sendKeyboardEventToWindow } = require("./globalShortcuts");
 const CommandLineManager = require("./startup/commandLine");
@@ -211,39 +212,9 @@ if (gotTheLock) {
 
   // IPC Security: wrap handler-registration methods so every renderer-initiated
   // IPC call is validated against the allowlist in app/security/ipcValidator.js.
-  const originalIpcHandle = ipcMain.handle.bind(ipcMain);
-  const originalIpcOn = ipcMain.on.bind(ipcMain);
-  const originalIpcOnce = ipcMain.once.bind(ipcMain);
-
-  ipcMain.handle = (channel, handler) => {
-    return originalIpcHandle(channel, (event, ...args) => {
-      if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
-        console.error(`[IPC Security] Rejected handle request for channel: ${channel}`);
-        return Promise.reject(new Error(`Unauthorized IPC channel: ${channel}`));
-      }
-      return handler(event, ...args);
-    });
-  };
-
-  ipcMain.on = (channel, handler) => {
-    return originalIpcOn(channel, (event, ...args) => {
-      if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
-        console.error(`[IPC Security] Rejected event for channel: ${channel}`);
-        return;
-      }
-      return handler(event, ...args);
-    });
-  };
-
-  ipcMain.once = (channel, handler) => {
-    return originalIpcOnce(channel, (event, ...args) => {
-      if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
-        console.error(`[IPC Security] Rejected event for channel: ${channel}`);
-        return;
-      }
-      return handler(event, ...args);
-    });
-  };
+  // The wrapping also covers removal, so listeners registered per short-lived
+  // window can actually be taken off again. See app/security/ipcSecurity.js.
+  installIpcSecurity(ipcMain);
 
   // Restart application when configuration file changes
   ipcMain.on("config-file-changed", restartApp);
@@ -619,7 +590,8 @@ function loadMenuToggleSettings() {
     'disableNotificationSoundIfNotAvailable',
     'disableNotificationWindowFlash',
     'disableBadgeCount',
-    'defaultNotificationUrgency'
+    'defaultNotificationUrgency',
+    'appIcon'
   ];
 
   for (const setting of menuToggleSettings) {
@@ -737,7 +709,9 @@ async function handleAppReady() {
           mainWindow,
           profilesManager,
           config,
-          mainAppWindow.bindDisplayMediaHandler
+          mainAppWindow.bindDisplayMediaHandler,
+          mainAppWindow.bindWindowOpenHandler,
+          mainAppWindow.injectScreenSharingLogic
         );
         profileViewManager.initialize();
         await profileViewManager.bootstrapProfileZeroIfNeeded();
@@ -813,6 +787,22 @@ async function userStatusChangedHandler(_event, options) {
 async function setBadgeCountHandler(_event, count) {
   if (!config.disableBadgeCount) {
     app.setBadgeCount(count);
+    // Electron's own Linux badge path loads libunity at runtime, which none
+    // of our packagings ship, so setBadgeCount is a silent no-op there.
+    // Mirror the count over the LauncherEntry broadcast the docks actually
+    // listen to — the same route downloads use for dock progress.
+    if (os.platform() === "linux") {
+      try {
+        require("./downloadManager/launcherEntryEmitter").update({
+          count,
+          countVisible: count > 0,
+        });
+      } catch (error) {
+        console.warn("[Badge] LauncherEntry emit failed", {
+          message: error.message,
+        });
+      }
+    }
   }
 }
 

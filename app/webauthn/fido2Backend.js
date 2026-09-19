@@ -18,6 +18,26 @@ const log = require("./log");
 const execFileAsync = promisify(execFile);
 
 /**
+ * Rejection message used when the user cancels a security-key operation.
+ * Callers compare against this to tell a deliberate cancel apart from a real
+ * failure, so that a cancel is not reported to the page as a broken key.
+ */
+const CANCELLED_MESSAGE = "NotAllowedError: security key operation cancelled";
+
+/**
+ * Reject a cancelled request before it does any further work.
+ * @param {AbortSignal} [signal]
+ */
+function throwIfCancelled(signal) {
+  if (signal?.aborted) throw new Error(CANCELLED_MESSAGE);
+}
+
+// Silent probes answer in milliseconds; the cap only matters for a key that
+// stalls on "-t up=false" instead of rejecting it, where the worst case is
+// the old behaviour plus this long per listed credential.
+const PROBE_TIMEOUT_MS = 5000;
+
+/**
  * Run a fido2 command with stdin input and optional PIN.
  * Uses spawn (not exec/shell) to avoid command injection.
  *
@@ -35,9 +55,15 @@ const execFileAsync = promisify(execFile);
  * @param {string[]} inputLines - Stdin input lines (credential parameters)
  * @param {number} timeoutMs - Process timeout in milliseconds
  * @param {string|null} pin - Pre-collected PIN string, or null if no PIN needed
+ * @param {AbortSignal} [signal] - Aborting kills the child and rejects with CANCELLED_MESSAGE
  */
-function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
+function spawnFido2(cmd, args, inputLines, timeoutMs, pin, signal) {
   return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new Error(CANCELLED_MESSAGE));
+      return;
+    }
+
     // Detach the child process so it has no controlling terminal.
     // fido2-tools use readpassphrase() which tries /dev/tty first for PIN
     // input. With detached: true, open("/dev/tty") fails and the tool
@@ -50,16 +76,53 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
     let stderr = "";
     let rejected = false;
     let pinWritten = false;
+    // 'exit' fires before 'close', so a cancel or timeout landing in between
+    // would otherwise discard a result the child has already produced — and
+    // signal a PID the OS is free to have reused.
+    let exited = false;
+    proc.on("exit", () => {
+      exited = true;
+    });
+
+    // The child sits in the user-presence check until the key is touched, so
+    // both the timeout and an explicit cancel have to take the whole process
+    // group down (negative PID) — detached: true put it in its own session,
+    // and killing only the leader would orphan it holding the device open.
+    const killProcessGroup = () => {
+      try { process.kill(-proc.pid, "SIGKILL"); } catch { proc.kill("SIGKILL"); }
+    };
 
     const timeout = setTimeout(() => {
-      if (!rejected) {
+      if (!rejected && !exited) {
         rejected = true;
-        // Kill the process group (negative PID) since detached: true
-        // creates a new session/group.
-        try { process.kill(-proc.pid, "SIGKILL"); } catch { proc.kill("SIGKILL"); }
+        killProcessGroup();
         reject(new Error(`${cmd} timed out after ${timeoutMs}ms`));
       }
     }, timeoutMs);
+
+    const onAbort = () => {
+      // Let an already-finished call report its real result.
+      if (rejected || exited) return;
+      rejected = true;
+      clearTimeout(timeout);
+      killProcessGroup();
+      log.info("[WEBAUTHN] Security key operation cancelled by user");
+      reject(new Error(CANCELLED_MESSAGE));
+    };
+    signal?.addEventListener("abort", onAbort, { once: true });
+    const stopListeningForAbort = () => signal?.removeEventListener("abort", onAbort);
+
+    // Writing into a child that is already gone gives EPIPE on the stream.
+    // Without a listener Node promotes that to an uncaught exception, and the
+    // handler in app/index.js does not recognise it as recoverable, so it takes
+    // the whole app down (#2920). The real outcome is decided by 'close' and
+    // 'error' below, so this only has to keep the failed write from throwing.
+    // Warn rather than debug: log.debug is off unless auth.webauthn.debug is
+    // set, and a failed parameter write means the tool never received its
+    // input, whose only other symptom is the full timeout a minute later.
+    proc.stdin.on("error", (err) => {
+      log.warn("[WEBAUTHN] stdin write failed", { errCode: err.code });
+    });
 
     proc.stdout.on("data", (data) => { stdout += data.toString(); });
 
@@ -79,6 +142,7 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
 
     proc.on("close", (code) => {
       clearTimeout(timeout);
+      stopListeningForAbort();
       if (rejected) return;
       if (code === 0) {
         resolve({ stdout });
@@ -89,14 +153,19 @@ function spawnFido2(cmd, args, inputLines, timeoutMs, pin) {
 
     proc.on("error", (err) => {
       clearTimeout(timeout);
+      stopListeningForAbort();
       if (!rejected) reject(err);
     });
 
     // Write credential parameters to stdin. Do NOT close stdin yet —
     // fido2-tools will prompt for PIN on stderr when ready, and we
-    // write the PIN then (see stderr handler above).
-    const paramBlock = inputLines.join("\n") + "\n";
-    proc.stdin.write(paramBlock);
+    // write the PIN then (see stderr handler above). Commands that take no
+    // stdin parameters (fido2-token -L) must not receive a stray newline,
+    // which readpassphrase would consume as an empty PIN.
+    if (inputLines.length > 0) {
+      const paramBlock = inputLines.join("\n") + "\n";
+      proc.stdin.write(paramBlock);
+    }
 
     // If no PIN is needed, close stdin so the tool doesn't hang waiting.
     if (!pin) {
@@ -249,6 +318,10 @@ function buildCredArgs(authSel) {
  * @returns {Promise<object>} Credential creation result
  */
 async function createCredential(options) {
+  // Bail out before touching the device: the prompt's Cancel can land while
+  // the previous step is still settling, and enumerating USB hardware for a
+  // request the user already gave up on is pure latency.
+  throwIfCancelled(options.abortSignal);
   const device = await resolveDevice();
   log.info("[WEBAUTHN] createCredential", {
     devicePresent: true,
@@ -273,7 +346,7 @@ async function createCredential(options) {
   const timeoutMs = (options.timeout || 60) * 1000;
   const { stdout } = await spawnFido2(
     "fido2-cred", args, inputLines, timeoutMs,
-    options.preCollectedPin || null,
+    options.preCollectedPin || null, options.abortSignal,
   );
 
   const lines = stdout.trim().split("\n");
@@ -319,6 +392,187 @@ async function createCredential(options) {
 }
 
 /**
+ * Silently check whether a credential is present on the device.
+ * "-t up=false" turns off the user-presence test, so the key answers without
+ * a touch and, since UV is not requested, without a PIN. The assertion it
+ * returns is unusable for sign-in (no UP flag) and is discarded; only the
+ * exit status matters. Keys that refuse silent assertions fail every probe,
+ * which reads as "no match" and leaves the caller on the sequential path.
+ *
+ * @param {string} device - Device path
+ * @param {string[]} inputLines - clientDataHash, rpId and credentialId lines
+ * @param {AbortSignal} [abortSignal] - Cancelling rejects instead of reporting a miss
+ * @returns {Promise<boolean>} Whether the credential is on the device
+ */
+async function probeCredential(device, inputLines, abortSignal) {
+  try {
+    await spawnFido2("fido2-assert", ["-G", "-t", "up=false", device], inputLines, PROBE_TIMEOUT_MS, null, abortSignal);
+    return true;
+  } catch (err) {
+    const errClass = log.classifyError(err);
+    // A cancel is the user giving up on the ceremony, not a probe miss.
+    if (errClass === "CANCELLED") throw err;
+    log.debug("[WEBAUTHN] probe miss", { errClass });
+    return false;
+  }
+}
+
+/**
+ * Narrow an allowCredentials list to the one credential the device holds,
+ * using silent probes. A full assertion demands a touch per attempted
+ * credential, so without narrowing a login page that lists several
+ * registered credentials asks the user for one blind touch per entry.
+ * Probing first means the real assertion needs exactly one touch.
+ *
+ * Returns the original list when nothing probes as present (credProtect can
+ * hide credentials from silent probes), so the sequential behaviour stays
+ * as the fallback and probing can only remove touches, never break a login.
+ *
+ * @param {Array} allowCredentials - Credential descriptors from the RP
+ * @param {(cred: object) => Promise<boolean>} probe - Presence check for one credential
+ * @returns {Promise<Array>} Either [matchedCredential] or the original list
+ */
+async function narrowCandidates(allowCredentials, probe) {
+  if (allowCredentials.length <= 1) {
+    return allowCredentials;
+  }
+  const total = allowCredentials.length;
+  for (const [i, cred] of allowCredentials.entries()) {
+    log.debug("[WEBAUTHN] getAssertion probe", { index: i + 1, total });
+    if (await probe(cred)) {
+      log.info("[WEBAUTHN] getAssertion probe matched", { index: i + 1, total });
+      return [cred];
+    }
+  }
+  log.info("[WEBAUTHN] getAssertion probes found no match, using sequential fallback", { total });
+  return allowCredentials;
+}
+
+/**
+ * Try each credential the relying party allowed, until one is on the key.
+ *
+ * The server lists every credential it has registered for the account, but only
+ * one of them lives on the key that is plugged in (marcovr's bug: the first
+ * credential is not necessarily the right one). FIDO_ERR_NO_CREDENTIALS is the
+ * device saying "not this one"; every other outcome — a cancel, a bad PIN, a
+ * timeout — is final and stops the loop rather than being retried against the
+ * remaining credentials.
+ *
+ * Lives outside getAssertion() so the retry decision is not three levels deep
+ * (SonarCloud javascript:S3776).
+ *
+ * @param {object} options - Same options object getAssertion received
+ * @param {string[]} args - fido2-assert args, device included
+ * @param {string[]} inputLines - Stdin lines shared by every attempt
+ * @param {number} timeoutMs - Per-attempt timeout
+ * @param {Buffer} clientDataJSON - clientDataJSON for the result
+ * @returns {Promise<object>} Assertion result
+ */
+async function tryAllowCredentials(options, args, inputLines, timeoutMs, clientDataJSON) {
+  const total = options.allowCredentials.length;
+  let lastError;
+
+  for (const [i, cred] of options.allowCredentials.entries()) {
+    const credInputLines = [...inputLines, base64urlDecode(cred.id).toString("base64")];
+    const index = i + 1;
+    log.debug("[WEBAUTHN] getAssertion cred-try", { index, total });
+    try {
+      const { stdout } = await spawnFido2(
+        "fido2-assert", args, credInputLines, timeoutMs,
+        options.preCollectedPin || null, options.abortSignal,
+      );
+      return parseAssertionOutput(stdout, options, clientDataJSON, cred.id);
+    } catch (err) {
+      const errClass = log.classifyError(err);
+      log.debug("[WEBAUTHN] getAssertion cred-try failed", { index, total, errClass });
+      lastError = err;
+      // Only "this credential is not on this device" is worth another attempt.
+      if (errClass !== "NO_CREDENTIALS") throw err;
+    }
+  }
+
+  throw lastError;
+}
+
+// Credential algorithms print_rk emits. Anything else in the type column
+// means the line is not in a format this parser knows.
+const RK_TYPES = new Set(["es256", "es384", "rs256", "eddsa"]);
+const BASE64_RE = /^[A-Za-z0-9+/]+={0,2}$/;
+
+const RK_UNPARSEABLE =
+  "NotAllowedError: could not read the credential listing from the security key. Start the sign-in by entering your email address instead.";
+
+/**
+ * Parse `fido2-token -L -k` output into resident credential descriptors.
+ * Each line reads "NN: <credId base64> <displayName> <userId base64> <type> <prot>",
+ * with libfido2 1.17 appending a "pay"/"nopay" column (tools/credman.c
+ * print_rk). The display name is free text and may contain spaces, so the
+ * fixed fields are anchored from the end of the line after stripping the
+ * optional payment column, and validated. A line that names a credential
+ * ("NN:") but does not parse throws instead of being skipped: the caller
+ * counts credentials to decide whether asserting is safe, and a display name
+ * containing a newline must not make two accounts look like one.
+ *
+ * @param {string} stdout - Raw stdout from fido2-token -L -k
+ * @returns {Array<{credentialId: string, userHandle: string}>} base64url-encoded
+ */
+function parseResidentCredentialList(stdout) {
+  const creds = [];
+  for (const line of stdout.split("\n")) {
+    const parts = line.trim().split(/\s+/);
+    if (!/^\d+:$/.test(parts[0])) continue;
+    const last = parts.at(-1);
+    if (last === "pay" || last === "nopay") {
+      parts.pop();
+    }
+    const credentialId = parts[1];
+    const userId = parts.at(-3);
+    const type = parts.at(-2);
+    if (parts.length < 6 || !RK_TYPES.has(type) || !BASE64_RE.test(credentialId) || !BASE64_RE.test(userId)) {
+      throw new Error(RK_UNPARSEABLE);
+    }
+    creds.push({
+      credentialId: base64urlEncode(Buffer.from(credentialId, "base64")),
+      userHandle: base64urlEncode(Buffer.from(userId, "base64")),
+    });
+  }
+  return creds;
+}
+
+/**
+ * List the key's resident (discoverable) credentials for a relying party via
+ * the CTAP 2.1 credential management API. PIN-gated on most keys; the PIN is
+ * written on the same stderr prompt fido2-assert uses.
+ *
+ * @param {object} options - Assertion options (rpId, preCollectedPin, abortSignal)
+ * @param {string} device - Device path
+ * @param {number} timeoutMs - Process timeout
+ * @returns {Promise<Array<{credentialId: string, userHandle: string}>>}
+ */
+async function listResidentCredentials(options, device, timeoutMs) {
+  const { stdout } = await spawnFido2(
+    "fido2-token", ["-L", "-k", sanitizeForFido2(options.rpId), device], [], timeoutMs,
+    options.preCollectedPin || null, options.abortSignal,
+  );
+  return parseResidentCredentialList(stdout);
+}
+
+/**
+ * Build the fido2-assert argument list, device excluded.
+ * Only "required" adds -v per the WebAuthn spec; "preferred" must not force UV.
+ *
+ * @param {string} [userVerification] - The request's userVerification value
+ * @returns {string[]} fido2-assert arguments
+ */
+function buildAssertArgs(userVerification) {
+  const args = ["-G"];
+  if (userVerification === "required") {
+    args.push("-v");
+  }
+  return args;
+}
+
+/**
  * Get an assertion from a hardware security key.
  *
  * @param {object} options - WebAuthn get options (serialized from renderer)
@@ -332,6 +586,10 @@ async function createCredential(options) {
  * @returns {Promise<object>} Assertion result
  */
 async function getAssertion(options) {
+  // Bail out before touching the device: the prompt's Cancel can land while
+  // the previous step is still settling, and enumerating USB hardware for a
+  // request the user already gave up on is pure latency.
+  throwIfCancelled(options.abortSignal);
   const device = await resolveDevice();
   log.info("[WEBAUTHN] getAssertion", {
     devicePresent: true,
@@ -346,69 +604,73 @@ async function getAssertion(options) {
 
   const hasAllowCredentials = options.allowCredentials && options.allowCredentials.length > 0;
 
-  const args = ["-G"];
-
-  // -r (resident/discoverable) is only needed when the server doesn't specify
-  // which credentials to use. When allowCredentials is provided, the server
-  // has selected specific credentials — don't use -r or it conflicts.
-  if (!hasAllowCredentials) {
-    args.push("-r");
-  }
-
-  // Only add -v for "required" per WebAuthn spec; "preferred" should not force UV.
-  if (options.userVerification === "required") {
-    args.push("-v");
-  }
-
+  const args = buildAssertArgs(options.userVerification);
   args.push(device);
 
   const timeoutMs = (options.timeout || 60) * 1000;
 
-  // When multiple allowCredentials are provided, try each one until fido2-assert
-  // succeeds. The server lists all registered credentials, but only one will
-  // match the key that's plugged in (marcovr's bug: first credential may not
-  // be the one on the device).
   if (hasAllowCredentials) {
-    let lastError;
-    for (const cred of options.allowCredentials) {
-      const credInputLines = [...inputLines, base64urlDecode(cred.id).toString("base64")];
-      const index = options.allowCredentials.indexOf(cred) + 1;
-      const total = options.allowCredentials.length;
-      log.debug("[WEBAUTHN] getAssertion cred-try", { index, total });
-      try {
-        const { stdout } = await spawnFido2(
-          "fido2-assert", args, credInputLines, timeoutMs,
-          options.preCollectedPin || null,
-        );
-        return parseAssertionOutput(stdout, options, clientDataJSON, cred.id);
-      } catch (err) {
-        const errClass = log.classifyError(err);
-        log.debug("[WEBAUTHN] getAssertion cred-try failed", { index, total, errClass });
-        lastError = err;
-        // FIDO_ERR_NO_CREDENTIALS means this credential isn't on the device — try next
-        if (errClass !== "NO_CREDENTIALS") {
-          throw err; // Other errors (bad PIN, timeout) should not be retried
-        }
-      }
-    }
-    throw lastError;
+    // Find the one credential on the device with silent probes first, so the
+    // user touches the key once instead of once per listed credential.
+    const candidates = await narrowCandidates(options.allowCredentials, (cred) =>
+      probeCredential(device, [...inputLines, base64urlDecode(cred.id).toString("base64")], options.abortSignal),
+    );
+    return tryAllowCredentials({ ...options, allowCredentials: candidates }, args, inputLines, timeoutMs, clientDataJSON);
   }
 
-  // No allowCredentials — use resident key mode
-  log.debug("[WEBAUTHN] getAssertion resident-key mode");
-  const { stdout } = await spawnFido2(
-    "fido2-assert", args, inputLines, timeoutMs,
-    options.preCollectedPin || null,
+  // Discoverable-credential flow: the server sent no credential list, so it can
+  // only identify the account from the credential id and user handle we return.
+  // fido2-assert -r completes the ceremony but never outputs the credential id
+  // (fido2-assert(1) OUTPUT FORMAT), so the old parsing returned the user id in
+  // its place and left userHandle empty, and the server rejected every assertion
+  // (#2719 follow-up reports). Enumerate the resident credentials for this rpId
+  // instead and run the normal credential-id path with the one found.
+  log.debug("[WEBAUTHN] getAssertion discoverable-credential mode");
+  // The listing and the assertion share the relying party's timeout budget
+  // rather than each getting the full amount.
+  const startedAt = Date.now();
+  let residentCreds;
+  try {
+    residentCreds = await listResidentCredentials(options, device, timeoutMs);
+  } catch (err) {
+    const errClass = log.classifyError(err);
+    // A cancel, a wrong PIN, a timeout, or an already user-readable failure
+    // must keep its meaning. Everything else here is typically
+    // FIDO_ERR_INVALID_ARGUMENT from a key without CTAP 2.1 credential
+    // management, whose raw text would map to InvalidStateError on the page.
+    if (errClass === "CANCELLED" || errClass === "BAD_PIN" || errClass === "TIMEOUT" || err.message.startsWith("NotAllowedError:")) {
+      throw err;
+    }
+    log.warn("[WEBAUTHN] Resident credential listing failed", { errClass });
+    throw new Error("NotAllowedError: the security key does not support listing its credentials (CTAP 2.1 credential management). Start the sign-in by entering your email address instead.");
+  }
+  log.info("[WEBAUTHN] Resident credentials for rpId", { count: residentCreds.length });
+  if (residentCreds.length === 0) {
+    throw new Error("NotAllowedError: no credential for this site is stored on the security key. Start the sign-in by entering your email address instead.");
+  }
+  if (residentCreds.length > 1) {
+    // No account picker yet. Failing with a clear message beats silently
+    // asserting with an arbitrary account.
+    throw new Error("NotAllowedError: the security key holds credentials for more than one account on this site and an account picker is not implemented yet. Start the sign-in by entering your email address instead.");
+  }
+  const chosen = residentCreds[0];
+  const remainingMs = Math.max(1000, timeoutMs - (Date.now() - startedAt));
+  const result = await tryAllowCredentials(
+    { ...options, allowCredentials: [{ id: chosen.credentialId }] },
+    args, inputLines, remainingMs, clientDataJSON,
   );
-  return parseAssertionOutput(stdout, options, clientDataJSON, null);
+  // fido2-assert prints the user id itself when the credential is resident;
+  // the credman answer covers key or tool versions that do not.
+  return { ...result, userHandle: result.userHandle || chosen.userHandle };
 }
 
 /**
  * Parse fido2-assert stdout into a structured assertion result.
  * @param {string} stdout - Raw stdout from fido2-assert
- * @param {object} options - Original assertion options (for rpId, allowCredentials)
+ * @param {object} options - Original assertion options (for rpId)
  * @param {Buffer} clientDataJSON - The clientDataJSON buffer
- * @param {string|null} credentialId - The credentialId which was used for the assertion
+ * @param {string} credentialId - The credentialId the assertion was made with;
+ *   fido2-assert output never contains it, so the caller must know it
  * @returns {object} Assertion result
  */
 function parseAssertionOutput(stdout, options, clientDataJSON, credentialId) {
@@ -422,18 +684,11 @@ function parseAssertionOutput(stdout, options, clientDataJSON, credentialId) {
 
   const authData = cborDecode(Buffer.from(dataLines[0], "base64"));
   const assertSignature = Buffer.from(dataLines[1], "base64");
-
-  if (!credentialId) {
-    if (dataLines.length >= 3) {
-      credentialId = base64urlEncode(Buffer.from(dataLines[2], "base64"));
-    } else if (options.allowCredentials?.length === 1) {
-      credentialId = options.allowCredentials[0].id;
-    } else {
-      throw new Error("NotAllowedError: fido2-assert did not return a credential ID and multiple credentials were allowed");
-    }
-  }
-  const userHandle = dataLines.length >= 4
-    ? base64urlEncode(Buffer.from(dataLines[3], "base64"))
+  // When the asserted credential is resident, fido2-assert appends the user id
+  // as a final line (fido2-assert(1) OUTPUT FORMAT). An earlier version read
+  // it one line too late, expecting a credential id line that does not exist.
+  const userHandle = dataLines.length >= 3
+    ? base64urlEncode(Buffer.from(dataLines[2], "base64"))
     : null;
 
   return {
@@ -447,4 +702,16 @@ function parseAssertionOutput(stdout, options, clientDataJSON, credentialId) {
   };
 }
 
-module.exports = { isAvailable, discoverDevices, createCredential, getAssertion };
+module.exports = { isAvailable, discoverDevices, createCredential, getAssertion, CANCELLED_MESSAGE };
+
+// Exposed so the cancellation path can be unit-tested against a real detached
+// child process. Not part of the module's contract — do not use from app code.
+module.exports._spawnFido2 = spawnFido2;
+
+// Exposed for unit tests only, same caveat as above.
+module.exports._narrowCandidates = narrowCandidates;
+// Exposed for unit tests against captured fido2-token output. Not part of the
+// module's contract — do not use from app code.
+module.exports._parseResidentCredentialList = parseResidentCredentialList;
+module.exports._parseAssertionOutput = parseAssertionOutput;
+module.exports._buildAssertArgs = buildAssertArgs;

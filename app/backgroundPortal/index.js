@@ -36,6 +36,12 @@ const STATUS_MESSAGE = "Running in background";
 // The response may sit behind a user-facing permission dialog, so the wait is
 // generous. After the timeout we only stop listening; nothing is aborted.
 const RESPONSE_TIMEOUT_MS = 30000;
+// An autostart entry is switched off in place rather than deleted: GNOME
+// writes X-GNOME-Autostart-enabled=false, and the spec's Hidden=true means the
+// same thing. Reading either as "on" would re-enable autostart for someone who
+// deliberately turned it off.
+const HIDDEN_LINE = /^Hidden\s*=\s*(\S*)/m;
+const GNOME_AUTOSTART_LINE = /^X-GNOME-Autostart-enabled\s*=\s*(\S*)/m;
 
 /**
  * Request the background permission and, when granted on a v2+ portal, set
@@ -116,6 +122,53 @@ function getPortalVersion(sessionBus, callback) {
 }
 
 /**
+ * Whether the user currently has autostart switched on.
+ *
+ * The portal treats a missing `autostart` option as an explicit false: its
+ * `autostart_requested` flag is initialised to FALSE and `g_variant_lookup`
+ * leaves it untouched when the key is absent, after which
+ * `enable_autostart_sync` runs on every granted request and unlinks the entry.
+ * There is no way to ask for background permission without also declaring an
+ * autostart intent, so we read whatever the user already has and hand the same
+ * state back (#2936).
+ *
+ * No `commandline` is sent with it. The portal's `rewrite_commandline` always
+ * prepends `flatpak run` and turns the first element into `--command=`, so
+ * handing back an Exec the portal itself wrote double-wraps it. Left out, the
+ * portal writes its own correct `flatpak run <app-id>`, and since
+ * `enable_autostart_sync` rebuilds the file from scratch on every call a
+ * hand-edited Exec never survived regardless.
+ *
+ * @returns {boolean}
+ */
+function isAutostartEnabled() {
+  const fs = require("node:fs");
+  const os = require("node:os");
+  const path = require("node:path");
+
+  const file = path.join(
+    os.homedir(),
+    ".config",
+    "autostart",
+    `${process.env.FLATPAK_ID}.desktop`
+  );
+
+  let contents;
+  try {
+    contents = fs.readFileSync(file, "utf8");
+  } catch {
+    // No entry is the ordinary case, and means autostart is already off.
+    return false;
+  }
+
+  // The portal writes a single [Desktop Entry] group, so scanning the whole
+  // file for these two keys is enough.
+  if (HIDDEN_LINE.exec(contents)?.[1] === "true") return false;
+  if (GNOME_AUTOSTART_LINE.exec(contents)?.[1] === "false") return false;
+  return true;
+}
+
+/**
  * Call RequestBackground and wait for the portal's asynchronous Response
  * signal. The signal arrives on a Request object path ending in our
  * handle_token, which is how the reply is matched without computing the
@@ -123,6 +176,12 @@ function getPortalVersion(sessionBus, callback) {
  */
 function requestBackground(sessionBus, callback) {
   const token = `tfl${Date.now().toString(36)}`;
+  const options = [
+    ["handle_token", ["s", token]],
+    ["reason", ["s", REQUEST_REASON]],
+    // Always sent. Leaving it out is what deleted the entry (#2936).
+    ["autostart", ["b", isAutostartEnabled()]],
+  ];
   const matchRule = `type='signal',interface='${REQUEST_INTERFACE}',member='Response'`;
   let done = false;
 
@@ -178,10 +237,7 @@ function requestBackground(sessionBus, callback) {
             // Empty parent window: the request is not anchored to a window,
             // which the portal accepts.
             "",
-            [
-              ["handle_token", ["s", token]],
-              ["reason", ["s", REQUEST_REASON]],
-            ],
+            options,
           ],
         },
         (error) => {
