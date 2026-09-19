@@ -41,7 +41,9 @@ jobs:
     #
     # issue_comment is by far the highest-volume trigger, and its payload does
     # carry labels, so gate it here and spare the runner. The marker concludes
-    # `skipped` when its own gate declined, so only a `success` gets through.
+    # `skipped` when its own gate declined, so only a `success` gets through,
+    # and only one raised by a review event: the marker's definition came from
+    # the pull request, which could have given it other triggers.
     if: >-
       (
         github.event_name == 'issue_comment'
@@ -51,6 +53,7 @@ jobs:
       ) || (
         github.event_name == 'workflow_run'
         && github.event.workflow_run.conclusion == 'success'
+        && contains(fromJSON('["pull_request_review", "pull_request_review_comment"]'), github.event.workflow_run.event)
       )
     permissions:
       issues: write
