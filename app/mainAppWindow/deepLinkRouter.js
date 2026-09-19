@@ -58,21 +58,22 @@ function toHashRoute(url) {
   return `#${route}${query}`;
 }
 
-function isTeamsOrigin(frameUrl) {
+function isTeamsOrigin(frameUrl, configuredOrigin) {
   try {
-    const { protocol, hostname } = new URL(frameUrl);
-    return protocol === "https:" && isTeamsHost(hostname);
+    const { protocol, hostname, origin } = new URL(frameUrl);
+    return origin === configuredOrigin || (protocol === "https:" && isTeamsHost(hostname));
   } catch {
     return false;
   }
 }
 
-// The SPA occupies the main frame. The host check keeps the fragment off
-// unrelated content, such as the login origin mid-auth. It is not compared
-// to the configured URL: Teams redirects `teams.microsoft.com` sessions to
-// `teams.cloud.microsoft`, and a session on any Teams host routes the same.
-function findRouterFrame(mainFrame) {
-  return isTeamsOrigin(mainFrame.url) ? mainFrame : null;
+// The SPA occupies the main frame. The check keeps the fragment off unrelated
+// content, such as the login origin mid-auth. Two acceptances: the configured
+// origin, which covers a `url` override outside the known hosts (GovCloud's
+// `gov.teams.microsoft.us`, ADR-020), and any Teams host, since Teams redirects
+// `teams.microsoft.com` sessions to `teams.cloud.microsoft`.
+function findRouterFrame(mainFrame, configuredOrigin) {
+  return isTeamsOrigin(mainFrame.url, configuredOrigin) ? mainFrame : null;
 }
 
 // The SPA rewrote the fragment within 26ms when measured. This budget is only
@@ -84,13 +85,26 @@ const ROUTE_CONSUMED_TIMEOUT_MS = 750;
  *
  * @param {Electron.BrowserWindow} window - Main application window
  * @param {string} url - Deep link URL resolved from the launch argument
+ * @param {string} teamsUrl - Configured Teams URL, accepted as the frame's
+ *   origin alongside the known Teams hosts
  * @returns {Promise<boolean>} True when the SPA consumed the route; false
  *   means the caller should fall back to a full navigation
  */
-async function navigateInPage(window, url) {
+async function navigateInPage(window, url, teamsUrl) {
   const route = toHashRoute(url);
   if (!route) {
     return false;
+  }
+
+  // An unparsable configured URL only loses its own acceptance: a session on
+  // a known Teams host still routes. Opaque origins (`file:`, `data:`) all
+  // serialise to the string "null" and would match any `about:blank` frame.
+  let configuredOrigin = null;
+  try {
+    const { origin } = new URL(teamsUrl);
+    configuredOrigin = origin === "null" ? null : origin;
+  } catch {
+    // keep null
   }
 
   // Electron throws "Object has been destroyed" rather than returning
@@ -98,7 +112,7 @@ async function navigateInPage(window, url) {
   // fallback instead of rejecting out of the module.
   let frame;
   try {
-    frame = findRouterFrame(window.webContents.mainFrame);
+    frame = findRouterFrame(window.webContents.mainFrame, configuredOrigin);
   } catch {
     return false;
   }

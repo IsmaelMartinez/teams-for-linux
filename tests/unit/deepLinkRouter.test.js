@@ -7,6 +7,8 @@ const {
   navigateInPage,
 } = require("../../app/mainAppWindow/deepLinkRouter");
 
+const TEAMS_URL = "https://teams.cloud.microsoft";
+const TEAMS_ORIGIN = new URL(TEAMS_URL).origin;
 const DEEP_LINK = "https://teams.cloud.microsoft/l/chat/0/0?users=a@b.com";
 const MEETING_LINK =
   "https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc%40thread.v2/0?context=%7B%22Tid%22%3A%22t%22%7D";
@@ -83,7 +85,17 @@ test("toHashRoute declines links the SPA route cannot resolve", () => {
 test("findRouterFrame returns the main frame when Teams is loaded", () => {
   const main = { url: "https://teams.cloud.microsoft/" };
 
-  assert.strictEqual(findRouterFrame(main), main);
+  assert.strictEqual(findRouterFrame(main, TEAMS_ORIGIN), main);
+});
+
+test("findRouterFrame accepts the configured origin outside the known hosts", () => {
+  // GovCloud runs on `gov.teams.microsoft.us`, reached through the `url`
+  // override (ADR-020): not a known Teams host, accepted as the configured one.
+  const gov = { url: "https://gov.teams.microsoft.us/v2/" };
+
+  assert.strictEqual(findRouterFrame(gov, "https://gov.teams.microsoft.us"), gov);
+  assert.strictEqual(findRouterFrame(gov, TEAMS_ORIGIN), null, "only when it is the configured one");
+  assert.strictEqual(findRouterFrame(gov, null), null);
 });
 
 test("findRouterFrame accepts every Teams host, whatever the configured URL", () => {
@@ -96,17 +108,17 @@ test("findRouterFrame accepts every Teams host, whatever the configured URL", ()
     "https://teams.cloud.microsoft.mcas.ms/",
   ]) {
     const main = { url };
-    assert.strictEqual(findRouterFrame(main), main, url);
+    assert.strictEqual(findRouterFrame(main, TEAMS_ORIGIN), main, url);
   }
-  for (const url of ["http://teams.cloud.microsoft/", "https://evil.com.teams.microsoft.com/", "not-a-url"]) {
-    assert.strictEqual(findRouterFrame({ url }), null, url);
+  for (const url of ["http://teams.microsoft.com/", "https://evil.com.teams.microsoft.com/", "not-a-url"]) {
+    assert.strictEqual(findRouterFrame({ url }, TEAMS_ORIGIN), null, url);
   }
 });
 
 test("findRouterFrame declines while the window is on another origin", () => {
   const main = { url: "https://login.microsoftonline.com/common/oauth2/" };
 
-  assert.strictEqual(findRouterFrame(main), null);
+  assert.strictEqual(findRouterFrame(main, TEAMS_ORIGIN), null);
 });
 
 function windowWith(frameUrl, executeJavaScript) {
@@ -122,7 +134,7 @@ test("navigateInPage succeeds when the SPA consumes the fragment", async () => {
     return true;
   });
 
-  assert.strictEqual(await navigateInPage(win, DEEP_LINK), true);
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, TEAMS_URL), true);
   assert.match(script, /const target = "#\/l\/chat\/0\/0\?users=a@b\.com"/);
   // The injected source is evaluated in the renderer, where a syntax error
   // would surface only as a rejected promise and a silent fallback.
@@ -136,7 +148,7 @@ test("navigateInPage hands a meeting route to the loaded SPA", async () => {
     return true;
   });
 
-  assert.strictEqual(await navigateInPage(win, MEETING_LINK), true);
+  assert.strictEqual(await navigateInPage(win, MEETING_LINK, TEAMS_URL), true);
   assert.match(script, /const target = "#\/l\/meetup-join\//);
 });
 
@@ -147,7 +159,7 @@ test("navigateInPage short-circuits when the fragment already holds the route", 
     return true;
   });
 
-  assert.strictEqual(await navigateInPage(win, DEEP_LINK), true);
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, TEAMS_URL), true);
   // Re-assigning an identical fragment fires no `hashchange`, so without this
   // guard the wait would time out and reload a page already on the route.
   assert.match(script, /if \(previous === target\) \{ resolve\(true\); return; \}/);
@@ -160,7 +172,7 @@ test("navigateInPage also takes a document title change as consumption", async (
     return true;
   });
 
-  assert.strictEqual(await navigateInPage(win, DEEP_LINK), true);
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, TEAMS_URL), true);
   // Teams can open the target without rewriting the fragment; it always
   // retitles the document for it, so the title is watched as a second signal.
   assert.match(script, /const previousTitle = bareTitle\(\);/);
@@ -177,7 +189,7 @@ test("navigateInPage ignores an unread-count-only title change", async () => {
     script = source;
     return true;
   });
-  await navigateInPage(win, DEEP_LINK);
+  await navigateInPage(win, DEEP_LINK, TEAMS_URL);
 
   // The injected comparison strips the "(N) " unread prefix that
   // mutationTitle.js reads, so a counter update alone is not consumption.
@@ -195,7 +207,7 @@ test("navigateInPage re-checks the fragment at the deadline", async () => {
     script = source;
     return true;
   });
-  await navigateInPage(win, DEEP_LINK);
+  await navigateInPage(win, DEEP_LINK, TEAMS_URL);
 
   // The SPA can clear the assigned fragment through the history API, which
   // fires no hashchange and may leave the title alone (a link to the
@@ -207,7 +219,7 @@ test("navigateInPage re-checks the fragment at the deadline", async () => {
 test("navigateInPage falls back when the fragment is left untouched", async () => {
   const win = windowWith("https://teams.cloud.microsoft/", async () => false);
 
-  assert.strictEqual(await navigateInPage(win, DEEP_LINK), false);
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, TEAMS_URL), false);
 });
 
 test("navigateInPage declines when Teams is not the loaded origin", async () => {
@@ -215,7 +227,7 @@ test("navigateInPage declines when Teams is not the loaded origin", async () => 
     assert.fail("should not execute script")
   );
 
-  assert.strictEqual(await navigateInPage(win, DEEP_LINK), false);
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, TEAMS_URL), false);
 });
 
 test("navigateInPage declines when the frame rejects", async () => {
@@ -223,7 +235,7 @@ test("navigateInPage declines when the frame rejects", async () => {
     throw new Error("frame disposed");
   });
 
-  assert.strictEqual(await navigateInPage(win, DEEP_LINK), false);
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, TEAMS_URL), false);
 });
 
 test("navigateInPage declines when the window is torn down mid-flight", async () => {
@@ -247,7 +259,41 @@ test("navigateInPage declines unsupported link shapes without touching the frame
   );
 
   assert.strictEqual(
-    await navigateInPage(win, "https://teams.microsoft.com/meet/241"),
+    await navigateInPage(win, "https://teams.microsoft.com/meet/241", TEAMS_URL),
     false
   );
+});
+
+test("navigateInPage routes a GovCloud session through its configured URL", async () => {
+  let ran = 0;
+  const win = windowWith("https://gov.teams.microsoft.us/v2/", async () => {
+    ran += 1;
+    return true;
+  });
+  const link = "https://gov.teams.microsoft.us/l/chat/0/0?users=a@b.com";
+
+  assert.strictEqual(await navigateInPage(win, link, "https://gov.teams.microsoft.us"), true);
+  // Counted rather than asserted inside the callback: navigateInPage swallows
+  // a throw from the frame, which would read as a clean decline.
+  assert.strictEqual(await navigateInPage(win, link, TEAMS_URL), false);
+  assert.strictEqual(ran, 1, "declined without touching a frame that is not the configured one");
+});
+
+test("navigateInPage still routes on a Teams host when the configured URL is unusable", async () => {
+  const win = windowWith("https://teams.cloud.microsoft/", async () => true);
+
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, "not a url"), true);
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, undefined), true);
+});
+
+test("navigateInPage does not let an opaque configured origin match a blank frame", async () => {
+  // `file:` and `about:blank` both serialise their origin as "null".
+  let ran = 0;
+  const win = windowWith("about:blank", async () => {
+    ran += 1;
+    return true;
+  });
+
+  assert.strictEqual(await navigateInPage(win, DEEP_LINK, "file:///tmp/teams.html"), false);
+  assert.strictEqual(ran, 0);
 });

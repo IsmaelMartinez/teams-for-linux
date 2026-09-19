@@ -536,6 +536,8 @@ const deferredDeepLink = new DeferredDeepLink(
   (url) => openDeepLink(url).catch(() => console.debug('[DEEPLINK] deferred navigation failed')),
   CALL_TEARDOWN_DELAY_MS
 );
+// Bumped per `openDeepLink` call: after its await, only the newest call may fall back.
+let deepLinkGeneration = 0;
 // A single transient worker UPR must not prompt (#2428); require the worker
 // signals to persist this long into the same call before treating them as a
 // genuine mid-call auth failure.
@@ -950,10 +952,18 @@ async function openDeepLink(url) {
   // earlier must not open over it, and the full navigation below can outlast
   // the release delay before `did-navigate` would get to cancel it.
   deferredDeepLink.cancel();
+  const generation = ++deepLinkGeneration;
 
-  const routed = await deepLinkRouter.navigateInPage(window, url);
+  const routed = await deepLinkRouter.navigateInPage(window, url, config.url);
   if (routed) {
     console.debug("[DEEPLINK] routed in page");
+    return;
+  }
+
+  // A released link is not held off by the second-instance cooldown, so a
+  // newer one can arrive during the wait above; it owns the fallback then.
+  if (generation !== deepLinkGeneration) {
+    console.debug("[DEEPLINK] superseded by a newer link, fallback skipped");
     return;
   }
 
