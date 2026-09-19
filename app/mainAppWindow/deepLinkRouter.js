@@ -190,43 +190,88 @@ const CONVERSATION_ROUTE = /^#\/l\/(chat|message)\//;
 // The target conversation mounts its editor after the route is consumed, and
 // switching from another chat replaces the previous editor with it.
 const COMPOSE_FOCUS_TIMEOUT_MS = 1500;
+// A chat switch mutates the DOM in a burst that removes the outgoing editor;
+// focusing only after this much quiet keeps the caret off the chat being left.
+const COMPOSE_SETTLE_MS = 100;
 
 /**
- * Runs in the renderer (serialised by `focusCompose`). Focuses the compose box
- * and keeps it focused while the conversation view settles: an editor focused
- * too early belongs to the chat being left and is removed with it. Backs off
- * at the first key or pointer input, so it never fights the user.
+ * Runs in the renderer (serialised by `focusCompose`). Waits for the view to
+ * stop mutating, then focuses the compose box and keeps it focused until the
+ * deadline: the editor present right after the route belongs to the chat being
+ * left, and a keystroke into it would land in the wrong conversation. Backs
+ * off as soon as the user points somewhere or types into another field, so it
+ * never fights the user; a keystroke that lands on a non-editable element (the
+ * highlighted message) is the user reaching for the compose box, and the SPA
+ * moving focus onto that message is taken back.
  *
  * @param {(doc: Document, selectors: string[]) => Element|null} find -
  *   `findCompose` from helpers/composeBox, passed in because this runs serialised
  * @param {string[]} selectors - Compose box selectors, most specific first
  * @param {number} timeoutMs - How long the view is given to settle
- * @returns {Promise<boolean>} Whether the compose box holds focus at the end
+ * @param {number} settleMs - Quiet time before focusing an editor that was
+ *   already there when the route landed (same view, or the outgoing one)
+ * @returns {Promise<{focused: boolean, afterMs: number|null}>} Whether the
+ *   compose box holds focus at the end, and when it was first focused
  */
-function focusComposeBox(find, selectors, timeoutMs) {
+function focusComposeBox(find, selectors, timeoutMs, settleMs) {
   return new Promise((resolve) => {
+    const started = Date.now();
+    // Present when the route landed: the outgoing editor on a switch, the
+    // target itself when the view does not change. Only a *new* editor is
+    // safe to take at once; this one has to outlive the settle window.
+    const initial = find(document, selectors);
     let focused = null;
-    const refocus = () => {
-      if (focused?.isConnected && document.activeElement === focused) return;
+    let firstFocusAt = null;
+    let settleTimer = null;
+    const focusNow = () => {
       const el = find(document, selectors);
       if (el) {
         el.focus();
         focused = el;
+        firstFocusAt ??= Date.now() - started;
       }
     };
-    const observer = new MutationObserver(refocus);
+    // DOM churn and the SPA's own focus moves both count as the view settling.
+    const onActivity = () => {
+      if (focused === null) {
+        const el = find(document, selectors);
+        if (el && el !== initial) {
+          clearTimeout(settleTimer);
+          focusNow();
+          return;
+        }
+        // Still in the switch burst: keep pushing the first attempt back.
+        clearTimeout(settleTimer);
+        settleTimer = setTimeout(focusNow, settleMs);
+        return;
+      }
+      if (focused.isConnected && document.activeElement === focused) return;
+      focusNow();
+    };
+    const editable = (el) =>
+      Boolean(el) && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName || ""));
+    const observer = new MutationObserver(onActivity);
     const stop = () => {
       observer.disconnect();
       clearTimeout(timer);
-      removeEventListener("keydown", stop, true);
+      clearTimeout(settleTimer);
+      removeEventListener("keydown", onKey, true);
       removeEventListener("pointerdown", stop, true);
-      resolve(focused !== null && document.activeElement === focused);
+      removeEventListener("focusin", onActivity, true);
+      resolve({ focused: focused !== null && document.activeElement === focused, afterMs: firstFocusAt });
+    };
+    // Typing into a field is the user's choice of target; a key on anything
+    // else (the highlighted message, the body) is a caret still looking for
+    // the compose box.
+    const onKey = (event) => {
+      if (editable(event.target)) stop();
     };
     const timer = setTimeout(stop, timeoutMs);
-    addEventListener("keydown", stop, true);
+    addEventListener("keydown", onKey, true);
     addEventListener("pointerdown", stop, true);
+    addEventListener("focusin", onActivity, true);
     observer.observe(document.body, { childList: true, subtree: true });
-    refocus();
+    settleTimer = setTimeout(focusNow, settleMs);
   });
 }
 
@@ -238,23 +283,25 @@ function focusComposeBox(find, selectors, timeoutMs) {
  * @param {Electron.BrowserWindow} window - Main application window
  * @param {string} url - The deep link that was just routed in page
  * @param {string} teamsUrl - Configured Teams URL, as for `navigateInPage`
- * @returns {Promise<boolean>} Whether a compose box was focused
+ * @returns {Promise<{focused: boolean, afterMs: number|null}>} Whether a
+ *   compose box was focused, and how long after the route it first was
  */
 async function focusCompose(window, url, teamsUrl) {
+  const miss = { focused: false, afterMs: null };
   const route = toHashRoute(url);
   if (!route || !CONVERSATION_ROUTE.test(route)) {
-    return false;
+    return miss;
   }
   try {
     const frame = findRouterFrame(window.webContents.mainFrame, configuredOriginOf(teamsUrl));
     if (!frame) {
-      return false;
+      return miss;
     }
     return await frame.executeJavaScript(
-      `(${focusComposeBox.toString()})(${findCompose.toString()}, ${JSON.stringify(COMPOSE_SELECTORS)}, ${COMPOSE_FOCUS_TIMEOUT_MS})`
+      `(${focusComposeBox.toString()})(${findCompose.toString()}, ${JSON.stringify(COMPOSE_SELECTORS)}, ${COMPOSE_FOCUS_TIMEOUT_MS}, ${COMPOSE_SETTLE_MS})`
     );
   } catch {
-    return false;
+    return miss;
   }
 }
 

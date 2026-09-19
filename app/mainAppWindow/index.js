@@ -957,8 +957,8 @@ async function openDeepLink(url) {
   const routed = await deepLinkRouter.navigateInPage(window, url, config.url);
   if (routed) {
     console.debug("[DEEPLINK] routed in page");
-    const focused = await deepLinkRouter.focusCompose(window, url, config.url);
-    console.debug(`[DEEPLINK] compose box ${focused ? "focused" : "not found"}`);
+    const { focused, afterMs } = await deepLinkRouter.focusCompose(window, url, config.url);
+    console.debug(`[DEEPLINK] compose box ${focused ? `focused after ${afterMs} ms` : "not found"}`);
     return;
   }
 

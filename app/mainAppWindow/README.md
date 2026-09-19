@@ -30,5 +30,7 @@ recovery. That slot holds one link and the newest navigation wins: a later link
 (however it ends up opening), any `did-navigate`, or a queued auth recovery
 cancels it, up to the moment it opens. After an in-page route to a chat or a
 message, `focusCompose` puts the caret in the compose box (best effort,
-selector cascade, backs off at the first user input): the SPA opens the
+selector cascade, only once the view has stopped mutating so the caret never
+lands in the chat being left, takes focus back from the highlighted message, backs
+off when the user points elsewhere or types into another field): the SPA opens the
 conversation but leaves focus wherever it was.

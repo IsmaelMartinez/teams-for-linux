@@ -313,12 +313,12 @@ test("focusCompose only targets conversation routes on a Teams frame", async () 
   let script = null;
   const win = windowWith("https://teams.cloud.microsoft/", async (source) => {
     script = source;
-    return true;
+    return { focused: true, afterMs: 0 };
   });
 
-  assert.strictEqual(await focusCompose(win, MEETING_LINK, TEAMS_URL), false);
+  assert.strictEqual((await focusCompose(win, MEETING_LINK, TEAMS_URL)).focused, false);
   assert.strictEqual(script, null, "a meeting link has no compose box to focus");
-  assert.strictEqual(await focusCompose(win, DEEP_LINK, TEAMS_URL), true);
+  assert.strictEqual((await focusCompose(win, DEEP_LINK, TEAMS_URL)).focused, true);
   // The renderer function travels as source: a syntax slip would only show
   // up as a rejected promise, silently swallowed as "not found".
   assert.doesNotThrow(() => new Function(`return ${script}`));
@@ -331,12 +331,12 @@ test("focusCompose only targets conversation routes on a Teams frame", async () 
     ranOnLogin += 1;
     return true;
   });
-  assert.strictEqual(await focusCompose(login, DEEP_LINK, TEAMS_URL), false);
+  assert.strictEqual((await focusCompose(login, DEEP_LINK, TEAMS_URL)).focused, false);
   assert.strictEqual(ranOnLogin, 0, "nothing is injected off a Teams host");
   const rejecting = windowWith("https://teams.cloud.microsoft/", async () => {
     throw new Error("frame disposed");
   });
-  assert.strictEqual(await focusCompose(rejecting, DEEP_LINK, TEAMS_URL), false);
+  assert.strictEqual((await focusCompose(rejecting, DEEP_LINK, TEAMS_URL)).focused, false);
 });
 
 // Minimal renderer stand-in for focusComposeBox: one query result at a time,
@@ -349,7 +349,7 @@ function fakeDom() {
     querySelector: () => dom.editor,
   };
   dom.mount = () => {
-    const el = { isConnected: true, focusCount: 0 };
+    const el = { isConnected: true, focusCount: 0, isContentEditable: true, tagName: "DIV" };
     el.focus = () => {
       el.focusCount += 1;
       document.activeElement = el;
@@ -388,45 +388,150 @@ function fakeDom() {
   return dom;
 }
 
-test("focusComposeBox follows the editor while the conversation view settles", async (t) => {
+const SETTLE = 100;
+const DEADLINE = 1500;
+
+function focusing(t, dom, selectors = ["any"]) {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const done = focusComposeBox(findCompose, selectors, DEADLINE, SETTLE);
+  return { done, tick: (ms) => t.mock.timers.tick(ms) };
+}
+
+test("focusComposeBox never focuses the editor of the chat being left", async (t) => {
+  // Right after the route the outgoing editor is still mounted; a keystroke
+  // into it would land in the wrong conversation. The switch shows up as a
+  // burst of mutations, so the first attempt waits for the view to go quiet.
   const dom = fakeDom();
   t.after(dom.restore);
-
   const leaving = dom.mount();
-  const done = focusComposeBox(findCompose, ["any"], 30);
-  assert.strictEqual(leaving.focusCount, 1, "focuses what is there at once");
+  const { done, tick } = focusing(t, dom);
 
-  // The chat being left takes its editor with it; the target mounts its own.
+  tick(SETTLE - 20);
+  dom.mutate(); // the burst begins: the outgoing editor is still the only one
+  assert.strictEqual(leaving.focusCount, 0, "an editor already there when the route landed waits");
   dom.unmount(leaving);
   const target = dom.mount();
   dom.mutate();
-  assert.strictEqual(target.focusCount, 1);
+  assert.strictEqual(target.focusCount, 1, "a new editor is taken as soon as it mounts");
+  assert.strictEqual(leaving.focusCount, 0, "the outgoing editor was never focused");
+  assert.ok((await Promise.race([done, Promise.resolve(null)])) === null, "still following");
+
   dom.mutate();
   assert.strictEqual(target.focusCount, 1, "an editor that kept focus is left alone");
-
-  assert.strictEqual(await done, true);
+  tick(DEADLINE);
+  assert.strictEqual((await done).focused, true);
   assert.deepStrictEqual(dom.listeners, {}, "listeners are removed on settle");
   assert.strictEqual(dom.observing, false);
 });
 
-test("focusComposeBox backs off at the first user input", async (t) => {
+test("focusComposeBox focuses a quiet view after the settle window and follows a replacement", async (t) => {
   const dom = fakeDom();
   t.after(dom.restore);
+  const editor = dom.mount();
+  const { done, tick } = focusing(t, dom);
 
-  const done = focusComposeBox(findCompose, ["any"], 30);
+  tick(SETTLE);
+  assert.strictEqual(editor.focusCount, 1, "same view, no mutations: focused after the quiet window");
+
+  // A late remount within the deadline takes focus with it: follow it.
+  dom.unmount(editor);
+  const remounted = dom.mount();
+  dom.mutate();
+  assert.strictEqual(remounted.focusCount, 1);
+  tick(DEADLINE);
+  const result = await done;
+  assert.strictEqual(result.focused, true);
+  assert.ok(Number.isInteger(result.afterMs) && result.afterMs >= 0, "reports when the caret first landed");
+});
+
+test("focusComposeBox backs off at user input arriving before the first focus", async (t) => {
+  const dom = fakeDom();
+  t.after(dom.restore);
+  const { done, tick } = focusing(t, dom);
+
   dom.listeners.pointerdown();
   const late = dom.mount();
   dom.mutate();
+  tick(DEADLINE);
 
   assert.strictEqual(late.focusCount, 0, "never fights the user for focus");
-  assert.strictEqual(await done, false);
+  assert.strictEqual((await done).focused, false);
+});
+
+test("focusComposeBox stops following the editor once the user types", async (t) => {
+  const dom = fakeDom();
+  t.after(dom.restore);
+  const editor = dom.mount();
+  const { done, tick } = focusing(t, dom);
+
+  tick(SETTLE);
+  assert.strictEqual(editor.focusCount, 1);
+  dom.listeners.keydown({ target: editor });
+  dom.unmount(editor);
+  const next = dom.mount();
+  dom.mutate();
+
+  assert.strictEqual(next.focusCount, 0, "typing ends the follow-up");
+  tick(DEADLINE);
+  assert.strictEqual((await done).focused, true, "settled at the keystroke, while the editor held focus");
+});
+
+test("focusComposeBox keeps going when a key lands on a non-editable element", async (t) => {
+  // Typing straight after the click, before the view settled: the key hits
+  // the highlighted message and is lost, but the caret still wants the box.
+  const dom = fakeDom();
+  t.after(dom.restore);
+  const { done, tick } = focusing(t, dom);
+
+  dom.listeners.keydown({ target: { tagName: "DIV", isContentEditable: false } });
+  const editor = dom.mount();
+  dom.mutate();
+  tick(SETTLE);
+
+  assert.strictEqual(editor.focusCount, 1);
+  tick(DEADLINE);
+  assert.strictEqual((await done).focused, true);
+});
+
+test("focusComposeBox backs off when the user types into another field", async (t) => {
+  const dom = fakeDom();
+  t.after(dom.restore);
+  const { done, tick } = focusing(t, dom);
+
+  dom.listeners.keydown({ target: { tagName: "INPUT" } });
+  const editor = dom.mount();
+  dom.mutate();
+  tick(DEADLINE);
+
+  assert.strictEqual(editor.focusCount, 0);
+  assert.strictEqual((await done).focused, false);
+});
+
+test("focusComposeBox takes focus back from the SPA's highlighted message", async (t) => {
+  const dom = fakeDom();
+  t.after(dom.restore);
+  const editor = dom.mount();
+  const { done, tick } = focusing(t, dom);
+
+  tick(SETTLE);
+  assert.strictEqual(editor.focusCount, 1);
+  // The SPA scrolls to the linked message and focuses it, with no DOM change.
+  globalThis.document.activeElement = { tagName: "DIV" };
+  dom.listeners.focusin({ target: globalThis.document.activeElement });
+  assert.strictEqual(editor.focusCount, 2, "refocused without waiting for a mutation");
+  tick(DEADLINE);
+  assert.strictEqual((await done).focused, true);
 });
 
 test("focusComposeBox resolves false when no compose box ever mounts", async (t) => {
   const dom = fakeDom();
   t.after(dom.restore);
+  const { done, tick } = focusing(t, dom, ["a", "b"]);
 
-  assert.strictEqual(await focusComposeBox(findCompose, ["a", "b"], 10), false);
+  tick(DEADLINE);
+  const result = await done;
+  assert.strictEqual(result.focused, false);
+  assert.strictEqual(result.afterMs, null, "never focused, nothing to time");
   assert.strictEqual(dom.observing, false);
 });
 
@@ -434,12 +539,12 @@ test("focusCompose accepts the configured origin like navigateInPage", async () 
   let ran = 0;
   const gov = windowWith("https://gov.teams.microsoft.us/v2/", async () => {
     ran += 1;
-    return true;
+    return { focused: true, afterMs: 0 };
   });
   const link = "https://gov.teams.microsoft.us/l/chat/0/0?users=a@b.com";
 
-  assert.strictEqual(await focusCompose(gov, link, "https://gov.teams.microsoft.us"), true);
-  assert.strictEqual(await focusCompose(gov, link, TEAMS_URL), false);
+  assert.strictEqual((await focusCompose(gov, link, "https://gov.teams.microsoft.us")).focused, true);
+  assert.strictEqual((await focusCompose(gov, link, TEAMS_URL)).focused, false);
   assert.strictEqual(ran, 1, "nothing is injected into a frame that is not the configured one");
 });
 
@@ -450,6 +555,8 @@ test("focusComposeBox reports false when the match cannot take focus", async (t)
   t.after(dom.restore);
   const wrapper = dom.mount();
   wrapper.focus = () => {};
+  const { done, tick } = focusing(t, dom);
 
-  assert.strictEqual(await focusComposeBox(findCompose, ["any"], 10), false);
+  tick(DEADLINE);
+  assert.strictEqual((await done).focused, false);
 });
