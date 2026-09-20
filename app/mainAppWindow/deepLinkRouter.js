@@ -270,7 +270,7 @@ function focusComposeBox(find, selectors, timeoutMs, settleMs) {
     const typing = (event) => {
       if (event.isComposing || event.key === "Dead" || event.key === "Process") return true;
       if (event.key?.length !== 1 || event.metaKey) return false;
-      return !(event.ctrlKey || event.altKey) || (event.ctrlKey && event.altKey);
+      return !(event.ctrlKey || event.altKey) || Boolean(event.ctrlKey && event.altKey);
     };
     const onKey = (event) => {
       if (editable(event.target) || !typing(event)) stop();
