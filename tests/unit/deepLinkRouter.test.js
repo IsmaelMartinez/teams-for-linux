@@ -5,6 +5,8 @@ const {
   toHashRoute,
   findRouterFrame,
   navigateInPage,
+  focusCompose,
+  focusComposeBox,
 } = require("../../app/mainAppWindow/deepLinkRouter");
 
 const TEAMS_URL = "https://teams.cloud.microsoft";
@@ -223,11 +225,16 @@ test("navigateInPage falls back when the fragment is left untouched", async () =
 });
 
 test("navigateInPage declines when Teams is not the loaded origin", async () => {
-  const win = windowWith("https://login.microsoftonline.com/", async () =>
-    assert.fail("should not execute script")
-  );
+  // Counted, not asserted inside the callback: navigateInPage swallows a
+  // throw from the frame, so an assert.fail in there reads as a clean decline.
+  let ran = 0;
+  const win = windowWith("https://login.microsoftonline.com/", async () => {
+    ran += 1;
+    return true;
+  });
 
   assert.strictEqual(await navigateInPage(win, DEEP_LINK, TEAMS_URL), false);
+  assert.strictEqual(ran, 0, "nothing is injected off the Teams origin");
 });
 
 test("navigateInPage declines when the frame rejects", async () => {
@@ -254,14 +261,17 @@ test("navigateInPage declines when the window is torn down mid-flight", async ()
 });
 
 test("navigateInPage declines unsupported link shapes without touching the frame", async () => {
-  const win = windowWith("https://teams.cloud.microsoft/", async () =>
-    assert.fail("should not execute script")
-  );
+  let ran = 0;
+  const win = windowWith("https://teams.cloud.microsoft/", async () => {
+    ran += 1;
+    return true;
+  });
 
   assert.strictEqual(
     await navigateInPage(win, "https://teams.microsoft.com/meet/241", TEAMS_URL),
     false
   );
+  assert.strictEqual(ran, 0, "an unsupported shape never reaches the frame");
 });
 
 test("navigateInPage routes a GovCloud session through its configured URL", async () => {
@@ -296,4 +306,128 @@ test("navigateInPage does not let an opaque configured origin match a blank fram
 
   assert.strictEqual(await navigateInPage(win, DEEP_LINK, "file:///tmp/teams.html"), false);
   assert.strictEqual(ran, 0);
+});
+
+test("focusCompose only targets conversation routes on a Teams frame", async () => {
+  let script = null;
+  const win = windowWith("https://teams.cloud.microsoft/", async (source) => {
+    script = source;
+    return { focused: true, afterMs: 0 };
+  });
+
+  assert.strictEqual((await focusCompose(win, MEETING_LINK, TEAMS_URL)).focused, false);
+  assert.strictEqual(script, null, "a meeting link has no compose box to focus");
+  assert.strictEqual((await focusCompose(win, DEEP_LINK, TEAMS_URL)).focused, true);
+  // The renderer function travels as source: a syntax slip would only show
+  // up as a rejected promise, silently swallowed as "not found".
+  assert.doesNotThrow(() => new Function(`return ${script}`));
+  assert.match(script, /role=\\"textbox\\"/);
+
+  // Counted, not asserted inside the callback: focusCompose swallows a throw
+  // from the frame, so an assert.fail in there would read as a clean decline.
+  let ranOnLogin = 0;
+  const login = windowWith("https://login.microsoftonline.com/", async () => {
+    ranOnLogin += 1;
+    return true;
+  });
+  assert.strictEqual((await focusCompose(login, DEEP_LINK, TEAMS_URL)).focused, false);
+  assert.strictEqual(ranOnLogin, 0, "nothing is injected off a Teams host");
+  const rejecting = windowWith("https://teams.cloud.microsoft/", async () => {
+    throw new Error("frame disposed");
+  });
+  assert.strictEqual((await focusCompose(rejecting, DEEP_LINK, TEAMS_URL)).focused, false);
+});
+
+// Unit tests have no DOM (CLAUDE.md): the injected function is pinned by its
+// source text, and its behaviour is checked in a real renderer with an
+// Electron probe (hidden BrowserWindow + executeJavaScript), see the PR.
+function injectedSource() {
+  return focusComposeBox.toString();
+}
+
+test("focusComposeBox source is self-contained and parses", () => {
+  const source = injectedSource();
+  assert.doesNotThrow(() => new Function(`return ${source}`));
+  // Nothing from the module scope may be closed over: it runs serialised.
+  assert.doesNotMatch(source, /COMPOSE_SELECTORS|COMPOSE_FOCUS_TIMEOUT_MS|COMPOSE_SETTLE_MS|isTeamsHost/);
+  assert.doesNotMatch(source, /require\(/);
+});
+
+test("focusComposeBox never takes the editor present when the route landed at once", () => {
+  const source = injectedSource();
+  // The outgoing chat's editor is still mounted right after the route; only a
+  // new element is safe immediately, the initial one waits for DOM quiet.
+  assert.match(source, /const initial = find\(document, selectors\);/);
+  assert.match(source, /if \(el && el !== initial\) \{\s*clearTimeout\(settleTimer\);\s*focusNow\(\);/);
+  assert.match(source, /settleTimer = setTimeout\(focusNow, settleMs\);/);
+});
+
+test("focusComposeBox follows the editor and reclaims focus the SPA moves away", () => {
+  const source = injectedSource();
+  assert.match(source, /if \(focused\.isConnected && document\.activeElement === focused\) return;\s*focusNow\(\);/);
+  assert.match(source, /addEventListener\("focusin", onActivity, true\);/);
+  assert.match(source, /observer\.observe\(document\.body, \{ childList: true, subtree: true \}\);/);
+});
+
+test("focusComposeBox backs off on pointer input, field input and navigation keys only", () => {
+  const source = injectedSource();
+  assert.match(source, /addEventListener\("pointerdown", stop, true\);/);
+  assert.match(source, /if \(editable\(event\.target\) \|\| !typing\(event\)\) stop\(\);/);
+  // Evaluate the production classifier itself, lifted out of the source.
+  const typingSrc = source.match(/const typing = \((event)\) => \{([\s\S]*?)\n {4}\};/);
+  assert.ok(typingSrc, "typing classifier present");
+  const typing = new Function("event", typingSrc[2]);
+  const message = {};
+  for (const event of [
+    { key: "a" }, { key: "é" }, { key: "Dead" }, { key: "Process", isComposing: true },
+    { key: "@", ctrlKey: true, altKey: true },
+  ]) {
+    assert.strictEqual(typing({ ...event, target: message }), true, `${event.key} is typing`);
+  }
+  for (const event of [
+    { key: "Tab" }, { key: "ArrowDown" }, { key: "Enter" },
+    { key: "k", ctrlKey: true }, { key: "f", altKey: true }, { key: "k", metaKey: true }, {},
+  ]) {
+    assert.strictEqual(typing({ ...event, target: message }), false, `${event.key} is navigation`);
+  }
+  const editableSrc = source.match(/const editable = \((el)\) =>\s*([\s\S]*?);\n/);
+  assert.ok(editableSrc, "editable check present");
+  const editable = new Function("el", `return ${editableSrc[2]};`);
+  assert.strictEqual(editable({ isContentEditable: true }), true);
+  assert.strictEqual(editable({ tagName: "INPUT" }), true);
+  assert.strictEqual(editable({ tagName: "DIV", isContentEditable: false }), false);
+  assert.strictEqual(editable(null), false);
+});
+
+test("focusComposeBox reports whether the box holds focus and when it first did", () => {
+  const source = injectedSource();
+  assert.match(source, /resolve\(\{ focused: focused !== null && document\.activeElement === focused, afterMs: firstFocusAt \}\);/);
+  assert.match(source, /firstFocusAt \?\?= Date\.now\(\) - started;/);
+});
+
+test("focusCompose injects the shared finder, the cascade and both budgets", async () => {
+  let script = null;
+  const win = windowWith("https://teams.cloud.microsoft/", async (source) => {
+    script = source;
+    return { focused: true, afterMs: 0 };
+  });
+
+  await focusCompose(win, DEEP_LINK, TEAMS_URL);
+  assert.match(script, /^\(function focusComposeBox\(/);
+  assert.match(script, /\(function findCompose\(doc, selectors\)/);
+  assert.match(script, /"div\[id\^=\\"new-message-\\"\]"/);
+  assert.match(script, /, 1500, 100\)$/);
+});
+
+test("focusCompose accepts the configured origin like navigateInPage", async () => {
+  let ran = 0;
+  const gov = windowWith("https://gov.teams.microsoft.us/v2/", async () => {
+    ran += 1;
+    return { focused: true, afterMs: 0 };
+  });
+  const link = "https://gov.teams.microsoft.us/l/chat/0/0?users=a@b.com";
+
+  assert.strictEqual((await focusCompose(gov, link, "https://gov.teams.microsoft.us")).focused, true);
+  assert.strictEqual((await focusCompose(gov, link, TEAMS_URL)).focused, false);
+  assert.strictEqual(ran, 1, "nothing is injected into a frame that is not the configured one");
 });
