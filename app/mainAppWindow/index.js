@@ -900,6 +900,12 @@ exports.show = function () {
 // "restore" (issue #2647).
 exports.restoreWindow = restoreWindow;
 
+// The tray is created inside Menus during onAppReady; Phase 2's unread
+// aggregator attaches to it afterwards. Null when trayIconEnabled is off.
+exports.getTray = function () {
+  return menus?.tray ?? null;
+};
+
 exports.getWindow = function () {
   return window;
 };

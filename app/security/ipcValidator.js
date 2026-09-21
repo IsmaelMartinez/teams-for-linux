@@ -163,6 +163,15 @@ const allowedChannels = new Set([
   // State flows main → renderer over `profile-switcher-state` (send direction,
   // not gated; listed for an authoritative allowlist per CLAUDE.md). All are
   // registered only when `multiAccount.enabled === true`.
+  // Aggregate tray badge (ADR-020 Phase 2). The renderer's reply to main's
+  // render-aggregate-badge request: the summed unread count composited onto
+  // the tray icon by trayIconRenderer's canvas path. Matched by requestId
+  // and sender identity in main; registered only when multi-account is on.
+  'aggregate-badge-rendered',
+  // main → renderer only (webContents.send); not gated by this validator,
+  // listed so the allowlist stays authoritative per CLAUDE.md.
+  'render-aggregate-badge',
+
   'profile-switcher-open-add',
   'profile-switcher-open-manage',
   'profile-switcher-set-expanded',

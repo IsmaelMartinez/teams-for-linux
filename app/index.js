@@ -173,6 +173,11 @@ const profilesManager = new ProfilesManager(appConfig.settingsStore);
 // after `mainAppWindow.onAppReady` resolves.
 let profileViewManager = null;
 
+// ADR-020 Phase 2: aggregates per-profile unread counts into one tray badge
+// and dock count. Only constructed when the multi-account flag is on; with
+// the flag off the tray/badge handlers keep their single-sender behaviour.
+let unreadAggregator = null;
+
 const idleMonitor = new IdleMonitor(config, getUserStatus);
 
 const customNotificationManager = new CustomNotificationManager(config, mainAppWindow);
@@ -739,6 +744,7 @@ async function handleAppReady() {
         );
         profileViewManager.initialize();
         await profileViewManager.bootstrapProfileZeroIfNeeded();
+        unreadAggregator = createUnreadAggregator(profileViewManager);
       } else {
         console.warn(
           "[ProfileViewManager] main window unavailable after onAppReady; multi-account features disabled for this session"
@@ -808,7 +814,25 @@ async function userStatusChangedHandler(_event, options) {
   }
 }
 
-async function setBadgeCountHandler(_event, count) {
+// Badge counts that arrive before the aggregator attaches, kept so the
+// attach can replay them — renderers dedupe and never re-send an unchanged
+// count, so a pre-attach report would otherwise be missing from the sum.
+const preAggregatorBadgeCounts = new Map();
+
+async function setBadgeCountHandler(event, count) {
+  if (unreadAggregator) {
+    // Multi-account: every profile view reports its own count; the
+    // aggregator applies the SUM instead of last-write-wins.
+    unreadAggregator.onBadgeCount(event, count);
+    return;
+  }
+  if (config.multiAccount?.enabled && typeof event?.sender?.id === "number") {
+    preAggregatorBadgeCounts.set(event.sender.id, count);
+  }
+  applyBadgeCount(count);
+}
+
+function applyBadgeCount(count) {
   if (!config.disableBadgeCount) {
     app.setBadgeCount(count);
     // Electron's own Linux badge path loads libunity at runtime, which none
@@ -828,6 +852,66 @@ async function setBadgeCountHandler(_event, count) {
       }
     }
   }
+}
+
+// Build the Phase 2 unread aggregator and attach it to the tray. Kept as a
+// factory so the flag-off path never touches any of this wiring.
+function createUnreadAggregator(viewManager) {
+  const ProfileUnreadAggregator = require("./profileUnread");
+  const { createBadgeRenderBridge } = require("./profileUnread/badgeRenderBridge");
+
+  const requestBadgeRender = createBadgeRenderBridge({
+    ipcMain,
+    getTarget: () => viewManager.getActiveWebContents(),
+  });
+
+  // Profile names for the tooltip, cached so the per-badge-tick path never
+  // touches the settings store (electron-store re-reads its JSON on every
+  // access); the rare profile events invalidate it.
+  let nameCache = null;
+  const getProfileName = (profileId) => {
+    if (!nameCache) {
+      nameCache = new Map(profilesManager.list().map((p) => [p.id, p.name]));
+    }
+    return nameCache.get(profileId) ?? null;
+  };
+  const invalidateNames = () => {
+    nameCache = null;
+  };
+  profilesManager.on("add", invalidateNames);
+  profilesManager.on("update", invalidateNames);
+  profilesManager.on("remove", invalidateNames);
+
+  const aggregator = new ProfileUnreadAggregator({
+    resolveProfileId: (event) => viewManager.getProfileFor(event)?.id ?? null,
+    isPrimarySender: (event) => viewManager.isPrimaryProfileSurface(event),
+    getProfileName,
+    requestBadgeRender,
+    applyTray: (update) => mainAppWindow.getTray()?.applyAggregate(update),
+    applyBadgeCount,
+    appTitle: config.appTitle,
+  });
+
+  // A removed profile stops contributing immediately (its view teardown
+  // sends no final zero-count update) — and so does a profile whose view
+  // died on its own (auth window.close(), renderer crash): with no live
+  // surface left to report, holding its last count would inflate the badge
+  // for the rest of the session.
+  profilesManager.on("remove", ({ removedId }) =>
+    aggregator.removeProfile(removedId)
+  );
+  viewManager.onProfileViewGone((profileId) =>
+    aggregator.removeProfile(profileId)
+  );
+
+  // Replay anything that raced the attach: the tray replays its last direct
+  // update inside setAggregator; badge counts are replayed here.
+  mainAppWindow.getTray()?.setAggregator(aggregator);
+  for (const [senderId, count] of preAggregatorBadgeCounts) {
+    aggregator.onBadgeCount({ sender: { id: senderId } }, count);
+  }
+  preAggregatorBadgeCounts.clear();
+  return aggregator;
 }
 
 function handleGlobalShortcutDisabled() {
