@@ -736,6 +736,7 @@ module.exports = {
           showStatusOnDockIcon: false,
           macPerformanceMode: true,
           preventDeviceSwitching: false,
+          audioDeviceRecovery: { enabled: true },
         },
         describe:
           "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the Dock icon on macOS. macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications.",
@@ -823,6 +824,11 @@ module.exports = {
             type: "boolean",
             describe:
               "On macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; set false to opt out without disabling the GPU entirely.",
+          },
+          "audioDeviceRecovery.enabled": {
+            type: "boolean",
+            describe:
+              "On Linux, keep audio working when devices appear or disappear while Teams is running, which Bluetooth headsets do every time PipeWire/PulseAudio switches them between the music (A2DP) and call (HFP) profiles. Polls the device list and notifies Teams of changes (Chromium never does this on Linux for Bluetooth devices), retries a microphone request with the system default when the selected device is gone, and falls back to the default speaker when the selected one cannot be opened. Set false to restore the raw browser behaviour.",
           },
           // preventDeviceSwitching is documented in the option's `describe`
           // above; see the note in the download.fields block on why it isn't a

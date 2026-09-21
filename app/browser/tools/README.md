@@ -36,6 +36,14 @@ Stops Teams' in-app mute button from following the operating system microphone m
 **Configuration**: `media.microphone.ignoreSystemMute: true`
 **Use Case**: Users who mute exclusively at the OS or hotkey level and want the Teams button to stay put
 
+#### [audioDeviceRecovery.js](audioDeviceRecovery.js)
+Keeps audio working on Linux when devices appear or disappear while Teams is running. Bluetooth headsets are the usual trigger: PipeWire/PulseAudio switch them from the A2DP (music) profile to HFP (call) when the microphone is opened and back when the call ends, and on Ubuntu 22.04/24.04 sound servers the headset microphone only exists in the call profile. Chromium only notices audio device changes on Linux through udev `sound` events, which Bluetooth devices never emit, so Teams keeps a stale list and keeps asking for a device that is gone.
+
+The tool polls `enumerateDevices()` every 5 seconds and dispatches a synthetic `devicechange` when the list differs, retries a `getUserMedia` request without its `deviceId` when the pinned microphone fails with a device error (`NotFoundError`, `OverconstrainedError`, `NotReadableError`, `AbortError`), and falls back to the default output when `setSinkId` rejects. Successful requests are passed through untouched, and the original error is rethrown if the fallback fails too. The poller is skipped when `media.preventDeviceSwitching` is on.
+
+**Configuration**: `media.audioDeviceRecovery.enabled: true` (default on Linux; set `false` to disable)
+**Use Case**: Bluetooth headsets that stop working after a call, headsets connected after launch not showing up until restart (#864, #2168, #2531)
+
 #### [overrideMicConstraints.js](overrideMicConstraints.js)
 Overrides the microphone audio constraints Teams requests via `getUserMedia`, letting users disable WebRTC APM processing (echo cancellation, noise suppression, auto gain control) or pin `channelCount` / `sampleRate` at the Chromium/WebRTC layer. This is the Linux equivalent of the "High fidelity music mode" Microsoft only exposes on Windows Teams.
 
