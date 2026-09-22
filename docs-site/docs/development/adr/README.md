@@ -385,12 +385,12 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 30
+- **Total ADRs**: 31
 - **Implemented**: 19
 - **Accepted**: 4
-- **Proposed**: 0
-- **Rejected**: 5
-- **Superseded**: 2
+- **Proposed**: 1
+- **Rejected**: 4
+- **Superseded**: 3
 - **Average length**: ~1050 words
 - **Topics covered**: 11 (Authentication & Security, Screen Sharing, Linux Desktop & Display Server, Testing & Quality, Performance, Documentation & Standards, Release Process & Automation, Community & Metrics, MQTT & Integration, UI Features, Distribution & Packaging)
 
