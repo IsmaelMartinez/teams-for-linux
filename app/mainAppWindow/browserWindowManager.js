@@ -16,6 +16,9 @@ const {
   clearStorageForPartitions,
 } = require("../utils/storagePartitions");
 
+const MIN_WINDOW_WIDTH = 400;
+const MIN_WINDOW_HEIGHT = 300;
+
 class BrowserWindowManager {
   constructor(properties) {
     this.config = properties.config;
@@ -90,6 +93,11 @@ class BrowserWindowManager {
 
       width: windowState.width,
       height: windowState.height,
+      // electron-window-state accepts any positive size, so a window that was
+      // saved at 1x1 came back at 1x1 with no edge left to drag (#2996).
+      // Electron clamps both the restored size and later resizes to these.
+      minWidth: MIN_WINDOW_WIDTH,
+      minHeight: MIN_WINDOW_HEIGHT,
       backgroundColor: nativeTheme.shouldUseDarkColors ? "#302a75" : "#fff",
 
       show: false,
