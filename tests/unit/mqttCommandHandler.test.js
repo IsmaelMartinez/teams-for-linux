@@ -139,7 +139,7 @@ describe('MQTT allowedActions', () => {
 		assert.ok(allowed.includes('toggle-mute'));
 		assert.ok(allowed.includes('toggle-video'));
 		assert.ok(allowed.includes('toggle-hand-raise'));
-		assert.ok(allowed.includes('leave-call'));
+		assert.ok(allowed.includes('leave'));
 	});
 
 	it('includes non-shortcut actions', () => {
