@@ -197,6 +197,7 @@ Send commands as JSON messages to the command topic (`teams/command` by default)
 | `unmute` | Ctrl+Shift+M | Unmute the microphone (state-aware, see below) |
 | `toggle-video` | Ctrl+Shift+O | Toggle video on/off |
 | `toggle-hand-raise` | Ctrl+Shift+K | Toggle hand raise in meeting |
+| `leave` | Ctrl+Shift+H | Leave/hang up the active call |
 
 ### State-Aware Mute and Unmute
 
@@ -225,6 +226,9 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 
 
 # Toggle hand raise
 mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-hand-raise"}' -q 1
+
+# Leave call
+mosquitto_pub -h localhost -t "teams/command" -m '{"action":"leave"}' -q 1
 ```
 
 #### System Keyboard Shortcuts
@@ -501,6 +505,7 @@ All entities are grouped under a single HA device (identified by `mqtt.clientId`
 | `button` | Teams Toggle Mute | via `commandTopic` | Sends `{"action":"toggle-mute"}` |
 | `button` | Teams Toggle Video | via `commandTopic` | Sends `{"action":"toggle-video"}` |
 | `button` | Teams Toggle Hand Raise | via `commandTopic` | Sends `{"action":"toggle-hand-raise"}` |
+| `button` | Teams Leave Call | via `commandTopic` | Sends `{"action":"leave"}` |
 
 Button entities are only created when `commandTopic` is set (bidirectional mode). Discovery configs are republished on every broker reconnect so entities survive broker restarts.
 
@@ -771,6 +776,7 @@ Commands are validated with multiple security layers:
   - `toggle-mute` → Ctrl+Shift+M
   - `toggle-video` → Ctrl+Shift+O
   - `toggle-hand-raise` → Ctrl+Shift+K
+  - `leave` → Ctrl+Shift+H
 - Sends keyboard events to Teams window via `sendKeyboardEventToWindow`
 - **Location**: `app/globalShortcuts/index.js` for keyboard event generation
 
