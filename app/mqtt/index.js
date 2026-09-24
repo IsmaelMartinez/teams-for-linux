@@ -27,7 +27,8 @@ class MQTTClient extends EventEmitter {
 			'mute': 'Ctrl+Shift+M',
 			'unmute': 'Ctrl+Shift+M',
 			'toggle-video': 'Ctrl+Shift+O',
-			'toggle-hand-raise': 'Ctrl+Shift+K'
+			'toggle-hand-raise': 'Ctrl+Shift+K',
+			'leave': 'Ctrl+Shift+H'
 		};
 
 		this.nonShortcutActions = ['get-calendar'];

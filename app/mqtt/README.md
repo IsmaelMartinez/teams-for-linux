@@ -113,6 +113,7 @@ Command messages should be sent as JSON with the following structure:
 - `toggle-mute` - Toggle microphone mute (Ctrl+Shift+M)
 - `toggle-video` - Toggle video on/off (Ctrl+Shift+O)
 - `toggle-hand-raise` - Toggle hand raise in meeting (Ctrl+Shift+K)
+- `leave` - Leave/hang up the active call (Ctrl+Shift+H)
 
 #### Command Security
 
@@ -134,6 +135,9 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 
 
 # Toggle hand raise
 mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-hand-raise"}' -q 1
+
+# Leave call
+mosquitto_pub -h localhost -t "teams/command" -m '{"action":"leave"}' -q 1
 ```
 
 ## Home Assistant Auto-Discovery
@@ -156,6 +160,7 @@ When `mqtt.homeAssistant.enabled` is `true`, Teams for Linux publishes MQTT disc
 | Teams Toggle Mute | `button` | Toggle microphone mute |
 | Teams Toggle Video | `button` | Toggle camera on/off |
 | Teams Toggle Hand Raise | `button` | Toggle hand raise in meeting |
+| Teams Leave Call | `button` | Leave/hang up the active call |
 
 All entities are grouped under a single **Teams for Linux** device in Home Assistant and respect the `availability_topic` (`{topicPrefix}/connected`) — entities show as unavailable when Teams for Linux is not running.
 

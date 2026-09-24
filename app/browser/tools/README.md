@@ -159,6 +159,7 @@ System-wide keyboard shortcuts that work even when Teams is not focused. When tr
 **Common Teams Shortcuts**:
 - `Ctrl+Shift+M` - Toggle mute/unmute
 - `Ctrl+Shift+O` - Toggle video on/off
+- `Ctrl+Shift+H` - Leave/hang up call
 - `Ctrl+Shift+K` - Raise/lower hand
 - `Ctrl+Shift+B` - Toggle background blur
 - `Ctrl+Shift+E` - Start/stop screen sharing
