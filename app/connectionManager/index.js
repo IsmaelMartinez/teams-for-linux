@@ -145,18 +145,22 @@ class ConnectionManager {
   }
 
   async load(hasUrl) {
+    // Timed so the default log shows how long Teams took to load on a slow link.
+    const startedAt = Date.now();
+    const elapsedSeconds = () => ((Date.now() - startedAt) / 1000).toFixed(1);
     try {
       if (hasUrl) {
         console.debug("Reloading current page...");
         this.window.reload();
       } else {
-        console.debug("Loading initial URL...");
+        console.info("[CONNECTION] Loading initial URL...");
         await this.window.loadURL(this.currentUrl, {
           userAgent: this.config.chromeUserAgent,
         });
+        console.info(`[CONNECTION] Teams page loaded in ${elapsedSeconds()}s`);
       }
     } catch (err) {
-      console.error(`[CONNECTION] Failed to load page: ${err.message}`);
+      console.error(`[CONNECTION] Failed to load page after ${elapsedSeconds()}s: ${err.message}`);
       _ConnectionManager_needsReload.set(this, true);
       this.debouncedRefresh();
     }
