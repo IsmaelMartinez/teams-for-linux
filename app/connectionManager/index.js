@@ -120,6 +120,9 @@ class ConnectionManager {
       }
       this.window?.setTitle("Waiting for network...");
       console.debug("Waiting for network...");
+      // Timed so a "network never came up" wait is visible at info/error level.
+      const waitStartedAt = Date.now();
+      const waitedSeconds = () => ((Date.now() - waitStartedAt) / 1000).toFixed(1);
       const connected = await this.isOnline();
 
       // Re-check window availability after async isOnline() call,
@@ -133,7 +136,7 @@ class ConnectionManager {
         // needsReload is left as it was, so a later resume or retry still
         // reloads a page that failed.
         this.window?.setTitle("No internet connection");
-        console.error("No internet connection");
+        console.error(`[CONNECTION] No internet connection after ${waitedSeconds()}s`);
         return;
       }
 
@@ -157,7 +160,8 @@ class ConnectionManager {
         await this.window.loadURL(this.currentUrl, {
           userAgent: this.config.chromeUserAgent,
         });
-        console.info(`[CONNECTION] Teams page loaded in ${elapsedSeconds()}s`);
+        // Navigation time only — lazy chunks can still be loading after this.
+        console.info(`[CONNECTION] Teams navigation finished in ${elapsedSeconds()}s`);
       }
     } catch (err) {
       console.error(`[CONNECTION] Failed to load page after ${elapsedSeconds()}s: ${err.message}`);

@@ -88,7 +88,7 @@ describe('ConnectionManager initial page load timing', () => {
 		await manager.load(false);
 		assert.deepStrictEqual(infos, [
 			'[CONNECTION] Loading initial URL...',
-			'[CONNECTION] Teams page loaded in 2.5s',
+			'[CONNECTION] Teams navigation finished in 2.5s',
 		]);
 		assert.deepStrictEqual(errors, []);
 	});
@@ -102,7 +102,7 @@ describe('ConnectionManager initial page load timing', () => {
 
 		assert.strictEqual(errors.length, 1);
 		assert.match(errors[0], /^\[CONNECTION\] Failed to load page after 3\.0s: ERR_CONNECTION_TIMED_OUT/);
-		assert.ok(!infos.some((line) => line.includes('Teams page loaded in')), 'a failed load is not reported as loaded');
+		assert.ok(!infos.some((line) => line.includes('Teams navigation finished in')), 'a failed load is not reported as finished');
 
 		// With a page URL present, refresh() skips a healthy page, so it only
 		// reloads here if the failure set needsReload; the reload only happens at
@@ -111,5 +111,18 @@ describe('ConnectionManager initial page load timing', () => {
 		mock.timers.tick(1000);
 		await new Promise((r) => setImmediate(r));
 		assert.strictEqual(reloadCount(), 1, 'the failed load should schedule one debounced reload');
+	});
+
+	it('reports how long the connectivity check waited before giving up', async () => {
+		({ manager } = managerWithFakeWindow({ loadMs: 0 }));
+		manager.isOnline = async () => {
+			mock.timers.tick(4000);
+			return false;
+		};
+		await manager.refresh();
+
+		assert.strictEqual(errors.length, 1);
+		assert.match(errors[0], /^\[CONNECTION\] No internet connection after 4\.0s$/);
+		assert.strictEqual(infos.length, 0, 'an offline wait is not reported as a navigation');
 	});
 });
