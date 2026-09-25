@@ -101,6 +101,13 @@ describe('formatChunkLoadWarning', () => {
 		assert.match(line, /too slow/);
 	});
 
+	// The reason group is captured under /i, so a cased variant still gets the hint.
+	it('treats a cased timeout reason as a timeout', () => {
+		const line = formatChunkLoadWarning({ reason: 'Timeout', file: '12-abc.js' });
+		assert.match(line, /^\[NETWORK\] Teams code chunk timed out: 12-abc\.js\./);
+		assert.match(line, /too slow/);
+	});
+
 	it('reports other reasons without the slow-connection hint', () => {
 		const line = formatChunkLoadWarning({ reason: 'error', file: '12-abc.js' });
 		assert.strictEqual(line, '[NETWORK] Teams code chunk failed to load (error): 12-abc.js');

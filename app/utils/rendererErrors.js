@@ -46,7 +46,8 @@ function parseChunkLoadFailure(message) {
 // or a blocked host.
 function formatChunkLoadWarning({ reason, file }) {
   const name = sanitizePii(file) || "unknown";
-  return reason === "timeout"
+  // The reason group is matched under /i, so compare case-insensitively too.
+  return String(reason).toLowerCase() === "timeout"
     ? `[NETWORK] Teams code chunk timed out: ${name}. The connection may be too slow for Teams to fetch it in time.`
     : `[NETWORK] Teams code chunk failed to load (${reason}): ${name}`;
 }
