@@ -154,12 +154,13 @@ jobs:
       - name: Smoke-launch the packaged app
         # e2e launches app/index.js from the checkout, so this is the only check
         # that the build.files allowlist ships everything the app loads. The
-        # app must finish navigating to Teams, still be running after 30s
-        # (timeout exits 124), and log no missing-module error.
+        # app must finish navigating to Teams, still be running after 60s
+        # (timeout exits 124), and log no missing-module error. 60s leaves
+        # room for the up-to-20s connectivity probe on a slow runner.
         run: |
           export E2E_USER_DATA_DIR="$(mktemp -d)"
           set +e
-          timeout 30 xvfb-run --auto-servernum dist/linux-unpacked/teams-for-linux --no-sandbox > smoke.log 2>&1
+          timeout 60 xvfb-run --auto-servernum dist/linux-unpacked/teams-for-linux --no-sandbox > smoke.log 2>&1
           status=$?
           set -e
           cat smoke.log
@@ -168,7 +169,7 @@ jobs:
             exit 1
           fi
           if [ "$status" -ne 124 ]; then
-            echo "::error::packaged app exited after less than 30s (status $status)"
+            echo "::error::packaged app exited after less than 60s (status $status)"
             exit 1
           fi
           if ! grep -q "\[CONNECTION\] Teams navigation finished" smoke.log; then
