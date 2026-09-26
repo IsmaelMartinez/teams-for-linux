@@ -642,7 +642,7 @@ async function getAssertion(options) {
       throw err;
     }
     log.warn("[WEBAUTHN] Resident credential listing failed", { errClass });
-    throw new Error("NotAllowedError: the security key does not support listing its credentials (CTAP 2.1 credential management). Start the sign-in by entering your email address instead.");
+    throw new Error("NotAllowedError: the security key does not support listing its credentials (CTAP 2.1 credential management). Start the sign-in by entering your email address instead.", { cause: err });
   }
   log.info("[WEBAUTHN] Resident credentials for rpId", { count: residentCreds.length });
   if (residentCreds.length === 0) {

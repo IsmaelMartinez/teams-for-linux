@@ -59,7 +59,7 @@ class BrowserWindowManager {
     windowState.manage(this.window);
 
     if (process.env.E2E_TESTING !== 'true') {
-      this.window.eval = globalThis.eval = function () { // eslint-disable-line no-eval
+      this.window.eval = globalThis.eval = function () {
         throw new Error("Sorry, this app does not support window.eval().");
       };
     }
@@ -93,7 +93,7 @@ class BrowserWindowManager {
       backgroundColor: nativeTheme.shouldUseDarkColors ? "#302a75" : "#fff",
 
       show: false,
-      autoHideMenuBar: this.config.menubar == "auto",
+      autoHideMenuBar: this.config.menubar === "auto",
       icon: this.iconChooser ? this.getIconImage(this.iconChooser.getFile()) : undefined,
       frame: this.config.frame,
 
@@ -232,7 +232,7 @@ class BrowserWindowManager {
   }
 
   assignOnIncomingCallEndedHandler() {
-    return async (e) => {
+    return async () => {
       this.handleOnIncomingCallEnded();
       app.emit('teams-incoming-call-ended');
     };
@@ -249,7 +249,7 @@ class BrowserWindowManager {
   }
 
   assignOnCallConnectedHandler() {
-    return async (e) => {
+    return async () => {
       this.isOnCall = true;
       const result = this.screenLockInhibitionMethod === "Electron"
         ? this.disableScreenLockElectron()
@@ -261,7 +261,7 @@ class BrowserWindowManager {
   }
 
   assignOnCallDisconnectedHandler() {
-    return async (e) => {
+    return async () => {
       this.isOnCall = false;
       const result = this.screenLockInhibitionMethod === "Electron"
         ? this.enableScreenLockElectron()

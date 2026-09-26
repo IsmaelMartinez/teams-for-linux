@@ -5,7 +5,7 @@ const assert = require('node:assert');
 const { readFileSync } = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const { encode: cborEncode, decode: cborDecode } = require('cbor-x');
+const { encode: cborEncode } = require('cbor-x');
 const { base64urlEncode, base64urlDecode, generateClientDataJSON, sanitizeForFido2 } = require('../../app/webauthn/helpers');
 
 // ─── Test helpers hoisted to module scope (replicas of fido2Backend.js logic) ──

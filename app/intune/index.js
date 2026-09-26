@@ -149,7 +149,7 @@ async function waitForBrokerReady(retries, delay) {
       return;
     } catch (error) {
       if (error?.name === "org.freedesktop.DBus.Error.ServiceUnknown") {
-        throw new Error("Broker not found, ensure it's installed");
+        throw new Error("Broker not found, ensure it's installed", { cause: error });
       }
 
       if (attempt < retries) {
