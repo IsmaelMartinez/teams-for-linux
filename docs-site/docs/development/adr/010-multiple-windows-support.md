@@ -6,7 +6,9 @@ id: 010-multiple-windows-support
 
 ## Status
 
-❌ Rejected
+🔄 Superseded by [ADR-032](032-secondary-window-for-calls.md)
+
+Rejected in November 2025. The premise that the Teams web app does not tolerate a second instance of the same account was disproved in September 2026 (browser-tab test and an in-app spike during a live call), and several building blocks the rejection assumed missing now exist (meeting-link interception, per-session screen-share picker, the multi-account window-open policy, Graph calendar access). ADR-032 records the narrower, opt-in design that replaces this decision. The analysis below is kept for history.
 
 ## Context
 
