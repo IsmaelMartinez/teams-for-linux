@@ -946,6 +946,8 @@ Teams for Linux supports system-wide configuration files for enterprise and mult
 
 > [!NOTE]
 > User configurations take precedence over system-wide configurations. This allows administrators to set organization-wide defaults while still allowing individual users to customize their settings.
+>
+> The files merge per setting: a user file that sets one field inside an object option such as `mqtt` or `network` keeps every other field from the system file and the built-in defaults. Lists such as `electronCLIFlags` are replaced, not combined.
 
 #### Example System-wide Config
 

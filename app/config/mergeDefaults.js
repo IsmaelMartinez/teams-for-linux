@@ -23,6 +23,9 @@ function deepMerge(base, override) {
   }
   const result = structuredClone(base);
   for (const [key, value] of Object.entries(override)) {
+    // JSON.parse keeps "__proto__" as an own key; assigning it would swap the
+    // prototype and hide the value from the config validator.
+    if (key === "__proto__" || key === "constructor" || key === "prototype") continue;
     result[key] = deepMerge(base[key], value);
   }
   return result;

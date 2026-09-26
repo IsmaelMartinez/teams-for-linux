@@ -1,7 +1,10 @@
 'use strict';
 
-const { describe, it } = require('node:test');
+const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const { deepMerge, applyObjectDefaults } = require('../../app/config/mergeDefaults');
 const options = require('../../app/config/options');
 
@@ -21,6 +24,12 @@ describe('config mergeDefaults - deepMerge', () => {
 			deepMerge({ on: true, value: 'x' }, { on: false, value: null }),
 			{ on: false, value: null },
 		);
+	});
+
+	it('ignores a __proto__ key instead of swapping the prototype', () => {
+		const result = deepMerge({ a: 1 }, JSON.parse('{"__proto__":{"polluted":true}}'));
+		assert.strictEqual(Object.getPrototypeOf(result), Object.prototype);
+		assert.strictEqual(result.polluted, undefined);
 	});
 
 	it('returns a non-object override as is', () => {
@@ -60,7 +69,8 @@ describe('config mergeDefaults - applyObjectDefaults', () => {
 	});
 
 	it('coerces a dotted CLI boolean string against a boolean default', () => {
-		const config = { network: { disableQuic: 'false' } };
+		// Parsed like the CLI value, so the fixture carries no static type.
+		const config = JSON.parse('{"network":{"disableQuic":"false"}}');
 		applyObjectDefaults(config, options);
 		assert.strictEqual(config.network.disableQuic, false);
 	});
@@ -83,5 +93,46 @@ describe('config mergeDefaults - applyObjectDefaults', () => {
 		const config = { mqtt: 'oops' };
 		applyObjectDefaults(config, options);
 		assert.strictEqual(config.mqtt, 'oops');
+	});
+});
+
+// Drives the real loader so dropping the applyObjectDefaults or deepMerge
+// wiring in app/config/index.js fails here, not just the helper tests above.
+describe('config loader - object defaults', () => {
+	const electronPath = require.resolve('electron');
+	const loggerPath = require.resolve('../../app/config/logger');
+	const loaderPath = require.resolve('../../app/config');
+	let configDir;
+	let argv;
+
+	before(() => {
+		require.cache[electronPath] = {
+			id: electronPath, filename: electronPath, loaded: true,
+			exports: { ipcMain: { emit: () => {} } },
+		};
+		require.cache[loggerPath] = {
+			id: loggerPath, filename: loggerPath, loaded: true,
+			exports: { init: () => {} },
+		};
+		delete require.cache[loaderPath];
+		argv = require('../../app/config');
+		configDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tfl-config-'));
+		fs.writeFileSync(
+			path.join(configDir, 'config.json'),
+			JSON.stringify({ network: { webRTCIPHandlingPolicy: 'default_public_interface_only' } }),
+		);
+	});
+
+	after(() => {
+		delete require.cache[electronPath];
+		delete require.cache[loggerPath];
+		delete require.cache[loaderPath];
+		fs.rmSync(configDir, { recursive: true, force: true });
+	});
+
+	it('keeps network.disableQuic when config.json sets only another network leaf', () => {
+		const config = argv(configDir, '0.0.0');
+		assert.strictEqual(config.network.webRTCIPHandlingPolicy, 'default_public_interface_only');
+		assert.strictEqual(config.network.disableQuic, true);
 	});
 });
