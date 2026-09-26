@@ -10,7 +10,7 @@ const {
   isMigrationMenuAvailable,
 } = require("./deprecation");
 const { applyRenamedOptions, isOptionSetByUser } = require("./renames");
-const { deepMerge, applyObjectDefaults } = require("./mergeDefaults");
+const { mergeConfigFiles, applyObjectDefaults } = require("./mergeDefaults");
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
@@ -75,7 +75,7 @@ function populateConfigObjectFromFile(configObject, configPath) {
   // so a user `mqtt` block overrides the admin's leaves rather than the whole
   // namespace.
   if (hasUserConfig || hasSystemConfig) {
-    configObject.configFile = deepMerge(systemConfig, userConfig);
+    configObject.configFile = mergeConfigFiles(systemConfig, userConfig);
     configObject.isConfigFile = true;
 
     if (hasUserConfig && hasSystemConfig) {

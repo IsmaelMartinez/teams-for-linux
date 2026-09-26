@@ -286,6 +286,7 @@ function toNestedConfigFile(configFile, renames = RENAMES) {
 
 module.exports = {
   RENAMES,
+  readPath,
   applyRenamedOptions,
   isOptionSetByUser,
   toNestedConfigFile,

@@ -5,7 +5,8 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { deepMerge, applyObjectDefaults } = require('../../app/config/mergeDefaults');
+const { deepMerge, applyObjectDefaults, mergeConfigFiles } = require('../../app/config/mergeDefaults');
+const { applyRenamedOptions } = require('../../app/config/renames');
 const options = require('../../app/config/options');
 
 describe('config mergeDefaults - deepMerge', () => {
@@ -30,6 +31,13 @@ describe('config mergeDefaults - deepMerge', () => {
 		const result = deepMerge({ a: 1 }, JSON.parse('{"__proto__":{"polluted":true}}'));
 		assert.strictEqual(Object.getPrototypeOf(result), Object.prototype);
 		assert.strictEqual(result.polluted, undefined);
+	});
+
+	it('does not share an override array with the result', () => {
+		const override = { list: [1] };
+		const result = deepMerge({ list: [] }, override);
+		result.list.push(2);
+		assert.deepStrictEqual(override.list, [1]);
 	});
 
 	it('returns a non-object override as is', () => {
@@ -75,6 +83,12 @@ describe('config mergeDefaults - applyObjectDefaults', () => {
 		assert.strictEqual(config.network.disableQuic, false);
 	});
 
+	it('coerces an optional boolean leaf that has no default, using its field type', () => {
+		const config = JSON.parse('{"media":{"microphone":{"overrideConstraints":{"echoCancellation":"false"}}}}');
+		applyObjectDefaults(config, options);
+		assert.strictEqual(config.media.microphone.overrideConstraints.echoCancellation, false);
+	});
+
 	it('leaves a string default alone when the value is "false"', () => {
 		const config = { mqtt: { topicPrefix: 'false' } };
 		applyObjectDefaults(config, options);
@@ -93,6 +107,42 @@ describe('config mergeDefaults - applyObjectDefaults', () => {
 		const config = { mqtt: 'oops' };
 		applyObjectDefaults(config, options);
 		assert.strictEqual(config.mqtt, 'oops');
+	});
+});
+
+describe('config mergeDefaults - mergeConfigFiles', () => {
+	// Runs the merged file through rename projection, as the loader does.
+	function resolveHandler(system, user) {
+		const configFile = mergeConfigFiles(system, user);
+		const config = { defaultURLHandler: configFile.defaultURLHandler ?? '' };
+		applyRenamedOptions(config, configFile);
+		return config.defaultURLHandler;
+	}
+
+	it('keeps a user flat value over a system nested value for the same rename', () => {
+		const system = { urlHandling: { defaultHandler: 'system-browser' } };
+		const user = { defaultURLHandler: 'user-browser', urlHandling: { meetupJoinRegEx: 'x' } };
+		assert.strictEqual(resolveHandler(system, user), 'user-browser');
+	});
+
+	it('keeps a user nested value over a system flat value for the same rename', () => {
+		const system = { defaultURLHandler: 'system-browser' };
+		const user = { urlHandling: { defaultHandler: 'user-browser' } };
+		assert.strictEqual(resolveHandler(system, user), 'user-browser');
+	});
+
+	it('keeps a system value the user did not touch', () => {
+		const system = { urlHandling: { defaultHandler: 'system-browser' }, mqtt: { topicPrefix: 'corp' } };
+		const user = { mqtt: { enabled: true } };
+		const merged = mergeConfigFiles(system, user);
+		assert.strictEqual(resolveHandler(system, user), 'system-browser');
+		assert.deepStrictEqual(merged.mqtt, { topicPrefix: 'corp', enabled: true });
+	});
+
+	it('does not mutate the system config', () => {
+		const system = { urlHandling: { defaultHandler: 'system-browser' } };
+		mergeConfigFiles(system, { defaultURLHandler: 'user-browser' });
+		assert.deepStrictEqual(system, { urlHandling: { defaultHandler: 'system-browser' } });
 	});
 });
 
