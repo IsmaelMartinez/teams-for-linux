@@ -10,6 +10,7 @@ const {
   isMigrationMenuAvailable,
 } = require("./deprecation");
 const { applyRenamedOptions, isOptionSetByUser } = require("./renames");
+const { deepMerge, applyObjectDefaults } = require("./mergeDefaults");
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
@@ -70,9 +71,11 @@ function populateConfigObjectFromFile(configObject, configPath) {
     }
   }
 
-  // Merge configs with user config taking precedence over system config
+  // Merge configs with user config taking precedence over system config. Deep,
+  // so a user `mqtt` block overrides the admin's leaves rather than the whole
+  // namespace.
   if (hasUserConfig || hasSystemConfig) {
-    configObject.configFile = { ...systemConfig, ...userConfig };
+    configObject.configFile = deepMerge(systemConfig, userConfig);
     configObject.isConfigFile = true;
 
     if (hasUserConfig && hasSystemConfig) {
@@ -145,6 +148,10 @@ function argv(configPath, appVersion) {
   if (configObject.configError) {
     config["error"] = configObject.configError;
   }
+
+  // yargs replaces an object option wholesale when the file or CLI sets any
+  // leaf; restore the declared defaults of the leaves left unset.
+  applyObjectDefaults(config, configOptions);
 
   // ADR-025: project any nested value the user supplied onto the flat key that
   // modules still read. Must run before anything consumes the config. The raw
