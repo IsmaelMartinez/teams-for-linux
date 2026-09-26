@@ -32,6 +32,10 @@
 * **deps:** bump image-size from 2.0.2 to 2.0.4 in /docs-site ([#3006](https://github.com/IsmaelMartinez/teams-for-linux/issues/3006)) ([d575b50](https://github.com/IsmaelMartinez/teams-for-linux/commit/d575b500dc560ea0c7437101c366ec5644025f51))
 * **deps:** bump mqtt in the minor-and-patch group ([#2997](https://github.com/IsmaelMartinez/teams-for-linux/issues/2997)) ([a3900bf](https://github.com/IsmaelMartinez/teams-for-linux/commit/a3900bff1e9b5d6cabd560e6466f37de05a2ee7a))
 
+### Thanks
+
+Big thanks to @app/dependabot, @babs, @DavidVallaLope, @dhananjaypesu, @minigig, @nikolainyegaard for contributing to this release.
+
 ## [2.22.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.21.0...v2.22.0) (2026-09-18)
 
 

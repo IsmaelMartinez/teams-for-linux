@@ -14,6 +14,22 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.23.0" date="2026-09-26">
+      <description>
+        <ul>
+          <li>deeplink: put the caret in the compose box after an in-page route (#2991)</li>
+          <li>logging: name slow-link chunk failures and time the initial load (#3009)</li>
+          <li>menu: add Open config file and Open config folder to Settings (#2893)</li>
+          <li>mqtt: add leave command to hang up the active call (#3002)</li>
+          <li>deeplink: keep a running call through the fallback, on any Teams host (#2988)</li>
+          <li>notifications: show Teams for Linux as the notification title on Linux (#2898)</li>
+          <li>release: describe the automated Flathub beta bump (#2989)</li>
+          <li>clear the awaiting-feedback label on inline replies from fork PRs (#2993)</li>
+          <li>deps: bump image-size from 2.0.2 to 2.0.4 in /docs-site (#3006)</li>
+          <li>deps: bump mqtt in the minor-and-patch group (#2997)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.22.0" date="2026-09-18">
       <description>
         <ul>
