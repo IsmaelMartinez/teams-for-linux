@@ -637,10 +637,12 @@ class Menus {
     this.window.webContents.executeJavaScript(script, true);
   }
 
-  joinMeeting() {
+  async joinMeeting() {
     let clipboardText = '';
     try {
-      clipboardText = clipboard.readText();
+      // Electron 44 moved the clipboard module onto the W3C Clipboard API, so
+      // readText() resolves rather than returns.
+      clipboardText = await clipboard.readText();
     } catch (error) {
       console.error('Error reading clipboard:', error);
     }
