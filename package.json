@@ -79,6 +79,10 @@
   },
   "build": {
     "appId": "teams-for-linux",
+    "files": [
+      "app/**/*",
+      "!app/customBackground/example${/*}"
+    ],
     "asarUnpack": [
       "node_modules/spellchecker/vendor/hunspell_dictionaries"
     ],
