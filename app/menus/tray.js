@@ -33,9 +33,13 @@ class ApplicationTray {
     // aggregator needs): counts arriving before the aggregator attaches
     // would otherwise be lost to it — renderers dedupe and never re-send an
     // unchanged count, and with disableBadgeCount there is no set-badge-count
-    // fallback, so a single slot would keep only the last profile.
-    this.lastDirectUpdates ??= new Map();
-    this.lastDirectUpdates.set(event?.sender?.id, data);
+    // fallback, so a single slot would keep only the last profile. Gated on
+    // the flag: with multi-account off no aggregator ever attaches, and the
+    // stash would grow one entry per sender forever.
+    if (this.config.multiAccount?.enabled) {
+      this.lastDirectUpdates ??= new Map();
+      this.lastDirectUpdates.set(event?.sender?.id, data);
+    }
     // Handle both old format { icon, flash } and new format { icon, flash, count }
     const { icon, flash, count } = data;
     this.updateTrayImage(icon, flash, count);
@@ -56,7 +60,12 @@ class ApplicationTray {
   // (total plus top profiles), not derived from a single count.
   applyAggregate({ icon, flash, tooltip }) {
     if (!this.tray || this.tray.isDestroyed()) return;
-    const image = this.getIconImage(icon || this.iconPath);
+    // createFromDataURL returns an EMPTY image (not a throw) for a malformed
+    // payload — falling back to the base icon beats blanking the tray.
+    let image = this.getIconImage(icon || this.iconPath);
+    if (image.isEmpty()) {
+      image = this.getIconImage(this.iconPath);
+    }
     this.tray.setImage(image);
     this.window.flashFrame(flash);
     this.tray.setToolTip(tooltip);

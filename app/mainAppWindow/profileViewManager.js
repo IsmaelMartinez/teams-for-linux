@@ -430,8 +430,12 @@ class ProfileViewManager {
     const senderId = event?.sender?.id;
     if (typeof senderId !== "number") return false;
     if (senderId === this.#window.webContents.id) return true;
-    for (const meta of this.#viewMeta.values()) {
-      if (meta.wcId === senderId) return true;
+    // LIVE views only — #viewMeta is deliberately retained after a view
+    // self-destroys (for the eventual removal's storage clear), so checking
+    // it would keep a dead sender "primary" and let its stashed pre-attach
+    // update replay into an unremovable bucket.
+    for (const view of this.#views.values()) {
+      if (view.webContents?.id === senderId) return true;
     }
     return false;
   }

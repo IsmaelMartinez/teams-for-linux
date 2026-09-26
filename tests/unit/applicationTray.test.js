@@ -48,8 +48,19 @@ function installElectronMock() {
         },
       },
       nativeImage: {
-        createFromDataURL: (url) => ({ kind: 'data', url, resize: () => ({}) }),
-        createFromPath: (p) => ({ kind: 'path', p, resize: () => ({}) }),
+        // resize returns the image itself so assertions hold on macOS too
+        // (getIconImage resizes there); isEmpty models a decodable payload
+        // unless the URL is marked bad.
+        createFromDataURL: (url) => {
+          const img = { kind: 'data', url, isEmpty: () => url.includes('bad') };
+          img.resize = () => img;
+          return img;
+        },
+        createFromPath: (p) => {
+          const img = { kind: 'path', p, isEmpty: () => false };
+          img.resize = () => img;
+          return img;
+        },
       },
     },
   };
@@ -80,6 +91,7 @@ function build() {
   };
   const tray = new ApplicationTray(window, [], '/base/icon.png', {
     appTitle: 'Teams',
+    multiAccount: { enabled: true },
   });
   tray.initialize();
   return { tray, window };
@@ -90,11 +102,8 @@ describe('ApplicationTray aggregation', () => {
     const { window } = build();
     trayUpdateHandler({ sender: { id: 1 } }, { icon: 'data:x', flash: true, count: 3 });
     const nativeTray = trayInstances[0];
-    assert.deepStrictEqual(nativeTray.images.at(-1), {
-      kind: 'data',
-      url: 'data:x',
-      resize: nativeTray.images.at(-1).resize,
-    });
+    assert.strictEqual(nativeTray.images.at(-1).kind, 'data');
+    assert.strictEqual(nativeTray.images.at(-1).url, 'data:x');
     assert.deepStrictEqual(window.flashes, [true]);
     assert.strictEqual(nativeTray.tooltips.at(-1), 'Teams (3)');
   });
@@ -124,6 +133,23 @@ describe('ApplicationTray aggregation', () => {
     // Replay happens once, not again on a second attach.
     tray.setAggregator({ onTrayUpdate: (event, data) => seen.push(['again', data]) });
     assert.strictEqual(seen.length, 2);
+  });
+
+  it('does not stash direct updates with multi-account off (flag-off path identical to main)', () => {
+    const window = { flashes: [], flashFrame(f) { this.flashes.push(f); }, isFocused: () => false };
+    const tray = new ApplicationTray(window, [], '/base/icon.png', { appTitle: 'Teams' });
+    tray.initialize();
+    trayUpdateHandler({ sender: { id: 4 } }, { icon: 'data:x', flash: false, count: 2 });
+    assert.strictEqual(tray.lastDirectUpdates, undefined);
+  });
+
+  it('applyAggregate falls back to the base icon when the payload decodes to an empty image', () => {
+    const { tray } = build();
+    tray.applyAggregate({ icon: 'data:image/png;base64,bad', flash: false, tooltip: 'Teams (3)' });
+    const nativeTray = trayInstances[0];
+    assert.strictEqual(nativeTray.images.at(-1).kind, 'path');
+    assert.strictEqual(nativeTray.images.at(-1).p, '/base/icon.png');
+    assert.strictEqual(nativeTray.tooltips.at(-1), 'Teams (3)');
   });
 
   it('applyAggregate applies the composed icon, flash, and tooltip; null icon falls back to base', () => {

@@ -23,9 +23,17 @@ const MAX_ICON_LENGTH = 2 * 1024 * 1024;
  * @param {Electron.IpcMain} deps.ipcMain
  * @param {() => Electron.WebContents|null} deps.getTarget
  * @param {number} [deps.timeoutMs]
+ * @param {(icon: string) => string|null} [deps.sanitizeIcon]  Decode-level
+ *   validation (nativeImage in production); prefix/size checks alone accept
+ *   payloads that decode to an empty image.
  * @returns {(count: number) => Promise<string|null>}
  */
-function createBadgeRenderBridge({ ipcMain, getTarget, timeoutMs = 2000 }) {
+function createBadgeRenderBridge({
+  ipcMain,
+  getTarget,
+  timeoutMs = 2000,
+  sanitizeIcon = (icon) => icon,
+}) {
   const pending = new Map();
 
   // Renderer reply for the aggregate tray badge (see render-aggregate-badge).
@@ -39,7 +47,7 @@ function createBadgeRenderBridge({ ipcMain, getTarget, timeoutMs = 2000 }) {
       typeof icon === "string" &&
         icon.startsWith(DATA_URL_PREFIX) &&
         icon.length <= MAX_ICON_LENGTH
-        ? icon
+        ? sanitizeIcon(icon)
         : null
     );
   });
