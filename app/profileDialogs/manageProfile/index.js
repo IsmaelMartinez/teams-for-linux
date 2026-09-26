@@ -135,7 +135,7 @@ class ManageProfileDialog {
         typeof error?.message === "string" && error.message
           ? error.message
           : "Failed to rename profile.";
-      throw new Error(raw.replace(/^\[ProfilesManager\]\s*/, ""));
+      throw new Error(raw.replace(/^\[ProfilesManager\]\s*/, ""), { cause: error });
     }
   };
 

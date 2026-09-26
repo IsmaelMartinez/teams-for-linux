@@ -19,33 +19,33 @@ function applyCameraAspectRatioPatch() {
       return;
     }
 
+    const settings = track.getSettings();
+    console.debug("[CAMERA_ASPECT_RATIO] Current track settings:", settings);
+
+    const width = settings.width;
+    const height = settings.height;
+
+    if (!width || !height) {
+      console.debug("[CAMERA_ASPECT_RATIO] No dimensions available yet");
+      return;
+    }
+
+    // Calculate the proper aspect ratio from camera's native resolution
+    const nativeAspectRatio = width / height;
+
+    console.debug(
+      `[CAMERA_ASPECT_RATIO] Track dimensions: ${width}x${height}, aspect ratio: ${nativeAspectRatio.toFixed(2)}`
+    );
+
+    // Reapply constraints with explicit aspect ratio
+    // This prevents Teams from messing with it when window size changes
+    const constraints = {
+      width: { ideal: width },
+      height: { ideal: height },
+      aspectRatio: { exact: nativeAspectRatio },
+    };
+
     try {
-      const settings = track.getSettings();
-      console.debug("[CAMERA_ASPECT_RATIO] Current track settings:", settings);
-
-      const width = settings.width;
-      const height = settings.height;
-
-      if (!width || !height) {
-        console.debug("[CAMERA_ASPECT_RATIO] No dimensions available yet");
-        return;
-      }
-
-      // Calculate the proper aspect ratio from camera's native resolution
-      const nativeAspectRatio = width / height;
-
-      console.debug(
-        `[CAMERA_ASPECT_RATIO] Track dimensions: ${width}x${height}, aspect ratio: ${nativeAspectRatio.toFixed(2)}`
-      );
-
-      // Reapply constraints with explicit aspect ratio
-      // This prevents Teams from messing with it when window size changes
-      const constraints = {
-        width: { ideal: width },
-        height: { ideal: height },
-        aspectRatio: { exact: nativeAspectRatio },
-      };
-
       await track.applyConstraints(constraints);
       console.debug(
         "[CAMERA_ASPECT_RATIO] Applied aspect ratio constraint:",

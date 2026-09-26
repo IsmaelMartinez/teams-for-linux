@@ -70,6 +70,7 @@ function generateClientDataJSON(type, challengeBytes, origin, topOrigin = null) 
  */
 function sanitizeForFido2(value, maxLength = 500) {
   if (typeof value !== "string") return "";
+  // eslint-disable-next-line no-control-regex -- stripping control characters is the point
   return value.replaceAll(/[\x00-\x1f\x7f]/g, "").substring(0, maxLength);
 }
 

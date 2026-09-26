@@ -26,7 +26,7 @@ class IncomingCallToast {
         // Handle incoming call actions (accept/decline)
         ipcMain.on('incoming-call-action', (event, action) => {
             this.hide();
-            if (actionListener && typeof actionListener == 'function') {
+            if (actionListener && typeof actionListener === 'function') {
                 actionListener(action);
             }
         });

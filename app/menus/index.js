@@ -179,7 +179,7 @@ class Menus {
   // cannot be built (no profilesManager).
   #attachMenu(menu) {
     if (
-      this.configGroup.startupConfig.menubar == "hidden" &&
+      this.configGroup.startupConfig.menubar === "hidden" &&
       this.#multiAccountOn()
     ) {
       const template = [buildProfilesMenu(this)].filter(Boolean);
@@ -199,13 +199,13 @@ class Menus {
     // With multi-account OFF the pre-feature `removeMenu()` behaviour is
     // untouched; otherwise #attachMenu picks the full or profiles-only menu.
     if (
-      this.configGroup.startupConfig.menubar == "hidden" &&
+      this.configGroup.startupConfig.menubar === "hidden" &&
       !this.#multiAccountOn()
     ) {
       this.window.removeMenu();
     } else {
       this.#attachMenu(menu);
-      if (this.configGroup.startupConfig.menubar == "hidden") {
+      if (this.configGroup.startupConfig.menubar === "hidden") {
         this.window.setMenuBarVisibility(false);
       }
     }
@@ -551,7 +551,7 @@ class Menus {
     // behaviour stays byte-identical to pre-feature (where updateMenu also
     // re-attached the menu unconditionally).
     if (
-      this.configGroup.startupConfig.menubar == "hidden" &&
+      this.configGroup.startupConfig.menubar === "hidden" &&
       this.#multiAccountOn()
     ) {
       this.window.setMenuBarVisibility(false);
@@ -958,7 +958,7 @@ function chooseLanguage(item, menus) {
 }
 
 function removeFromList(list, item) {
-  const itemIndex = list.findIndex((l) => l == item);
+  const itemIndex = list.findIndex((l) => l === item);
   if (itemIndex >= 0) {
     list.splice(itemIndex, 1);
   }
@@ -967,7 +967,7 @@ function removeFromList(list, item) {
 }
 
 function addToList(list, item) {
-  const itemIndex = list.findIndex((l) => l == item);
+  const itemIndex = list.findIndex((l) => l === item);
   if (itemIndex < 0) {
     list.push(item);
   }

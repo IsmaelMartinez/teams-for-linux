@@ -20,7 +20,7 @@
   "license": "GPL-3.0-or-later",
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
-    "lint": "eslint **/*.js",
+    "lint": "eslint .",
     "test:unit": "node --test 'tests/unit/*.test.js'",
     "test:e2e": "playwright test",
     "test:authenticated": "playwright test --config playwright.authenticated.config.js",

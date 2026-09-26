@@ -141,7 +141,7 @@ class ActivityHub {
         self.inactiveStartTime = null;
         self.setMachineState(state);
         self.setActive(
-          state == 1 && (self.current == 4 || self.current == 5)
+          state === 1 && (self.current === 4 || self.current === 5)
             ? 3
             : self.current,
         );
