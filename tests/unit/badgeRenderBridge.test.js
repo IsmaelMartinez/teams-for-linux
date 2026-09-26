@@ -86,6 +86,19 @@ describe('createBadgeRenderBridge', () => {
     assert.strictEqual(await second, null);
   });
 
+  it('resolves null when the injected sanitizer rejects a decodable-looking payload', async () => {
+    const target = fakeTarget(5);
+    const render = createBadgeRenderBridge({
+      ipcMain: fakeIpcMain(),
+      getTarget: () => target,
+      timeoutMs: 1000,
+      sanitizeIcon: () => null, // decodes to an empty image in production
+    });
+    const promise = render(3);
+    replyHandler({ sender: { id: 5 } }, { requestId: sent[0].payload.requestId, icon: 'data:image/png;base64,AAA' });
+    assert.strictEqual(await promise, null);
+  });
+
   it('resolves null on timeout and drops a late reply silently', async () => {
     const target = fakeTarget(5);
     const render = createBadgeRenderBridge({

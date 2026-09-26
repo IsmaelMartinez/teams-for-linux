@@ -904,6 +904,12 @@ function createUnreadAggregator(viewManager) {
   const requestBadgeRender = createBadgeRenderBridge({
     ipcMain,
     getTarget: () => viewManager.getActiveWebContents(),
+    // Decode-validate replies in main: createFromDataURL yields an EMPTY
+    // image (not a throw) for malformed payloads, and a bad icon must
+    // resolve null so the aggregator's fallback chain engages instead of
+    // caching a blank as its last-badged icon.
+    sanitizeIcon: (icon) =>
+      nativeImage.createFromDataURL(icon).isEmpty() ? null : icon,
   });
 
   // Profile names for the tooltip, cached so the per-badge-tick path never
@@ -924,7 +930,9 @@ function createUnreadAggregator(viewManager) {
   profilesManager.on("remove", invalidateNames);
 
   const aggregator = new ProfileUnreadAggregator({
-    resolveProfileId: (event) => viewManager.getProfileFor(event)?.id ?? null,
+    // Pure map read — getProfileFor would re-read the settings file on
+    // every count change.
+    resolveProfileId: (event) => viewManager.resolveProfileId(event?.sender),
     isPrimarySender: (event) => viewManager.isPrimaryProfileSurface(event),
     getProfileName,
     requestBadgeRender,

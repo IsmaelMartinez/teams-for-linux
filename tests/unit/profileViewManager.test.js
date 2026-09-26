@@ -473,6 +473,11 @@ describe('ProfileViewManager sender attribution wiring', () => {
     assert.strictEqual(pvm.resolveProfileId(popup.webContents), 'profile-a');
     assert.strictEqual(pvm.isPrimaryProfileSurface(eventFor(popup.webContents)), false);
     assert.strictEqual(pvm.isPrimaryProfileSurface({}), false);
+    // A self-destroyed view keeps its #viewMeta (for removal's storage
+    // clear) but must NOT stay primary — a stale primary would let its
+    // stashed pre-attach update replay into an unremovable bucket.
+    const deadWc = profileView.destroyWebContents();
+    assert.strictEqual(pvm.isPrimaryProfileSurface(eventFor(deadWc)), false);
   });
 
   it('onProfileViewGone fires when a view self-destroys, not on profile removal', () => {
