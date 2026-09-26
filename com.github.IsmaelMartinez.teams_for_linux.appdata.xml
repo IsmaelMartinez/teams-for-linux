@@ -14,6 +14,15 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.23.1" date="2026-09-26">
+      <description>
+        <ul>
+          <li>config: deep-merge object option defaults and system/user config (#3014)</li>
+          <li>lint: lint the whole repo and fix the errors it surfaces (#3015)</li>
+          <li>guard release-please PR output against empty step env (#3017)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.23.0" date="2026-09-26">
       <description>
         <ul>
