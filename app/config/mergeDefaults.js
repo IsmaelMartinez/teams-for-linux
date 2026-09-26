@@ -45,9 +45,12 @@ function deepMerge(base, override) {
  * @returns {Record<string, unknown>}
  */
 function mergeConfigFiles(systemConfig, userConfig) {
-  const system = structuredClone(systemConfig);
+  // A valid JSON root such as `null` or `[]` holds no settings; treat it as
+  // empty rather than throwing before yargs can fall back to the defaults.
+  const system = isPlainObject(systemConfig) ? structuredClone(systemConfig) : {};
+  const user = isPlainObject(userConfig) ? userConfig : {};
   for (const { flat, nested } of RENAMES) {
-    if (!Object.hasOwn(userConfig, flat) && readPath(userConfig, nested) === undefined) {
+    if (!Object.hasOwn(user, flat) && readPath(user, nested) === undefined) {
       continue;
     }
     delete system[flat];
@@ -55,7 +58,7 @@ function mergeConfigFiles(systemConfig, userConfig) {
     const parent = readPath(system, parts.slice(0, -1).join("."));
     if (isPlainObject(parent)) delete parent[parts.at(-1)];
   }
-  return deepMerge(system, userConfig);
+  return deepMerge(system, user);
 }
 
 // A dotted CLI flag such as `--network.disableQuic=false` reaches us as the

@@ -139,6 +139,11 @@ describe('config mergeDefaults - mergeConfigFiles', () => {
 		assert.deepStrictEqual(merged.mqtt, { topicPrefix: 'corp', enabled: true });
 	});
 
+	it('treats a null or array config root as empty instead of throwing', () => {
+		assert.deepStrictEqual(mergeConfigFiles({ appTitle: 'corp' }, null), { appTitle: 'corp' });
+		assert.deepStrictEqual(mergeConfigFiles([], { appTitle: 'mine' }), { appTitle: 'mine' });
+	});
+
 	it('does not mutate the system config', () => {
 		const system = { urlHandling: { defaultHandler: 'system-browser' } };
 		mergeConfigFiles(system, { defaultURLHandler: 'user-browser' });
