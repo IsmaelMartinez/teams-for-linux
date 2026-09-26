@@ -166,7 +166,7 @@ describe('ProfileUnreadAggregator', () => {
   });
 
   it('ignores updates from non-primary surfaces (a popped-out chat must not zero its profile)', async () => {
-    const resolve = (e) => 'p-a'; // popup attributes to the same profile
+    const resolve = () => 'p-a'; // popup attributes to the same profile
     const agg = build({
       resolve,
       names: { 'p-a': 'Work' },
