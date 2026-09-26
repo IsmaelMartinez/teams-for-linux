@@ -19,11 +19,18 @@ function applyCameraAspectRatioPatch() {
       return;
     }
 
-    const settings = track.getSettings();
+    // Callers fire this and forget it, so nothing below may throw uncaught.
+    let settings;
+    try {
+      settings = track.getSettings();
+    } catch (error) {
+      console.warn("[CAMERA_ASPECT_RATIO] Failed to read track settings:", error.message);
+      return;
+    }
     console.debug("[CAMERA_ASPECT_RATIO] Current track settings:", settings);
 
-    const width = settings.width;
-    const height = settings.height;
+    const width = settings?.width;
+    const height = settings?.height;
 
     if (!width || !height) {
       console.debug("[CAMERA_ASPECT_RATIO] No dimensions available yet");

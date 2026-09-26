@@ -8,11 +8,11 @@ const modulePath = require.resolve('../../app/browser/tools/cameraAspectRatio');
 const savedGlobals = {};
 const GLOBAL_NAMES = ['window', 'navigator'];
 
-function makeTrack(applyConstraints) {
+function makeTrack(applyConstraints, getSettings = () => ({ width: 1280, height: 720 })) {
 	return {
 		readyState: 'live',
 		label: 'fake camera',
-		getSettings: () => ({ width: 1280, height: 720 }),
+		getSettings,
 		applyConstraints,
 		addEventListener: () => {},
 	};
@@ -40,8 +40,6 @@ async function acquireCamera() {
 	delete require.cache[modulePath];
 	require(modulePath).init({ media: { camera: { autoAdjustAspectRatio: { enabled: true } } } });
 	await globalThis.navigator.mediaDevices.getUserMedia({ video: true });
-	// fixVideoTrackAspectRatio is fire-and-forget; let its awaits settle.
-	await new Promise((resolve) => setImmediate(resolve));
 }
 
 describe('cameraAspectRatio fallback', () => {
@@ -57,22 +55,41 @@ describe('cameraAspectRatio fallback', () => {
 		restoreGlobals();
 	});
 
-	it('retries with an ideal aspect ratio when the exact constraint is rejected', async () => {
+	// The patch runs fire-and-forget, so the test waits for the retry itself
+	// rather than for a turn of the event loop.
+	it('retries with an ideal aspect ratio when the exact constraint is rejected', { timeout: 2000 }, async () => {
+		let idealApplied;
+		const retried = new Promise((resolve) => { idealApplied = resolve; });
 		const applyConstraints = mock.fn(async (constraints) => {
 			if (constraints.aspectRatio?.exact !== undefined) {
 				const error = new Error('Cannot satisfy constraints');
 				error.name = 'OverconstrainedError';
 				throw error;
 			}
+			idealApplied();
 		});
 		installGlobals(makeTrack(applyConstraints));
 
 		await acquireCamera();
+		await retried;
 
 		assert.strictEqual(applyConstraints.mock.callCount(), 2);
 		assert.deepStrictEqual(applyConstraints.mock.calls[1].arguments[0], {
 			aspectRatio: { ideal: 1280 / 720 },
 		});
 		assert.strictEqual(console.error.mock.callCount(), 0);
+	});
+
+	it('logs instead of rejecting when getSettings throws', { timeout: 2000 }, async () => {
+		let warned;
+		const logged = new Promise((resolve) => { warned = resolve; });
+		mock.method(console, 'warn', () => warned());
+		const applyConstraints = mock.fn(async () => {});
+		installGlobals(makeTrack(applyConstraints, () => { throw new Error('track gone'); }));
+
+		await acquireCamera();
+		await logged;
+
+		assert.strictEqual(applyConstraints.mock.callCount(), 0);
 	});
 });
