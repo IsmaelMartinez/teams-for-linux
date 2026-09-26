@@ -81,7 +81,8 @@
     "appId": "teams-for-linux",
     "files": [
       "app/**/*",
-      "!app/customBackground/example${/*}"
+      "!app/customBackground/example${/*}",
+      "LICENSE.md"
     ],
     "asarUnpack": [
       "node_modules/spellchecker/vendor/hunspell_dictionaries"
