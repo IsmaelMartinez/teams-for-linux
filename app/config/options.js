@@ -849,6 +849,7 @@ module.exports = {
           mediaTopics: {
             inCall: "in-call",
             incomingCall: "incoming-call",
+            incomingCallCaller: "incoming-call/caller",
             meetingStarted: "meeting-started",
             camera: "camera",
             microphone: "microphone",

@@ -73,6 +73,79 @@ describe('MQTTMediaStatusService', () => {
 		mockIpcMain.removeAllListeners();
 	});
 
+	describe('Incoming call caller (#3019)', () => {
+		it('publishes the caller before incoming-call goes true', async () => {
+			createService(mqttClient);
+			mockApp.emit('teams-incoming-call-started', {
+				scenario: 'incoming_pstn_call',
+				number: '+1 555-010-0001',
+				name: 'Pat Example',
+				contact: true,
+				callId: 'call-1',
+			});
+			await flush();
+			assert.deepStrictEqual(published.map((p) => p.topic), [
+				'teams/incoming-call/caller',
+				'teams/incoming-call',
+			]);
+			const { timestamp, ...caller } = JSON.parse(published[0].payload);
+			assert.deepStrictEqual(caller, {
+				scenario: 'incoming_pstn_call',
+				number: '+1 555-010-0001',
+				name: 'Pat Example',
+				contact: true,
+				callId: 'call-1',
+			});
+			assert.strictEqual(new Date(timestamp).toISOString(), timestamp);
+			assert.deepStrictEqual(published[0].opts, { retain: true });
+			assert.strictEqual(published[1].payload, 'true');
+		});
+
+		it('publishes only the known fields', async () => {
+			createService(mqttClient);
+			mockApp.emit('teams-incoming-call-started', {
+				name: 'Pat Example',
+				image: 'data:image/jpeg;base64,AAAA',
+				queue: null,
+			});
+			await flush();
+			const caller = JSON.parse(published[0].payload);
+			delete caller.timestamp;
+			assert.deepStrictEqual(caller, { name: 'Pat Example' });
+		});
+
+		it('carries the MQTT clientId, as the status topic does', async () => {
+			createService(mqttClient, { clientId: 'teams-for-linux' });
+			mockApp.emit('teams-incoming-call-started', { name: 'Pat Example' });
+			await flush();
+			assert.strictEqual(JSON.parse(published[0].payload).clientId, 'teams-for-linux');
+		});
+
+		it('publishes only a timestamp when there are no details', async () => {
+			createService(mqttClient);
+			mockApp.emit('teams-incoming-call-started');
+			await flush();
+			assert.deepStrictEqual(Object.keys(JSON.parse(published[0].payload)), ['timestamp']);
+		});
+
+		it('clears the retained caller after incoming-call goes false', async () => {
+			createService(mqttClient);
+			mockApp.emit('teams-incoming-call-ended');
+			await flush();
+			assert.deepStrictEqual(published, [
+				{ topic: 'teams/incoming-call', payload: 'false', opts: { retain: true } },
+				{ topic: 'teams/incoming-call/caller', payload: '', opts: { retain: true } },
+			]);
+		});
+
+		it('follows a customised incomingCall topic', async () => {
+			createService(mqttClient, { mediaTopics: { incomingCall: 'ringing' } });
+			mockApp.emit('teams-incoming-call-ended');
+			await flush();
+			assertPublished(published, 'teams/ringing/caller', '');
+		});
+	});
+
 	describe('Default topic names (backward compatibility)', () => {
 		it('publishes true to in-call topic on teams-call-connected', async () => {
 			createService(mqttClient);

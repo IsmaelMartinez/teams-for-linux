@@ -66,6 +66,14 @@ class ActivityHub {
     return isIncomingCallScenario(scenarioName);
   }
 
+  /**
+   * Exposed for unit tests: the caller details published over MQTT for an
+   * incoming-call toast's entityOptions.
+   */
+  getIncomingCallDetails(entityOptions) {
+    return getIncomingCallDetails(entityOptions);
+  }
+
   start() {
     let attemptCount = 0;
     const maxAttempts = 12; // Try for up to 2 minutes
@@ -249,7 +257,8 @@ function handleCallEventEntityCommand(entityCommand) {
       onIncomingCallCreated({
         caller: entityCommand.entityOptions.title,
         image: entityCommand.entityOptions.mainImage?.src,
-        text: entityCommand.entityOptions.text
+        text: entityCommand.entityOptions.text,
+        details: getIncomingCallDetails(entityCommand.entityOptions)
       });
     } else {
       // Gets triggered when incoming call toast gets dismissed regardless of accepting or declining the call
@@ -260,6 +269,50 @@ function handleCallEventEntityCommand(entityCommand) {
 
 function isIncomingCallScenario(scenarioName) {
   return incomingCallScenarios.has(scenarioName);
+}
+
+function isPhoneNumber(value) {
+  return typeof value === "string" && /^\+?\d[\d\s().-]*$/.test(value.trim());
+}
+
+/**
+ * Caller details for MQTT, from an incoming-call toast's entityOptions, as
+ * seen on phone and call-queue calls (#3019). For a caller with a phone
+ * number, title is the number as Teams formats it and text is their name when
+ * Teams can match one, or the number again when it cannot; for any other
+ * caller, title is taken to be their name. A call-queue toast names the queue
+ * in headerSubtitle. In conference mode a call-queue toast is sent twice while
+ * ringing, the first before the name and queue are known, so this is worked
+ * out afresh for every toast rather than once per call. Fields without a value
+ * are left out, and the caller's picture never goes in.
+ */
+function getIncomingCallDetails(entityOptions) {
+  if (!entityOptions) {
+    return {};
+  }
+  const { title, text, crossClientScenarioName: scenario } = entityOptions;
+  const details = {};
+  if (scenario) {
+    details.scenario = scenario;
+  }
+  if (isPhoneNumber(title)) {
+    details.number = title.trim();
+    if (text && !isPhoneNumber(text)) {
+      details.name = text;
+    }
+  } else if (title) {
+    details.name = title;
+  }
+  if (scenario?.includes("call_queue") && entityOptions.headerSubtitle) {
+    details.queue = entityOptions.headerSubtitle;
+  }
+  if (entityOptions.trustworthy) {
+    details.contact = entityOptions.trustworthy.trustReason === "CONTACT";
+  }
+  if (entityOptions.callId) {
+    details.callId = entityOptions.callId;
+  }
+  return details;
 }
 
 /**
