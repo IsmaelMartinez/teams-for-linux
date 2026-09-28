@@ -8,7 +8,10 @@ function getMediaTopics(mqttConfig) {
 	// microphoneControl defaults to "<microphone>/control" so that customising
 	// `microphone` alone keeps the control topic in sync (e.g. microphone "mic"
 	// → control "mic/control"). Set microphoneControl explicitly to decouple it.
-	// incomingCallCaller follows incomingCall the same way.
+	// incomingCallCaller follows incomingCall the same way. It has no entry in
+	// the mqtt option's defaults on purpose: config loading deep-merges those
+	// defaults into the user's mediaTopics, and a literal default there would
+	// always win over this fallback.
 	const microphone = mqttConfig.mediaTopics?.microphone || 'microphone';
 	const incomingCall = mqttConfig.mediaTopics?.incomingCall || 'incoming-call';
 	return {

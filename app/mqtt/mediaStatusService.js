@@ -13,7 +13,7 @@ const { getMediaTopics } = require('./mediaTopics');
  * - {topicPrefix}/in-call - Active call state
  * - {topicPrefix}/incoming-call - Whether a call is ringing
  * - {topicPrefix}/incoming-call/caller - JSON details of the ringing call's
- *   caller (#3019), cleared when it stops ringing
+ *   caller (#3019), not retained
  * - {topicPrefix}/screen-sharing - Screen sharing active state
  * - {topicPrefix}/meeting-started - Scheduled-meeting-start pulse (#2587):
  *   'true' on detection, back to 'false' on whichever comes first: joining
@@ -80,23 +80,30 @@ class MQTTMediaStatusService {
 	}
 
 	// The caller goes out before 'true' so that anything reacting to the ring
-	// finds it already there. A call-queue toast in conference mode arrives
-	// twice while ringing, the second with the name and queue filled in, and
-	// each one replaces the caller published before it.
+	// has it already. A call-queue toast in conference mode arrives twice while
+	// ringing, the second with the name and queue filled in, and each is
+	// published.
 	async #handleIncomingCallStarted(details) {
 		await this.#publishIncomingCallCaller(details);
 		await this.#publishBoolean(this.#mediaTopics.incomingCall, 'true', 'Incoming call started');
 	}
 
+	// Nothing to clear on the caller topic: it is never retained.
 	async #handleIncomingCallEnded() {
 		await this.#publishBoolean(this.#mediaTopics.incomingCall, 'false', 'Incoming call ended');
-		await this.#clearIncomingCallCaller();
 	}
 
 	/**
 	 * Only the known fields are copied, so nothing else the renderer sends
 	 * (the caller's picture, say) can reach the broker. The timestamp (when
 	 * this was published) and clientId are carried as on the status topic.
+	 *
+	 * Unlike the other media topics the caller is not retained. It describes a
+	 * call that is ringing now: if the app quits or the broker connection drops
+	 * mid-ring, a retained caller would stay behind with nothing left to clear
+	 * it, and while the call is still ringing when the app comes back Teams
+	 * raises the toast again and the caller is published afresh. Its topic and
+	 * payload are kept out of the log, since it holds names and numbers.
 	 */
 	async #publishIncomingCallCaller(details) {
 		const caller = {};
@@ -107,22 +114,12 @@ class MQTTMediaStatusService {
 		}
 		caller.timestamp = new Date().toISOString();
 		caller.clientId = this.#clientId;
-		await this.#publishRetained(this.#mediaTopics.incomingCallCaller, JSON.stringify(caller), 'Incoming call caller');
-	}
-
-	// An empty retained message deletes the retained one, so a caller's name
-	// and number do not stay on the broker after the call stops ringing.
-	async #clearIncomingCallCaller() {
-		await this.#publishRetained(this.#mediaTopics.incomingCallCaller, '', 'Incoming call caller cleared');
-	}
-
-	async #publishRetained(subtopic, payload, label) {
 		try {
-			const topic = `${this.#topicPrefix}/${subtopic}`;
-			await this.#mqttClient.publish(topic, payload, { retain: true });
-			console.debug(`[MQTTMediaStatusService] ${label}, published to`, topic);
+			const topic = `${this.#topicPrefix}/${this.#mediaTopics.incomingCallCaller}`;
+			await this.#mqttClient.publish(topic, JSON.stringify(caller), { retain: false, redactLog: true });
+			console.debug('[MQTTMediaStatusService] Incoming call caller published');
 		} catch (error) {
-			console.error(`[MQTTMediaStatusService] Failed to publish ${subtopic}:`, { message: error.message });
+			console.error('[MQTTMediaStatusService] Failed to publish the incoming call caller:', { message: error.message });
 		}
 	}
 

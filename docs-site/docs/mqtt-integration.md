@@ -414,7 +414,7 @@ When MQTT is enabled, Teams for Linux automatically publishes to the following r
 | `{topicPrefix}/{statusTopic}` | JSON object | User presence status (see [Message Format](#message-format) above) |
 | `{topicPrefix}/in-call` | `"true"` or `"false"` | Active call state via IPC events and WebRTC fallback |
 | `{topicPrefix}/incoming-call` | `"true"` or `"false"` | Incoming call ringing state |
-| `{topicPrefix}/incoming-call/caller` | JSON object | Caller of the ringing call; cleared when it stops ringing (see below) |
+| `{topicPrefix}/incoming-call/caller` | JSON object | Caller of the ringing call; not retained (see below) |
 | `{topicPrefix}/meeting-started` | `"true"` or `"false"` | Scheduled-meeting-start pulse (experimental, requires [`mqtt.meetingStartDetection.enabled`](#meeting-start-detection-experimental)) |
 | `{topicPrefix}/camera` | `"true"` or `"false"` | Camera on/off state |
 | `{topicPrefix}/microphone` | `"speaking"`, `"silent"`, `"muted"`, or `"off"` | Microphone state from WebRTC speaking-indicator monitoring |
@@ -423,7 +423,7 @@ When MQTT is enabled, Teams for Linux automatically publishes to the following r
 
 The media topic names after the prefix (`in-call`, `incoming-call`, `incoming-call/caller`, `meeting-started`, `camera`, `microphone`, `microphone/control`, `screen-sharing`) are defaults and can be customized via [`mqtt.mediaTopics`](#media-topics).
 
-All topics use retained messages so subscribers receive the last known state immediately on connect. The `connected` topic uses LWT: if the app crashes or loses network, the broker publishes `"false"` automatically.
+All topics except `incoming-call/caller` use retained messages so subscribers receive the last known state immediately on connect. The `connected` topic uses LWT: if the app crashes or loses network, the broker publishes `"false"` automatically.
 
 The microphone topic activates whenever `mqtt.enabled` is true (no separate toggle). States are derived from WebRTC `RTCPeerConnection.getStats()`: `speaking` means audio is being transmitted, `silent` means the mic is open but quiet, `muted` means Teams has zeroed the audio signal, and `off` means no active call.
 
@@ -457,7 +457,11 @@ While a call is ringing, `{topicPrefix}/incoming-call/caller` holds a JSON objec
 | `timestamp` | always | When this was published, in ISO 8601, as on the status topic |
 | `clientId` | always | The configured `mqtt.clientId`, as on the status topic |
 
-The caller is published just before `incoming-call` goes `"true"`, so an automation triggered by the ring finds it already there. A call-queue call in conference mode is announced twice while it rings, the first time before Teams has matched the caller, so the object can be replaced once with a fuller one. When the call stops ringing, whether answered, declined or missed, the topic is cleared with an empty retained message, so a caller's name and number do not stay on the broker.
+The caller is published just before `incoming-call` goes `"true"`, so an automation triggered by the ring has it already. Unlike the other topics it is **not retained**: it describes a call that is ringing now, and a retained copy could outlive the call if the app quit or lost the broker mid-ring. A subscriber that connects while a call is already ringing therefore sees `incoming-call` as `"true"` but no caller until Teams announces the call again. There is nothing to clear when the ringing stops; `incoming-call` going `"false"` says so.
+
+A call-queue call in conference mode is announced twice while it rings. The first announcement can come before Teams has matched the caller, in which case `name` is missing and `queue` holds Teams' placeholder (`"Unknown user"` in English) rather than the queue's name; the second, a moment later, carries both. Nothing in the first announcement reliably tells the placeholder apart from a real queue name, so it is published as Teams gives it.
+
+The caller's details are never written to the log.
 
 ## Meeting Start Detection (Experimental)
 

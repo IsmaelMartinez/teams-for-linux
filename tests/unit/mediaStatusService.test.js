@@ -14,6 +14,8 @@ require.cache[require.resolve('electron')] = {
 };
 
 const MQTTMediaStatusService = require('../../app/mqtt/mediaStatusService');
+const { applyObjectDefaults } = require('../../app/config/mergeDefaults');
+const options = require('../../app/config/options');
 
 // ---- Test helpers -----------------------------------------------------------
 
@@ -97,7 +99,7 @@ describe('MQTTMediaStatusService', () => {
 				callId: 'call-1',
 			});
 			assert.strictEqual(new Date(timestamp).toISOString(), timestamp);
-			assert.deepStrictEqual(published[0].opts, { retain: true });
+			assert.deepStrictEqual(published[0].opts, { retain: false, redactLog: true });
 			assert.strictEqual(published[1].payload, 'true');
 		});
 
@@ -128,21 +130,32 @@ describe('MQTTMediaStatusService', () => {
 			assert.deepStrictEqual(Object.keys(JSON.parse(published[0].payload)), ['timestamp']);
 		});
 
-		it('clears the retained caller after incoming-call goes false', async () => {
+		it('leaves the caller topic alone when the call stops ringing', async () => {
+			// The caller is never retained, so there is nothing to clear.
 			createService(mqttClient);
 			mockApp.emit('teams-incoming-call-ended');
 			await flush();
 			assert.deepStrictEqual(published, [
 				{ topic: 'teams/incoming-call', payload: 'false', opts: { retain: true } },
-				{ topic: 'teams/incoming-call/caller', payload: '', opts: { retain: true } },
 			]);
 		});
 
 		it('follows a customised incomingCall topic', async () => {
 			createService(mqttClient, { mediaTopics: { incomingCall: 'ringing' } });
-			mockApp.emit('teams-incoming-call-ended');
+			mockApp.emit('teams-incoming-call-started');
 			await flush();
-			assertPublished(published, 'teams/ringing/caller', '');
+			assert.ok(published.some((p) => p.topic === 'teams/ringing/caller'));
+		});
+
+		it('follows a customised incomingCall topic through config loading', async () => {
+			// Config loading deep-merges the option defaults into the user's
+			// mediaTopics; a literal caller default there would pin the topic.
+			const config = { mqtt: { topicPrefix: 'teams', mediaTopics: { incomingCall: 'ringing' } } };
+			applyObjectDefaults(config, options);
+			new MQTTMediaStatusService(mqttClient, config).initialize();
+			mockApp.emit('teams-incoming-call-started');
+			await flush();
+			assert.ok(published.some((p) => p.topic === 'teams/ringing/caller'));
 		});
 	});
 
