@@ -1,3 +1,4 @@
+const { nativeImage } = require("electron");
 const os = require("node:os");
 const path = require("node:path");
 const iconFolder = path.join(__dirname, "../..", "assets/icons");
@@ -24,6 +25,17 @@ class TrayIconChooser {
       iconFolder,
       icons[`icon_${this.config.appIconType}_${isMac ? 16 : 96}`],
     );
+  }
+
+  // X11 silently drops _NET_WM_ICON once the image no longer fits in one
+  // request (about 240px square on Xwayland), so the window icon is capped.
+  static windowImage(iconPath) {
+    const image = nativeImage.createFromPath(iconPath);
+    const { width, height } = image.getSize();
+    if (Math.max(width, height) <= 128) return image;
+    return width >= height
+      ? image.resize({ width: 128 })
+      : image.resize({ height: 128 });
   }
 }
 

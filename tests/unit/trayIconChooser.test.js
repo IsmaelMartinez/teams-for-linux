@@ -32,3 +32,37 @@ describe('trayIconChooser appIcon resolution', () => {
     }
   });
 });
+
+describe('trayIconChooser windowImage', () => {
+  const electronPath = require.resolve('electron');
+  const chooserPath = require.resolve('../../app/browser/tools/trayIconChooser');
+  const fakeImage = (width, height) => ({
+    getSize: () => ({ width, height }),
+    resize: (opts) => ({ resized: opts }),
+  });
+  const withImage = (image) => {
+    require.cache[electronPath] = {
+      id: electronPath,
+      filename: electronPath,
+      loaded: true,
+      exports: { nativeImage: { createFromPath: () => image } },
+    };
+    delete require.cache[chooserPath];
+    try {
+      return require(chooserPath).windowImage('/any.png');
+    } finally {
+      delete require.cache[electronPath];
+      delete require.cache[chooserPath];
+    }
+  };
+
+  it('passes images of 128px or smaller through untouched', () => {
+    const image = fakeImage(96, 96);
+    assert.strictEqual(withImage(image), image);
+  });
+
+  it('caps larger images on their longer side', () => {
+    assert.deepStrictEqual(withImage(fakeImage(250, 264)), { resized: { height: 128 } });
+    assert.deepStrictEqual(withImage(fakeImage(512, 256)), { resized: { width: 128 } });
+  });
+});
