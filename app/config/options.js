@@ -67,7 +67,7 @@ module.exports = {
       appIcon: {
         default: "",
         describe:
-          "Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu",
+          "Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu. On Linux the menu also copies it into the user icon theme so the taskbar and launcher follow (not under Snap or Flatpak)",
         type: "string",
         applyMode: "live",
         deprecated: "use tray.icon instead",
@@ -1376,7 +1376,7 @@ module.exports = {
           },
           "icon": {
             type: "string",
-            describe: "Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu",
+            describe: "Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu. On Linux the menu also copies it into the user icon theme so the taskbar and launcher follow (not under Snap or Flatpak)",
           },
           "iconType": {
             type: "string",
