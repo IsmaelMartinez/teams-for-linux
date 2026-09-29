@@ -7,6 +7,7 @@ const path = require("node:path");
 // there once a copy sits in the per-user hicolor theme under that name.
 const SIZES = [16, 22, 24, 32, 48, 64, 96, 128, 256, 512];
 const DEFAULT_NAME = "teams-for-linux";
+const NAME_PATTERN = /^[\w.-]+$/;
 
 let bus = null;
 
@@ -18,15 +19,17 @@ function hicolorDir() {
   return path.join(dataHome(), "icons", "hicolor");
 }
 
+function manifestFile() {
+  return path.join(dataHome(), DEFAULT_NAME, "theme-icon.json");
+}
+
 function supported() {
   return process.platform === "linux" && !process.env.SNAP && !process.env.FLATPAK_ID;
 }
 
-// AppImage integrations install the desktop file under their own icon
-// name, so take the name from whichever desktop file launches this binary.
-function iconName() {
-  const exe = process.env.APPIMAGE || process.execPath;
+function readDesktopFiles() {
   const dirs = [dataHome(), ...(process.env.XDG_DATA_DIRS || "/usr/local/share:/usr/share").split(":")];
+  const files = [];
   for (const dir of dirs) {
     const appsDir = path.join(dir, "applications");
     let entries;
@@ -37,22 +40,47 @@ function iconName() {
     }
     for (const entry of entries) {
       if (!entry.endsWith(".desktop")) continue;
-      let text;
       try {
-        text = fs.readFileSync(path.join(appsDir, entry), "utf8");
+        files.push({ name: entry, text: fs.readFileSync(path.join(appsDir, entry), "utf8") });
       } catch {
-        continue;
+        // unreadable entries are skipped
       }
-      if (!text.includes(exe)) continue;
-      const icon = /^Icon=(.+)$/m.exec(text)?.[1].trim();
-      if (icon && !path.isAbsolute(icon)) return icon;
     }
   }
-  return DEFAULT_NAME;
+  return files;
+}
+
+// Pick the desktop file the shell matches this window to: a profile launcher
+// by its StartupWMClass (see multiple-instances.md), otherwise the packaged
+// entry by file name, otherwise whichever launches this binary (AppImage
+// integrations install one under their own icon name).
+function iconName() {
+  const files = readDesktopFiles();
+  const wmClass = process.argv.find((arg) => arg.startsWith("--class="))?.slice(8);
+  const exe = process.env.APPIMAGE || process.execPath;
+  const match =
+    (wmClass && files.find((f) => f.text.includes(`StartupWMClass=${wmClass}`))) ||
+    files.find((f) => f.name === `${DEFAULT_NAME}.desktop`) ||
+    files.find((f) => f.text.includes(exe));
+  const icon = match && /^Icon=(.+)$/m.exec(match.text)?.[1].trim();
+  return icon && NAME_PATTERN.test(icon) ? icon : DEFAULT_NAME;
 }
 
 function iconFile(size, name) {
   return path.join(hicolorDir(), `${size}x${size}`, "apps", `${name}.png`);
+}
+
+function readManifest() {
+  try {
+    return JSON.parse(fs.readFileSync(manifestFile(), "utf8"));
+  } catch {
+    return [];
+  }
+}
+
+function writeManifest(files) {
+  fs.mkdirSync(path.dirname(manifestFile()), { recursive: true });
+  fs.writeFileSync(manifestFile(), JSON.stringify(files));
 }
 
 function refresh() {
@@ -75,21 +103,36 @@ function install(image) {
   if (!supported()) return false;
   const name = iconName();
   const { width, height } = image.getSize();
-  for (const size of SIZES) {
-    const file = iconFile(size, name);
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    const resized = image.resize(width >= height ? { width: size } : { height: size });
-    fs.writeFileSync(file, resized.toPNG());
+  const written = [];
+  try {
+    for (const size of SIZES) {
+      const file = iconFile(size, name);
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      const resized = image.resize(width >= height ? { width: size } : { height: size });
+      fs.writeFileSync(file, resized.toPNG());
+      written.push(file);
+    }
+    writeManifest(written);
+  } catch (error) {
+    console.warn("[ThemeIcon] could not write the icon theme, leaving it untouched", { message: error.message });
+    for (const file of written) fs.rmSync(file, { force: true });
+    return false;
   }
   refresh();
   return true;
 }
 
+// Only files this app wrote are removed; hand-placed icons are left alone.
 function remove() {
   if (!supported()) return false;
-  const name = iconName();
-  for (const size of SIZES) {
-    fs.rmSync(iconFile(size, name), { force: true });
+  const files = readManifest();
+  if (files.length === 0) return false;
+  try {
+    for (const file of files) fs.rmSync(file, { force: true });
+    fs.rmSync(manifestFile(), { force: true });
+  } catch (error) {
+    console.warn("[ThemeIcon] could not remove the icon theme files", { message: error.message });
+    return false;
   }
   refresh();
   return true;
