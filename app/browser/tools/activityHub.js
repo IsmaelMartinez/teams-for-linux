@@ -8,6 +8,16 @@ const supportedEvents = new Set([
   "call-disconnected",
   "meeting-started"
 ]);
+// crossClientScenarioName values Teams gives the toast for a ringing call.
+// Any other toast with isIncomingCall set (the dismissal carries null) means
+// the ringing has ended. A call from a phone number is "incoming_pstn_call"
+// (#3019); the two call-queue names are taken from the Teams client.
+const incomingCallScenarios = new Set([
+  "incoming_call",
+  "incoming_pstn_call",
+  "incoming_call_queue_call",
+  "conference_incoming_call_queue_call"
+]);
 
 class ActivityHub {
 
@@ -46,6 +56,14 @@ class ActivityHub {
    */
   getMeetingStartId(entityOptions) {
     return getMeetingStartId(entityOptions);
+  }
+
+  /**
+   * Exposed for unit tests: whether a toast's crossClientScenarioName is
+   * one Teams uses for a call that is ringing.
+   */
+  isIncomingCallScenario(scenarioName) {
+    return isIncomingCallScenario(scenarioName);
   }
 
   start() {
@@ -226,7 +244,7 @@ function handleCallEventEntityCommand(entityCommand) {
     onMeetingStarted(meetingStartId);
   }
   if (entityCommand.entityOptions?.isIncomingCall) {
-    if ("incoming_call" === entityCommand.entityOptions?.crossClientScenarioName) {
+    if (isIncomingCallScenario(entityCommand.entityOptions?.crossClientScenarioName)) {
       // Gets triggered by incoming call.
       onIncomingCallCreated({
         caller: entityCommand.entityOptions.title,
@@ -238,6 +256,10 @@ function handleCallEventEntityCommand(entityCommand) {
       onIncomingCallEnded();
     }
   }
+}
+
+function isIncomingCallScenario(scenarioName) {
+  return incomingCallScenarios.has(scenarioName);
 }
 
 /**
