@@ -13,7 +13,7 @@ const { getMediaTopics } = require('./mediaTopics');
  * - {topicPrefix}/in-call - Active call state
  * - {topicPrefix}/incoming-call - Whether a call is ringing
  * - {topicPrefix}/incoming-call/caller - JSON details of the ringing call's
- *   caller (#3019), not retained
+ *   caller (#3019), not retained, and only with mqtt.incomingCallCaller.enabled
  * - {topicPrefix}/screen-sharing - Screen sharing active state
  * - {topicPrefix}/meeting-started - Scheduled-meeting-start pulse (#2587):
  *   'true' on detection, back to 'false' on whichever comes first: joining
@@ -24,6 +24,7 @@ class MQTTMediaStatusService {
 	#topicPrefix;
 	#clientId;
 	#mediaTopics;
+	#incomingCallCallerEnabled;
 	#lastMicrophoneState = null;
 	#lastMicrophoneControlState = null;
 	#meetingStartedResetMs;
@@ -34,6 +35,9 @@ class MQTTMediaStatusService {
 		this.#topicPrefix = config.mqtt.topicPrefix;
 		this.#clientId = config.mqtt.clientId;
 		this.#mediaTopics = getMediaTopics(config.mqtt);
+		// Opt-in: the caller's name and number are personal details that the
+		// other topics never carry.
+		this.#incomingCallCallerEnabled = config.mqtt.incomingCallCaller?.enabled === true;
 		this.#meetingStartedResetMs =
 			(config.mqtt.meetingStartDetection?.resetSeconds ?? 10) * 1000;
 	}
@@ -84,7 +88,9 @@ class MQTTMediaStatusService {
 	// ringing, the second with the name and queue filled in, and each is
 	// published.
 	async #handleIncomingCallStarted(details) {
-		await this.#publishIncomingCallCaller(details);
+		if (this.#incomingCallCallerEnabled) {
+			await this.#publishIncomingCallCaller(details);
+		}
 		await this.#publishBoolean(this.#mediaTopics.incomingCall, 'true', 'Incoming call started');
 	}
 

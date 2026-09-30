@@ -76,8 +76,29 @@ describe('MQTTMediaStatusService', () => {
 	});
 
 	describe('Incoming call caller (#3019)', () => {
-		it('publishes the caller before incoming-call goes true', async () => {
+		const callerEnabled = { incomingCallCaller: { enabled: true } };
+
+		it('publishes no caller unless enabled', async () => {
 			createService(mqttClient);
+			mockApp.emit('teams-incoming-call-started', { name: 'Pat Example', number: '+1 555-010-0001' });
+			await flush();
+			assert.deepStrictEqual(published, [
+				{ topic: 'teams/incoming-call', payload: 'true', opts: { retain: true } },
+			]);
+		});
+
+		it('is off after config loading when not set', async () => {
+			const config = { mqtt: { topicPrefix: 'teams' } };
+			applyObjectDefaults(config, options);
+			assert.strictEqual(config.mqtt.incomingCallCaller.enabled, false);
+			new MQTTMediaStatusService(mqttClient, config).initialize();
+			mockApp.emit('teams-incoming-call-started', { name: 'Pat Example' });
+			await flush();
+			assert.ok(!published.some((p) => p.topic.endsWith('/caller')));
+		});
+
+		it('publishes the caller before incoming-call goes true', async () => {
+			createService(mqttClient, callerEnabled);
 			mockApp.emit('teams-incoming-call-started', {
 				scenario: 'incoming_pstn_call',
 				number: '+1 555-010-0001',
@@ -104,7 +125,7 @@ describe('MQTTMediaStatusService', () => {
 		});
 
 		it('publishes only the known fields', async () => {
-			createService(mqttClient);
+			createService(mqttClient, callerEnabled);
 			mockApp.emit('teams-incoming-call-started', {
 				name: 'Pat Example',
 				image: 'data:image/jpeg;base64,AAAA',
@@ -117,14 +138,14 @@ describe('MQTTMediaStatusService', () => {
 		});
 
 		it('carries the MQTT clientId, as the status topic does', async () => {
-			createService(mqttClient, { clientId: 'teams-for-linux' });
+			createService(mqttClient, { ...callerEnabled, clientId: 'teams-for-linux' });
 			mockApp.emit('teams-incoming-call-started', { name: 'Pat Example' });
 			await flush();
 			assert.strictEqual(JSON.parse(published[0].payload).clientId, 'teams-for-linux');
 		});
 
 		it('publishes only a timestamp when there are no details', async () => {
-			createService(mqttClient);
+			createService(mqttClient, callerEnabled);
 			mockApp.emit('teams-incoming-call-started');
 			await flush();
 			assert.deepStrictEqual(Object.keys(JSON.parse(published[0].payload)), ['timestamp']);
@@ -132,7 +153,7 @@ describe('MQTTMediaStatusService', () => {
 
 		it('leaves the caller topic alone when the call stops ringing', async () => {
 			// The caller is never retained, so there is nothing to clear.
-			createService(mqttClient);
+			createService(mqttClient, callerEnabled);
 			mockApp.emit('teams-incoming-call-ended');
 			await flush();
 			assert.deepStrictEqual(published, [
@@ -141,7 +162,7 @@ describe('MQTTMediaStatusService', () => {
 		});
 
 		it('follows a customised incomingCall topic', async () => {
-			createService(mqttClient, { mediaTopics: { incomingCall: 'ringing' } });
+			createService(mqttClient, { ...callerEnabled, mediaTopics: { incomingCall: 'ringing' } });
 			mockApp.emit('teams-incoming-call-started');
 			await flush();
 			assert.ok(published.some((p) => p.topic === 'teams/ringing/caller'));
@@ -150,7 +171,7 @@ describe('MQTTMediaStatusService', () => {
 		it('follows a customised incomingCall topic through config loading', async () => {
 			// Config loading deep-merges the option defaults into the user's
 			// mediaTopics; a literal caller default there would pin the topic.
-			const config = { mqtt: { topicPrefix: 'teams', mediaTopics: { incomingCall: 'ringing' } } };
+			const config = { mqtt: { topicPrefix: 'teams', ...callerEnabled, mediaTopics: { incomingCall: 'ringing' } } };
 			applyObjectDefaults(config, options);
 			new MQTTMediaStatusService(mqttClient, config).initialize();
 			mockApp.emit('teams-incoming-call-started');

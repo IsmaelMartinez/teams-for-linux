@@ -414,7 +414,7 @@ When MQTT is enabled, Teams for Linux automatically publishes to the following r
 | `{topicPrefix}/{statusTopic}` | JSON object | User presence status (see [Message Format](#message-format) above) |
 | `{topicPrefix}/in-call` | `"true"` or `"false"` | Active call state via IPC events and WebRTC fallback |
 | `{topicPrefix}/incoming-call` | `"true"` or `"false"` | Incoming call ringing state |
-| `{topicPrefix}/incoming-call/caller` | JSON object | Caller of the ringing call; not retained (see below) |
+| `{topicPrefix}/incoming-call/caller` | JSON object | Caller of the ringing call; not retained, requires [`mqtt.incomingCallCaller.enabled`](#incoming-call-caller) |
 | `{topicPrefix}/meeting-started` | `"true"` or `"false"` | Scheduled-meeting-start pulse (experimental, requires [`mqtt.meetingStartDetection.enabled`](#meeting-start-detection-experimental)) |
 | `{topicPrefix}/camera` | `"true"` or `"false"` | Camera on/off state |
 | `{topicPrefix}/microphone` | `"speaking"`, `"silent"`, `"muted"`, or `"off"` | Microphone state from WebRTC speaking-indicator monitoring |
@@ -431,7 +431,23 @@ The camera topic monitors video sender `track.enabled` in the same RTCPeerConnec
 
 ### Incoming Call Caller
 
-While a call is ringing, `{topicPrefix}/incoming-call/caller` holds a JSON object saying who is calling:
+This topic is off by default, since it sends the names and numbers of the people who call you (colleagues on Teams as well as outside callers) to the broker. Turn it on with:
+
+```json
+{
+  "mqtt": {
+    "incomingCallCaller": {
+      "enabled": true
+    }
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `incomingCallCaller.enabled` | `boolean` | `false` | Publish the ringing call's caller to `{topicPrefix}/incoming-call/caller` |
+
+While a call is ringing, `{topicPrefix}/incoming-call/caller` then holds a JSON object saying who is calling:
 
 ```json
 {
