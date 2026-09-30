@@ -346,7 +346,7 @@ class Menus {
   }
 
   #updateWindowIcon(iconPath) {
-    this.window.setIcon(nativeImage.createFromPath(iconPath));
+    this.window.setIcon(TrayIconChooser.windowImage(iconPath));
     if (!app.dock) return;
     // The tray asset is 16px on macOS but the dock needs >=128px, so the
     // default is resolved separately here, exactly as startup does it.

@@ -2,7 +2,6 @@ const {
   app,
   BrowserWindow,
   ipcMain,
-  nativeImage,
   nativeTheme,
   powerSaveBlocker,
 } = require("electron");
@@ -10,6 +9,7 @@ const path = require("node:path");
 const { spawn } = require("node:child_process");
 const windowStateKeeper = require("electron-window-state");
 const { StreamSelector } = require("../screenSharing");
+const TrayIconChooser = require("../browser/tools/trayIconChooser");
 const IncomingCallToast = require("../incomingCallToast");
 const {
   collectPartitionsToClear,
@@ -79,7 +79,7 @@ class BrowserWindowManager {
    * @returns {Electron.NativeImage|undefined} The native image or undefined if no path
    */
   getIconImage(iconPath) {
-    return iconPath ? nativeImage.createFromPath(iconPath) : undefined;
+    return iconPath ? TrayIconChooser.windowImage(iconPath) : undefined;
   }
 
   createNewBrowserWindow(windowState) {
