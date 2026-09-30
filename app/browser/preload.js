@@ -435,7 +435,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "framelessTweaks", path: "./tools/frameless" },
       { name: "customStickers", path: "./tools/customStickers" },
       { name: "dockIconRenderer", path: "./tools/dockIconRenderer" },
-      { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching" }
+      { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching" },
+      // Must stay last: it wraps getUserMedia around the other media tools so
+      // its retry re-enters their constraint patches.
+      { name: "audioDeviceRecovery", path: "./tools/audioDeviceRecovery" }
     ];
 
     // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)

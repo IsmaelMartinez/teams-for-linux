@@ -237,6 +237,31 @@ Both locations sit ahead of `/usr/share/applications` in `XDG_DATA_DIRS`, so the
     *   Open a terminal and run: `pulseaudio -k && pulseaudio --start`
     *   Restart Teams for Linux.
 
+#### Issue: Bluetooth headset stops working after a call, or is not listed until restart
+
+**Description:** A Bluetooth headset works for one call and then the microphone or speaker is silent on the next one, Teams still shows the headset as selected, or a headset connected after launch never appears in Settings -> Devices.
+
+**Potential Causes:**
+*   PipeWire/PulseAudio switch the headset between the A2DP (music) and HFP (call) profiles around every call. On Ubuntu 22.04/24.04 sound servers the headset microphone only exists in the call profile, so the device Teams selected vanishes when the call ends.
+*   Chromium only detects audio device changes on Linux through udev `sound` events, which Bluetooth devices never emit, so Teams is never told the list changed.
+*   The headset is paired without the hands-free profile, so it has no microphone at all.
+
+**Solutions/Workarounds:**
+
+1.  **Make sure recovery is enabled (it is by default):**
+    *   `media.audioDeviceRecovery.enabled` is `true` by default on Linux. It notifies Teams when devices change, retries the microphone with the system default when the selected one is gone, and falls back to the default speaker when the selected one cannot be opened.
+    *   If you set `media.preventDeviceSwitching`, the device list poller is off and only the retry paths stay active.
+
+2.  **Let the headset be the system default:**
+    *   Pick the headset as the default output and input in your desktop's sound settings (or `wpctl set-default`). With WirePlumber this is what triggers the automatic switch to the call profile when Teams opens the microphone, and the fallback in step 1 lands on the headset.
+    *   In Teams, prefer the "Default" entries in Settings -> Devices over the named headset entry, so the selection follows the system.
+
+3.  **Check that the hands-free profile is available:**
+    *   `pactl list cards` should list a `headset-head-unit` profile for the headset. If only `a2dp-sink` profiles exist, the headset was connected without HFP. On PipeWire check `bluez5.roles` / `bluez5.auto-connect` in your WirePlumber configuration; on PulseAudio check that `module-bluetooth-policy` is loaded.
+
+4.  **Reconnect the headset:**
+    *   Turn the headset off and on again (or `bluetoothctl disconnect` / `connect`). Teams picks the device up within a few seconds without a restart.
+
 ---
 
 ### Login and Authentication

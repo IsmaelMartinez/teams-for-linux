@@ -578,6 +578,7 @@ Media settings are organized under the `media` configuration object with subgrou
 | `media.camera.resolution.height` | `number` | - | Target height when mode is `"override"` |
 | `media.camera.autoAdjustAspectRatio.enabled` | `boolean` | `false` | Fixes camera video stretching when moving Teams between monitors with different orientations by reapplying proper aspect ratio constraints |
 | `media.video.menuEnabled` | `boolean` | `false` | Enable menu entry for controlling video elements (PiP mode, video controls) |
+| `media.audioDeviceRecovery.enabled` | `boolean` | `true` | Linux only. Keeps audio working when devices appear or disappear while Teams is running, which Bluetooth headsets do every time PipeWire/PulseAudio switch them between the music (A2DP) and call (HFP) profiles. Polls the device list and notifies Teams of changes (Chromium never does this on Linux for Bluetooth devices), retries a microphone request with the system default when the selected device is gone, and falls back to the default speaker when the selected one cannot be opened. The poller is skipped when `media.preventDeviceSwitching` is on. Set `false` to restore the raw browser behaviour |
 
 **Example Media Configuration:**
 ```json
