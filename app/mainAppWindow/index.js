@@ -1545,14 +1545,15 @@ function openInBrowser(details) {
   if (config.defaultURLHandler.trim() === "") {
     // A scheme with no handling app rejects; uncaught, that reaches the
     // process-wide unhandledRejection handler and exits the app.
-    shell.openExternal(details.url).catch((error) => {
+    // Only the scheme is logged: the OS error message can echo the URL.
+    shell.openExternal(details.url).catch(() => {
       let scheme = "unparseable";
       try {
         scheme = new URL(details.url).protocol;
       } catch {
         // keep "unparseable"
       }
-      console.error("[LINK] Could not open link externally", { scheme, error: error.message });
+      console.error("[LINK] Could not open link externally", { scheme });
     });
   } else {
     execFile(

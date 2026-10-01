@@ -28,7 +28,7 @@ describe('openInBrowser handles a rejected openExternal', () => {
 	it('logs only the scheme, never the URL', () => {
 		const handler = fn.slice(fn.indexOf('.catch('));
 		const logCall = handler.match(/console\.error\([^;]*\);/)?.[0] ?? '';
-		assert.match(logCall, /scheme/);
-		assert.doesNotMatch(logCall, /details\.url/);
+		assert.match(logCall, /\{\s*scheme\s*\}/, 'the log metadata must be the scheme alone');
+		assert.doesNotMatch(logCall, /details\.url|error\.message/);
 	});
 });
