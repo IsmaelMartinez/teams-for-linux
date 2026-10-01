@@ -855,6 +855,9 @@ module.exports = {
             microphoneControl: "microphone/control",
             screenSharing: "screen-sharing",
           },
+          incomingCallCaller: {
+            enabled: false,
+          },
           meetingStartDetection: {
             enabled: false,
             patterns: ["meeting started", "started the meeting"],
@@ -917,6 +920,11 @@ module.exports = {
           "homeAssistant.deviceName": {
             type: "string",
             describe: "Device name shown in Home Assistant.",
+          },
+          "incomingCallCaller.enabled": {
+            type: "boolean",
+            describe:
+              "Publish the ringing call's caller (name, number, call queue) as JSON to the incoming-call/caller topic. Off by default because it sends callers' personal details to the broker.",
           },
           "meetingStartDetection.enabled": {
             type: "boolean",

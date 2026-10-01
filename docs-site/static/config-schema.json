@@ -929,6 +929,9 @@
           "microphoneControl": "microphone/control",
           "screenSharing": "screen-sharing"
         },
+        "incomingCallCaller": {
+          "enabled": false
+        },
         "meetingStartDetection": {
           "enabled": false,
           "patterns": [
@@ -1012,6 +1015,12 @@
           "type": "string",
           "default": "Teams for Linux",
           "description": "Device name shown in Home Assistant."
+        },
+        {
+          "path": "incomingCallCaller.enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Publish the ringing call's caller (name, number, call queue) as JSON to the incoming-call/caller topic. Off by default because it sends callers' personal details to the broker."
         },
         {
           "path": "meetingStartDetection.enabled",

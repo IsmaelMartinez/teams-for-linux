@@ -235,7 +235,7 @@ class BrowserWindowManager {
       if (this.config.enableIncomingCallToast) {
         this.incomingCallToast.show(data);
       }
-      app.emit('teams-incoming-call-started');
+      app.emit('teams-incoming-call-started', data?.details);
     };
   }
 
