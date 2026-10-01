@@ -3,6 +3,8 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert');
 const { EventEmitter } = require('node:events');
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 
 const { installIpcSecurity } = require('../../app/security/ipcSecurity');
 
@@ -243,5 +245,61 @@ describe('IPC security - allowlist enforcement', () => {
 
     assert.strictEqual(Object.hasOwn(received, '__proto__'), false);
     assert.strictEqual(received.safe, 1);
+  });
+});
+
+// GHSA-3vg9-cwq9-p773: the Teams page could reach the screen-share picker's
+// channels and capture the screen with no picker shown. Those channels must
+// only answer frames that show a file shipped in the app directory.
+describe('IPC security - picker-only channels', () => {
+  const PICKER_CHANNEL = 'desktop-capturer-get-sources';
+  const appPage = { senderFrame: { url: pathToFileURL(path.join(__dirname, '..', '..', 'app', 'screenSharing', 'index.html')).href } };
+
+  for (const [label, event] of [
+    ['a remote page', { senderFrame: { url: 'https://teams.microsoft.com/v2/' } }],
+    ['a file outside the app directory', { senderFrame: { url: 'file:///tmp/evil.html' } }],
+    ['a sender with no frame', {}],
+  ]) {
+    it(`rejects invoke requests from ${label}`, async () => {
+      const ipcMain = fakeIpcMain();
+      installIpcSecurity(ipcMain, silent);
+      let called = false;
+      ipcMain.handle(PICKER_CHANNEL, () => { called = true; });
+
+      await assert.rejects(
+        () => ipcMain.invokeHandlers.get(PICKER_CHANNEL)(event, { types: ['screen'] }),
+        /Unauthorized IPC channel/,
+      );
+      assert.strictEqual(called, false);
+    });
+  }
+
+  it('drops picker events sent by a remote page', () => {
+    const ipcMain = fakeIpcMain();
+    installIpcSecurity(ipcMain, silent);
+    let called = false;
+    ipcMain.once('selected-source', () => { called = true; });
+
+    ipcMain.emit('selected-source', { senderFrame: { url: 'https://teams.microsoft.com/v2/' } }, { id: 'screen:0' });
+    assert.strictEqual(called, false);
+  });
+
+  it('serves the picker page itself', async () => {
+    const ipcMain = fakeIpcMain();
+    installIpcSecurity(ipcMain, silent);
+    ipcMain.handle(PICKER_CHANNEL, () => 'sources');
+
+    assert.strictEqual(await ipcMain.invokeHandlers.get(PICKER_CHANNEL)(appPage, { types: ['screen'] }), 'sources');
+  });
+
+  it('leaves other channels open to any sender', async () => {
+    const ipcMain = fakeIpcMain();
+    installIpcSecurity(ipcMain, silent);
+    ipcMain.handle(ALLOWED, () => 'result');
+
+    assert.strictEqual(
+      await ipcMain.invokeHandlers.get(ALLOWED)({ senderFrame: { url: 'https://teams.microsoft.com/v2/' } }, {}),
+      'result',
+    );
   });
 });

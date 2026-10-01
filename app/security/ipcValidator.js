@@ -5,6 +5,9 @@
  * for disabled contextIsolation and sandbox features.
  */
 
+const path = require('node:path');
+const { fileURLToPath } = require('node:url');
+
 // Allowlist of legitimate IPC channels used by Teams for Linux
 const allowedChannels = new Set([
   // Core application channels
@@ -214,4 +217,37 @@ function validateIpcChannel(channel, payload = null) {
   return true;
 }
 
-module.exports = { validateIpcChannel, allowedChannels };
+// Channels only the in-app screen-share picker may use. The picker is a local
+// page (app/screenSharing/index.html), so a web page in the Teams window must
+// not be able to capture the screen or pick a source through them
+// (GHSA-3vg9-cwq9-p773).
+const appPageOnlyChannels = new Set([
+  'close-view',
+  'desktop-capturer-get-sources',
+  'get-screen-sharing-displays',
+  'selected-source',
+]);
+
+const APP_ROOT = path.join(__dirname, '..');
+
+/**
+ * Check that the frame sending an IPC message may use the channel.
+ * Channels outside appPageOnlyChannels accept any sender; those inside accept
+ * only frames showing a file shipped in the app directory.
+ *
+ * @param {string} channel
+ * @param {{ senderFrame?: { url?: string } | null }} event
+ * @returns {boolean}
+ */
+function isSenderAllowed(channel, event) {
+  if (!appPageOnlyChannels.has(channel)) return true;
+  const url = event?.senderFrame?.url;
+  if (typeof url !== 'string' || !url.startsWith('file:')) return false;
+  try {
+    return fileURLToPath(url).startsWith(APP_ROOT + path.sep);
+  } catch {
+    return false;
+  }
+}
+
+module.exports = { validateIpcChannel, isSenderAllowed, allowedChannels, appPageOnlyChannels };
