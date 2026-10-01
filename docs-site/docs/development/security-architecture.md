@@ -143,7 +143,7 @@ _isAllowedTeamsDomain(hostname) {
 **Features**:
 - **`webviewTag: false`**: Nothing in the app or in Teams web uses `<webview>`, so the tag is off in the root window and every profile view
 - **App-wide `will-attach-webview` refusal**: Covers any webContents created later, including popups, since a guest can request its own preload with `sandbox=no` and that preload would run with full Node.js
-- **Sticker import signature check**: `customStickers` URL import saves a file only when its bytes match the declared image type, rather than trusting the server's content-type header
+- **Sticker import signature check**: `customStickers` URL import saves a file only when it starts with the declared image type's signature, rather than trusting the server's content-type header alone (a format sanity check; the webview block is the actual protection)
 
 **Protection**: Keeps page script from turning a file on disk into code running with Node.js, which preserves the `nodeIntegration: false` boundary above.
 

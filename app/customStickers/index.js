@@ -23,8 +23,10 @@ const CONTENT_TYPE_EXT = {
 };
 
 // The content-type header is server-controlled, so the saved bytes must also
-// start with that format's signature; otherwise any payload could be written
-// to disk under an image name (GHSA-6xpg-fhf9-chcr).
+// start with that format's signature (GHSA-6xpg-fhf9-chcr). This is a format
+// sanity check, not proof the file is a well-formed image; the protection
+// against running a saved file as code is the webview block in
+// app/security/webviewGuard.js.
 const CONTENT_TYPE_SIGNATURES = {
   "image/png": (buf) => buf.subarray(0, 8).equals(Buffer.from("89504e470d0a1a0a", "hex")),
   "image/jpeg": (buf) => buf.subarray(0, 3).equals(Buffer.from("ffd8ff", "hex")),
