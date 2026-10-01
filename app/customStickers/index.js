@@ -22,6 +22,19 @@ const CONTENT_TYPE_EXT = {
   "image/bmp": "bmp",
 };
 
+// The content-type header is server-controlled, so the saved bytes must also
+// start with that format's signature; otherwise any payload could be written
+// to disk under an image name (GHSA-6xpg-fhf9-chcr).
+const CONTENT_TYPE_SIGNATURES = {
+  "image/png": (buf) => buf.subarray(0, 8).equals(Buffer.from("89504e470d0a1a0a", "hex")),
+  "image/jpeg": (buf) => buf.subarray(0, 3).equals(Buffer.from("ffd8ff", "hex")),
+  "image/gif": (buf) => ["GIF87a", "GIF89a"].includes(buf.subarray(0, 6).toString("latin1")),
+  "image/webp": (buf) =>
+    buf.subarray(0, 4).toString("latin1") === "RIFF" &&
+    buf.subarray(8, 12).toString("latin1") === "WEBP",
+  "image/bmp": (buf) => buf.subarray(0, 2).toString("latin1") === "BM",
+};
+
 const DEFAULT_URL_IMPORT_CONTENT_TYPES = [
   "image/png",
   "image/jpeg",
@@ -340,6 +353,10 @@ class CustomStickers {
     }
     if (buf.length > maxBytes) {
       return { success: false, error: `File too large (${buf.length} bytes)` };
+    }
+    if (!CONTENT_TYPE_SIGNATURES[contentType]?.(buf)) {
+      console.warn(`${LOG_PREFIX} URL import rejected: content does not match its content-type`);
+      return { success: false, error: `Content is not a valid ${contentType}` };
     }
 
     const ext = CONTENT_TYPE_EXT[contentType] || "png";

@@ -18,6 +18,7 @@ const GraphApiClient = require("./graphApi");
 const { registerGraphApiHandlers } = require("./graphApi/ipcHandlers");
 const { allowedChannels } = require("./security/ipcValidator");
 const { installIpcSecurity } = require("./security/ipcSecurity");
+const { installWebviewGuard } = require("./security/webviewGuard");
 const { sanitize: sanitizePii } = require("./utils/logSanitizer");
 const { isPreLoginAuthNoise, parseChunkLoadFailure, formatChunkLoadWarning } = require("./utils/rendererErrors");
 const { register: registerGlobalShortcuts, sendKeyboardEventToWindow } = require("./globalShortcuts");
@@ -240,6 +241,8 @@ if (gotTheLock) {
   // The wrapping also covers removal, so listeners registered per short-lived
   // window can actually be taken off again. See app/security/ipcSecurity.js.
   installIpcSecurity(ipcMain);
+  // Refuse every <webview> attach (GHSA-6xpg-fhf9-chcr). See app/security/webviewGuard.js.
+  installWebviewGuard(app);
 
   // Restart application when configuration file changes
   ipcMain.on("config-file-changed", restartApp);
