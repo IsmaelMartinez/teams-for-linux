@@ -1543,7 +1543,17 @@ function secureOpenLink(details) {
 
 function openInBrowser(details) {
   if (config.defaultURLHandler.trim() === "") {
-    shell.openExternal(details.url);
+    // A scheme with no handling app rejects; uncaught, that reaches the
+    // process-wide unhandledRejection handler and exits the app.
+    shell.openExternal(details.url).catch((error) => {
+      let scheme = "unparseable";
+      try {
+        scheme = new URL(details.url).protocol;
+      } catch {
+        // keep "unparseable"
+      }
+      console.error("[LINK] Could not open link externally", { scheme, error: error.message });
+    });
   } else {
     execFile(
       config.defaultURLHandler.trim(),

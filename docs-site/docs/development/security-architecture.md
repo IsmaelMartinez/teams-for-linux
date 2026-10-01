@@ -121,7 +121,7 @@ _isAllowedTeamsDomain(hostname) {
 
 **Features**:
 - **`uncaughtException` handler**: Logs error details and exits with code 1 (process state unknown after uncaught exception)
-- **`unhandledRejection` handler**: Logs rejection details, allows process to continue (non-fatal)
+- **`unhandledRejection` handler**: Logs rejection details; network errors are ignored, anything else exits with code 1, so every promise-returning Electron call (for example `shell.openExternal`) must be caught
 - **Startup try/catch**: `handleAppReady()` wrapped with error logging and graceful `app.quit()` on failure
 
 **Protection**: Prevents silent process termination and provides diagnostic output for crash reports.
