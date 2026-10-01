@@ -241,9 +241,11 @@ const APP_ROOT = path.join(__dirname, '..');
  */
 function isSenderAllowed(channel, event) {
   if (!appPageOnlyChannels.has(channel)) return true;
-  const url = event?.senderFrame?.url;
-  if (typeof url !== 'string' || !url.startsWith('file:')) return false;
+  // senderFrame is a getter that throws once the frame is disposed, so it is
+  // read inside the try: a gone frame is simply refused.
   try {
+    const url = event?.senderFrame?.url;
+    if (typeof url !== 'string' || !url.startsWith('file:')) return false;
     return fileURLToPath(url).startsWith(APP_ROOT + path.sep);
   } catch {
     return false;

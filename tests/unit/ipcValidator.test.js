@@ -189,6 +189,12 @@ describe('isSenderAllowed (GHSA-3vg9-cwq9-p773)', () => {
 	it('rejects a missing or destroyed sender frame', () => {
 		assert.strictEqual(isSenderAllowed('selected-source', {}), false);
 		assert.strictEqual(isSenderAllowed('selected-source', { senderFrame: null }), false);
+		const disposed = {
+			get senderFrame() {
+				throw new Error('Render frame was disposed before WebFrameMain could be accessed');
+			},
+		};
+		assert.strictEqual(isSenderAllowed('selected-source', disposed), false);
 	});
 
 	it('does not restrict channels outside the picker set', () => {
