@@ -1389,8 +1389,15 @@ function onNewWindow(details) {
   return secureOpenLink(details);
 }
 
-function onPageTitleUpdated(_event, title) {
+function onPageTitleUpdated(event, title) {
   window.webContents.send("page-title", title);
+  // A custom app.title suffixes the window title so multiple instances can be
+  // told apart in taskbars and Alt+Tab (#3035). The default leaves Electron
+  // mirroring document.title untouched.
+  if (config.appTitle && config.appTitle !== "Microsoft Teams") {
+    event.preventDefault();
+    window.setTitle(`${title} - ${config.appTitle}`);
+  }
 }
 
 function onNavigationChanged() {

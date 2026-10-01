@@ -117,7 +117,7 @@ ignored. The examples below use whichever spelling actually applies.
 |--------|------|---------|-------------|
 | `app.url` | `string` | `"https://teams.cloud.microsoft"` | Microsoft Teams URL |
 | `url` | `string` | `"https://teams.cloud.microsoft"` | Deprecated, use `app.url` |
-| `app.title` | `string` | `"Microsoft Teams"` | Text to be suffixed with page title |
+| `app.title` | `string` | `"Microsoft Teams"` | Text appended to the window title (when changed from the default) and used as the tray tooltip |
 | `appTitle` | `string` | `"Microsoft Teams"` | Deprecated, use `app.title` |
 | `app.partition` | `string` | `"persist:teams-4-linux"` | BrowserWindow webpreferences partition |
 | `partition` | `string` | `"persist:teams-4-linux"` | Deprecated, use `app.partition` |
