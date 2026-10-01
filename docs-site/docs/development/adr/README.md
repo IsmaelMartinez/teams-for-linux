@@ -53,6 +53,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [029](029-config-schema-single-source-of-truth.md) | Configuration Schema as Single Source of Truth | ✅ Accepted | 2026-09-05 | v2.12.0+ |
 | [030](030-graph-api-teams-session-token.md) | Graph API Access via the Teams Session Token | ✅ Implemented | 2025-11-21 | v2.6.17 |
 | [031](031-ozone-platform-x11-default.md) | Keep the `--ozone-platform=x11` Default on Wayland | ✅ Accepted | 2026-09-05 | N/A |
+| [033](033-phone-passkey-backend-prototype.md) | Experimental Phone Passkey Backend | 🚧 Proposed | 2026-09-30 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
