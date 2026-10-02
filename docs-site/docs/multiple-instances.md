@@ -73,6 +73,16 @@ Set a custom tray and window icon for each profile:
 
 This changes the visual icon used in the title bar and system tray/dock, making it easy to distinguish between different profiles.
 
+### `--appTitle`
+
+Label each profile's window and tray tooltip:
+
+```bash
+--appTitle="Teams - Work"
+```
+
+Any value other than the default replaces "Microsoft Teams" at the end of the window title (for example `Chat | Teams - Work`), so taskbars and Alt+Tab show which profile a window belongs to. In `config.json` the same setting is `app.title`.
+
 ### `--class`
 
 Set the internal application name used by Electron:

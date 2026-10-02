@@ -96,7 +96,7 @@ module.exports = {
       },
       appTitle: {
         default: "Microsoft Teams",
-        describe: "A text to be suffixed with page title",
+        describe: "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip",
         type: "string",
         applyMode: "restart",
         deprecated: "use app.title instead",
@@ -1308,7 +1308,7 @@ module.exports = {
         fields: {
           "title": {
             type: "string",
-            describe: "A text to be suffixed with page title",
+            describe: "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip",
           },
           "url": {
             type: "string",
