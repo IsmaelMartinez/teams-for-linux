@@ -32,6 +32,13 @@ const log = require("./log");
 // app/browser/tools/webauthnOverride.js builds the same set.
 let allowedOrigins = new Set(DEFAULT_ORIGINS);
 
+// A sign-in frame outside the allowlist keeps Chromium's own WebAuthn, which
+// has no PIN or touch UI here, so the key prompt silently never appears
+// (#3008). Teams loads many unrelated iframes, so the hint is logged once per
+// session, and each skipped origin is named only under the debug flag.
+let skipHintLogged = false;
+const skippedOrigins = new Set();
+
 let initialized = false;
 
 /**
@@ -186,6 +193,25 @@ async function handleWebauthnRequest(operation, event, options) {
 }
 
 /**
+ * Point at auth.webauthn.extraOrigins when a subframe is left without the
+ * override. Opaque origins (about:blank, data:) are not sign-in pages.
+ * @param {string} frameOrigin
+ */
+function logSkippedFrame(frameOrigin) {
+  if (!frameOrigin.startsWith("https://")) return;
+  if (!skipHintLogged) {
+    skipHintLogged = true;
+    log.info("[WEBAUTHN] Skipped a subframe outside the login allowlist", {
+      hint: "if the security key prompt never appears, add your sign-in page's origin to auth.webauthn.extraOrigins; set auth.webauthn.debug to log each skipped origin",
+    });
+  }
+  if (!skippedOrigins.has(frameOrigin)) {
+    skippedOrigins.add(frameOrigin);
+    log.debug("[WEBAUTHN] Skipped subframe origin", { origin: frameOrigin });
+  }
+}
+
+/**
  * Inject the WebAuthn override into a subframe if it's a Microsoft login origin.
  * Called from did-frame-finish-load for non-main frames.
  *
@@ -204,6 +230,7 @@ function injectIntoFrame(wf) {
   }
 
   if (!isAllowedOrigin(frameOrigin)) {
+    logSkippedFrame(frameOrigin);
     return;
   }
 
@@ -391,4 +418,5 @@ module.exports = {
     allowedOrigins = buildAllowedOrigins(extraOrigins);
   },
   _isAllowedOrigin: isAllowedOrigin,
+  _injectIntoFrame: injectIntoFrame,
 };

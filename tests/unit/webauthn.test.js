@@ -1201,6 +1201,75 @@ describe('WebAuthn origin allowlist - auth.webauthn.extraOrigins', () => {
 	});
 });
 
+// ─── Hint for a skipped sign-in subframe (issue #3008) ────────────────────────
+
+// A frame outside the allowlist falls through to Chromium's own WebAuthn and the
+// PIN prompt never appears, so the log has to point at extraOrigins.
+describe('WebAuthn subframe injection - skipped origin hint', () => {
+	const log = require('../../app/webauthn/log');
+
+	// A private copy of app/webauthn, so the once-per-session flag starts unset.
+	function freshWebauthn() {
+		const indexPath = require.resolve('../../app/webauthn');
+		const saved = require.cache[indexPath];
+		delete require.cache[indexPath];
+		try {
+			return require('../../app/webauthn');
+		} finally {
+			require.cache[indexPath] = saved;
+		}
+	}
+
+	function captureLogs(t) {
+		const lines = { info: [], debug: [] };
+		t.mock.method(console, 'info', (...args) => lines.info.push(args));
+		t.mock.method(console, 'debug', (...args) => lines.debug.push(args));
+		return lines;
+	}
+
+	after(() => log.setDebug(false));
+
+	it('logs the extraOrigins hint once, without the origin', (t) => {
+		log.setDebug(false);
+		const webauthn = freshWebauthn();
+		const lines = captureLogs(t);
+
+		webauthn._injectIntoFrame({ url: 'https://sso.example.com/adfs/ls' });
+		webauthn._injectIntoFrame({ url: 'https://statics.teams.cdn.office.net/frame' });
+
+		assert.strictEqual(lines.info.length, 1);
+		const [message, fields] = lines.info[0];
+		assert.match(message, /Skipped a subframe outside the login allowlist/);
+		assert.match(fields.hint, /auth\.webauthn\.extraOrigins/);
+		assert.ok(!JSON.stringify(lines.info).includes('sso.example.com'));
+		assert.strictEqual(lines.debug.length, 0);
+	});
+
+	it('names each skipped origin once under the debug flag', (t) => {
+		log.setDebug(true);
+		const webauthn = freshWebauthn();
+		const lines = captureLogs(t);
+
+		webauthn._injectIntoFrame({ url: 'https://sso.example.com/adfs/ls' });
+		webauthn._injectIntoFrame({ url: 'https://sso.example.com/adfs/ls?step=2' });
+		webauthn._injectIntoFrame({ url: 'https://idp.example.com/' });
+
+		assert.deepStrictEqual(lines.debug.map(([, fields]) => fields.origin), ['https://sso.example.com', 'https://idp.example.com']);
+	});
+
+	it('stays quiet for opaque frames such as about:blank', (t) => {
+		log.setDebug(true);
+		const webauthn = freshWebauthn();
+		const lines = captureLogs(t);
+
+		webauthn._injectIntoFrame({ url: 'about:blank' });
+		webauthn._injectIntoFrame({ url: 'data:text/html,<p>x</p>' });
+
+		assert.strictEqual(lines.info.length, 0);
+		assert.strictEqual(lines.debug.length, 0);
+	});
+});
+
 // ─── The combined origin gate on a relayed ceremony (issue #2931) ─────────────
 
 // handleWebauthnRequest() checks BOTH the IPC sender's origin and the inner
