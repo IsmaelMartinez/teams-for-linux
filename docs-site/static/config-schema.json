@@ -81,7 +81,7 @@
       "name": "appTitle",
       "type": "string",
       "default": "Microsoft Teams",
-      "description": "Text appended to the window title (when changed from the default) and used as the tray tooltip",
+      "description": "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip",
       "applyMode": "restart",
       "deprecated": "use app.title instead"
     },
@@ -1449,7 +1449,7 @@
           "path": "title",
           "type": "string",
           "default": "Microsoft Teams",
-          "description": "Text appended to the window title (when changed from the default) and used as the tray tooltip"
+          "description": "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip"
         },
         {
           "path": "url",

@@ -96,7 +96,7 @@ module.exports = {
       },
       appTitle: {
         default: "Microsoft Teams",
-        describe: "Text appended to the window title (when changed from the default) and used as the tray tooltip",
+        describe: "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip",
         type: "string",
         applyMode: "restart",
         deprecated: "use app.title instead",
@@ -1300,7 +1300,7 @@ module.exports = {
         fields: {
           "title": {
             type: "string",
-            describe: "Text appended to the window title (when changed from the default) and used as the tray tooltip",
+            describe: "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip",
           },
           "url": {
             type: "string",

@@ -16,7 +16,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 | `appIconType` | `string` | `"default"` | Type of tray icon to be used **Deprecated:** use tray.iconType instead | `restart` |
 | `appIdleTimeout` | `number` | `300` | A numeric value in seconds as duration before app considers the system as idle | `restart` |
 | `appIdleTimeoutCheckInterval` | `number` | `10` | A numeric value in seconds as poll interval to check if the appIdleTimeout is reached | `restart` |
-| `appTitle` | `string` | `"Microsoft Teams"` | Text appended to the window title (when changed from the default) and used as the tray tooltip **Deprecated:** use app.title instead | `restart` |
+| `appTitle` | `string` | `"Microsoft Teams"` | Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip **Deprecated:** use app.title instead | `restart` |
 | `alwaysOnTop` | `boolean` | `true` | Keep the pop-out window always on top of other windows. **Deprecated:** use window.alwaysOnTop instead | `restart` |
 | `authServerWhitelist` | `string` | `"*"` | Set auth-server-whitelist value | `restart` |
 | `awayOnSystemIdle` | `boolean` | `false` | Sets the user status as away when system goes idle | `restart` |
@@ -320,7 +320,7 @@ Object options group several related settings. The tables below list each nested
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `app.title` | `string` | `"Microsoft Teams"` | Text appended to the window title (when changed from the default) and used as the tray tooltip |
+| `app.title` | `string` | `"Microsoft Teams"` | Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip |
 | `app.url` | `string` | `"https://teams.cloud.microsoft"` | Microsoft Teams URL |
 | `app.partition` | `string` | `"persist:teams-4-linux"` | BrowserWindow webpreferences partition |
 

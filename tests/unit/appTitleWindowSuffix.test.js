@@ -4,36 +4,53 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert');
 const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
+const vm = require('node:vm');
 
-// Regression guard for #3035: a custom app.title suffixes the window title,
-// while the default leaves Electron mirroring document.title. Source-text
-// assertion because app/mainAppWindow/index.js requires the electron runtime.
+// Regression guard for #3035: a custom app.title replaces the trailing
+// "Microsoft Teams" in the window title, while the default leaves Electron
+// mirroring document.title. app/mainAppWindow/index.js requires the electron
+// runtime, so the handler is extracted from source and run against stubs.
 
 const INDEX_PATH = join(__dirname, '..', '..', 'app', 'mainAppWindow', 'index.js');
+const source = readFileSync(INDEX_PATH, 'utf8');
+const handlerSource = source.match(/function onPageTitleUpdated\(event, title\) \{[\s\S]*?\n\}/)?.[0];
 
-describe('onPageTitleUpdated app.title suffix', () => {
-	const source = readFileSync(INDEX_PATH, 'utf8');
-	const handler = source.match(/function onPageTitleUpdated\(event, title\) \{[\s\S]*?\n\}/)?.[0];
+function run(appTitle, title) {
+	const calls = { sent: [], setTitle: [], prevented: 0 };
+	const window = {
+		webContents: { send: (channel, value) => calls.sent.push([channel, value]) },
+		setTitle: (value) => calls.setTitle.push(value),
+	};
+	const handler = vm.runInNewContext(`(${handlerSource})`, { window, config: { appTitle } });
+	handler({ preventDefault: () => calls.prevented++ }, title);
+	return calls;
+}
 
-	it('exists with the event parameter it needs to preventDefault', () => {
-		assert.ok(handler, 'onPageTitleUpdated(event, title) not found');
+describe('onPageTitleUpdated app.title', () => {
+	it('exists', () => {
+		assert.ok(handlerSource, 'onPageTitleUpdated(event, title) not found');
 	});
 
-	it('only overrides the title when app.title differs from the default', () => {
-		assert.match(handler, /config\.appTitle\s*!==\s*"Microsoft Teams"/);
+	it('replaces the trailing Microsoft Teams with a custom app.title', () => {
+		const calls = run('Teams - Org A', 'Chat | Microsoft Teams');
+		assert.deepStrictEqual(calls.setTitle, ['Chat | Teams - Org A']);
+		assert.strictEqual(calls.prevented, 1);
 	});
 
-	it('prevents the native update and applies exactly one suffix inside that branch', () => {
-		const branch = handler.match(/if \([^)]*"Microsoft Teams"\) \{([\s\S]*?)\n {2}\}/)?.[1] ?? '';
-		assert.match(branch, /event\.preventDefault\(\)/);
-		assert.match(branch, /window\.setTitle\(`\$\{title\} - \$\{config\.appTitle\}`\)/);
+	it('appends a custom app.title when the page title lacks the default', () => {
+		const calls = run('Work', 'Connecting');
+		assert.deepStrictEqual(calls.setTitle, ['Connecting - Work']);
+		assert.strictEqual(calls.prevented, 1);
 	});
 
-	it('does not preventDefault outside the custom-title branch', () => {
-		assert.strictEqual(handler.match(/preventDefault\(\)/g)?.length, 1);
+	it('leaves the native title update alone with the default app.title', () => {
+		const calls = run('Microsoft Teams', 'Chat | Microsoft Teams');
+		assert.deepStrictEqual(calls.setTitle, []);
+		assert.strictEqual(calls.prevented, 0);
 	});
 
-	it('still forwards the raw page title to the renderer', () => {
-		assert.match(handler, /webContents\.send\("page-title", title\)/);
+	it('always forwards the raw page title to the renderer', () => {
+		const calls = run('Work', 'Chat | Microsoft Teams');
+		assert.deepStrictEqual(calls.sent, [['page-title', 'Chat | Microsoft Teams']]);
 	});
 });

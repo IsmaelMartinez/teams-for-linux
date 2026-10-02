@@ -81,7 +81,7 @@ Label each profile's window and tray tooltip:
 --appTitle="Teams - Work"
 ```
 
-Any value other than the default is appended to the window title (for example `Chat | Microsoft Teams - Teams - Work`), so taskbars and Alt+Tab show which profile a window belongs to. In `config.json` the same setting is `app.title`.
+Any value other than the default replaces "Microsoft Teams" at the end of the window title (for example `Chat | Teams - Work`), so taskbars and Alt+Tab show which profile a window belongs to. In `config.json` the same setting is `app.title`.
 
 ### `--class`
 
