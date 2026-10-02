@@ -34,9 +34,9 @@ let allowedOrigins = new Set(DEFAULT_ORIGINS);
 
 // A sign-in frame outside the allowlist keeps Chromium's own WebAuthn, which
 // has no PIN or touch UI here, so the key prompt silently never appears
-// (#3008). Teams loads many unrelated iframes, so the hint is logged once per
-// session, and each skipped origin is named only under the debug flag.
-let skipHintLogged = false;
+// (#3008). The hint is logged once per distinct origin, as the frame loads, so
+// it lines up with the sign-in step it explains. The origin itself stays in
+// memory: an IdP host identifies the tenant, and debug logs get shared.
 const skippedOrigins = new Set();
 
 let initialized = false;
@@ -198,17 +198,11 @@ async function handleWebauthnRequest(operation, event, options) {
  * @param {string} frameOrigin
  */
 function logSkippedFrame(frameOrigin) {
-  if (!frameOrigin.startsWith("https://")) return;
-  if (!skipHintLogged) {
-    skipHintLogged = true;
-    log.info("[WEBAUTHN] Skipped a subframe outside the login allowlist", {
-      hint: "if the security key prompt never appears, add your sign-in page's origin to auth.webauthn.extraOrigins; set auth.webauthn.debug to log each skipped origin",
-    });
-  }
-  if (!skippedOrigins.has(frameOrigin)) {
-    skippedOrigins.add(frameOrigin);
-    log.debug("[WEBAUTHN] Skipped subframe origin", { origin: frameOrigin });
-  }
+  if (!frameOrigin.startsWith("https://") || skippedOrigins.has(frameOrigin)) return;
+  skippedOrigins.add(frameOrigin);
+  log.info("[WEBAUTHN] Skipped a subframe outside the login allowlist", {
+    hint: "if this is your sign-in page and the security key prompt never appears, add its origin to auth.webauthn.extraOrigins",
+  });
 }
 
 /**

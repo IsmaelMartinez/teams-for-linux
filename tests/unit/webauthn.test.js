@@ -1229,32 +1229,36 @@ describe('WebAuthn subframe injection - skipped origin hint', () => {
 
 	after(() => log.setDebug(false));
 
-	it('logs the extraOrigins hint once, without the origin', (t) => {
-		log.setDebug(false);
-		const webauthn = freshWebauthn();
-		const lines = captureLogs(t);
-
-		webauthn._injectIntoFrame({ url: 'https://sso.example.com/adfs/ls' });
-		webauthn._injectIntoFrame({ url: 'https://statics.teams.cdn.office.net/frame' });
-
-		assert.strictEqual(lines.info.length, 1);
-		const [message, fields] = lines.info[0];
-		assert.match(message, /Skipped a subframe outside the login allowlist/);
-		assert.match(fields.hint, /auth\.webauthn\.extraOrigins/);
-		assert.ok(!JSON.stringify(lines.info).includes('sso.example.com'));
-		assert.strictEqual(lines.debug.length, 0);
-	});
-
-	it('names each skipped origin once under the debug flag', (t) => {
+	// An IdP host identifies the tenant and debug logs get pasted into issues,
+	// so the hint carries only fixed text, even with the debug flag on.
+	it('logs the extraOrigins hint without the origin', (t) => {
 		log.setDebug(true);
 		const webauthn = freshWebauthn();
 		const lines = captureLogs(t);
 
 		webauthn._injectIntoFrame({ url: 'https://sso.example.com/adfs/ls' });
-		webauthn._injectIntoFrame({ url: 'https://sso.example.com/adfs/ls?step=2' });
-		webauthn._injectIntoFrame({ url: 'https://idp.example.com/' });
 
-		assert.deepStrictEqual(lines.debug.map(([, fields]) => fields.origin), ['https://sso.example.com', 'https://idp.example.com']);
+		assert.strictEqual(lines.info.length, 1);
+		const [message, fields, ...rest] = lines.info[0];
+		assert.strictEqual(message, '[WEBAUTHN] Skipped a subframe outside the login allowlist');
+		assert.deepStrictEqual(Object.keys(fields), ['hint']);
+		assert.match(fields.hint, /auth\.webauthn\.extraOrigins/);
+		assert.strictEqual(rest.length, 0);
+		assert.strictEqual(lines.debug.length, 0);
+	});
+
+	// Once per origin rather than once per session, so an unrelated Teams iframe
+	// that loads first cannot use up the hint before the sign-in frame appears.
+	it('logs once per distinct skipped origin', (t) => {
+		log.setDebug(false);
+		const webauthn = freshWebauthn();
+		const lines = captureLogs(t);
+
+		webauthn._injectIntoFrame({ url: 'https://statics.teams.cdn.office.net/frame' });
+		webauthn._injectIntoFrame({ url: 'https://sso.example.com/adfs/ls' });
+		webauthn._injectIntoFrame({ url: 'https://sso.example.com/adfs/ls?step=2' });
+
+		assert.strictEqual(lines.info.length, 2);
 	});
 
 	it('stays quiet for opaque frames such as about:blank', (t) => {
