@@ -14,6 +14,39 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.24.0" date="2026-10-03">
+      <description>
+        <ul>
+          <li>mqtt: publish the ringing call's caller to incoming-call/caller (#3022)</li>
+          <li>cap the window icon so x11 does not drop it (#3030)</li>
+          <li>config: deep-merge object option defaults and system/user config (#3014)</li>
+          <li>ipc: make a pending once() listener removable through the security wrapper (#3055)</li>
+          <li>links: catch openExternal rejection so unknown schemes don't exit the app (#3049)</li>
+          <li>lint: lint the whole repo and fix the errors it surfaces (#3015)</li>
+          <li>mqtt: recognize phone and call-queue calls as incoming calls (#3021) (a17c77f), closes #3019</li>
+          <li>security: block webview attach and validate sticker import bytes (#3053)</li>
+          <li>security: stop leaking ipcRenderer and pin picker IPC to app pages (#3054)</li>
+          <li>webauthn: log a hint when a subframe is skipped from the allowlist (#3052)</li>
+          <li>window: enforce a minimum window size to prevent a 1x1 restore (#3003)</li>
+          <li>window: show app.title in the window title to tell instances apart (#3038)</li>
+          <li>roadmap: track WebAuthn on Linux and the Flatpak libfido2 bundle (#3024) (d6a427e), closes #3008</li>
+          <li>guard release-please PR output against empty step env (#3017)</li>
+          <li>deps-dev: bump brace-expansion from 1.1.18 to 1.1.21 (#3040)</li>
+          <li>deps-dev: bump undici from 6.28.0 to 6.29.0 (#3039)</li>
+          <li>deps: bump actions/deploy-pages from 5.0.0 to 5.0.1 (#3045)</li>
+          <li>deps: bump brace-expansion from 5.0.9 to 5.0.12 in /docs-site (#3041)</li>
+          <li>deps: bump canonical/setup-lxd (#3046)</li>
+          <li>deps: bump dompurify from 3.4.13 to 3.4.16 in /docs-site (#3042)</li>
+          <li>deps: bump fast-uri to 3.1.8 to clear Dependabot alerts (#3051)</li>
+          <li>deps: bump github/codeql-action from 4.37.9 to 4.38.2 (#3047)</li>
+          <li>deps: bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml (#3043)</li>
+          <li>deps: bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml (#3044)</li>
+          <li>deps: bump ip-address from 10.4.0 to 10.7.2 (#3029)</li>
+          <li>deps: bump the minor-and-patch group with 2 updates (#3026)</li>
+          <li>deps: bump undici from 7.29.0 to 7.30.0 in /docs-site (#3028)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.23.0" date="2026-09-26">
       <description>
         <ul>
