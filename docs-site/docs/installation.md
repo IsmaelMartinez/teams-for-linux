@@ -162,6 +162,8 @@ The beta remote carries pre-release builds and packaging changes that are still 
    - **snap** - Universal snap package
    - **tar.gz** - Portable archive
 
+Packages are built for x86_64 and arm64. 32-bit ARM (armv7l) builds ended with the move to Electron 44, which no longer ships 32-bit binaries; existing armv7l installs keep working but receive no further updates.
+
 ### Package Installation
 
 #### Debian/Ubuntu (.deb)

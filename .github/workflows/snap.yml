@@ -76,64 +76,6 @@ jobs:
           retention-days: 30
           compression-level: 0
 
-  snap-armv7l:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    env:
-      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
-      # Note: No LXD - electron-builder handles armv7l cross-compilation directly
-
-    steps:
-      - name: Install Snapcraft
-        uses: samuelmeuli/action-snapcraft@d33c176a9b784876d966f80fb1b461808edc0641 # v2.1.1
-
-      - name: Check out Git repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Install Node.js and NPM
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-
-      - name: Build
-        # --ignore-scripts blocks arbitrary dependency lifecycle scripts; the
-        # explicit postinstall keeps electron-builder install-app-deps (native
-        # dep rebuild) that packaging needs.
-        run: |
-          npm ci --ignore-scripts
-          npm run postinstall
-
-      - name: Set edge version with commit SHA
-        if: github.ref == 'refs/heads/main'
-        run: |
-          SHA=$(git rev-parse --short HEAD)
-          node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            pkg.version += '-edge.g${SHA}';
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
-          echo "Snap edge version: $(node -p "require('./package.json').version")"
-
-      - name: Build for Release
-        if: github.ref == 'refs/heads/main'
-        run: npm run dist:linux:snap:armv7l -- --publish always
-
-      - name: Build for PR
-        if: github.ref != 'refs/heads/main'
-        run: npm run dist:linux:snap:armv7l -- --publish never
-
-      - name: Upload PR artifacts
-        if: github.ref != 'refs/heads/main'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: teams-for-linux-snap-armv7l
-          path: dist/*.snap
-          retention-days: 30
-          compression-level: 0
-
   snap-arm64:
     runs-on: ubuntu-24.04-arm
     permissions:
@@ -149,8 +91,8 @@ jobs:
         # electron-builder's deprecated core22 `snap` target invokes
         # (`snapcraft snap --output`), so the native-arm64 build fails. Pin
         # below 9.0.0 until the snap build migrates to the core24 `snapcraft`
-        # target, which uses `snapcraft pack` (#2590, #2592). The amd64 and
-        # armv7l jobs pack via app-builder directly and are unaffected. A
+        # target, which uses `snapcraft pack` (#2590, #2592). The amd64 job
+        # packs via app-builder directly and is unaffected. A
         # first core24 migration (#2758) shipped snaps that core-dump on
         # launch and was reverted (#2905), restoring this pin.
         uses: samuelmeuli/action-snapcraft@d33c176a9b784876d966f80fb1b461808edc0641 # v2.1.1

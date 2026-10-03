@@ -73,7 +73,6 @@ jobs:
             // Group artifacts by platform
             const linuxX64 = buildArtifacts.find(a => a.name.includes('linux-x64'));
             const linuxArm64 = buildArtifacts.find(a => a.name.includes('linux-arm64'));
-            const linuxArmv7l = buildArtifacts.find(a => a.name.includes('linux-armv7l'));
             const macosX64 = buildArtifacts.find(a => a.name.includes('macos-x64'));
             const macosArm64 = buildArtifacts.find(a => a.name.includes('macos-arm64'));
             const windows = buildArtifacts.find(a => a.name.includes('windows'));
@@ -91,11 +90,6 @@ jobs:
               const sizeMB = (linuxArm64.size_in_bytes / 1024 / 1024).toFixed(2);
               body += `**arm64** (${sizeMB} MB) - Contains: .deb, .rpm, .tar.gz, .AppImage\n`;
               body += `- [${linuxArm64.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${linuxArm64.id})\n\n`;
-            }
-            if (linuxArmv7l) {
-              const sizeMB = (linuxArmv7l.size_in_bytes / 1024 / 1024).toFixed(2);
-              body += `**armv7l** (${sizeMB} MB) - Contains: .deb, .rpm, .tar.gz, .AppImage\n`;
-              body += `- [${linuxArmv7l.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${linuxArmv7l.id})\n\n`;
             }
 
             // macOS section
@@ -213,7 +207,6 @@ jobs:
             // Group artifacts by architecture
             const snapX64 = snapArtifacts.find(a => a.name.includes('snap-x64'));
             const snapArm64 = snapArtifacts.find(a => a.name.includes('snap-arm64'));
-            const snapArmv7l = snapArtifacts.find(a => a.name.includes('snap-armv7l'));
 
             let body = '## 📦 PR Snap Build Artifacts\n\n';
             body += '✅ **Snap builds successful!** Download artifacts:\n\n';
@@ -228,11 +221,6 @@ jobs:
               const sizeMB = (snapArm64.size_in_bytes / 1024 / 1024).toFixed(2);
               body += `**arm64** (${sizeMB} MB)\n`;
               body += `- [${snapArm64.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${snapArm64.id})\n\n`;
-            }
-            if (snapArmv7l) {
-              const sizeMB = (snapArmv7l.size_in_bytes / 1024 / 1024).toFixed(2);
-              body += `**armv7l** (${sizeMB} MB)\n`;
-              body += `- [${snapArmv7l.name}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}/artifacts/${snapArmv7l.id})\n\n`;
             }
 
             body += '---\n\n';

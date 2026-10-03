@@ -176,8 +176,8 @@ jobs:
           # Each source is matched on the URL it currently holds rather than on
           # a line number, and its sha256 is the next one beneath it. Only
           # sources the manifest actually references are touched: releases also
-          # carry an armv7l deb that beta does not use, so a blind version
-          # find-and-replace would invent a fourth source.
+          # carry assets that beta does not use, so a blind version
+          # find-and-replace would invent extra sources.
           targets = [
               (
                   re.compile(
