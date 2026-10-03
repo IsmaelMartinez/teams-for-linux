@@ -284,6 +284,23 @@ describe('IPC security - picker-only channels', () => {
     assert.strictEqual(called, false);
   });
 
+  // EventEmitter.once registers through this.on, which is the wrapped on(), so
+  // the sender check runs before the one-shot wrapper and a rejected event
+  // cannot spend the picker's listener.
+  it('keeps a once() listener armed after a rejected event, then fires it once', () => {
+    const ipcMain = fakeIpcMain();
+    installIpcSecurity(ipcMain, silent);
+    const received = [];
+    ipcMain.once('selected-source', (_event, source) => received.push(source.id));
+
+    ipcMain.emit('selected-source', { senderFrame: { url: 'https://teams.microsoft.com/v2/' } }, { id: 'spoofed' });
+    ipcMain.emit('selected-source', appPage, { id: 'screen:1' });
+    ipcMain.emit('selected-source', appPage, { id: 'screen:2' });
+
+    assert.deepStrictEqual(received, ['screen:1']);
+    assert.strictEqual(ipcMain.listenerCount('selected-source'), 0);
+  });
+
   it('serves the picker page itself', async () => {
     const ipcMain = fakeIpcMain();
     installIpcSecurity(ipcMain, silent);

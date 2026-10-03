@@ -72,7 +72,7 @@ const responseHeaders = {
 - **Recursive Payload Sanitization**: Removes dangerous properties (`__proto__`, `constructor`, `prototype`) from payloads at all nesting depths
 - **Prototype Pollution Protection**: Guards against object prototype manipulation with depth-limited recursion (max 10 levels)
 - **Request Validation**: Validates all IPC requests before processing
-- **Sender Pinning**: Channels only the screen-share picker uses (`desktop-capturer-get-sources`, `get-screen-sharing-displays`, `selected-source`, `close-view`) are answered only when the sending frame shows a file inside the app directory (`isSenderAllowed`), so page script cannot capture the screen or pick a source on its own
+- **Sender Pinning**: Channels only the screen-share picker uses (`desktop-capturer-get-sources`, `get-screen-sharing-displays`, `selected-source`, `close-view`, and the legacy picker's `source-selected`) are answered only when the sending frame shows a file inside the app directory (`isSenderAllowed`), so page script cannot capture the screen or pick a source on its own
 - **No Raw `ipcRenderer` in the Page**: With `contextIsolation: false`, anything `electronAPI` returns is usable by page script, so its listener helpers return nothing and strip Electron's IPC event (whose `sender` is the raw `ipcRenderer`) before calling back
 
 ```javascript

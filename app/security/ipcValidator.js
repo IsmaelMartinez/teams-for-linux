@@ -226,6 +226,7 @@ const appPageOnlyChannels = new Set([
   'desktop-capturer-get-sources',
   'get-screen-sharing-displays',
   'selected-source',
+  'source-selected',
 ]);
 
 const APP_ROOT = path.join(__dirname, '..');

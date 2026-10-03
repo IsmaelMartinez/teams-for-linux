@@ -197,6 +197,12 @@ describe('isSenderAllowed (GHSA-3vg9-cwq9-p773)', () => {
 		assert.strictEqual(isSenderAllowed('selected-source', disposed), false);
 	});
 
+	it('pins the legacy picker reply, which page script could otherwise forge', () => {
+		assert.strictEqual(isSenderAllowed('source-selected', remote), false);
+		const legacyPicker = pathToFileURL(path.join(APP_DIR, 'screenPicker', 'index.html')).href;
+		assert.strictEqual(isSenderAllowed('source-selected', { senderFrame: { url: legacyPicker } }), true);
+	});
+
 	it('does not restrict channels outside the picker set', () => {
 		assert.strictEqual(isSenderAllowed('get-config', remote), true);
 	});
