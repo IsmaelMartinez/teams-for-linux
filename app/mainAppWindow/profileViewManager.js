@@ -442,7 +442,7 @@ class ProfileViewManager {
         preload: path.join(__dirname, "..", "browser", "preload.js"),
         plugins: true,
         spellcheck: true,
-        webviewTag: true,
+        webviewTag: false,
         // SECURITY: matches the root window's webPreferences
         // (browserWindowManager.js). Required for Teams DOM access via
         // ReactHandler; compensated by IPC validation.
