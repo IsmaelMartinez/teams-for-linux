@@ -1,5 +1,54 @@
 # Changelog
 
+## [2.24.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.23.0...v2.24.0) (2026-10-03)
+
+
+### Features
+
+* **mqtt:** publish the ringing call's caller to incoming-call/caller ([#3022](https://github.com/IsmaelMartinez/teams-for-linux/issues/3022)) ([5682444](https://github.com/IsmaelMartinez/teams-for-linux/commit/568244480fe166054bc6005744bf8c2eaf59a932))
+
+
+### Bug Fixes
+
+* cap the window icon so x11 does not drop it ([#3030](https://github.com/IsmaelMartinez/teams-for-linux/issues/3030)) ([e224058](https://github.com/IsmaelMartinez/teams-for-linux/commit/e224058999c275f3c779456ed8cd29ccbb5192b1))
+* **config:** deep-merge object option defaults and system/user config ([#3014](https://github.com/IsmaelMartinez/teams-for-linux/issues/3014)) ([ab3a853](https://github.com/IsmaelMartinez/teams-for-linux/commit/ab3a853e56b36a1f8eaea94a33841df17bc62ea9))
+* **ipc:** make a pending once() listener removable through the security wrapper ([#3055](https://github.com/IsmaelMartinez/teams-for-linux/issues/3055)) ([6c91de8](https://github.com/IsmaelMartinez/teams-for-linux/commit/6c91de8b3f4c1babdba9cc02b457eb12829dbbe0))
+* **links:** catch openExternal rejection so unknown schemes don't exit the app ([#3049](https://github.com/IsmaelMartinez/teams-for-linux/issues/3049)) ([79afc94](https://github.com/IsmaelMartinez/teams-for-linux/commit/79afc9474f6c4cdf9c3ab0b558d096e94d087eae))
+* **lint:** lint the whole repo and fix the errors it surfaces ([#3015](https://github.com/IsmaelMartinez/teams-for-linux/issues/3015)) ([a5f8811](https://github.com/IsmaelMartinez/teams-for-linux/commit/a5f881169e1d14af428d4e463beb258cdea725e9))
+* **mqtt:** recognize phone and call-queue calls as incoming calls ([#3021](https://github.com/IsmaelMartinez/teams-for-linux/issues/3021)) ([a17c77f](https://github.com/IsmaelMartinez/teams-for-linux/commit/a17c77fe379a3f00f3df41d8a744fc151ad06fd0)), closes [#3019](https://github.com/IsmaelMartinez/teams-for-linux/issues/3019)
+* **security:** block webview attach and validate sticker import bytes ([#3053](https://github.com/IsmaelMartinez/teams-for-linux/issues/3053)) ([9666718](https://github.com/IsmaelMartinez/teams-for-linux/commit/9666718a578e1171ca69f2174b5b06c2b7126c19))
+* **security:** stop leaking ipcRenderer and pin picker IPC to app pages ([#3054](https://github.com/IsmaelMartinez/teams-for-linux/issues/3054)) ([ce6c9d4](https://github.com/IsmaelMartinez/teams-for-linux/commit/ce6c9d42b18e63dd4ac8deed296e0121c1dd591e))
+* **webauthn:** log a hint when a subframe is skipped from the allowlist ([#3052](https://github.com/IsmaelMartinez/teams-for-linux/issues/3052)) ([e9c54ee](https://github.com/IsmaelMartinez/teams-for-linux/commit/e9c54eedcd3b3555fa3b8762f7b9842a5d6e339f))
+* **window:** enforce a minimum window size to prevent a 1x1 restore ([#3003](https://github.com/IsmaelMartinez/teams-for-linux/issues/3003)) ([d6c858c](https://github.com/IsmaelMartinez/teams-for-linux/commit/d6c858ca9bf1a560abea54ffd540e311f3816a38))
+* **window:** show app.title in the window title to tell instances apart ([#3038](https://github.com/IsmaelMartinez/teams-for-linux/issues/3038)) ([7025750](https://github.com/IsmaelMartinez/teams-for-linux/commit/702575094a91a23a16702a5302863c09dde5e216))
+
+
+### Documentation
+
+* **roadmap:** track WebAuthn on Linux and the Flatpak libfido2 bundle ([#3024](https://github.com/IsmaelMartinez/teams-for-linux/issues/3024)) ([d6a427e](https://github.com/IsmaelMartinez/teams-for-linux/commit/d6a427e8a0bdcca167dd9f45301daaab0bc2c653)), closes [#3008](https://github.com/IsmaelMartinez/teams-for-linux/issues/3008)
+
+
+### CI/CD
+
+* guard release-please PR output against empty step env ([#3017](https://github.com/IsmaelMartinez/teams-for-linux/issues/3017)) ([7de6f20](https://github.com/IsmaelMartinez/teams-for-linux/commit/7de6f203b7144cfd05f609157743e0d290db6f2c))
+
+
+### Maintenance
+
+* **deps-dev:** bump brace-expansion from 1.1.18 to 1.1.21 ([#3040](https://github.com/IsmaelMartinez/teams-for-linux/issues/3040)) ([f6337d0](https://github.com/IsmaelMartinez/teams-for-linux/commit/f6337d0fe14bc11fe6056a0feb1277af7e77c93e))
+* **deps-dev:** bump undici from 6.28.0 to 6.29.0 ([#3039](https://github.com/IsmaelMartinez/teams-for-linux/issues/3039)) ([ba51c8f](https://github.com/IsmaelMartinez/teams-for-linux/commit/ba51c8f7813d6b07550a8a2ca8ff47c3e7156f36))
+* **deps:** bump actions/deploy-pages from 5.0.0 to 5.0.1 ([#3045](https://github.com/IsmaelMartinez/teams-for-linux/issues/3045)) ([36df800](https://github.com/IsmaelMartinez/teams-for-linux/commit/36df800ced5d9187f79c9935914f0aaf920e6c38))
+* **deps:** bump brace-expansion from 5.0.9 to 5.0.12 in /docs-site ([#3041](https://github.com/IsmaelMartinez/teams-for-linux/issues/3041)) ([ed60305](https://github.com/IsmaelMartinez/teams-for-linux/commit/ed603056943300cd60632a4473390d070cfef53c))
+* **deps:** bump canonical/setup-lxd ([#3046](https://github.com/IsmaelMartinez/teams-for-linux/issues/3046)) ([cb1e6b2](https://github.com/IsmaelMartinez/teams-for-linux/commit/cb1e6b24c2424a2d00a8078be45a8b585fa5721f))
+* **deps:** bump dompurify from 3.4.13 to 3.4.16 in /docs-site ([#3042](https://github.com/IsmaelMartinez/teams-for-linux/issues/3042)) ([9124865](https://github.com/IsmaelMartinez/teams-for-linux/commit/91248651504fcdbb7469f47a0a933ab9a52dcc86))
+* **deps:** bump fast-uri to 3.1.8 to clear Dependabot alerts ([#3051](https://github.com/IsmaelMartinez/teams-for-linux/issues/3051)) ([677568b](https://github.com/IsmaelMartinez/teams-for-linux/commit/677568b6e3a5d6e9cca67b92c060066fc567458d))
+* **deps:** bump github/codeql-action from 4.37.9 to 4.38.2 ([#3047](https://github.com/IsmaelMartinez/teams-for-linux/issues/3047)) ([460a962](https://github.com/IsmaelMartinez/teams-for-linux/commit/460a962657ba42131468a17e4dab0302facfaf41))
+* **deps:** bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml ([#3043](https://github.com/IsmaelMartinez/teams-for-linux/issues/3043)) ([ec737c1](https://github.com/IsmaelMartinez/teams-for-linux/commit/ec737c1b5bfb9d12f70b2259551ad57ca4ec763b))
+* **deps:** bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml ([#3044](https://github.com/IsmaelMartinez/teams-for-linux/issues/3044)) ([fa89472](https://github.com/IsmaelMartinez/teams-for-linux/commit/fa89472205246bdd6c309d1a997f5f1a9a01f3a3))
+* **deps:** bump ip-address from 10.4.0 to 10.7.2 ([#3029](https://github.com/IsmaelMartinez/teams-for-linux/issues/3029)) ([49ba414](https://github.com/IsmaelMartinez/teams-for-linux/commit/49ba4148bc1f6feebf15a4767d1d152f002316be))
+* **deps:** bump the minor-and-patch group with 2 updates ([#3026](https://github.com/IsmaelMartinez/teams-for-linux/issues/3026)) ([fac9934](https://github.com/IsmaelMartinez/teams-for-linux/commit/fac9934e8424925ff3c07a7f7c834406c7c24268))
+* **deps:** bump undici from 7.29.0 to 7.30.0 in /docs-site ([#3028](https://github.com/IsmaelMartinez/teams-for-linux/issues/3028)) ([f0aea9b](https://github.com/IsmaelMartinez/teams-for-linux/commit/f0aea9b8bddce2a0f080599132e01d3970da6a79))
+
 ## [2.23.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.22.0...v2.23.0) (2026-09-26)
 
 
