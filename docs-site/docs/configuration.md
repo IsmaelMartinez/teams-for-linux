@@ -158,7 +158,7 @@ ignored. The examples below use whichever spelling actually applies.
 |--------|------|---------|-------------|
 | `tray.enabled` | `boolean` | `true` | Enable tray icon |
 | `trayIconEnabled` | `boolean` | `true` | Deprecated, use `tray.enabled` |
-| `tray.icon` | `string` | `""` | Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu |
+| `tray.icon` | `string` | `""` | Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu. On Linux the menu also copies it into the user icon theme so the taskbar and launcher follow (not under Snap or Flatpak) |
 | `appIcon` | `string` | `""` | Deprecated, use `tray.icon` |
 | `tray.iconType` | `string` | `"default"` | Type of tray icon. Choices: `default`, `light`, `dark` |
 | `appIconType` | `string` | `"default"` | Deprecated, use `tray.iconType` |
