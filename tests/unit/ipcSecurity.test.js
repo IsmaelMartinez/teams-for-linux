@@ -124,6 +124,23 @@ describe('IPC security - listener removal', () => {
     assert.strictEqual(ipcMain.listenerCount(ALLOWED), 0);
   });
 
+  // The screen-share pickers register their reply with once() and remove it
+  // when the window closes without a choice. If that removal misses, every
+  // cancelled picker leaves a listener behind.
+  it('removes a once() listener that has not fired yet', () => {
+    const ipcMain = fakeIpcMain();
+    installIpcSecurity(ipcMain, silent);
+    let calls = 0;
+    const handler = () => { calls++; };
+
+    ipcMain.once(ALLOWED, handler);
+    ipcMain.removeListener(ALLOWED, handler);
+    ipcMain.emit(ALLOWED, {});
+
+    assert.strictEqual(calls, 0);
+    assert.strictEqual(ipcMain.listenerCount(ALLOWED), 0);
+  });
+
   it('clears only the channel removeAllListeners was given', () => {
     const ipcMain = fakeIpcMain();
     installIpcSecurity(ipcMain, silent);
