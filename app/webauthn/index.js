@@ -1,22 +1,10 @@
-// app/webauthn/index.js
-
 /**
- * WebAuthn / FIDO2 Hardware Security Key Support
- *
- * Two-layer interception:
- * Layer 1 (preload): webauthnOverride.js patches navigator.credentials in the
- *   main frame via the preload script. This works because contextIsolation is false.
- * Layer 2 (frame injection): This module injects the override into subframes
- *   (iframes) where the preload doesn't run. Microsoft's login page loads in
- *   the main frame but the WebAuthn ceremony may be triggered from a child frame.
- *   We use did-frame-finish-load + webFrameMain.executeJavaScript() following
- *   the same pattern as customCSS/index.js.
- *
- * Linux-only: on macOS/Windows, Electron's Chromium handles WebAuthn natively.
- * Requires fido2-tools system package on Linux.
+ * Linux WebAuthn interception for hardware keys and opt-in phone passkeys.
+ * The non-isolated preload handles the main frame; injected overrides handle
+ * login subframes where that preload does not run. Other platforms use Chromium.
  */
 
-const { BrowserWindow, ipcMain, webFrameMain } = require("electron");
+const { app, BrowserWindow, ipcMain, webFrameMain } = require("electron");
 const fido2Backend = require("./fido2Backend");
 const { requestPinPreCollect, requestPinModal } = require("./pinDialog");
 const { showTouchPrompt } = require("./touchPrompt");
@@ -40,6 +28,7 @@ let allowedOrigins = new Set(DEFAULT_ORIGINS);
 const skippedOrigins = new Set();
 
 let initialized = false;
+let phoneBackend = null;
 
 /**
  * Validate that the request origin is an allowed login origin.
@@ -80,8 +69,7 @@ async function collectPin(sender) {
  * Handle a webauthn:create or webauthn:get IPC request.
  * Shared logic for both channels to reduce duplication.
  *
- * For operations requiring userVerification, the PIN is collected upfront
- * (Strategy A) before spawning fido2-tools, avoiding the async stderr race.
+ * Hardware requests collect the required PIN before spawning fido2-tools.
  *
  * @param {string} operation - "create" or "get"
  * @param {Electron.IpcMainInvokeEvent} event
@@ -114,6 +102,8 @@ async function handleWebauthnRequest(operation, event, options) {
     });
     return { success: false, error: "SecurityError: origin not allowed" };
   }
+
+  if (phoneBackend) return phoneBackend.handle(operation, event, options);
 
   // timeoutSec is the timeout the relying party asked for. It is the number that
   // tells us whether a slow ceremony (PIN entry plus waiting for the touch) can
@@ -210,8 +200,8 @@ function logSkippedFrame(frameOrigin) {
  * Called from did-frame-finish-load for non-main frames.
  *
  * The injected script patches navigator.credentials in the frame's context and
- * uses window.parent.postMessage to relay WebAuthn calls to the main frame,
- * where the preload's ipcRenderer forwards them to the main process.
+ * relays calls through the main-frame preload. Phone mode uses window.top to
+ * reach it from nested frames; hardware mode retains the parent relay.
  *
  * @param {Electron.WebFrameMain} wf - The subframe to inject into
  */
@@ -232,9 +222,6 @@ function injectIntoFrame(wf) {
     originClass: log.classifyOrigin(frameOrigin),
   });
 
-  // The injected script patches navigator.credentials in the frame and uses
-  // postMessage to communicate with the parent frame (which has ipcRenderer).
-  // The parent preload listens for these messages and relays them via IPC.
   wf.executeJavaScript(String.raw`
     (function() {
       if (window.__webauthnOverrideInjected) return;
@@ -242,6 +229,10 @@ function injectIntoFrame(wf) {
 
       if (!navigator.credentials || !navigator.credentials.create) return;
 
+      const phone = ${Boolean(phoneBackend)};
+      const relayWindow = phone ? window.top : window.parent;
+      const phoneFrameId = {processId: ${wf.processId}, routingId: ${wf.routingId}};
+      const permitted = () => (document.permissionsPolicy || document.featurePolicy)?.allowsFeature("publickey-credentials-get") === true;
       const origCreate = navigator.credentials.create.bind(navigator.credentials);
       const origGet = navigator.credentials.get.bind(navigator.credentials);
 
@@ -286,30 +277,41 @@ function injectIntoFrame(wf) {
       function serGet(pk) {
         return {
           challenge: bufToB64url(pk.challenge), rpId: pk.rpId || "",
-          timeout: pk.timeout ? Math.floor(pk.timeout/1000) : 60,
+          timeout: phone ? (pk.timeout ?? 60000) / 1000 : pk.timeout ? Math.floor(pk.timeout/1000) : 60,
           userVerification: pk.userVerification || "preferred",
           allowCredentials: (pk.allowCredentials || []).map(c => ({ id: bufToB64url(c.id), type: c.type, transports: c.transports }))
         };
       }
 
-      function ipcInvoke(channel, data) {
+      function ipcInvoke(channel, data, signal) {
+        if (phone && signal?.aborted) return Promise.reject(new DOMException("Cancelled", "AbortError"));
         return new Promise((resolve, reject) => {
           const id = crypto.randomUUID();
+          let timer;
+          const cleanup = () => { window.removeEventListener("message", onMsg); signal?.removeEventListener("abort", abort); clearTimeout(timer); };
+          const send = (payload) => relayWindow.postMessage({ type: "webauthn-request", id, channel, data: payload }, "*");
+          const abort = () => {
+            cleanup();
+            send({ cancelRequestId: id, phoneFrameId });
+            reject(new DOMException("Cancelled", "AbortError"));
+          };
           function onMsg(e) {
-            if (e.data?.type === "webauthn-response" && e.data.id === id) {
-              window.removeEventListener("message", onMsg);
-              if (e.data.error) reject(new DOMException(e.data.error, "NotAllowedError"));
-              else resolve(e.data.result);
-            }
+            if (e.source !== relayWindow || e.data?.type !== "webauthn-response" || e.data.id !== id) return;
+            cleanup();
+            if (e.data.error) {
+              const name = /^(SecurityError|NotSupportedError|NotAllowedError|AbortError|InvalidStateError|OperationError|TypeError):/.exec(e.data.error)?.[1] || "NotAllowedError";
+              reject(new DOMException(e.data.error, name));
+            } else resolve(e.data.result);
           }
           window.addEventListener("message", onMsg);
-          window.parent.postMessage({ type: "webauthn-request", id, channel, data }, "*");
-          setTimeout(() => { window.removeEventListener("message", onMsg); reject(new DOMException("Timeout", "NotAllowedError")); }, 120000);
+          if (phone) signal?.addEventListener("abort", abort, {once:true});
+          send(phone ? {...data, requestId:id, phoneFrameId} : data);
+          timer = setTimeout(() => { cleanup(); if (phone) send({cancelRequestId:id,phoneFrameId}); reject(new DOMException("Timeout", "NotAllowedError")); }, 120000);
         });
       }
 
       navigator.credentials.create = async function(opts) {
-        if (!opts?.publicKey) return origCreate(opts);
+        if (!opts?.publicKey || phone) return origCreate(opts);
         console.info("[WEBAUTHN:frame] Intercepting credentials.create()");
         const r = await ipcInvoke("webauthn:create", serCreate(opts.publicKey));
         const raw = b64urlToBuf(r.rawId);
@@ -325,9 +327,10 @@ function injectIntoFrame(wf) {
 
       navigator.credentials.get = async function(opts) {
         if (!opts?.publicKey) return origGet(opts);
-        if (opts.mediation === "conditional") return origGet(opts);
+        if (opts.mediation === "conditional" || (phone && opts.mediation === "silent")) return origGet(opts);
+        if (phone && !permitted()) throw new DOMException("Frame policy blocks passkeys", "SecurityError");
         console.info("[WEBAUTHN:frame] Intercepting credentials.get()");
-        const r = await ipcInvoke("webauthn:get", serGet(opts.publicKey));
+        const r = await ipcInvoke("webauthn:get", serGet(opts.publicKey), phone ? opts.signal : undefined);
         const raw = b64urlToBuf(r.rawId);
         const authData = b64urlToBuf(r.authenticatorData);
         // The real response prototype matters: the bridge/fido login page
@@ -365,14 +368,18 @@ async function initialize(mainWindow, config) {
   log.setDebug(config?.auth?.webauthn?.debug);
   allowedOrigins = buildAllowedOrigins(config?.auth?.webauthn?.extraOrigins);
 
-  const available = await fido2Backend.isAvailable();
-  if (!available) {
+  const phone = config?.auth?.webauthn?.backend === "phone";
+  if (phone) {
+    const { createPhoneBackend } = require("./phoneBackend");
+    phoneBackend = createPhoneBackend({ electron: require("electron"), mainWindow,
+      helperPath: config.auth.webauthn.helperPath, origins: allowedOrigins });
+    app.once("before-quit", () => phoneBackend.dispose());
+  } else if (!await fido2Backend.isAvailable()) {
     log.warn("[WEBAUTHN] fido2-tools not found. Install with: sudo apt install fido2-tools");
     log.warn("[WEBAUTHN] Hardware key support will not be available");
     return;
   }
-
-  log.info("[WEBAUTHN] fido2-tools detected, registering IPC handlers");
+  log.info("[WEBAUTHN] Registering WebAuthn handlers", { backend: phone ? "phone" : "hardware" });
 
   // Handle credential creation requests from renderer
   ipcMain.handle("webauthn:create", (event, options) => handleWebauthnRequest("create", event, options));
@@ -399,13 +406,14 @@ async function initialize(mainWindow, config) {
   }
 
   initialized = true;
-  log.info("[WEBAUTHN] Hardware security key support initialized", {
+  log.info("[WEBAUTHN] WebAuthn support initialized", {
     extraOrigins: allowedOrigins.size - DEFAULT_ORIGINS.length,
   });
 }
 
 module.exports = {
   initialize,
+  _injectIntoFrame: injectIntoFrame,
   // Exported for tests: the allowlist is the security gate, so it is asserted
   // on directly rather than through a replica.
   _applyExtraOrigins: (extraOrigins) => {

@@ -1,11 +1,8 @@
-// app/browser/tools/webauthnOverride.js
-
 /**
  * WebAuthn Override Browser Tool
  *
  * Monkey-patches navigator.credentials.create() and .get() to route
- * WebAuthn requests through IPC to the main process, which uses
- * fido2-tools for hardware security key communication.
+ * WebAuthn requests through IPC to the selected Linux backend.
  *
  * Linux-only: on macOS/Windows, Electron's Chromium handles WebAuthn natively.
  */
@@ -38,11 +35,12 @@ function init(config, ipcRenderer) {
 
   console.info("[WEBAUTHN] Patching navigator.credentials (preload, main frame)");
 
+  const phone = config.auth.webauthn.backend === "phone";
   const originalCreate = navigator.credentials.create.bind(navigator.credentials);
   const originalGet = navigator.credentials.get.bind(navigator.credentials);
 
   navigator.credentials.create = async (options) => {
-    if (!options?.publicKey) {
+    if (!options?.publicKey || phone) {
       return originalCreate(options);
     }
 
@@ -71,17 +69,36 @@ function init(config, ipcRenderer) {
       return originalGet(options);
     }
 
-    // Do not intercept conditional mediation (passkey autofill probes).
-    // Microsoft's login page calls credentials.get({ mediation: "conditional" })
-    // on page load to check for discoverable credentials. This is an ambient
-    // check that should be handled natively, not routed to fido2-tools which
-    // would immediately trigger device discovery and a PIN dialog.
-    if (options.mediation === "conditional") {
+    // Autofill probes must not trigger hardware PIN or phone QR prompts.
+    if (options.mediation === "conditional" || (phone && options.mediation === "silent")) {
       console.debug("[WEBAUTHN] Skipping conditional mediation (passkey autofill)");
       return originalGet(options);
     }
 
     console.info("[WEBAUTHN] Intercepting credentials.get()");
+
+    if (phone) {
+      const policy = document.permissionsPolicy || document.featurePolicy;
+      if (policy?.allowsFeature("publickey-credentials-get") !== true) throw new DOMException("Frame policy blocks passkeys", "SecurityError");
+      if (options.signal?.aborted) throw new DOMException("Cancelled", "AbortError");
+      const requestId = crypto.randomUUID();
+      const cancel = async () => {
+        try {
+          await ipcRenderer.invoke("webauthn:get", { cancelRequestId: requestId });
+        } catch {
+          // Navigation may remove the IPC endpoint while aborting the page.
+        }
+      };
+      options.signal?.addEventListener("abort", cancel, { once: true });
+      try {
+        const result = await ipcRenderer.invoke("webauthn:get", { ...serializeGetOptions(options.publicKey, true), requestId });
+        if (options.signal?.aborted) throw new DOMException("Cancelled", "AbortError");
+        if (!result.success) throw mapError(result.error);
+        return reconstructGetResponse(result.data);
+      } finally {
+        options.signal?.removeEventListener("abort", cancel);
+      }
+    }
 
     // Observe only, never act on it. Knowing whether the page gives up on a
     // ceremony (and after how long) is what separates "the user was slow to
@@ -216,11 +233,14 @@ function serializeCreateOptions(publicKey) {
   };
 }
 
-function serializeGetOptions(publicKey) {
+function serializeGetOptions(publicKey, phone = false) {
   return {
     challenge: bufferToBase64url(publicKey.challenge),
     rpId: publicKey.rpId || "",
-    timeout: publicKey.timeout ? Math.floor(publicKey.timeout / 1000) : 60,
+    // The phone adapter accepts fractional seconds; preserve subsecond budgets.
+    // Keep the existing integer-seconds contract for fido2-tools.
+    timeout: phone ? (publicKey.timeout ?? 60000) / 1000 :
+      publicKey.timeout ? Math.floor(publicKey.timeout / 1000) : 60,
     userVerification: publicKey.userVerification || "preferred",
     allowCredentials: (publicKey.allowCredentials || []).map((c) => ({
       id: bufferToBase64url(c.id),
@@ -332,6 +352,8 @@ function reconstructGetResponse(data) {
  * Map error strings to appropriate DOMExceptions.
  */
 function mapError(errorMessage) {
+  const explicit = /^(SecurityError|NotSupportedError|NotAllowedError|AbortError|InvalidStateError|OperationError|TypeError):/.exec(errorMessage || "");
+  if (explicit) return new DOMException(errorMessage, explicit[1]);
   const msg = (errorMessage || "").toLowerCase();
   if (msg.includes("notallowederror") || msg.includes("no fido2")) {
     return new DOMException(errorMessage, "NotAllowedError");
