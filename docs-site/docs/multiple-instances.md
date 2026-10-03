@@ -295,6 +295,10 @@ $HOME/.config/
 - **JSON syntax**: Validate JSON syntax using `jq` or online validators
 - **File permissions**: Ensure config files are readable by the application
 
+## Community Tools
+
+- [teams-for-linux-multiclient](https://github.com/JamesStuder/teams-for-linux-multiclient) (KDE Plasma 6): runs one isolated instance per tenant using the `--class` and `--user-data-dir` options above, and replaces the per-instance tray icons with a single icon that shows the combined unread count and a submenu per instance. Not maintained by this project.
+
 ## Related Documentation
 
 - [Configuration Options](configuration.md) - All available configuration options
