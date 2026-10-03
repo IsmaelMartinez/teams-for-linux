@@ -31,7 +31,6 @@ const { validateIpcChannel, isSenderAllowed } = require("./ipcValidator");
 function installIpcSecurity(ipcMain, logger = console) {
   const originalHandle = ipcMain.handle.bind(ipcMain);
   const originalOn = ipcMain.on.bind(ipcMain);
-  const originalOnce = ipcMain.once.bind(ipcMain);
   const originalRemoveListener = ipcMain.removeListener.bind(ipcMain);
   const originalRemoveAllListeners = ipcMain.removeAllListeners.bind(ipcMain);
 
@@ -113,15 +112,18 @@ function installIpcSecurity(ipcMain, logger = console) {
     return originalOn(channel, entry.wrapper);
   };
 
+  // Registered with the original `on` and removed by hand on the first allowed
+  // event. The emitter's own `once` registers through the wrapped `on` above,
+  // which stores a second wrapper that removeListener(channel, handler) can
+  // never find, so a once() removed before it fired stayed registered.
   ipcMain.once = (channel, handler) => {
     const entry = remember(channel, handler, (event, ...args) => {
-      // The emitter has already dropped this wrapper by the time it runs, so
-      // drop our record of it too rather than leave a stale entry behind.
-      forgetEntry(channel, handler, entry);
       if (!isAllowed(channel, event, args, "event")) return;
+      originalRemoveListener(channel, entry.wrapper);
+      forgetEntry(channel, handler, entry);
       return handler(event, ...args);
     });
-    return originalOnce(channel, entry.wrapper);
+    return originalOn(channel, entry.wrapper);
   };
 
   ipcMain.removeListener = (channel, handler) => {
