@@ -172,7 +172,7 @@ class NavigationButtons {
     this.updateButtonStates();
 
     if (globalThis.electronAPI?.onNavigationStateChanged) {
-      globalThis.electronAPI.onNavigationStateChanged((event, canGoBack, canGoForward) => {
+      globalThis.electronAPI.onNavigationStateChanged((canGoBack, canGoForward) => {
         this.updateButtonStates(canGoBack, canGoForward);
       });
     }
