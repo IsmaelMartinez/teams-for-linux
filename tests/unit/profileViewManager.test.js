@@ -44,6 +44,9 @@ class FakeWebContents {
   }
   removeListener() {}
   send() {}
+  focus() {
+    this.focusCalls = (this.focusCalls || 0) + 1;
+  }
   isDestroyed() {
     return this._destroyed;
   }
@@ -59,6 +62,9 @@ class FakeWebContentsView {
   }
   setBounds() {}
   setBackgroundColor() {}
+  setVisible(visible) {
+    this.visible = visible;
+  }
   // Mirror Electron's observed behaviour when a page destroys its own
   // webContents: the `destroyed` handlers fire and afterwards the view's
   // `webContents` accessor no longer returns a usable object. Any production
@@ -107,7 +113,17 @@ function fakeWindow() {
     once() {},
     removeListener() {},
     getContentSize: () => [1200, 800],
-    contentView: { addChildView() {}, removeChildView() {} },
+    contentView: {
+      attached: new Set(),
+      removed: [],
+      addChildView(view) {
+        this.attached.add(view);
+      },
+      removeChildView(view) {
+        this.attached.delete(view);
+        this.removed.push(view);
+      },
+    },
   };
 }
 
@@ -422,5 +438,43 @@ describe('ProfileViewManager per-view load hook (#2979)', () => {
       viewB.webContents,
       viewA.webContents,
     ]);
+  });
+});
+
+// #3057: on Linux a profile view that loads while detached and is attached
+// later paints but never receives input. Views are therefore attached at
+// creation and a switch only toggles visibility; nothing is detached.
+describe('ProfileViewManager keeps profile views attached (#3057)', () => {
+  it('attaches every profile view at creation, visible only when active', () => {
+    const { win } = build([PROFILE_A, PROFILE_B]);
+    const [viewA, viewB] = createdViews;
+    assert.ok(win.contentView.attached.has(viewA));
+    assert.ok(win.contentView.attached.has(viewB));
+    assert.strictEqual(viewA.visible, true);
+    assert.strictEqual(viewB.visible, false);
+  });
+
+  it('switches by toggling visibility and focusing, never by detaching', () => {
+    const { win, pm } = build([LEGACY, PROFILE_A, PROFILE_B]);
+    const [viewA, viewB] = createdViews;
+
+    pm.switch('profile-b');
+    assert.strictEqual(viewB.visible, true);
+    assert.strictEqual(viewA.visible, false);
+    assert.ok(viewB.webContents.focusCalls >= 1);
+
+    pm.switch('profile-0');
+    assert.strictEqual(viewA.visible, false);
+    assert.strictEqual(viewB.visible, false);
+    assert.ok(win.webContents.focusCalls >= 1);
+
+    pm.switch('profile-a');
+    assert.strictEqual(viewA.visible, true);
+    assert.deepStrictEqual(win.contentView.removed, []);
+  });
+
+  it('turns off focus-on-navigation so a background profile cannot take focus', () => {
+    const source = require('node:fs').readFileSync(pvmPath, 'utf8');
+    assert.match(source, /focusOnNavigation:\s*false/);
   });
 });

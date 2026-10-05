@@ -443,6 +443,10 @@ class ProfileViewManager {
         plugins: true,
         spellcheck: true,
         webviewTag: false,
+        // Every profile view stays attached (hidden while inactive, #3057),
+        // so a background profile's navigation must not take keyboard focus
+        // from the visible one. #showActive focuses the active view instead.
+        focusOnNavigation: false,
         // SECURITY: matches the root window's webPreferences
         // (browserWindowManager.js). Required for Teams DOM access via
         // ReactHandler; compensated by IPC validation.
@@ -494,6 +498,22 @@ class ProfileViewManager {
       activate: () => this.#activate(profileId),
     });
     this.#applyBounds(view);
+
+    // Attach now and keep attached, hidden until shown. On Linux, a view
+    // that loads Teams while detached and is attached later paints but never
+    // receives input (Electron 42.11+/43, reproduced under Xvfb with real
+    // X11 input); toggling visibility on an attached view does not hit it
+    // (#3057). Re-raise the pill so the new view does not cover it.
+    view.setVisible(false);
+    this.#window.contentView.addChildView(view);
+    this.#raiseChrome();
+    // focusOnNavigation is off, so give the active profile focus once its
+    // page has loaded (startup, reloads).
+    view.webContents.on("did-finish-load", () => {
+      if (this.#profilesManager.getActive()?.id === profileId) {
+        view.webContents.focus();
+      }
+    });
 
     const url = profile.url || this.#config.url;
     view.webContents.loadURL(url, {
@@ -629,6 +649,7 @@ class ProfileViewManager {
       // stays put (it's not in #views) and is re-raised below.
       this.#hideAllOverlays();
       this.#raiseChrome();
+      this.#window.webContents.focus();
       return;
     }
     this.#hideAllOverlays();
@@ -642,19 +663,18 @@ class ProfileViewManager {
       return;
     }
     this.#applyBounds(view);
+    view.setVisible(true);
+    // addChildView on an already attached view only moves it to the top.
     this.#window.contentView.addChildView(view);
-    // Adding the profile view puts it on top; re-raise the pill so it stays
-    // above the active content.
+    // Re-raise the pill so it stays above the active content.
     this.#raiseChrome();
+    view.webContents.focus();
   }
 
+  // Hide rather than detach: see #createView (#3057).
   #hideAllOverlays() {
     for (const view of this.#views.values()) {
-      try {
-        this.#window.contentView.removeChildView(view);
-      } catch {
-        // Already detached; ignore.
-      }
+      view.setVisible(false);
     }
   }
 
