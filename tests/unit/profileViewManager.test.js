@@ -17,6 +17,7 @@ const mapPath = require.resolve('../../app/mainAppWindow/senderProfileMap');
 let nextWcId;
 let createdViews;
 let partitionSessions; // partition → { clearCalls }
+let ipcHandlers; // channel → ipcMain.handle handler
 
 class FakeWebContents {
   constructor() {
@@ -97,7 +98,9 @@ function installElectronMock() {
         },
       },
       ipcMain: {
-        handle() {},
+        handle(channel, handler) {
+          ipcHandlers[channel] = handler;
+        },
         on() {},
         removeHandler() {},
         removeListener() {},
@@ -112,6 +115,10 @@ function fakeWindow() {
     on() {},
     once() {},
     removeListener() {},
+    focused: true,
+    isFocused() {
+      return this.focused;
+    },
     getContentSize: () => [1200, 800],
     contentView: {
       attached: new Set(),
@@ -161,6 +168,7 @@ beforeEach(() => {
   nextWcId = 100;
   createdViews = [];
   partitionSessions = {};
+  ipcHandlers = {};
   installElectronMock();
   delete require.cache[pvmPath];
   delete require.cache[mapPath];
@@ -481,6 +489,34 @@ describe('ProfileViewManager keeps profile views attached (#3057)', () => {
     viewB.webContents.emit('did-finish-load');
     assert.strictEqual(viewA.webContents.focusCalls, before + 1);
     assert.strictEqual(viewB.webContents.focusCalls || 0, 0);
+  });
+
+  it('refocuses the active view when the switcher closes, only while the window is focused', () => {
+    const { win } = build([PROFILE_A, PROFILE_B]);
+    const [viewA] = createdViews;
+    const chrome = createdViews.at(-1);
+    const setExpanded = ipcHandlers['profile-switcher-set-expanded'];
+    const event = { sender: chrome.webContents };
+
+    setExpanded(event, true);
+    const before = viewA.webContents.focusCalls || 0;
+    viewA.webContents.emit('did-finish-load');
+    assert.strictEqual(viewA.webContents.focusCalls || 0, before);
+
+    setExpanded(event, false);
+    assert.strictEqual(viewA.webContents.focusCalls, before + 1);
+
+    win.focused = false;
+    setExpanded(event, true);
+    setExpanded(event, false);
+    assert.strictEqual(viewA.webContents.focusCalls, before + 1);
+  });
+
+  it('detaches a profile view whose page destroyed its own webContents', () => {
+    const { win } = build([PROFILE_A, PROFILE_B]);
+    const [, viewB] = createdViews;
+    viewB.destroyWebContents();
+    assert.ok(!win.contentView.attached.has(viewB));
   });
 
   it('turns off focus-on-navigation so a background profile cannot take focus', () => {

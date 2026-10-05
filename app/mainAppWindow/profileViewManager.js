@@ -189,6 +189,11 @@ class ProfileViewManager {
       this.#chromeExpanded = !!expanded;
       this.#applyChromeBounds();
       this.#raiseChrome();
+      // A load while the dropdown was open skipped its focus (see
+      // #createView), so hand focus back to the active profile on close.
+      // Only while the window is focused, so a blur-driven close does not
+      // pull focus back into the app.
+      if (!this.#chromeExpanded && this.#window.isFocused()) this.#focusActive();
     };
     // Grow the view to full-window while the dropdown is open (so the scrim
     // covers the app and the dropdown isn't clipped), shrink back to the
@@ -484,6 +489,12 @@ class ProfileViewManager {
     // and a later remove must clear the partition's storage (ADR-020 remove
     // contract) even though the view is gone.
     view.webContents.once("destroyed", () => {
+      // Every view stays attached (#3057), so detach the dead one too.
+      try {
+        this.#window.contentView.removeChildView(view);
+      } catch {
+        // Window already gone; nothing to detach from.
+      }
       this.#views.delete(profileId);
       this.#registry.unregister(wcId);
       this.#teardownDescendants(profileId);
@@ -673,6 +684,16 @@ class ProfileViewManager {
     // Re-raise the pill so it stays above the active content.
     this.#raiseChrome();
     view.webContents.focus();
+  }
+
+  #focusActive() {
+    const active = this.#profilesManager.getActive();
+    if (!active) return;
+    const wc =
+      active.partition === LEGACY_PARTITION
+        ? this.#window.webContents
+        : this.#views.get(active.id)?.webContents;
+    if (wc && !wc.isDestroyed()) wc.focus();
   }
 
   // Hide rather than detach: see #createView (#3057).
