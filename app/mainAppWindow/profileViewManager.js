@@ -189,6 +189,11 @@ class ProfileViewManager {
       this.#chromeExpanded = !!expanded;
       this.#applyChromeBounds();
       this.#raiseChrome();
+      // A load while the dropdown was open skipped its focus (see
+      // #createView), so hand focus back to the active profile on close.
+      // Only while the window is focused, so a blur-driven close does not
+      // pull focus back into the app.
+      if (!this.#chromeExpanded && this.#window.isFocused()) this.#focusActive();
     };
     // Grow the view to full-window while the dropdown is open (so the scrim
     // covers the app and the dropdown isn't clipped), shrink back to the
@@ -443,6 +448,10 @@ class ProfileViewManager {
         plugins: true,
         spellcheck: true,
         webviewTag: false,
+        // Every profile view stays attached (hidden while inactive, #3057),
+        // so a background profile's navigation must not take keyboard focus
+        // from the visible one. #showActive focuses the active view instead.
+        focusOnNavigation: false,
         // SECURITY: matches the root window's webPreferences
         // (browserWindowManager.js). Required for Teams DOM access via
         // ReactHandler; compensated by IPC validation.
@@ -480,6 +489,12 @@ class ProfileViewManager {
     // and a later remove must clear the partition's storage (ADR-020 remove
     // contract) even though the view is gone.
     view.webContents.once("destroyed", () => {
+      // Every view stays attached (#3057), so detach the dead one too.
+      try {
+        this.#window.contentView.removeChildView(view);
+      } catch {
+        // Window already gone; nothing to detach from.
+      }
       this.#views.delete(profileId);
       this.#registry.unregister(wcId);
       this.#teardownDescendants(profileId);
@@ -494,6 +509,26 @@ class ProfileViewManager {
       activate: () => this.#activate(profileId),
     });
     this.#applyBounds(view);
+
+    // Attach now and keep attached, hidden until shown. On Linux, a view
+    // that loads Teams while detached and is attached later paints but never
+    // receives input (Electron 42.11+/43, reproduced under Xvfb with real
+    // X11 input); toggling visibility on an attached view does not hit it
+    // (#3057). Re-raise the pill so the new view does not cover it.
+    view.setVisible(false);
+    this.#window.contentView.addChildView(view);
+    this.#raiseChrome();
+    // focusOnNavigation is off, so give the active profile focus once its
+    // page has loaded (startup, reloads), unless the switcher dropdown is
+    // open: it closes on blur.
+    view.webContents.on("did-finish-load", () => {
+      if (
+        !this.#chromeExpanded &&
+        this.#profilesManager.getActive()?.id === profileId
+      ) {
+        view.webContents.focus();
+      }
+    });
 
     const url = profile.url || this.#config.url;
     view.webContents.loadURL(url, {
@@ -629,6 +664,7 @@ class ProfileViewManager {
       // stays put (it's not in #views) and is re-raised below.
       this.#hideAllOverlays();
       this.#raiseChrome();
+      this.#window.webContents.focus();
       return;
     }
     this.#hideAllOverlays();
@@ -642,19 +678,28 @@ class ProfileViewManager {
       return;
     }
     this.#applyBounds(view);
+    view.setVisible(true);
+    // addChildView on an already attached view only moves it to the top.
     this.#window.contentView.addChildView(view);
-    // Adding the profile view puts it on top; re-raise the pill so it stays
-    // above the active content.
+    // Re-raise the pill so it stays above the active content.
     this.#raiseChrome();
+    view.webContents.focus();
   }
 
+  #focusActive() {
+    const active = this.#profilesManager.getActive();
+    if (!active) return;
+    const wc =
+      active.partition === LEGACY_PARTITION
+        ? this.#window.webContents
+        : this.#views.get(active.id)?.webContents;
+    if (wc && !wc.isDestroyed()) wc.focus();
+  }
+
+  // Hide rather than detach: see #createView (#3057).
   #hideAllOverlays() {
     for (const view of this.#views.values()) {
-      try {
-        this.#window.contentView.removeChildView(view);
-      } catch {
-        // Already detached; ignore.
-      }
+      view.setVisible(false);
     }
   }
 

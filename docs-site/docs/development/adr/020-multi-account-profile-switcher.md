@@ -36,7 +36,7 @@ The `BrowserView` API has since been superseded by `WebContentsView` (Electron 3
 
 - **Feature-flag gated.** The entire feature is opt-in via `multiAccount.enabled` in `config.json` (default `false`). When disabled, behavior is byte-identical to pre-feature single-profile operation. See § "Feature Flag & Scope" for the full contract.
 - Each profile is bound to `session.fromPartition('persist:teams-profile-{uuid}')`; the partition UUID is generated once at profile creation (`crypto.randomUUID()`) and is immutable for the view's lifetime. The `persist:` prefix is what tells Electron to persist cookies and storage for that partition — the method's optional `options` second argument is not needed for this persistence behavior.
-- All profile views are instantiated up front as children of `mainWindow.contentView`. Switching toggles visibility via `contentView.addChildView` / `removeChildView` and bounds updates — **no `loadURL` on switch**, so sessions stay warm, drafts survive, and the Teams websocket is not reconnected.
+- All profile views are instantiated up front as children of `mainWindow.contentView`. Switching toggles visibility via `view.setVisible()` and bounds updates, with `addChildView` only reordering (views are never detached on switch, see #3057) — **no `loadURL` on switch**, so sessions stay warm, drafts survive, and the Teams websocket is not reconnected.
 - Profile metadata is stored under `app.profiles` in the existing `settingsStore` (electron-store), not in user-facing `config.json`. When the feature flag is flipped on for the first time, the legacy `persist:teams-4-linux` session becomes Profile 0 ("My account") with no login loss.
 
 ### Rationale
@@ -154,7 +154,7 @@ The user sees exactly the same Teams view they had before the flag flipped. The 
 
 **Keyboard:** `Ctrl+Alt+1…5` jumps directly to pinned profile N. Up to 5 pinned profiles supported; pinned state is the per-profile `pinned` boolean. (Originally specced as `Ctrl+Shift+1…5` to mirror the native Windows client, but the Teams *web* client this app wraps binds `Ctrl+Shift+<digit>` for its own app-bar navigation — the switch chord moved to the unbound `Ctrl+Alt` namespace, as community testing on #2495 also suggested. Implemented as window-menu accelerators, so they fire only while the app is focused and are unavailable on macOS, which has no per-window menu.)
 
-**Mechanism:** switching toggles visibility via `mainWindow.contentView.addChildView` / `removeChildView` and bounds updates. **No `loadURL`** — the switched-away view stays in the view hierarchy but hidden. Sessions stay warm, drafts survive, the Teams websocket is not reconnected. Target: under 500 ms switch latency (verified by E2E timing assertion).
+**Mechanism:** every profile view is attached to `mainWindow.contentView` when created and switching toggles `view.setVisible()` plus bounds updates, using `addChildView` only to raise the active view. Detaching with `removeChildView` and attaching later is avoided: on Linux, from Electron 42.11 and 43, a view that loaded Teams while detached paints but never receives input once attached (#3057). **No `loadURL`** — the switched-away view stays in the view hierarchy but hidden. Sessions stay warm, drafts survive, the Teams websocket is not reconnected. Target: under 500 ms switch latency (verified by E2E timing assertion).
 
 ### Rename a profile
 
