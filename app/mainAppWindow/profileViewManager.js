@@ -508,9 +508,13 @@ class ProfileViewManager {
     this.#window.contentView.addChildView(view);
     this.#raiseChrome();
     // focusOnNavigation is off, so give the active profile focus once its
-    // page has loaded (startup, reloads).
+    // page has loaded (startup, reloads), unless the switcher dropdown is
+    // open: it closes on blur.
     view.webContents.on("did-finish-load", () => {
-      if (this.#profilesManager.getActive()?.id === profileId) {
+      if (
+        !this.#chromeExpanded &&
+        this.#profilesManager.getActive()?.id === profileId
+      ) {
         view.webContents.focus();
       }
     });

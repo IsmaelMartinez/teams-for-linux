@@ -473,6 +473,16 @@ describe('ProfileViewManager keeps profile views attached (#3057)', () => {
     assert.deepStrictEqual(win.contentView.removed, []);
   });
 
+  it('focuses the active view when its page loads, but not a background one', () => {
+    build([PROFILE_A, PROFILE_B]);
+    const [viewA, viewB] = createdViews;
+    const before = viewA.webContents.focusCalls || 0;
+    viewA.webContents.emit('did-finish-load');
+    viewB.webContents.emit('did-finish-load');
+    assert.strictEqual(viewA.webContents.focusCalls, before + 1);
+    assert.strictEqual(viewB.webContents.focusCalls || 0, 0);
+  });
+
   it('turns off focus-on-navigation so a background profile cannot take focus', () => {
     const source = require('node:fs').readFileSync(pvmPath, 'utf8');
     assert.match(source, /focusOnNavigation:\s*false/);
