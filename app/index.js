@@ -31,6 +31,8 @@ const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
 const ProfilesManager = require("./profilesManager");
 const ProfileViewManager = require("./mainAppWindow/profileViewManager");
+const TeamsControlService = require("./control/teamsControlService");
+const TeamsStateService = require("./control/teamsStateService");
 const IdleMonitor = require("./idle/monitor");
 const AutoUpdater = require("./autoUpdater");
 const WebAuthn = require("./webauthn");
@@ -138,6 +140,8 @@ let mqttClient = null;
 let mqttMediaStatusService = null;
 let haDiscovery = null;
 let graphApiClient = null;
+let teamsStateService = null;
+let teamsControlService = null;
 let quickChatManager = null;
 
 const { createPlayer } = require("./audio/player");
@@ -174,6 +178,7 @@ const profilesManager = new ProfilesManager(appConfig.settingsStore);
 // multi-account flag is on; the manager is wired to the main window
 // after `mainAppWindow.onAppReady` resolves.
 let profileViewManager = null;
+let dbusControlService = null;
 
 const idleMonitor = new IdleMonitor(config, getUserStatus);
 
@@ -228,6 +233,13 @@ if (gotTheLock) {
   app.on("render-process-gone", onRenderProcessGone);
   app.on("will-quit", async () => {
     console.debug("will-quit");
+    teamsStateService?.dispose();
+    teamsControlService?.dispose();
+    try {
+      dbusControlService?.stop();
+    } catch (error) {
+      console.warn("[DBUS_CONTROL] Failed to stop service", { message: error.message });
+    }
     if (mqttClient) {
       await mqttClient.disconnect();
     }
@@ -441,6 +453,19 @@ function onRenderProcessGone(event, webContents, details) {
 
 function onAppTerminated() {
   app.quit();
+}
+
+function getControlWebContents() {
+  try {
+    if (profileViewManager) {
+      const active = profileViewManager.getActiveWebContents();
+      return active && !active.isDestroyed() ? active : null;
+    }
+    const window = mainAppWindow.getWindow();
+    return window && !window.isDestroyed() ? window.webContents : null;
+  } catch {
+    return null;
+  }
 }
 
 function handleShortcutCommand({ action, shortcut }) {
@@ -671,6 +696,27 @@ function initializeAutoUpdater() {
   }
 }
 
+function initializeDbusControl() {
+  if (process.platform !== "linux" || config.dbusControl?.enabled !== true) return;
+  teamsStateService = new TeamsStateService(config, {
+    getActiveWebContents: getControlWebContents,
+  });
+  teamsStateService.initialize();
+  teamsControlService = new TeamsControlService({
+    getShortcutWebContents: getControlWebContents,
+    performIncomingCallAction: (action) => mainAppWindow.performIncomingCallAction(action),
+    stateService: teamsStateService,
+  });
+  try {
+    const DBusControlService = require("./dbus/controlService");
+    dbusControlService = new DBusControlService(teamsControlService);
+    dbusControlService.start();
+  } catch (error) {
+    dbusControlService = null;
+    console.warn("[DBUS_CONTROL] Service unavailable; continuing without D-Bus control", { message: error.message });
+  }
+}
+
 async function handleAppReady() {
   try {
     await showConfigurationDialogs();
@@ -686,6 +732,7 @@ async function handleAppReady() {
       initializeMqtt();
     }
 
+    initializeDbusControl();
     loadMenuToggleSettings();
 
     const customBackground = new CustomBackground(app, config);
@@ -741,6 +788,9 @@ async function handleAppReady() {
 
     initializeGraphApiClient();
     registerGraphApiHandlers(ipcMain, graphApiClient);
+    if (teamsControlService && config.multiAccount?.enabled) {
+      profilesManager.on("switch", () => setImmediate(() => teamsControlService.refreshState()));
+    }
     initializeQuickChat();
     registerGlobalShortcuts(config, mainAppWindow, app);
     initializeAutoUpdater();
@@ -787,6 +837,7 @@ async function requestMediaAccess() {
 
 async function userStatusChangedHandler(_event, options) {
   userStatus = options.data.status;
+  teamsStateService?.setPresence(userStatus, _event?.sender);
 
   if (mqttClient) {
     try {

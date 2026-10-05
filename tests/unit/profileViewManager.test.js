@@ -172,6 +172,26 @@ function build(profiles, bindWindowOpenHandler) {
 }
 
 describe('ProfileViewManager sender attribution wiring', () => {
+  it('returns root contents for legacy and active view contents for another profile', () => {
+    const { win, pm, pvm } = build([LEGACY, PROFILE_A]);
+    assert.strictEqual(pvm.getActiveWebContents(), win.webContents);
+    pm.switch(PROFILE_A.id);
+    assert.strictEqual(pvm.getActiveWebContents(), createdViews[0].webContents);
+  });
+
+  it('fails closed when the selected non-legacy renderer is destroyed', () => {
+    const { pm, pvm } = build([LEGACY, PROFILE_A]);
+    pm.switch(PROFILE_A.id);
+    createdViews[0].destroyWebContents();
+    assert.strictEqual(pvm.getActiveWebContents(), null);
+  });
+
+  it('returns null when neither selected profile contents nor root is live', () => {
+    const { win, pvm } = build([LEGACY]);
+    win.webContents._destroyed = true;
+    assert.strictEqual(pvm.getActiveWebContents(), null);
+  });
+
   it('resolves the root window to the legacy profile after initialize', () => {
     const { win, pvm } = build([LEGACY, PROFILE_A]);
     assert.strictEqual(pvm.resolveProfileId(win.webContents), 'profile-0');

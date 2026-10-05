@@ -248,6 +248,20 @@ class ProfileViewManager {
     this.#createChromeView();
   }
 
+  /** Return the live WebContents for the currently selected Teams profile. */
+  getActiveWebContents() {
+    const active = this.#profilesManager.getActive();
+    if (!active || active.partition === LEGACY_PARTITION) {
+      return this.#window?.webContents && !this.#window.webContents.isDestroyed()
+        ? this.#window.webContents
+        : null;
+    }
+    const view = this.#views.get(active.id);
+    const webContents = view?.webContents;
+    if (webContents && !webContents.isDestroyed()) return webContents;
+    return null;
+  }
+
   /**
    * Bootstrap Profile 0 from the legacy `persist:teams-4-linux` partition
    * if (a) no profiles exist yet and (b) the legacy partition has cookies.

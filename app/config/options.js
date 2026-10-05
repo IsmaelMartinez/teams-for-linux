@@ -28,6 +28,18 @@
 const defaults = require("./defaults");
 
 module.exports = {
+      dbusControl: {
+        default: { enabled: false },
+        describe: "Opt-in Linux user session D-Bus control and observed Teams state. Requires restart.",
+        type: "object",
+        fields: {
+          enabled: {
+            type: "boolean",
+            describe: "Enable the Linux D-Bus service and its local status monitors.",
+          },
+        },
+        applyMode: "restart",
+      },
       appActiveCheckInterval: {
         default: 2,
         describe:
