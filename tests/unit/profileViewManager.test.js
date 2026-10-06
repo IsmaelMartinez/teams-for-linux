@@ -112,9 +112,17 @@ function installElectronMock() {
 function fakeWindow() {
   return {
     webContents: new FakeWebContents(),
-    on() {},
+    listeners: {},
+    on(event, cb) {
+      (this.listeners[event] ||= []).push(cb);
+    },
+    emit(event) {
+      for (const cb of this.listeners[event] || []) cb();
+    },
     once() {},
-    removeListener() {},
+    removeListener(event, cb) {
+      this.listeners[event] = (this.listeners[event] || []).filter((l) => l !== cb);
+    },
     focused: true,
     isFocused() {
       return this.focused;
@@ -509,6 +517,23 @@ describe('ProfileViewManager keeps profile views attached (#3057)', () => {
     viewB.webContents.emit('did-finish-load');
     assert.strictEqual(viewA.webContents.focusCalls, before + 1);
     assert.strictEqual(viewB.webContents.focusCalls || 0, 0);
+  });
+
+  // #3064: a window focus-in (e.g. a keyboard layout switch on X11) must not
+  // leave keyboard focus on the root webContents (Profile 0).
+  it('refocuses the active profile when the window regains focus, unless the switcher is open', () => {
+    const { win, pm } = build([LEGACY, PROFILE_A, PROFILE_B]);
+    const [, viewB] = createdViews;
+    const chrome = createdViews.at(-1);
+    pm.switch('profile-b');
+    const before = viewB.webContents.focusCalls;
+
+    win.emit('focus');
+    assert.strictEqual(viewB.webContents.focusCalls, before + 1);
+
+    ipcHandlers['profile-switcher-set-expanded']({ sender: chrome.webContents }, true);
+    win.emit('focus');
+    assert.strictEqual(viewB.webContents.focusCalls, before + 1);
   });
 
   it('refocuses the active view when the switcher closes, only while the window is focused', () => {
