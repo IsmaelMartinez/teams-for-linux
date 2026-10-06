@@ -99,6 +99,7 @@ class ProfileViewManager {
   #descendants = new Map();
   #handlers = null;
   #resizeHandler = null;
+  #focusHandler = null;
   #navigationHandler = null;
   #bootstrapInFlight = false;
   #initialized = false;
@@ -178,6 +179,15 @@ class ProfileViewManager {
 
     this.#resizeHandler = () => this.#applyBoundsToAll();
     this.#window.on("resize", this.#resizeHandler);
+
+    // When the window regains focus (e.g. after a keyboard layout switch on
+    // X11), keyboard focus otherwise falls back to the root webContents,
+    // which is Profile 0, while another profile is shown (#3064). Leave it
+    // alone while the switcher dropdown is open: it closes on blur.
+    this.#focusHandler = () => {
+      if (!this.#chromeExpanded) this.#focusActive();
+    };
+    this.#window.on("focus", this.#focusHandler);
 
     // Only act on events from our own pill's webContents. Returns once the
     // bounds are applied so the renderer can await before revealing the
@@ -356,6 +366,10 @@ class ProfileViewManager {
     if (this.#resizeHandler) {
       this.#window.removeListener("resize", this.#resizeHandler);
       this.#resizeHandler = null;
+    }
+    if (this.#focusHandler) {
+      this.#window.removeListener("focus", this.#focusHandler);
+      this.#focusHandler = null;
     }
     if (this.#navigationHandler) {
       this.#window.webContents.removeListener(
