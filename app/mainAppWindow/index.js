@@ -49,6 +49,7 @@ let streamSelector;
 let screenSharingService = null;
 let connectionManager = null;
 let menus = null;
+let browserWindowManager = null;
 
 const isMac = os.platform() === "darwin";
 
@@ -724,7 +725,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     }
   }
 
-  const browserWindowManager = new BrowserWindowManager({
+  browserWindowManager = new BrowserWindowManager({
     config: config,
     iconChooser: iconChooser,
     // Lets the startup clear reach every profile partition (#2866).
@@ -902,6 +903,10 @@ exports.restoreWindow = restoreWindow;
 
 exports.getWindow = function () {
   return window;
+};
+
+exports.performIncomingCallAction = function (action) {
+  return browserWindowManager?.performIncomingCallAction(action) === true;
 };
 
 exports.bindDisplayMediaHandler = bindDisplayMediaHandler;

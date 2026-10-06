@@ -53,6 +53,7 @@ const sidebars: SidebarsConfig = {
           label: 'Development Guides',
           items: [
             'development/ipc-api',
+            'development/dbus-control',
             'development/log-config',
             'development/release-info',
           ],
