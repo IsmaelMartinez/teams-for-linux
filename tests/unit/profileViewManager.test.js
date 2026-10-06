@@ -608,4 +608,26 @@ describe('ProfileViewManager window title follows the active profile (#3068)', (
     pm.switch('profile-0');
     assert.strictEqual(titles.at(-1), null);
   });
+
+  it('hands the title back when the active view destroys itself, not for a background one', () => {
+    const titles = [];
+    const pm = fakeProfilesManager([LEGACY, PROFILE_A, PROFILE_B]);
+    new ProfileViewManager(
+      fakeWindow(),
+      pm,
+      { url: 'https://teams.cloud.microsoft' },
+      () => {},
+      () => {},
+      () => {},
+      (title) => titles.push(title)
+    ).initialize();
+    const [viewA, viewB] = createdViews;
+    pm.switch('profile-b');
+    titles.length = 0;
+
+    viewA.destroyWebContents();
+    assert.deepStrictEqual(titles, []);
+    viewB.destroyWebContents();
+    assert.deepStrictEqual(titles, [null]);
+  });
 });

@@ -540,6 +540,10 @@ class ProfileViewManager {
       this.#views.delete(profileId);
       this.#registry.unregister(wcId);
       this.#teardownDescendants(profileId);
+      // Profile 0 now shows through, so hand the title back to it (#3068).
+      if (this.#profilesManager.getActive()?.id === profileId) {
+        this.#setTitleOverride(null);
+      }
     });
     // Attribute anything this view spawns to its profile. A popup genuinely
     // shares the view's partition and preload (window.open inherits them from

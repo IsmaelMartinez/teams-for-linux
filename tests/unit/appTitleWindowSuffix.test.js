@@ -21,10 +21,11 @@ const overrideSource = extract('setTitleOverride\\(title\\)');
 
 function load(appTitle, rootTitle = '') {
 	const calls = { sent: [], setTitle: [], prevented: 0 };
+	const root = { title: rootTitle };
 	const window = {
 		webContents: {
 			send: (channel, value) => calls.sent.push([channel, value]),
-			getTitle: () => rootTitle,
+			getTitle: () => root.title,
 		},
 		setTitle: (value) => calls.setTitle.push(value),
 		isDestroyed: () => false,
@@ -33,7 +34,11 @@ function load(appTitle, rootTitle = '') {
 		`${formatSource}\n${handlerSource}\n${overrideSource}\n({ onPageTitleUpdated, setTitleOverride })`,
 		{ window, config: { appTitle }, titleOverride: null }
 	);
-	const update = (title) => fns.onPageTitleUpdated({ preventDefault: () => calls.prevented++ }, title);
+	// The root webContents' title changes before Electron emits the update.
+	const update = (title) => {
+		root.title = title;
+		fns.onPageTitleUpdated({ preventDefault: () => calls.prevented++ }, title);
+	};
 	return { calls, update, setTitleOverride: fns.setTitleOverride };
 }
 
@@ -85,17 +90,20 @@ describe('setTitleOverride (multi-account)', () => {
 		assert.strictEqual(calls.prevented, 1);
 		assert.deepStrictEqual(calls.sent, [['page-title', 'Activity | P0 | Microsoft Teams']]);
 
+		// Hand-back restores Profile 0's latest title, not the one before B.
 		setTitleOverride(null);
-		assert.deepStrictEqual(calls.setTitle.at(-1), 'Chat | P0 | Microsoft Teams');
+		assert.deepStrictEqual(calls.setTitle.at(-1), 'Activity | P0 | Microsoft Teams');
 		update('Calendar | P0 | Microsoft Teams');
 		assert.strictEqual(calls.prevented, 1);
 	});
 
-	it('applies a custom app.title to the profile title and skips a redundant hand-back', () => {
-		const { calls, setTitleOverride } = load('Work');
+	it('applies a custom app.title to the profile title and the hand-back, skipping a redundant one', () => {
+		const { calls, update, setTitleOverride } = load('Work', 'Chat | Microsoft Teams');
 		setTitleOverride(null);
 		assert.deepStrictEqual(calls.setTitle, []);
-		setTitleOverride('Chat | Microsoft Teams');
-		assert.deepStrictEqual(calls.setTitle, ['Chat | Work']);
+		setTitleOverride('Chat | B | Microsoft Teams');
+		update('Activity | Microsoft Teams');
+		setTitleOverride(null);
+		assert.deepStrictEqual(calls.setTitle, ['Chat | B | Work', 'Activity | Work']);
 	});
 });
