@@ -84,6 +84,7 @@ class ProfileViewManager {
   #bindDisplayMediaHandler;
   #bindWindowOpenHandler;
   #onViewDidFinishLoad;
+  #setTitleOverride;
   #views = new Map();
   // Phase 2 foundation: webContents → profile attribution for main-process
   // IPC handlers (tray/badge/notification aggregation consumes this next).
@@ -128,6 +129,10 @@ class ProfileViewManager {
    *   Called on every `did-finish-load` of each profile view, mirroring the
    *   root window's listener. Main uses it to inject the screen-sharing
    *   script, which otherwise only reaches Profile 0 (#2979).
+   * @param {(title: string|null) => void} [setTitleOverride]
+   *   Sets the window title from the active profile view's page title, or
+   *   hands it back to the root window (Profile 0) with null. Electron only
+   *   mirrors the root webContents' title onto the window (#3068).
    */
   constructor(
     window,
@@ -135,7 +140,8 @@ class ProfileViewManager {
     config,
     bindDisplayMediaHandler,
     bindWindowOpenHandler = () => {},
-    onViewDidFinishLoad = () => {}
+    onViewDidFinishLoad = () => {},
+    setTitleOverride = () => {}
   ) {
     this.#window = window;
     this.#profilesManager = profilesManager;
@@ -143,6 +149,7 @@ class ProfileViewManager {
     this.#bindDisplayMediaHandler = bindDisplayMediaHandler;
     this.#bindWindowOpenHandler = bindWindowOpenHandler;
     this.#onViewDidFinishLoad = onViewDidFinishLoad;
+    this.#setTitleOverride = setTitleOverride;
     this.#registry = new SenderProfileMap(profilesManager);
   }
 
@@ -462,6 +469,7 @@ class ProfileViewManager {
     } else {
       this.#hideAllOverlays();
       this.#raiseChrome();
+      this.#setTitleOverride(null);
     }
     this.#pushSwitcherState();
   }
@@ -503,6 +511,12 @@ class ProfileViewManager {
     view.webContents.on("did-finish-load", () =>
       this.#onViewDidFinishLoad(view.webContents)
     );
+    // Only the active profile's title reaches the window (#3068).
+    view.webContents.on("page-title-updated", (_event, title) => {
+      if (this.#profilesManager.getActive()?.id === profileId) {
+        this.#setTitleOverride(title);
+      }
+    });
 
     const wcId = view.webContents.id;
     const profileId = profile.id;
@@ -693,6 +707,7 @@ class ProfileViewManager {
       this.#hideAllOverlays();
       this.#raiseChrome();
       this.#window.webContents.focus();
+      this.#setTitleOverride(null);
       return;
     }
     this.#hideAllOverlays();
@@ -703,6 +718,7 @@ class ProfileViewManager {
         { profileId: profile.id }
       );
       this.#raiseChrome();
+      this.#setTitleOverride(null);
       return;
     }
     this.#applyBounds(view);
@@ -712,6 +728,7 @@ class ProfileViewManager {
     // Re-raise the pill so it stays above the active content.
     this.#raiseChrome();
     view.webContents.focus();
+    this.#setTitleOverride(view.webContents.getTitle());
   }
 
   #focusActive() {
