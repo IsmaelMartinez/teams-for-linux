@@ -50,6 +50,46 @@ function switchValue(switches, name) {
   return found ? found[1] : undefined;
 }
 
+// Same Electron cache stub as appendedSwitches, but exercises
+// addSwitchesBeforeConfigLoad and can pre-seed disable-features.
+function switchesBeforeConfigLoad(platform, existingDisableFeatures) {
+  const switches = [];
+  const warnings = [];
+  const hasDisableFeatures = existingDisableFeatures !== undefined;
+  const originalWarn = console.warn;
+  console.warn = (...args) => warnings.push(args.map(String).join(' '));
+
+  const app = {
+    commandLine: {
+      appendSwitch: (name, value) => switches.push([name, value]),
+      hasSwitch: (name) => name === 'disable-features' && hasDisableFeatures,
+      getSwitchValue: (name) => (
+        name === 'disable-features' && hasDisableFeatures ? existingDisableFeatures : ''
+      ),
+    },
+    setName: () => {},
+    setDesktopName: () => {},
+    disableHardwareAcceleration: () => {},
+  };
+
+  require.cache[electronPath] = {
+    id: electronPath,
+    filename: electronPath,
+    loaded: true,
+    exports: { app },
+  };
+  Object.defineProperty(process, 'platform', { value: platform, configurable: true });
+  delete require.cache[commandLinePath];
+
+  try {
+    const CommandLineManager = require(commandLinePath);
+    CommandLineManager.addSwitchesBeforeConfigLoad();
+    return { switches, warnings };
+  } finally {
+    console.warn = originalWarn;
+  }
+}
+
 describe('CommandLineManager macOS performance gate', () => {
   afterEach(() => {
     Object.defineProperty(process, 'platform', { value: originalPlatform, configurable: true });
@@ -115,5 +155,64 @@ describe('CommandLineManager macOS performance gate', () => {
   it('does not apply the macOS switches on non-darwin platforms', () => {
     const switches = appendedSwitches({ authServerWhitelist: '*' }, 'linux');
     assert.ok(!hasSwitch(switches, 'use-angle'), 'mac perf path not taken off macOS');
+  });
+});
+
+describe('CommandLineManager disable-features defaults', () => {
+  afterEach(() => {
+    Object.defineProperty(process, 'platform', { value: originalPlatform, configurable: true });
+    Object.defineProperty(process, 'arch', { value: originalArch, configurable: true });
+    if (originalElectron) {
+      require.cache[electronPath] = originalElectron;
+    } else {
+      delete require.cache[electronPath];
+    }
+    delete require.cache[commandLinePath];
+  });
+
+  it('disables the portal accent color on Linux when no list is set', () => {
+    const { switches } = switchesBeforeConfigLoad('linux');
+    const disabled = switches.filter(([name]) => name === 'disable-features');
+    assert.deepStrictEqual(disabled, [['disable-features', 'HardwareMediaKeyHandling,UsePortalAccentColor']]);
+    assert.ok(hasSwitch(switches, 'try-supported-channel-layouts'));
+    assert.deepStrictEqual(
+      switches.find(([name]) => name === 'autoplay-policy'),
+      ['autoplay-policy', 'no-user-gesture-required'],
+    );
+  });
+
+  it('keeps HardwareMediaKeyHandling alone on darwin and win32', () => {
+    for (const platform of ['darwin', 'win32']) {
+      const { switches } = switchesBeforeConfigLoad(platform);
+      assert.strictEqual(switchValue(switches, 'disable-features'), 'HardwareMediaKeyHandling');
+    }
+  });
+
+  it('warns when a Linux list omits UsePortalAccentColor and does not append again', () => {
+    const { switches, warnings } = switchesBeforeConfigLoad('linux', 'HardwareMediaKeyHandling');
+    assert.ok(!hasSwitch(switches, 'disable-features'));
+    assert.ok(warnings.some((warning) => warning.includes('UsePortalAccentColor')));
+  });
+
+  it('does not warn when a Linux list already has both required tokens', () => {
+    const { switches, warnings } = switchesBeforeConfigLoad(
+      'linux',
+      'HardwareMediaKeyHandling,UsePortalAccentColor',
+    );
+    assert.ok(!hasSwitch(switches, 'disable-features'));
+    assert.deepStrictEqual(warnings, []);
+  });
+
+  it('leaves a Linux list of only UsePortalAccentColor unchanged and names HardwareMediaKeyHandling', () => {
+    const { switches, warnings } = switchesBeforeConfigLoad('linux', 'UsePortalAccentColor');
+    assert.ok(!hasSwitch(switches, 'disable-features'));
+    assert.ok(warnings.some((warning) => warning.includes('HardwareMediaKeyHandling')));
+  });
+
+  it('warns about HardwareMediaKeyHandling only when a non-Linux list omits it', () => {
+    const { switches, warnings } = switchesBeforeConfigLoad('darwin', 'SomeFeature');
+    assert.ok(!hasSwitch(switches, 'disable-features'));
+    assert.ok(warnings.some((warning) => warning.includes('HardwareMediaKeyHandling')));
+    assert.ok(warnings.every((warning) => !warning.includes('UsePortalAccentColor')));
   });
 });
