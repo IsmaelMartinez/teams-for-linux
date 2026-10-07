@@ -1,5 +1,6 @@
 const { shell } = require("electron");
 const buildProfilesMenu = require("./profilesMenu");
+const buildThemesMenu = require("./themesMenu");
 
 exports = module.exports = (Menus) => ({
   label: "Teams for Linux",
@@ -104,6 +105,8 @@ function getSettingsMenu(Menus) {
   return {
     label: "Settings",
     submenu: [
+      buildThemesMenu(Menus),
+      { type: "separator" },
       {
         label: "Save",
         click: () => Menus.saveSettings(),

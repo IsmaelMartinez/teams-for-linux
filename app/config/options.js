@@ -185,7 +185,7 @@ module.exports = {
       customCSSName: {
         default: "",
         describe:
-          'custom CSS name for the packaged available css files. Currently those are: "compactDark", "compactLight", "tweaks", "condensedDark" and "condensedLight" ',
+          'Packaged CSS theme name (compactDark, compactLight, tweaks, condensedDark, condensedLight), or custom:<id> for a discovered user theme. An empty name uses customCSSLocation when configured.',
         type: "string",
         applyMode: "restart",
         deprecated: "use appearance.cssName instead",
@@ -1262,7 +1262,7 @@ module.exports = {
         fields: {
           "cssName": {
             type: "string",
-            describe: "custom CSS name for the packaged available css files. Currently those are: \"compactDark\", \"compactLight\", \"tweaks\", \"condensedDark\" and \"condensedLight\" ",
+            describe: "Packaged CSS theme name (compactDark, compactLight, tweaks, condensedDark, condensedLight), or custom:<id> for a discovered user theme. An empty name uses appearance.cssLocation when configured.",
           },
           "cssLocation": {
             type: "string",

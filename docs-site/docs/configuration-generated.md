@@ -26,7 +26,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 | `customBGServiceBaseUrl` | `string` | `"http://localhost"` | Base URL of the server which provides custom background images **Deprecated:** use customBackground.serviceBaseUrl instead | `restart` |
 | `customBGServiceConfigFetchInterval` | `number` | `0` | A numeric value in seconds as poll interval to download background service config download **Deprecated:** use customBackground.configFetchInterval instead | `restart` |
 | `customCACertsFingerprints` | `array` | `[]` | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate | `restart` |
-| `customCSSName` | `string` | `""` | custom CSS name for the packaged available css files. Currently those are: "compactDark", "compactLight", "tweaks", "condensedDark" and "condensedLight" **Deprecated:** use appearance.cssName instead | `restart` |
+| `customCSSName` | `string` | `""` | Packaged CSS theme name (compactDark, compactLight, tweaks, condensedDark, condensedLight), or custom:&lt;id&gt; for a discovered user theme. An empty name uses customCSSLocation when configured. **Deprecated:** use appearance.cssName instead | `restart` |
 | `customCSSLocation` | `string` | `""` | custom CSS styles file location **Deprecated:** use appearance.cssLocation instead | `restart` |
 | `customStickers` | `object` | `{"enabled":false,"folder":"","formats":["png","jpg","jpeg","gif","webp"],"urlImport":{"enabled":true,"allowedContentTypes":["image/png","image/jpeg","image/gif","image/webp"],"maxBytes":5242880}}` | Custom stickers feature. enabled: master flag (off by default). folder: absolute path to the sticker folder; empty string uses &lt;userData&gt;/stickers/ (auto-created). formats: file extensions to scan (lowercase, no leading dot). The scanner reads the configured folder plus one level of subdirectories so packs imported under &lt;folder&gt;/&lt;pack&gt;/ are visible. urlImport: HTTPS URL import (drop or paste a URL onto the sticker panel); allowedContentTypes restricts what the wrapper will save; maxBytes caps individual file size. | `restart` |
 | `disableTimestampOnCopy` | `boolean` | `false` | Controls whether timestamps are included when copying messages in chats **Deprecated:** use platform.disableTimestampOnCopy instead | `restart` |
@@ -311,7 +311,7 @@ Object options group several related settings. The tables below list each nested
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `appearance.cssName` | `string` | `""` | custom CSS name for the packaged available css files. Currently those are: "compactDark", "compactLight", "tweaks", "condensedDark" and "condensedLight" |
+| `appearance.cssName` | `string` | `""` | Packaged CSS theme name (compactDark, compactLight, tweaks, condensedDark, condensedLight), or custom:&lt;id&gt; for a discovered user theme. An empty name uses appearance.cssLocation when configured. |
 | `appearance.cssLocation` | `string` | `""` | custom CSS styles file location |
 | `appearance.followSystemTheme` | `boolean` | `false` | Follow the operating-system dark/light theme preference. Default is false; set true to drive Teams's theme from the OS preference. |
 
