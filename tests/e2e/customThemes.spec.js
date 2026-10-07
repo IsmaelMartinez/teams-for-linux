@@ -39,7 +39,8 @@ function createFixture() {
     const directory = ${JSON.stringify(directory)};
     const repository = ${JSON.stringify(repository)};
     app.setPath('userData', directory);
-    app.whenReady().then(async () => {
+    async function startProbe() {
+      await app.whenReady();
       const { AppConfiguration } = require(path.join(repository, 'app/appConfiguration'));
       const customCSS = require(path.join(repository, 'app/customCSS'));
       const buildThemeMenu = require(path.join(repository, 'app/menus/themesMenu'));
@@ -67,7 +68,8 @@ function createFixture() {
         validationWarnings: validateConfigFile(
           JSON.parse(fs.readFileSync(path.join(directory, 'config.json'), 'utf8')), options),
       };
-    });
+    }
+    startProbe();
   `);
   return { directory, themeDirectory, script };
 }
