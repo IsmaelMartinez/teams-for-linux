@@ -180,6 +180,10 @@ const profilesManager = new ProfilesManager(appConfig.settingsStore);
 let profileViewManager = null;
 let dbusControlService = null;
 
+// ADR-020 Phase 2 unread aggregation; null with the flag off, where the
+// tray/badge handlers keep their single-sender behaviour.
+let unreadAggregator = null;
+
 const idleMonitor = new IdleMonitor(config, getUserStatus);
 
 const customNotificationManager = new CustomNotificationManager(config, mainAppWindow);
@@ -776,6 +780,7 @@ async function handleAppReady() {
         );
         profileViewManager.initialize();
         await profileViewManager.bootstrapProfileZeroIfNeeded();
+        unreadAggregator = createUnreadAggregator(profileViewManager);
       } else {
         console.warn(
           "[ProfileViewManager] main window unavailable after onAppReady; multi-account features disabled for this session"
@@ -849,7 +854,22 @@ async function userStatusChangedHandler(_event, options) {
   }
 }
 
-async function setBadgeCountHandler(_event, count) {
+// Replayed on aggregator attach — renderers dedupe and never re-send an
+// unchanged count, so a pre-attach report would otherwise be lost.
+const preAggregatorBadgeCounts = new Map();
+
+async function setBadgeCountHandler(event, count) {
+  if (unreadAggregator) {
+    unreadAggregator.onBadgeCount(event, count);
+    return;
+  }
+  if (config.multiAccount?.enabled && typeof event?.sender?.id === "number") {
+    preAggregatorBadgeCounts.set(event.sender.id, count);
+  }
+  applyBadgeCount(count);
+}
+
+function applyBadgeCount(count) {
   if (!config.disableBadgeCount) {
     app.setBadgeCount(count);
     // Electron's own Linux badge path loads libunity at runtime, which none
@@ -869,6 +889,64 @@ async function setBadgeCountHandler(_event, count) {
       }
     }
   }
+}
+
+// Factory so the flag-off path never touches any of this wiring.
+function createUnreadAggregator(viewManager) {
+  const ProfileUnreadAggregator = require("./profileUnread");
+  const { createBadgeRenderBridge } = require("./profileUnread/badgeRenderBridge");
+
+  const requestBadgeRender = createBadgeRenderBridge({
+    ipcMain,
+    getTarget: () => viewManager.getActiveWebContents(),
+    // createFromDataURL yields an EMPTY image (not a throw) for malformed
+    // payloads; a bad reply must resolve null, never become the fallback.
+    sanitizeIcon: (icon) =>
+      nativeImage.createFromDataURL(icon).isEmpty() ? null : icon,
+  });
+
+  // Cached: electron-store re-reads its JSON on every access, and this sits
+  // on the per-badge-tick path. Profile events invalidate it.
+  let nameCache = null;
+  const getProfileName = (profileId) => {
+    if (!nameCache) {
+      nameCache = new Map(profilesManager.list().map((p) => [p.id, p.name]));
+    }
+    return nameCache.get(profileId) ?? null;
+  };
+  const invalidateNames = () => {
+    nameCache = null;
+  };
+  profilesManager.on("add", invalidateNames);
+  profilesManager.on("update", invalidateNames);
+  profilesManager.on("remove", invalidateNames);
+
+  const aggregator = new ProfileUnreadAggregator({
+    // Pure map read; getProfileFor re-reads the settings file per call.
+    resolveProfileId: (event) => viewManager.resolveProfileId(event?.sender),
+    isPrimarySender: (event) => viewManager.isPrimaryProfileSurface(event),
+    getProfileName,
+    requestBadgeRender,
+    applyTray: (update) => mainAppWindow.getTray()?.applyAggregate(update),
+    applyBadgeCount,
+    appTitle: config.appTitle,
+  });
+
+  // No surface is left to report a zero after removal or a view dying on
+  // its own — holding the last count would inflate the badge all session.
+  profilesManager.on("remove", ({ removedId }) =>
+    aggregator.removeProfile(removedId)
+  );
+  viewManager.onProfileViewGone((profileId) =>
+    aggregator.removeProfile(profileId)
+  );
+
+  mainAppWindow.getTray()?.setAggregator(aggregator);
+  for (const [senderId, count] of preAggregatorBadgeCounts) {
+    aggregator.onBadgeCount({ sender: { id: senderId } }, count);
+  }
+  preAggregatorBadgeCounts.clear();
+  return aggregator;
 }
 
 function handleGlobalShortcutDisabled() {

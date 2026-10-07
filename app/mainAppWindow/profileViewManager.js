@@ -109,6 +109,8 @@ class ProfileViewManager {
   #chromeView = null;
   #chromeExpanded = false; // dropdown open (transient)
   #setExpandedHandler = null;
+  // Fired only when a view dies outside removal (removal has its own event).
+  #viewGoneListeners = new Set();
 
   /**
    * @param {Electron.BrowserWindow} window  Main app window
@@ -402,6 +404,7 @@ class ProfileViewManager {
     this.#registry.clear();
     this.#viewMeta.clear();
     this.#descendants.clear();
+    this.#viewGoneListeners.clear();
     this.#initialized = false;
   }
 
@@ -420,6 +423,29 @@ class ProfileViewManager {
   resolveProfileId(webContents) {
     if (!webContents || typeof webContents.id !== "number") return null;
     return this.#registry.resolveProfileId(webContents.id);
+  }
+
+  /**
+   * Root window or a registered profile view — never a popup or webview
+   * guest: only the main Teams SPA's title carries the real unread count
+   * (a popup's scrapes to 0 and must not overwrite it).
+   * @param {Electron.IpcMainEvent|Electron.IpcMainInvokeEvent} event
+   */
+  isPrimaryProfileSurface(event) {
+    const senderId = event?.sender?.id;
+    if (typeof senderId !== "number") return false;
+    if (senderId === this.#window.webContents.id) return true;
+    // Live #views, not #viewMeta — meta is retained after a self-destroy
+    // and would keep a dead sender "primary".
+    for (const view of this.#views.values()) {
+      if (view.webContents?.id === senderId) return true;
+    }
+    return false;
+  }
+
+  /** A view died outside removal (removal has ProfilesManager's "remove"). */
+  onProfileViewGone(callback) {
+    this.#viewGoneListeners.add(callback);
   }
 
   /**
@@ -537,12 +563,26 @@ class ProfileViewManager {
       } catch {
         // Window already gone; nothing to detach from.
       }
-      this.#views.delete(profileId);
+      // On the removal path #destroyView has already dropped the view from
+      // #views before close() — the delete returns false and the listeners
+      // stay silent (removal is observable via ProfilesManager's "remove").
+      // Only a SELF-destroyed view (still tracked here) notifies.
+      const wasTracked = this.#views.delete(profileId);
       this.#registry.unregister(wcId);
       this.#teardownDescendants(profileId);
       // Profile 0 now shows through, so hand the title back to it (#3068).
       if (this.#profilesManager.getActive()?.id === profileId) {
         this.#setTitleOverride(null);
+      }
+      if (!wasTracked) return;
+      for (const callback of this.#viewGoneListeners) {
+        try {
+          callback(profileId);
+        } catch (error) {
+          console.warn("[ProfileViewManager] view-gone listener failed", {
+            message: error.message,
+          });
+        }
       }
     });
     // Attribute anything this view spawns to its profile. A popup genuinely
