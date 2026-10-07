@@ -527,6 +527,7 @@ class Menus {
         app.exit(0);
       }
     } catch {
+      this.updateMenu();
       console.warn("[Themes] Could not save theme selection");
       dialog.showErrorBox("Themes", "Could not save the theme selection. Check that config.json is valid and writable.");
     }
