@@ -86,7 +86,7 @@ class ProfileUnreadAggregator {
       bucket.count = Number.isFinite(count) && count > 0 ? count : 0;
     }
     bucket.iconCount = bucket.count;
-    this.#refreshTray();
+    void this.#refreshTray();
   }
 
   #onBadgeCount(event, count) {
@@ -98,13 +98,13 @@ class ProfileUnreadAggregator {
     this.#deps.applyBadgeCount(this.#sum());
     // Only an out-of-band badge change gets here with a new count; the tray
     // would otherwise keep a stale total with nothing scheduled to fix it.
-    if (changed) this.#refreshTray();
+    if (changed) void this.#refreshTray();
   }
 
   removeProfile(profileId) {
     if (!this.#buckets.delete(profileId)) return;
     this.#deps.applyBadgeCount(this.#sum());
-    this.#refreshTray();
+    void this.#refreshTray();
   }
 
   #sum() {
@@ -133,6 +133,7 @@ class ProfileUnreadAggregator {
     return lines.length > 0 ? `${base}\n${lines.join("\n")}` : base;
   }
 
+  // Fire-and-forget at every call site (`void`): never rejects.
   async #refreshTray() {
     try {
       await this.#applyRefresh();
