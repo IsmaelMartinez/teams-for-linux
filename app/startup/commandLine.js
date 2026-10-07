@@ -18,14 +18,14 @@ class CommandLineManager {
     // --disable-features list replaces this default, so leave it untouched and
     // warn for any required token it omits.
     if (app.commandLine.hasSwitch("disable-features")) {
-      const disabledFeatures = app.commandLine.getSwitchValue("disable-features").split(",");
-      if (!disabledFeatures.includes("HardwareMediaKeyHandling")) {
+      const disabledFeatures = new Set(app.commandLine.getSwitchValue("disable-features").split(","));
+      if (!disabledFeatures.has("HardwareMediaKeyHandling")) {
         console.warn(
           "disable-features switch already set without HardwareMediaKeyHandling. " +
           "Teams media controls may conflict with system media key handling."
         );
       }
-      if (process.platform === "linux" && !disabledFeatures.includes("UsePortalAccentColor")) {
+      if (process.platform === "linux" && !disabledFeatures.has("UsePortalAccentColor")) {
         console.warn(
           "disable-features switch already set without UsePortalAccentColor. " +
           "The app may follow a sandbox GTK theme instead of the operating system theme."
