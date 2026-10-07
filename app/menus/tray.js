@@ -21,21 +21,15 @@ class ApplicationTray {
   }
 
   #handleTrayUpdate(event, data) {
-    // Multi-account (ADR-020 Phase 2): updates arrive from EVERY profile
-    // view, so applying them directly is last-write-wins across profiles.
-    // With an aggregator attached it becomes the authority for what the
-    // tray shows; without one (flag off) behaviour is unchanged.
+    // With multi-account on, updates arrive from every profile view and
+    // applying them directly is last-write-wins — the aggregator decides.
     if (this.aggregator) {
       this.aggregator.onTrayUpdate(event, data);
       return;
     }
-    // Remember the last direct update PER SENDER (the id is all the
-    // aggregator needs): counts arriving before the aggregator attaches
-    // would otherwise be lost to it — renderers dedupe and never re-send an
-    // unchanged count, and with disableBadgeCount there is no set-badge-count
-    // fallback, so a single slot would keep only the last profile. Gated on
-    // the flag: with multi-account off no aggregator ever attaches, and the
-    // stash would grow one entry per sender forever.
+    // Stash per sender for the aggregator to replay on attach — renderers
+    // dedupe and never re-send an unchanged count. Flag-gated: with
+    // multi-account off nothing ever drains it.
     if (this.config.multiAccount?.enabled) {
       this.lastDirectUpdates ??= new Map();
       this.lastDirectUpdates.set(event?.sender?.id, data);
@@ -56,12 +50,10 @@ class ApplicationTray {
     }
   }
 
-  // Aggregator-driven update: the tooltip is composed by the aggregator
-  // (total plus top profiles), not derived from a single count.
   applyAggregate({ icon, flash, tooltip }) {
     if (!this.tray || this.tray.isDestroyed()) return;
-    // createFromDataURL returns an EMPTY image (not a throw) for a malformed
-    // payload — falling back to the base icon beats blanking the tray.
+    // createFromDataURL yields an EMPTY image (not a throw) for a malformed
+    // payload, which would blank the tray.
     let image = this.getIconImage(icon || this.iconPath);
     if (image.isEmpty()) {
       image = this.getIconImage(this.iconPath);

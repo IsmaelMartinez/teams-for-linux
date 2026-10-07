@@ -1,31 +1,26 @@
 const crypto = require("node:crypto");
 
-// Icons travel as canvas data URLs; anything else is refused. The cap bounds
-// a hostile renderer's reply (the compositor is the Teams page's preload —
-// same trust level as the organic tray-update path, but a new channel should
-// not be looser than it has to be).
+// The compositor is the Teams page's preload, so replies are bounded and
+// shape-checked rather than trusted.
 const DATA_URL_PREFIX = "data:image/";
 const MAX_ICON_LENGTH = 2 * 1024 * 1024;
 
 /**
- * Bridge for aggregate tray-badge rendering (ADR-020 Phase 2). Main cannot
- * composite (no canvas), so `requestBadgeRender(count)` asks the active
- * surface's renderer — trayIconRenderer's existing canvas path — to draw the
- * summed badge and resolves its reply, or null on any failure (timeout,
- * destroyed target, refused payload); the aggregator then keeps a fallback
- * icon. Replies are matched by an unguessable request id AND the responding
- * webContents' identity, and the icon must be a bounded data:image URL.
+ * Asks the active surface's renderer to composite the aggregate badge (main
+ * has no canvas) and resolves the reply, or null on any failure — the
+ * aggregator keeps a fallback icon. Replies are matched by an unguessable
+ * request id and the responding webContents' identity.
  *
- * Factory with injected deps so the matching/timeout/validation logic is
- * unit-testable without Electron.
+ * Deps are injected so the matching/timeout/validation logic tests without
+ * Electron.
  *
  * @param {object} deps
  * @param {Electron.IpcMain} deps.ipcMain
  * @param {() => Electron.WebContents|null} deps.getTarget
  * @param {number} [deps.timeoutMs]
  * @param {(icon: string) => string|null} [deps.sanitizeIcon]  Decode-level
- *   validation (nativeImage in production); prefix/size checks alone accept
- *   payloads that decode to an empty image.
+ *   validation; the prefix/size checks alone accept payloads that decode to
+ *   an empty image.
  * @returns {(count: number) => Promise<string|null>}
  */
 function createBadgeRenderBridge({
@@ -68,8 +63,8 @@ function createBadgeRenderBridge({
       try {
         target.send("render-aggregate-badge", { requestId, count });
       } catch (error) {
-        // isDestroyed() then send() races a dying renderer; treat like any
-        // other render failure instead of rejecting (which would be fatal).
+        // isDestroyed() then send() races a dying renderer; a rejection here
+        // would be fatal (process-wide unhandledRejection handler).
         pending.delete(requestId);
         clearTimeout(timer);
         console.warn("[ProfileUnread] badge render request failed", {

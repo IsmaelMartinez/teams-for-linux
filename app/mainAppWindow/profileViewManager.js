@@ -109,11 +109,10 @@ class ProfileViewManager {
   #chromeView = null;
   #chromeExpanded = false; // dropdown open (transient)
   #setExpandedHandler = null;
-  // Cached active profile id, refreshed on the (rare) add/switch/remove
-  // events so hot-path callers never touch the settings store.
+  // Refreshed on the rare profile events so hot-path callers never touch
+  // the settings store.
   #activeProfileId = null;
-  // Callbacks fired when a profile view's webContents dies OUTSIDE profile
-  // removal (Phase 2's unread aggregator drops that profile's stale count).
+  // Fired only when a view dies outside removal (removal has its own event).
   #viewGoneListeners = new Set();
 
   /**
@@ -182,7 +181,7 @@ class ProfileViewManager {
 
     this.#handlers = {
       add: (profile) => {
-        // add() may take the active slot when none was set.
+        // add() takes the active slot when none was set.
         this.#activeProfileId = this.#profilesManager.getActive()?.id ?? null;
         this.#onAdd(profile);
       },
@@ -441,11 +440,7 @@ class ProfileViewManager {
   }
 
   /**
-   * The webContents of the profile surface the user is currently looking at:
-   * the active profile's view, or the root window (Profile 0, and the
-   * fallback whenever no overlay is materialized). Phase 2 uses it to pick a
-   * live renderer for aggregate badge rendering; #2867's rerouting will need
-   * the same accessor.
+   * The active profile's view, falling back to the root window.
    * @returns {Electron.WebContents}
    */
   getActiveWebContents() {
@@ -459,32 +454,24 @@ class ProfileViewManager {
   }
 
   /**
-   * True only for a profile's PRIMARY surface: the root window or a
-   * registered profile view — never a popup or webview guest. The unread
-   * pipeline runs in every surface that loads the preload, but only the
-   * main Teams SPA's title carries the real unread count; a popup's title
-   * ("Chat | Microsoft Teams") scrapes to 0 and must not overwrite it.
+   * Root window or a registered profile view — never a popup or webview
+   * guest: only the main Teams SPA's title carries the real unread count
+   * (a popup's scrapes to 0 and must not overwrite it).
    * @param {Electron.IpcMainEvent|Electron.IpcMainInvokeEvent} event
    */
   isPrimaryProfileSurface(event) {
     const senderId = event?.sender?.id;
     if (typeof senderId !== "number") return false;
     if (senderId === this.#window.webContents.id) return true;
-    // LIVE views only — #viewMeta is deliberately retained after a view
-    // self-destroys (for the eventual removal's storage clear), so checking
-    // it would keep a dead sender "primary" and let its stashed pre-attach
-    // update replay into an unremovable bucket.
+    // Live #views, not #viewMeta — meta is retained after a self-destroy
+    // and would keep a dead sender "primary".
     for (const view of this.#views.values()) {
       if (view.webContents?.id === senderId) return true;
     }
     return false;
   }
 
-  /**
-   * Register a callback for a profile view dying outside profile removal
-   * (page-initiated window.close(), renderer crash cleanup). Removal itself
-   * is observable via ProfilesManager's "remove" event.
-   */
+  /** A view died outside removal (removal has ProfilesManager's "remove"). */
   onProfileViewGone(callback) {
     this.#viewGoneListeners.add(callback);
   }

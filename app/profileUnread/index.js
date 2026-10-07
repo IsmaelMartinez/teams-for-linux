@@ -1,51 +1,32 @@
 /**
- * ProfileUnreadAggregator — ADR-020 Phase 2. With several profiles running
- * warm, every profile view runs its own title-scrape → badge pipeline and the
- * main-side `tray-update` / `set-badge-count` handlers were last-write-wins:
- * a background profile settling to 0 cleared the badge for the profile the
- * user is looking at. This module makes main authoritative — it keeps one
- * bucket per sender, attributes each to a profile via the SenderProfileMap
- * (through ProfileViewManager), and drives the tray and dock badge from the
- * AGGREGATE: badge = sum across profiles, tooltip = total plus the top-3
- * profiles by unread count.
+ * ADR-020 Phase 2: every profile view runs the title-scrape → badge
+ * pipeline, so the sender-blind handlers were last-write-wins across
+ * profiles. Main becomes authoritative: dock badge = sum, tooltip = total
+ * plus top-3 profiles, tray icon rendered for the aggregate when more than
+ * one profile is unread (main has no canvas, so an existing renderer
+ * composites via the injected `requestBadgeRender`).
  *
- * Bucketing: attributed senders key by profile id (a reloaded view replaces
- * its own bucket); unattributed senders (the root window before Profile 0
- * bootstrap) key by webContents id, participate in the sum, and are dropped
- * the moment the same sender starts resolving to a profile.
- *
- * Icon: main cannot composite (no canvas), so when more than one bucket is
- * unread the aggregate icon is rendered by an existing renderer via the
- * injected `requestBadgeRender` (trayIconRenderer's canvas path, reused).
- * With zero or one unread bucket the sender's own icon is used unchanged —
- * the single-profile look stays byte-identical to today's.
- *
- * Pure module (no Electron imports): every side effect is injected, so the
- * aggregation logic is unit-testable under plain `node --test`.
+ * Pure module: side effects are injected, keeping it testable without
+ * Electron. Entry points and the refresh never throw — the process-wide
+ * error handlers exit on anything they cannot classify.
  */
 class ProfileUnreadAggregator {
   /** @type {Map<string, {count:number, flash:boolean, icon:string|null}>} */
   #buckets = new Map();
   #deps;
   #renderToken = 0;
-  // The last badge-carrying icon we applied — never nulled by the zero-unread
-  // path, so a failed aggregate render can fall back to SOME badged icon
-  // rather than regressing to the bare base icon while counts are non-zero.
+  // Never nulled by the zero path: a failed render falls back here so the
+  // tray keeps a badged icon while counts are non-zero.
   #lastBadgedIcon = null;
 
   /**
    * @param {object} deps
-   * @param {(event: object) => string|null} deps.resolveProfileId  Sender →
-   *   profile id (ProfileViewManager.getProfileFor-style resolution by event).
-   * @param {(event: object) => boolean} deps.isPrimarySender  True only for
-   *   a profile's PRIMARY surface (root window or a profile view). Popups
-   *   and webview guests run the same unread pipeline but scrape their own
-   *   window titles — a popped-out chat reads 0 — so their updates must
-   *   never touch the buckets (the intra-profile last-write-wins trap).
+   * @param {(event: object) => string|null} deps.resolveProfileId
+   * @param {(event: object) => boolean} deps.isPrimarySender  Root window or
+   *   a profile view. Popups scrape their own titles (a popped-out chat
+   *   reads 0) and must never write a bucket.
    * @param {(profileId: string) => string|null} deps.getProfileName
    * @param {(count: number) => Promise<string|null>} deps.requestBadgeRender
-   *   Renders the aggregate badge in a live renderer; resolves a dataURL or
-   *   null when no renderer could produce one.
    * @param {(update: {icon:string|null, flash:boolean, tooltip:string}) => void} deps.applyTray
    * @param {(count: number) => void} deps.applyBadgeCount
    * @param {string} deps.appTitle
@@ -58,9 +39,8 @@ class ProfileUnreadAggregator {
     const profileId = this.#deps.resolveProfileId(event);
     const senderKey = `wc:${event?.sender?.id ?? "unknown"}`;
     if (profileId) {
-      // The sender is attributable now — drop any bucket it created while it
-      // was not (the root window's pre-bootstrap updates), so that count is
-      // never double-counted once its updates re-key to the profile id.
+      // Drop the bucket this sender made pre-bootstrap, or its count would
+      // double once updates re-key to the profile id.
       this.#buckets.delete(senderKey);
       return profileId;
     }
@@ -76,9 +56,6 @@ class ProfileUnreadAggregator {
     return bucket;
   }
 
-  // Public entry points never throw: they run inside ipcMain handlers and a
-  // synchronous dep failure (settings-store read, webContents race) there is
-  // a fatal uncaughtException — a badge update must never take the app down.
   onTrayUpdate(event, payload) {
     try {
       this.#onTrayUpdate(event, payload ?? {});
@@ -104,13 +81,10 @@ class ProfileUnreadAggregator {
     const bucket = this.#bucket(this.#bucketKey(event));
     bucket.icon = icon ?? null;
     bucket.flash = !!flash;
-    // Legacy payloads ({icon, flash} only, still supported by the tray) say
-    // nothing about the count — leave it alone rather than zeroing.
+    // Legacy {icon, flash} payloads say nothing about the count.
     if (count !== undefined && count !== null) {
       bucket.count = Number.isFinite(count) && count > 0 ? count : 0;
     }
-    // What number the icon has baked in — an out-of-band badge change makes
-    // it stale, and the refresh below must re-render rather than reuse it.
     bucket.iconCount = bucket.count;
     this.#refreshTray();
   }
@@ -122,14 +96,11 @@ class ProfileUnreadAggregator {
     const changed = bucket.count !== next;
     bucket.count = next;
     this.#deps.applyBadgeCount(this.#sum());
-    // The organic pipeline sends tray-update with the same count first, so
-    // this refresh only fires for out-of-band badge changes (page script
-    // calling electronAPI.setBadgeCount directly) — without it the tray
-    // would keep showing a stale total with no recomputation scheduled.
+    // Only an out-of-band badge change gets here with a new count; the tray
+    // would otherwise keep a stale total with nothing scheduled to fix it.
     if (changed) this.#refreshTray();
   }
 
-  /** A removed profile must stop contributing immediately. */
   removeProfile(profileId) {
     if (!this.#buckets.delete(profileId)) return;
     this.#deps.applyBadgeCount(this.#sum());
@@ -150,7 +121,6 @@ class ProfileUnreadAggregator {
     const base =
       sum > 0 ? `${this.#deps.appTitle} (${sum})` : this.#deps.appTitle;
     if (unread.length < 2) return base;
-    // Top-3 by count; only profile-attributed buckets can be named.
     const lines = unread
       .map(([key, bucket]) => ({
         name: key.startsWith("wc:") ? null : this.#deps.getProfileName(key),
@@ -164,9 +134,6 @@ class ProfileUnreadAggregator {
   }
 
   async #refreshTray() {
-    // Never allowed to reject: the process-wide unhandledRejection handler
-    // exits on anything it cannot classify, and the injected deps can throw
-    // (settings-store reads, webContents races).
     try {
       await this.#applyRefresh();
     } catch (error) {
@@ -185,14 +152,14 @@ class ProfileUnreadAggregator {
 
     let icon;
     if (unread.length === 0) {
-      icon = null; // tray falls back to the base icon, exactly like today
+      icon = null;
     } else if (unread.length === 1) {
       const [, bucket] = unread[0];
       if (bucket.icon !== null && bucket.iconCount === bucket.count) {
-        icon = bucket.icon; // the sender's own composited icon, unchanged
+        icon = bucket.icon;
       } else {
-        // The stored icon shows a different number (out-of-band badge
-        // change) or the bucket never carried one — re-render.
+        // The stored icon has a different number baked in (out-of-band
+        // badge change) — re-render.
         icon =
           (await this.#deps.requestBadgeRender(
             Math.min(bucket.count, 9999)
@@ -201,10 +168,7 @@ class ProfileUnreadAggregator {
         icon ??= bucket.icon ?? this.#lastBadgedIcon;
       }
     } else {
-      // Aggregate: rendered by a live renderer. Coalesce — only the newest
-      // request may apply. On failure fall back to the highest-count
-      // bucket's own icon, then to the last badge-carrying icon, so the
-      // tray never regresses to a bare base icon while counts are non-zero.
+      // Token guard: only the newest render may apply.
       icon = (await this.#deps.requestBadgeRender(Math.min(sum, 9999))) ?? null;
       if (token !== this.#renderToken) return;
       if (icon === null) {
