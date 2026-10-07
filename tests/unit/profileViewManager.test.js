@@ -45,6 +45,9 @@ class FakeWebContents {
   }
   removeListener() {}
   send() {}
+  getTitle() {
+    return this.title ?? '';
+  }
   focus() {
     this.focusCalls = (this.focusCalls || 0) + 1;
   }
@@ -567,5 +570,64 @@ describe('ProfileViewManager keeps profile views attached (#3057)', () => {
   it('turns off focus-on-navigation so a background profile cannot take focus', () => {
     const source = require('node:fs').readFileSync(pvmPath, 'utf8');
     assert.match(source, /focusOnNavigation:\s*false/);
+  });
+});
+
+// #3068: Electron only mirrors the root webContents (Profile 0) onto the
+// window title, so the active profile view's title has to be pushed instead.
+describe('ProfileViewManager window title follows the active profile (#3068)', () => {
+  it('sets the title from the active view, ignores background profiles, hands back to Profile 0', () => {
+    const titles = [];
+    const win = fakeWindow();
+    const pm = fakeProfilesManager([LEGACY, PROFILE_A, PROFILE_B]);
+    new ProfileViewManager(
+      win,
+      pm,
+      { url: 'https://teams.cloud.microsoft' },
+      () => {},
+      () => {},
+      () => {},
+      (title) => titles.push(title)
+    ).initialize();
+    const [viewA, viewB] = createdViews;
+    viewB.webContents.title = 'Chat | B | Microsoft Teams';
+    titles.length = 0;
+
+    pm.switch('profile-b');
+    assert.deepStrictEqual(titles, ['Chat | B | Microsoft Teams']);
+
+    viewB.webContents.emit('page-title-updated', {}, '(1) Chat | B | Microsoft Teams');
+    // Profile 0 (root) and profile A keep updating in the background.
+    win.webContents.emit('page-title-updated', {}, 'Chat | Profile 0 | Microsoft Teams');
+    viewA.webContents.emit('page-title-updated', {}, 'Chat | A | Microsoft Teams');
+    assert.deepStrictEqual(titles, [
+      'Chat | B | Microsoft Teams',
+      '(1) Chat | B | Microsoft Teams',
+    ]);
+
+    pm.switch('profile-0');
+    assert.strictEqual(titles.at(-1), null);
+  });
+
+  it('hands the title back when the active view destroys itself, not for a background one', () => {
+    const titles = [];
+    const pm = fakeProfilesManager([LEGACY, PROFILE_A, PROFILE_B]);
+    new ProfileViewManager(
+      fakeWindow(),
+      pm,
+      { url: 'https://teams.cloud.microsoft' },
+      () => {},
+      () => {},
+      () => {},
+      (title) => titles.push(title)
+    ).initialize();
+    const [viewA, viewB] = createdViews;
+    pm.switch('profile-b');
+    titles.length = 0;
+
+    viewA.destroyWebContents();
+    assert.deepStrictEqual(titles, []);
+    viewB.destroyWebContents();
+    assert.deepStrictEqual(titles, [null]);
   });
 });

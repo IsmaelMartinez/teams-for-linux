@@ -50,6 +50,9 @@ let screenSharingService = null;
 let connectionManager = null;
 let menus = null;
 let browserWindowManager = null;
+// Page title of the profile view currently shown over the root window, or
+// null while Profile 0 is (see setTitleOverride).
+let titleOverride = null;
 
 const isMac = os.platform() === "darwin";
 
@@ -912,6 +915,7 @@ exports.performIncomingCallAction = function (action) {
 exports.bindDisplayMediaHandler = bindDisplayMediaHandler;
 exports.bindWindowOpenHandler = bindWindowOpenHandler;
 exports.injectScreenSharingLogic = injectScreenSharingLogic;
+exports.setTitleOverride = setTitleOverride;
 
 exports.setQuickChatManager = function (quickChatManager) {
   if (menus) {
@@ -1394,19 +1398,42 @@ function onNewWindow(details) {
   return secureOpenLink(details);
 }
 
+// A custom app.title replaces the trailing "Microsoft Teams" in the window
+// title (or is appended when Teams omits it) so multiple instances can be
+// told apart in taskbars and Alt+Tab (#3035). The default leaves the page
+// title untouched.
+function formatWindowTitle(title) {
+  const defaultTitle = "Microsoft Teams";
+  if (!config.appTitle || config.appTitle === defaultTitle) return title;
+  return title.endsWith(defaultTitle)
+    ? title.slice(0, -defaultTitle.length) + config.appTitle
+    : `${title} - ${config.appTitle}`;
+}
+
 function onPageTitleUpdated(event, title) {
   window.webContents.send("page-title", title);
-  // A custom app.title replaces the trailing "Microsoft Teams" in the window
-  // title (or is appended when Teams omits it) so multiple instances can be
-  // told apart in taskbars and Alt+Tab (#3035). The default leaves Electron
-  // mirroring document.title untouched.
-  const defaultTitle = "Microsoft Teams";
-  if (config.appTitle && config.appTitle !== defaultTitle) {
+  // While another profile's view is shown its title owns the window, so
+  // Profile 0's background updates must not replace it (#3068).
+  if (titleOverride !== null) {
     event.preventDefault();
-    window.setTitle(title.endsWith(defaultTitle)
-      ? title.slice(0, -defaultTitle.length) + config.appTitle
-      : `${title} - ${config.appTitle}`);
+    return;
   }
+  // The default app.title leaves Electron mirroring document.title.
+  const windowTitle = formatWindowTitle(title);
+  if (windowTitle !== title) {
+    event.preventDefault();
+    window.setTitle(windowTitle);
+  }
+}
+
+// Multi-account: ProfileViewManager passes the active profile view's page
+// title, or null when Profile 0 (the root webContents) is shown again. A
+// null while Profile 0 already owns the title leaves it alone.
+function setTitleOverride(title) {
+  if (title === null && titleOverride === null) return;
+  titleOverride = title;
+  if (!window || window.isDestroyed()) return;
+  window.setTitle(formatWindowTitle(title ?? window.webContents.getTitle()));
 }
 
 function onNavigationChanged() {

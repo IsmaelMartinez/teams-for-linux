@@ -771,7 +771,8 @@ async function handleAppReady() {
           config,
           mainAppWindow.bindDisplayMediaHandler,
           mainAppWindow.bindWindowOpenHandler,
-          mainAppWindow.injectScreenSharingLogic
+          mainAppWindow.injectScreenSharingLogic,
+          mainAppWindow.setTitleOverride
         );
         profileViewManager.initialize();
         await profileViewManager.bootstrapProfileZeroIfNeeded();
