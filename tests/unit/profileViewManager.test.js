@@ -444,20 +444,6 @@ describe('ProfileViewManager sender attribution wiring', () => {
     assert.strictEqual(pvm.resolveProfileId(child.webContents), null);
   });
 
-  it('getActiveWebContents returns the root window while Profile 0 is active', () => {
-    const { win, pvm } = build([LEGACY, PROFILE_A]);
-    assert.strictEqual(pvm.getActiveWebContents(), win.webContents);
-  });
-
-  it('getActiveWebContents returns the active profile view, falling back to root when it is gone', () => {
-    const { win, pm, pvm } = build([LEGACY, PROFILE_A]);
-    pm.switch('profile-a');
-    const profileView = createdViews[0];
-    assert.strictEqual(pvm.getActiveWebContents(), profileView.webContents);
-    profileView.destroyWebContents();
-    assert.strictEqual(pvm.getActiveWebContents(), win.webContents);
-  });
-
   it('isPrimaryProfileSurface: true for root and profile views, false for pill, descendants, and dead views', () => {
     const { win, pvm } = build([LEGACY, PROFILE_A]);
     const profileView = createdViews[0];

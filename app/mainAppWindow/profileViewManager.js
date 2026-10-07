@@ -109,9 +109,6 @@ class ProfileViewManager {
   #chromeView = null;
   #chromeExpanded = false; // dropdown open (transient)
   #setExpandedHandler = null;
-  // Refreshed on the rare profile events so hot-path callers never touch
-  // the settings store.
-  #activeProfileId = null;
   // Fired only when a view dies outside removal (removal has its own event).
   #viewGoneListeners = new Set();
 
@@ -177,23 +174,12 @@ class ProfileViewManager {
     this.#registry.setRootProfileId(
       this.#profilesManager.getLegacyProfile()?.id ?? null
     );
-    this.#activeProfileId = this.#profilesManager.getActive()?.id ?? null;
 
     this.#handlers = {
-      add: (profile) => {
-        // add() takes the active slot when none was set.
-        this.#activeProfileId = this.#profilesManager.getActive()?.id ?? null;
-        this.#onAdd(profile);
-      },
+      add: (profile) => this.#onAdd(profile),
       update: () => this.#pushSwitcherState(),
-      switch: (profile) => {
-        this.#activeProfileId = profile?.id ?? null;
-        this.#onSwitch(profile);
-      },
-      remove: (result) => {
-        this.#activeProfileId = result?.activeId ?? null;
-        this.#onRemove(result);
-      },
+      switch: (profile) => this.#onSwitch(profile),
+      remove: (result) => this.#onRemove(result),
     };
     this.#profilesManager.on("add", this.#handlers.add);
     this.#profilesManager.on("update", this.#handlers.update);
@@ -437,20 +423,6 @@ class ProfileViewManager {
   resolveProfileId(webContents) {
     if (!webContents || typeof webContents.id !== "number") return null;
     return this.#registry.resolveProfileId(webContents.id);
-  }
-
-  /**
-   * The active profile's view, falling back to the root window.
-   * @returns {Electron.WebContents}
-   */
-  getActiveWebContents() {
-    if (this.#activeProfileId) {
-      const view = this.#views.get(this.#activeProfileId);
-      if (view?.webContents && !view.webContents.isDestroyed()) {
-        return view.webContents;
-      }
-    }
-    return this.#window.webContents;
   }
 
   /**
