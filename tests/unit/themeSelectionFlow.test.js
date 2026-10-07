@@ -83,7 +83,7 @@ after(() => {
   }
 });
 
-function createContext(t) {
+function createContext(t, initialConfig = {}) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "teams-theme-menu-flow-"));
   t.after(() => {
     app.removeAllListeners();
@@ -100,6 +100,7 @@ function createContext(t) {
     appearance: { cssName: "compactDark", followSystemTheme: false },
     window: { menubar: "auto" },
     appTitle: "Preserve",
+    ...initialConfig,
   }));
   dialog.showMessageBox = t.mock.fn(async () => ({ response: 1 }));
   dialog.showErrorBox = t.mock.fn();
@@ -200,5 +201,128 @@ describe("Menus theme save menu state", () => {
     assert.strictEqual(context.window.setMenu.mock.callCount(), 2);
     assert.strictEqual(dialog.showErrorBox.mock.callCount(), 0);
     assert.strictEqual(context.warning.mock.callCount(), 0);
+  });
+});
+
+function assertSavedAndAttached(context, original) {
+  assert.deepStrictEqual(JSON.parse(fs.readFileSync(context.configFile, "utf8")), {
+    ...original,
+    appearance: { ...original.appearance, cssName: "custom:glass-dark" },
+  });
+  assert.deepStrictEqual(context.configuration.themeSelection, { cssName: "custom:glass-dark", cssLocation: "" });
+  assert.deepStrictEqual(checkedLabels(context), ["Glass Dark"]);
+  assert.strictEqual(context.window.menu.items[0].label, "Teams for Linux");
+  assert.strictEqual(context.window.setMenu.mock.callCount(), 2);
+  assert.strictEqual(context.window.setMenu.mock.calls[1].arguments[0], context.window.menu);
+  assert.strictEqual(dialog.showErrorBox.mock.callCount(), 0);
+  assert.strictEqual(context.warning.mock.callCount(), 0);
+}
+
+function assertRestartPrompt(context, parent, options) {
+  assert.strictEqual(parent, context.window);
+  assert.deepStrictEqual(options, {
+    type: "info",
+    title: "Theme saved",
+    message: "Restart Teams for Linux to apply the selected theme.",
+    buttons: ["Restart now", "Later"],
+    defaultId: 0,
+    cancelId: 1,
+  });
+}
+
+function assertSelectionOnNextLaunch(context) {
+  const restarted = new AppConfiguration(context.directory, "2.24.0");
+  assert.deepStrictEqual(restarted.themeSelection, { cssName: "custom:glass-dark", cssLocation: "" });
+  assert.strictEqual(restarted.customCSSPath, path.join(context.directory, "themes", "glass-dark", "theme.css"));
+}
+
+describe("Menus real theme selection restart flow", () => {
+  it("saves and attaches the selected theme before prompting and restarting now", async (t) => {
+    const context = createContext(t);
+    const original = JSON.parse(fs.readFileSync(context.configFile, "utf8"));
+    const startup = structuredClone(context.configuration.startupConfig);
+    const lifecycle = [];
+    t.mock.method(dialog, "showMessageBox", async (parent, options) => {
+      assertSavedAndAttached(context, original);
+      assertRestartPrompt(context, parent, options);
+      lifecycle.push("prompt");
+      return { response: 0 };
+    });
+    t.mock.method(app, "relaunch", () => { lifecycle.push("relaunch"); });
+    t.mock.method(app, "exit", (code) => { lifecycle.push(["exit", code]); });
+
+    await toggleTheme(context, "Custom", "Glass Dark");
+
+    assert.deepStrictEqual(lifecycle, ["prompt", "relaunch", ["exit", 0]]);
+    assertSavedAndAttached(context, original);
+    assert.strictEqual(dialog.showMessageBox.mock.callCount(), 1);
+    assert.strictEqual(app.relaunch.mock.callCount(), 1);
+    assert.strictEqual(app.exit.mock.callCount(), 1);
+    assert.deepStrictEqual(context.configuration.startupConfig, startup);
+    assertSelectionOnNextLaunch(context);
+  });
+
+  it("keeps the saved selection and attached menu when restart is postponed", async (t) => {
+    const context = createContext(t);
+    const original = JSON.parse(fs.readFileSync(context.configFile, "utf8"));
+    const startup = structuredClone(context.configuration.startupConfig);
+    const startupCSS = context.configuration.customCSSPath;
+    t.mock.method(dialog, "showMessageBox", async (parent, options) => {
+      assertSavedAndAttached(context, original);
+      assertRestartPrompt(context, parent, options);
+      return { response: 1 };
+    });
+
+    await toggleTheme(context, "Custom", "Glass Dark");
+
+    assertSavedAndAttached(context, original);
+    assert.strictEqual(dialog.showMessageBox.mock.callCount(), 1);
+    assert.strictEqual(app.relaunch.mock.callCount(), 0);
+    assert.strictEqual(app.exit.mock.callCount(), 0);
+    assert.deepStrictEqual(context.configuration.startupConfig, startup);
+    assert.strictEqual(context.configuration.customCSSPath, startupCSS);
+    assertSelectionOnNextLaunch(context);
+  });
+
+  it("lets an active config watcher own the restart after saving and attaching the menu", async (t) => {
+    const context = createContext(t, { watchConfigFile: true });
+    const original = JSON.parse(fs.readFileSync(context.configFile, "utf8"));
+    const startup = structuredClone(context.configuration.startupConfig);
+    // Model an already registered watcher rather than waiting for fs events.
+    // The selection flow must consult actual watcher state, not just its flag.
+    const watcher = t.mock.method(loadConfig, "isWatchingConfigFile", (config) => {
+      assert.strictEqual(config, context.configuration.startupConfig);
+      return true;
+    });
+
+    await toggleTheme(context, "Custom", "Glass Dark");
+
+    assert.strictEqual(watcher.mock.callCount(), 1);
+    assertSavedAndAttached(context, original);
+    assert.strictEqual(dialog.showMessageBox.mock.callCount(), 0);
+    assert.strictEqual(app.relaunch.mock.callCount(), 0);
+    assert.strictEqual(app.exit.mock.callCount(), 0);
+    assert.deepStrictEqual(context.configuration.startupConfig, startup);
+    assertSelectionOnNextLaunch(context);
+  });
+
+  it("still prompts when watching was requested but no config watcher is active", async (t) => {
+    const context = createContext(t, { watchConfigFile: true });
+    const original = JSON.parse(fs.readFileSync(context.configFile, "utf8"));
+    const watcher = t.mock.method(loadConfig, "isWatchingConfigFile", () => false);
+    t.mock.method(dialog, "showMessageBox", async (parent, options) => {
+      assertSavedAndAttached(context, original);
+      assertRestartPrompt(context, parent, options);
+      return { response: 1 };
+    });
+
+    await toggleTheme(context, "Custom", "Glass Dark");
+
+    assert.strictEqual(watcher.mock.callCount(), 1);
+    assertSavedAndAttached(context, original);
+    assert.strictEqual(dialog.showMessageBox.mock.callCount(), 1);
+    assert.strictEqual(app.relaunch.mock.callCount(), 0);
+    assert.strictEqual(app.exit.mock.callCount(), 0);
+    assertSelectionOnNextLaunch(context);
   });
 });
