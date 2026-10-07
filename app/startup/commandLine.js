@@ -11,6 +11,12 @@ class CommandLineManager {
     // the first play and rejects subsequent audio on all renderer paths.
     app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 
+    // Electron 43.4.0 feeds the XDG portal accent color into the Linux theme,
+    // which can select a sandbox fallback light GTK theme even when the host
+    // portal reports dark (#3023). Disable UsePortalAccentColor on Linux until
+    // Electron picks up the Chromium follow-up. A caller-supplied
+    // --disable-features list replaces this default, so leave it untouched and
+    // warn for any required token it omits.
     if (app.commandLine.hasSwitch("disable-features")) {
       const disabledFeatures = app.commandLine.getSwitchValue("disable-features").split(",");
       if (!disabledFeatures.includes("HardwareMediaKeyHandling")) {
@@ -19,6 +25,17 @@ class CommandLineManager {
           "Teams media controls may conflict with system media key handling."
         );
       }
+      if (process.platform === "linux" && !disabledFeatures.includes("UsePortalAccentColor")) {
+        console.warn(
+          "disable-features switch already set without UsePortalAccentColor. " +
+          "The app may follow a sandbox GTK theme instead of the operating system theme."
+        );
+      }
+    } else if (process.platform === "linux") {
+      app.commandLine.appendSwitch(
+        "disable-features",
+        "HardwareMediaKeyHandling,UsePortalAccentColor"
+      );
     } else {
       app.commandLine.appendSwitch("disable-features", "HardwareMediaKeyHandling");
     }

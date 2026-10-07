@@ -1004,12 +1004,12 @@ The configuration file can include Electron CLI flags that will be added when th
 Teams for Linux automatically sets Chromium feature flags for optimal functionality. These defaults are applied only if you don't provide your own flags.
 
 **Default Settings:**
-- `--disable-features=HardwareMediaKeyHandling` - Prevents conflicts with Teams media controls
+- `--disable-features=HardwareMediaKeyHandling` - Prevents conflicts with Teams media controls. On Linux the default is `--disable-features=HardwareMediaKeyHandling,UsePortalAccentColor`, which also stops Electron from applying the XDG portal accent color (that can select a sandbox light GTK theme instead of the host theme).
 - `--enable-features=WebRTCPipeWireCapturer` - Enables PipeWire screen sharing (Wayland only)
 
 **Using Custom Feature Flags:**
 
-If you need custom feature flags, provide them when launching the app. The application respects your flags and will not override them.
+If you need custom feature flags, provide them when launching the app. The application respects your flags and will not override them. A `--disable-features` list you pass replaces the default entirely.
 
 ```bash
 # Example: Adding your own features on Wayland
@@ -1017,11 +1017,15 @@ teams-for-linux --enable-features=MyCustomFeature,WebRTCPipeWireCapturer
 
 # Example: Disabling features
 teams-for-linux --disable-features=HardwareMediaKeyHandling,UnwantedFeature
+
+# Linux: your list replaces the default, so keep both required tokens
+teams-for-linux --disable-features=HardwareMediaKeyHandling,UsePortalAccentColor,UnwantedFeature
 ```
 
 > [!WARNING]
 > When providing custom flags, **you must include the required features** for proper functionality:
 > - **Always include:** `HardwareMediaKeyHandling` in `--disable-features`
+> - **On Linux:** Also include `UsePortalAccentColor` in `--disable-features`
 > - **On Wayland:** Also include `WebRTCPipeWireCapturer` in `--enable-features`
 >
 > Missing required features will trigger a warning but won't prevent the app from starting.
@@ -1031,7 +1035,7 @@ teams-for-linux --disable-features=HardwareMediaKeyHandling,UnwantedFeature
 ```bash
 # Wayland users with custom needs
 teams-for-linux --enable-features=MyFeature,WebRTCPipeWireCapturer \
-                --disable-features=HardwareMediaKeyHandling,OtherFeature
+                --disable-features=HardwareMediaKeyHandling,UsePortalAccentColor,OtherFeature
 ```
 
 ### Incoming Call Command
