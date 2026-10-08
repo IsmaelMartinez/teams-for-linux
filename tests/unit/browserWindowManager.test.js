@@ -92,6 +92,18 @@ describe('BrowserWindowManager window.hideTitleBar', () => {
 		assert.strictEqual(build({ frame: true, window: { hideTitleBar: true } }).titleBarStyle, undefined);
 	});
 
+	it('reports whether the title bar is hidden, for the deferred first show', () => {
+		const hidden = (config) => new BrowserWindowManager({ config }).isTitleBarHidden();
+
+		setPlatform('linux');
+		assert.strictEqual(hidden({ frame: true, window: { hideTitleBar: true } }), true);
+		assert.strictEqual(hidden({ frame: true, window: { hideTitleBar: false } }), false);
+		assert.strictEqual(hidden({ frame: true }), false);
+		assert.strictEqual(hidden({ frame: false, window: { hideTitleBar: true } }), false);
+		setPlatform('darwin');
+		assert.strictEqual(hidden({ frame: true, window: { hideTitleBar: true } }), false);
+	});
+
 	it('yields to window.frame: false', () => {
 		setPlatform('linux');
 		const options = build({ frame: false, window: { hideTitleBar: true } });

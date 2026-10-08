@@ -91,6 +91,19 @@ class BrowserWindowManager {
   }
 
   /**
+   * Whether `window.hideTitleBar` applies: Linux only, and `window.frame: false`
+   * wins because a frameless window has no title bar to hide.
+   * @returns {boolean}
+   */
+  isTitleBarHidden() {
+    return (
+      process.platform === "linux" &&
+      Boolean(this.config.window?.hideTitleBar) &&
+      this.config.frame !== false
+    );
+  }
+
+  /**
    * Window decoration options for `window.hideTitleBar` (Linux only).
    *
    * `titleBarStyle: "hidden"` keeps the native frame, so Chromium still draws
@@ -100,19 +113,18 @@ class BrowserWindowManager {
    * @returns {object} BrowserWindow options, empty when the option is off
    */
   getTitleBarOptions() {
-    if (
-      process.platform !== "linux" ||
-      !this.config.window?.hideTitleBar ||
-      this.config.frame === false
-    ) {
+    if (!this.isTitleBarHidden()) {
       return {};
     }
-    const dark = nativeTheme.shouldUseDarkColors;
     return {
       titleBarStyle: "hidden",
+      // Teams picks its own theme, which need not match the OS one, so a solid
+      // overlay colour showed as a black block over a light Teams. Transparent
+      // lets the top bar show through; the symbols use a mid grey that reads on
+      // both the light and the dark Teams header.
       titleBarOverlay: {
-        color: dark ? "#1f1f1f" : "#ebebeb",
-        symbolColor: dark ? "#ffffff" : "#242424",
+        color: "#00000000",
+        symbolColor: "#8a8a8a",
         height: TITLE_BAR_OVERLAY_HEIGHT,
       },
     };

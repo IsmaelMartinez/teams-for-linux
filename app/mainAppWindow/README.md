@@ -16,6 +16,16 @@ Manages the primary BrowserWindow that hosts the Teams web interface.
 - Call event handling and screen sharing coordination
 - Deep link handling for `msteams:` protocol links and HTTPS Teams links
 
+## Hidden Title Bar (Linux)
+
+`window.hideTitleBar` keeps the native frame and drops only the title bar
+(`titleBarStyle: "hidden"` plus a transparent `titleBarOverlay`), so Chromium
+still draws the rounded corners and shadow. A window with a hidden title bar
+that is shown before its first load never paints and then ignores the mouse, so
+`showWhenLoaded` in `index.js` waits for `did-finish-load` (5 second fallback)
+before the first `show()`. Teams' own top-bar buttons sit under the overlay on
+the right; that overlap is not handled yet.
+
 ## Deep Link Routing
 
 `onAppSecondInstance` navigates the window to a resolved deep link, which

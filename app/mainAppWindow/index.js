@@ -1015,15 +1015,33 @@ function applyAppConfiguration(config, window) {
   }
   window.webContents.setUserAgent(config.chromeUserAgent);
 
-  if (!config.minimized) {
-    window.show();
-  } else {
+  if (config.minimized) {
     window.hide();
+  } else if (browserWindowManager.isTitleBarHidden()) {
+    showWhenLoaded(window);
+  } else {
+    window.show();
   }
 
   if (config.webDebug) {
     window.openDevTools();
   }
+}
+
+// With window.hideTitleBar, a window shown before its first load never paints
+// and then ignores the mouse, while one shown after the load works. The timer
+// keeps the window from staying hidden if the load never finishes.
+const SHOW_WHEN_LOADED_TIMEOUT_MS = 5000;
+
+function showWhenLoaded(win) {
+  const show = () => {
+    clearTimeout(timer);
+    if (!win.isDestroyed()) {
+      win.show();
+    }
+  };
+  const timer = setTimeout(show, SHOW_WHEN_LOADED_TIMEOUT_MS);
+  win.webContents.once("did-finish-load", show);
 }
 
 function applySpellCheckerConfiguration(languages, window) {
