@@ -128,7 +128,7 @@ ignored. The examples below use whichever spelling actually applies.
 |--------|------|---------|-------------|
 | `window.frame` | `boolean` | `true` | Specify false to create a Frameless Window |
 | `frame` | `boolean` | `true` | Deprecated, use `window.frame` |
-| `window.hideTitleBar` | `boolean` | `false` | Linux only. Hide the native title bar but keep the rounded corners, shadow and resize borders; the window buttons are drawn over the Teams top bar. Ignored when `window.frame` is false |
+| `window.hideTitleBar` | `boolean` | `false` | Linux only. Hide the native title bar but keep the rounded corners, shadow and resize borders; the window buttons are drawn over the Teams top bar. The menu bar is hidden with it and Alt does not show it, so use the tray icon menu. Ignored when `window.frame` is false |
 | `window.menubar` | `string` | `"auto"` | Menu bar behaviour. Choices: `auto`, `visible`, `hidden` |
 | `menubar` | `string` | `"auto"` | Deprecated, use `window.menubar` |
 | `window.minimized` | `boolean` | `false` | Start the application minimized |

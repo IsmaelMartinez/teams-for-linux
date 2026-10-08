@@ -337,7 +337,7 @@ Object options group several related settings. The tables below list each nested
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `window.frame` | `boolean` | `true` | Specify false to create a Frameless Window. Default is true |
-| `window.hideTitleBar` | `boolean` | `false` | Linux only. Hide the native title bar and keep the rounded corners, shadow and window buttons, which are drawn over the Teams top bar. Ignored when window.frame is false |
+| `window.hideTitleBar` | `boolean` | `false` | Linux only. Hide the native title bar and keep the rounded corners, shadow and window buttons, which are drawn over the Teams top bar. The menu bar is hidden with it (Alt does not show it); use the tray icon menu. Ignored when window.frame is false |
 | `window.menubar` | `string` | `"auto"` | A value controls the menu bar behaviour |
 | `window.minimized` | `boolean` | `false` | Start the application minimized |
 | `window.closeOnCross` | `boolean` | `false` | Close the app when clicking the close (X) cross |

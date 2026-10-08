@@ -1354,7 +1354,7 @@ module.exports = {
           },
           "hideTitleBar": {
             type: "boolean",
-            describe: "Linux only. Hide the native title bar and keep the rounded corners, shadow and window buttons, which are drawn over the Teams top bar. Ignored when window.frame is false",
+            describe: "Linux only. Hide the native title bar and keep the rounded corners, shadow and window buttons, which are drawn over the Teams top bar. The menu bar is hidden with it (Alt does not show it); use the tray icon menu. Ignored when window.frame is false",
           },
           "menubar": {
             type: "string",

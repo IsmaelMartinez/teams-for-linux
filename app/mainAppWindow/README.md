@@ -23,7 +23,8 @@ Manages the primary BrowserWindow that hosts the Teams web interface.
 still draws the rounded corners and shadow. A window with a hidden title bar
 that is shown before its first load never paints and then ignores the mouse, so
 `showWhenLoaded` in `index.js` waits for `did-finish-load` (5 second fallback)
-before the first `show()`. Teams' own top-bar buttons sit under the overlay on
+before the first `show()`. The menu bar goes with the title bar and Alt does
+not bring it back, so the menu is reachable from the tray icon only. Teams' own top-bar buttons sit under the overlay on
 the right; that overlap is not handled yet.
 
 ## Deep Link Routing
