@@ -59,6 +59,48 @@ describe('BrowserWindowManager.createNewBrowserWindow', () => {
 	});
 });
 
+describe('BrowserWindowManager window.hideTitleBar', () => {
+	const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
+	const setPlatform = (value) => Object.defineProperty(process, 'platform', { value });
+	const build = (config) => {
+		new BrowserWindowManager({ config }).createNewBrowserWindow({ x: 0, y: 0, width: 800, height: 600 });
+		return createdOptions;
+	};
+
+	after(() => Object.defineProperty(process, 'platform', originalPlatform));
+
+	it('keeps the native frame and overlays the window buttons on Linux', () => {
+		setPlatform('linux');
+		const options = build({ frame: true, window: { hideTitleBar: true } });
+
+		assert.strictEqual(options.frame, true);
+		assert.strictEqual(options.titleBarStyle, 'hidden');
+		assert.ok(options.titleBarOverlay.height > 0);
+	});
+
+	it('leaves the window alone when the option is off or unset', () => {
+		setPlatform('linux');
+		for (const config of [{ frame: true }, { frame: true, window: { hideTitleBar: false } }]) {
+			const options = build(config);
+			assert.strictEqual(options.titleBarStyle, undefined);
+			assert.strictEqual(options.titleBarOverlay, undefined);
+		}
+	});
+
+	it('does nothing on other platforms', () => {
+		setPlatform('darwin');
+		assert.strictEqual(build({ frame: true, window: { hideTitleBar: true } }).titleBarStyle, undefined);
+	});
+
+	it('yields to window.frame: false', () => {
+		setPlatform('linux');
+		const options = build({ frame: false, window: { hideTitleBar: true } });
+
+		assert.strictEqual(options.frame, false);
+		assert.strictEqual(options.titleBarStyle, undefined);
+	});
+});
+
 describe('BrowserWindowManager incoming call routing', () => {
 	it('preserves the reporting renderer on call connected/disconnected events', async () => {
 		const manager = new BrowserWindowManager({ config: {} });

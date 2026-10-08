@@ -18,6 +18,9 @@ const {
 
 const MIN_WINDOW_WIDTH = 400;
 const MIN_WINDOW_HEIGHT = 300;
+// Height of the min/max/close overlay drawn over the Teams top bar. It matches
+// the Teams header so the buttons sit inside it rather than below it.
+const TITLE_BAR_OVERLAY_HEIGHT = 48;
 
 class BrowserWindowManager {
   constructor(properties) {
@@ -87,6 +90,34 @@ class BrowserWindowManager {
     return iconPath ? TrayIconChooser.windowImage(iconPath) : undefined;
   }
 
+  /**
+   * Window decoration options for `window.hideTitleBar` (Linux only).
+   *
+   * `titleBarStyle: "hidden"` keeps the native frame, so Chromium still draws
+   * the rounded corners, shadow and resize borders, but drops the title bar.
+   * `titleBarOverlay` puts the window buttons back over the Teams top bar.
+   * `window.frame: false` wins: a frameless window has nothing to hide.
+   * @returns {object} BrowserWindow options, empty when the option is off
+   */
+  getTitleBarOptions() {
+    if (
+      process.platform !== "linux" ||
+      !this.config.window?.hideTitleBar ||
+      this.config.frame === false
+    ) {
+      return {};
+    }
+    const dark = nativeTheme.shouldUseDarkColors;
+    return {
+      titleBarStyle: "hidden",
+      titleBarOverlay: {
+        color: dark ? "#1f1f1f" : "#ebebeb",
+        symbolColor: dark ? "#ffffff" : "#242424",
+        height: TITLE_BAR_OVERLAY_HEIGHT,
+      },
+    };
+  }
+
   createNewBrowserWindow(windowState) {
     return new BrowserWindow({
       title: "Teams for Linux",
@@ -106,6 +137,7 @@ class BrowserWindowManager {
       autoHideMenuBar: this.config.menubar === "auto",
       icon: this.iconChooser ? this.getIconImage(this.iconChooser.getFile()) : undefined,
       frame: this.config.frame,
+      ...this.getTitleBarOptions(),
 
       webPreferences: {
         partition: this.config.partition,

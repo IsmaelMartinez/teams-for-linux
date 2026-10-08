@@ -1496,6 +1496,7 @@
       "type": "object",
       "default": {
         "frame": true,
+        "hideTitleBar": false,
         "menubar": "auto",
         "minimized": false,
         "closeOnCross": false,
@@ -1511,6 +1512,12 @@
           "type": "boolean",
           "default": true,
           "description": "Specify false to create a Frameless Window. Default is true"
+        },
+        {
+          "path": "hideTitleBar",
+          "type": "boolean",
+          "default": false,
+          "description": "Linux only. Hide the native title bar and keep the rounded corners, shadow and window buttons, which are drawn over the Teams top bar. Ignored when window.frame is false"
         },
         {
           "path": "menubar",
