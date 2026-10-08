@@ -127,26 +127,35 @@ class AppConfiguration {
     data.appearance = appearance;
     const changed = before !== JSON.stringify(data);
     if (changed) {
-      fs.mkdirSync(this.configPath, { recursive: true });
-      // Preserve user config symlinks (common with dotfile managers), mode and
-      // unrelated options. Rename atomically so a failed write cannot truncate it.
-      const target = fs.existsSync(configFile) ? fs.realpathSync(configFile) : configFile;
-      const mode = fs.existsSync(target) ? fs.statSync(target).mode & 0o777 : 0o600;
-      const temp = path.join(path.dirname(target), `.config-theme-${process.pid}-${Date.now()}.tmp`);
-      let written = false;
-      try {
-        fs.writeFileSync(temp, JSON.stringify(data, null, 2) + "\n", { flag: "wx", mode });
-        written = true;
-        fs.renameSync(temp, target);
-      } finally {
-        if (written && fs.existsSync(temp)) fs.unlinkSync(temp);
-      }
+      this.#writeThemeConfig(configFile, data);
     }
     this.#themeSelection = {
       cssName: appearance.cssName,
       cssLocation: appearance.cssLocation ?? data.customCSSLocation ?? this.themeSelection.cssLocation,
     };
     return changed;
+  }
+
+  #writeThemeConfig(configFile, data) {
+    fs.mkdirSync(this.configPath, { recursive: true });
+    // Preserve user config symlinks (common with dotfile managers), mode and
+    // unrelated options. Rename atomically so a failed write cannot truncate it.
+    const target = fs.existsSync(configFile) ? fs.realpathSync(configFile) : configFile;
+    const mode = fs.existsSync(target) ? fs.statSync(target).mode & 0o777 : 0o600;
+    const temp = path.join(path.dirname(target), `.config-theme-${process.pid}-${Date.now()}.tmp`);
+    const contents = JSON.stringify(data, null, 2) + "\n";
+    // A successful exclusive open establishes ownership even if writing fails.
+    const descriptor = fs.openSync(temp, "wx", mode);
+    try {
+      try {
+        fs.writeFileSync(descriptor, contents);
+      } finally {
+        fs.closeSync(descriptor);
+      }
+      fs.renameSync(temp, target);
+    } finally {
+      if (fs.existsSync(temp)) fs.unlinkSync(temp);
+    }
   }
 }
 

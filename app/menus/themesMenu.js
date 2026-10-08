@@ -1,6 +1,6 @@
 const { BUILTIN_THEMES } = require("../customCSS/themes");
 
-module.exports = (Menus) => {
+module.exports = function buildThemesMenu(Menus) {
   const customThemes = Menus.configGroup.customThemes ?? [];
   const selection = Menus.configGroup.themeSelection ?? {
     cssName: Menus.configGroup.startupConfig.customCSSName ?? "",

@@ -210,6 +210,42 @@ describe("AppConfiguration theme selection persistence", () => {
     assert.deepStrictEqual(fs.readdirSync(directory).sort(), ["config.json", "themes"]);
   });
 
+  it("cleans up its temporary file after a partial write fails", (t) => {
+    const contents = '{ "appearance": { "cssName": "compactDark" } }\n';
+    writeConfig(contents);
+    const config = createConfiguration();
+    const previousSelection = config.themeSelection;
+    const failure = Object.assign(new Error("Partial write failed"), { code: "ENOSPC" });
+    const originalWrite = fs.writeFileSync;
+    t.mock.method(fs, "writeFileSync", (file, _data, options) => {
+      originalWrite(file, "partial", options);
+      throw failure;
+    });
+
+    assert.throws(() => config.setThemeSelection("custom:glass-dark"), failure);
+
+    assert.strictEqual(fs.readFileSync(config.configFilePath, "utf8"), contents);
+    assert.deepStrictEqual(config.themeSelection, previousSelection);
+    assert.deepStrictEqual(fs.readdirSync(directory).sort(), ["config.json", "themes"]);
+  });
+
+  it("preserves a pre-existing file if the temporary filename collides", (t) => {
+    const contents = '{ "appearance": { "cssName": "compactDark" } }\n';
+    writeConfig(contents);
+    const config = createConfiguration();
+    const previousSelection = config.themeSelection;
+    const timestamp = 123;
+    t.mock.method(Date, "now", () => timestamp);
+    const collision = path.join(directory, `.config-theme-${process.pid}-${timestamp}.tmp`);
+    fs.writeFileSync(collision, "existing file");
+
+    assert.throws(() => config.setThemeSelection("custom:glass-dark"), { code: "EEXIST" });
+
+    assert.strictEqual(fs.readFileSync(collision, "utf8"), "existing file");
+    assert.strictEqual(fs.readFileSync(config.configFilePath, "utf8"), contents);
+    assert.deepStrictEqual(config.themeSelection, previousSelection);
+  });
+
   it("updates symlinked dotfile contents without replacing the config symlink", () => {
     const target = path.join(directory, "managed-config.json");
     fs.writeFileSync(target, JSON.stringify({ appearance: { cssName: "compactDark" }, appTitle: "Preserve" }));

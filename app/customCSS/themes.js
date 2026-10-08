@@ -48,6 +48,54 @@ function getRelativeCssPath(css) {
   return portable;
 }
 
+function loadTheme(themesRoot, directoryName) {
+  const themeDirectory = fs.realpathSync(path.join(themesRoot, directoryName));
+  if (!isContained(themesRoot, themeDirectory) ||
+      !fs.statSync(themeDirectory).isDirectory()) {
+    console.warn("[customCSS] Ignoring custom theme directory outside themes directory.");
+    return null;
+  }
+  const metadataPath = fs.realpathSync(path.join(themeDirectory, "theme.json"));
+  const metadataStat = fs.statSync(metadataPath);
+  if (!isContained(themeDirectory, metadataPath) ||
+      !metadataStat.isFile()) {
+    console.warn("[customCSS] Ignoring custom theme with unsafe metadata file.");
+    return null;
+  }
+  // Metadata is a small manifest. Reject oversized or sparse files before
+  // synchronously reading them during startup.
+  if (metadataStat.size > MAX_METADATA_BYTES) {
+    console.warn("[customCSS] Ignoring custom theme with oversized metadata file.");
+    return null;
+  }
+  const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf-8"));
+  if (!isValidMetadata(metadata)) {
+    console.warn("[customCSS] Ignoring invalid custom theme metadata.");
+    return null;
+  }
+  const relativeCss = getRelativeCssPath(metadata.css);
+  if (relativeCss === null) {
+    console.warn("[customCSS] Ignoring custom theme with unsafe CSS path.");
+    return null;
+  }
+  const cssPath = fs.realpathSync(path.resolve(themeDirectory, relativeCss));
+  if (!isContained(themeDirectory, cssPath) || !fs.statSync(cssPath).isFile()) {
+    console.warn("[customCSS] Ignoring custom theme with unsafe CSS file.");
+    return null;
+  }
+  const theme = {
+    id: metadata.id,
+    name: metadata.name.trim(),
+    css: metadata.css,
+    cssPath,
+    value: `custom:${metadata.id}`,
+  };
+  for (const key of OPTIONAL_METADATA) {
+    if (Object.hasOwn(metadata, key)) theme[key] = metadata[key];
+  }
+  return theme;
+}
+
 /** Discover immediate child theme directories without executing theme content. */
 function discoverThemes(configPath) {
   if (typeof configPath !== "string" || configPath === "") return [];
@@ -74,56 +122,14 @@ function discoverThemes(configPath) {
   const ids = new Set(BUILTIN_THEMES.map((theme) => theme.id));
   for (const entry of entries) {
     try {
-      const themeDirectory = fs.realpathSync(path.join(themesRoot, entry.name));
-      if (!isContained(themesRoot, themeDirectory) ||
-          !fs.statSync(themeDirectory).isDirectory()) {
-        console.warn("[customCSS] Ignoring custom theme directory outside themes directory.");
-        continue;
-      }
-      const metadataPath = fs.realpathSync(path.join(themeDirectory, "theme.json"));
-      const metadataStat = fs.statSync(metadataPath);
-      if (!isContained(themeDirectory, metadataPath) ||
-          !metadataStat.isFile()) {
-        console.warn("[customCSS] Ignoring custom theme with unsafe metadata file.");
-        continue;
-      }
-      // Metadata is a small manifest. Reject oversized or sparse files before
-      // synchronously reading them during startup.
-      if (metadataStat.size > MAX_METADATA_BYTES) {
-        console.warn("[customCSS] Ignoring custom theme with oversized metadata file.");
-        continue;
-      }
-      const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf-8"));
-      if (!isValidMetadata(metadata)) {
-        console.warn("[customCSS] Ignoring invalid custom theme metadata.");
-        continue;
-      }
-      const relativeCss = getRelativeCssPath(metadata.css);
-      if (relativeCss === null) {
-        console.warn("[customCSS] Ignoring custom theme with unsafe CSS path.");
-        continue;
-      }
-      const cssPath = fs.realpathSync(path.resolve(themeDirectory, relativeCss));
-      if (!isContained(themeDirectory, cssPath) || !fs.statSync(cssPath).isFile()) {
-        console.warn("[customCSS] Ignoring custom theme with unsafe CSS file.");
-        continue;
-      }
-      if (ids.has(metadata.id)) {
+      const theme = loadTheme(themesRoot, entry.name);
+      if (!theme) continue;
+      if (ids.has(theme.id)) {
         console.warn("[customCSS] Ignoring duplicate or reserved custom theme ID.");
         continue;
       }
       // The first valid directory in code-point order wins duplicate IDs.
-      ids.add(metadata.id);
-      const theme = {
-        id: metadata.id,
-        name: metadata.name.trim(),
-        css: metadata.css,
-        cssPath,
-        value: `custom:${metadata.id}`,
-      };
-      for (const key of OPTIONAL_METADATA) {
-        if (Object.hasOwn(metadata, key)) theme[key] = metadata[key];
-      }
+      ids.add(theme.id);
       themes.push(theme);
     } catch {
       // Do not log exception text or paths: both may contain user information.

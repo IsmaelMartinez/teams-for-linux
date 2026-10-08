@@ -109,6 +109,17 @@ describe("custom theme discovery", () => {
     assert.match(warnings[0], /duplicate or reserved/);
   });
 
+  test("an invalid earlier theme does not reserve an ID used by a later valid theme", (t) => {
+    const { configPath, themesPath, warnings } = fixture(t);
+    writeTheme(themesPath, "a-invalid", { id: "same" }, false);
+    const directory = writeTheme(themesPath, "z-valid", { id: "same", name: "Valid" });
+    const themes = discoverThemes(configPath);
+    assert.equal(themes.length, 1);
+    assert.equal(themes[0].name, "Valid");
+    assert.equal(themes[0].cssPath, path.join(directory, "theme.css"));
+    assert.deepEqual(warnings, ["[customCSS] Ignoring unreadable or malformed custom theme."]);
+  });
+
   test("custom themes cannot replace any built-in theme", (t) => {
     const { configPath, themesPath, warnings } = fixture(t);
     for (const builtin of BUILTIN_THEMES) writeTheme(themesPath, builtin.id);
