@@ -117,7 +117,7 @@ ignored. The examples below use whichever spelling actually applies.
 |--------|------|---------|-------------|
 | `app.url` | `string` | `"https://teams.cloud.microsoft"` | Microsoft Teams URL |
 | `url` | `string` | `"https://teams.cloud.microsoft"` | Deprecated, use `app.url` |
-| `app.title` | `string` | `"Microsoft Teams"` | Text to be suffixed with page title |
+| `app.title` | `string` | `"Microsoft Teams"` | Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip |
 | `appTitle` | `string` | `"Microsoft Teams"` | Deprecated, use `app.title` |
 | `app.partition` | `string` | `"persist:teams-4-linux"` | BrowserWindow webpreferences partition |
 | `partition` | `string` | `"persist:teams-4-linux"` | Deprecated, use `app.partition` |
@@ -409,7 +409,7 @@ Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debia
 | `auth.webauthn.debug` | `boolean` | `false` | Enable verbose WebAuthn diagnostic logging (useful for beta testers troubleshooting key registration) |
 | `auth.webauthn.extraOrigins` | `array` | `[]` | Extra sign-in origins allowed to use hardware keys, in addition to the built-in Microsoft login origins |
 
-Interception is limited to the Microsoft login origins (`https://login.microsoftonline.com`, `https://login.microsoft.com`, `https://login.live.com`). If your tenant is federated and the key prompt is served by your own identity provider, the ceremony is blocked and the log shows `[WEBAUTHN] Blocked request { reason: 'origin-not-allowed' }`. Add that origin to `auth.webauthn.extraOrigins` and restart:
+Interception is limited to the Microsoft login origins (`https://login.microsoftonline.com`, `https://login.microsoft.com`, `https://login.live.com`). If your tenant is federated and the key prompt is served by your own identity provider, the ceremony is blocked and the log shows `[WEBAUTHN] Blocked request { reason: 'origin-not-allowed' }`, or, when the identity provider runs in an embedded frame, `[WEBAUTHN] Skipped a subframe outside the login allowlist` and no key prompt at all. The log never names the origin, since it identifies your tenant. To find it, sign in at teams.microsoft.com in a regular browser with its developer tools open, and note the scheme and host of the request that loads the page asking for your key (the address bar shows only the outer page when that step is embedded). Add that origin to `auth.webauthn.extraOrigins` and restart:
 
 ```json
 {
@@ -1004,12 +1004,12 @@ The configuration file can include Electron CLI flags that will be added when th
 Teams for Linux automatically sets Chromium feature flags for optimal functionality. These defaults are applied only if you don't provide your own flags.
 
 **Default Settings:**
-- `--disable-features=HardwareMediaKeyHandling` - Prevents conflicts with Teams media controls
+- `--disable-features=HardwareMediaKeyHandling` - Prevents conflicts with Teams media controls. On Linux the default is `--disable-features=HardwareMediaKeyHandling,UsePortalAccentColor`, which also stops Electron from applying the XDG portal accent color (that can select a sandbox light GTK theme instead of the host theme).
 - `--enable-features=WebRTCPipeWireCapturer` - Enables PipeWire screen sharing (Wayland only)
 
 **Using Custom Feature Flags:**
 
-If you need custom feature flags, provide them when launching the app. The application respects your flags and will not override them.
+If you need custom feature flags, provide them when launching the app. The application respects your flags and will not override them. A `--disable-features` list you pass replaces the default entirely.
 
 ```bash
 # Example: Adding your own features on Wayland
@@ -1017,11 +1017,15 @@ teams-for-linux --enable-features=MyCustomFeature,WebRTCPipeWireCapturer
 
 # Example: Disabling features
 teams-for-linux --disable-features=HardwareMediaKeyHandling,UnwantedFeature
+
+# Linux: your list replaces the default, so keep both required tokens
+teams-for-linux --disable-features=HardwareMediaKeyHandling,UsePortalAccentColor,UnwantedFeature
 ```
 
 > [!WARNING]
 > When providing custom flags, **you must include the required features** for proper functionality:
 > - **Always include:** `HardwareMediaKeyHandling` in `--disable-features`
+> - **On Linux:** Also include `UsePortalAccentColor` in `--disable-features`
 > - **On Wayland:** Also include `WebRTCPipeWireCapturer` in `--enable-features`
 >
 > Missing required features will trigger a warning but won't prevent the app from starting.
@@ -1031,7 +1035,7 @@ teams-for-linux --disable-features=HardwareMediaKeyHandling,UnwantedFeature
 ```bash
 # Wayland users with custom needs
 teams-for-linux --enable-features=MyFeature,WebRTCPipeWireCapturer \
-                --disable-features=HardwareMediaKeyHandling,OtherFeature
+                --disable-features=HardwareMediaKeyHandling,UsePortalAccentColor,OtherFeature
 ```
 
 ### Incoming Call Command

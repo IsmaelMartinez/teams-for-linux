@@ -95,7 +95,8 @@ class MeetingStartDetector {
 		this.#ipcRenderer = ipcRenderer;
 
 		const detectionConfig = config.mqtt?.meetingStartDetection;
-		if (!config.mqtt?.enabled || !detectionConfig?.enabled) {
+		const dbusEnabled = process.platform === 'linux' && config.dbusControl?.enabled === true;
+		if ((!config.mqtt?.enabled && !dbusEnabled) || !detectionConfig?.enabled) {
 			console.debug('[MeetingStartDetector] Disabled');
 			return;
 		}

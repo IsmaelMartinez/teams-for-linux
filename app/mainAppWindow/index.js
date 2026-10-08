@@ -49,6 +49,10 @@ let streamSelector;
 let screenSharingService = null;
 let connectionManager = null;
 let menus = null;
+let browserWindowManager = null;
+// Page title of the profile view currently shown over the root window, or
+// null while Profile 0 is (see setTitleOverride).
+let titleOverride = null;
 
 const isMac = os.platform() === "darwin";
 
@@ -724,7 +728,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     }
   }
 
-  const browserWindowManager = new BrowserWindowManager({
+  browserWindowManager = new BrowserWindowManager({
     config: config,
     iconChooser: iconChooser,
     // Lets the startup clear reach every profile partition (#2866).
@@ -900,13 +904,24 @@ exports.show = function () {
 // "restore" (issue #2647).
 exports.restoreWindow = restoreWindow;
 
+// The tray is created inside Menus during onAppReady; Phase 2's unread
+// aggregator attaches to it afterwards. Null when trayIconEnabled is off.
+exports.getTray = function () {
+  return menus?.tray ?? null;
+};
+
 exports.getWindow = function () {
   return window;
+};
+
+exports.performIncomingCallAction = function (action) {
+  return browserWindowManager?.performIncomingCallAction(action) === true;
 };
 
 exports.bindDisplayMediaHandler = bindDisplayMediaHandler;
 exports.bindWindowOpenHandler = bindWindowOpenHandler;
 exports.injectScreenSharingLogic = injectScreenSharingLogic;
+exports.setTitleOverride = setTitleOverride;
 
 exports.setQuickChatManager = function (quickChatManager) {
   if (menus) {
@@ -1389,8 +1404,42 @@ function onNewWindow(details) {
   return secureOpenLink(details);
 }
 
-function onPageTitleUpdated(_event, title) {
+// A custom app.title replaces the trailing "Microsoft Teams" in the window
+// title (or is appended when Teams omits it) so multiple instances can be
+// told apart in taskbars and Alt+Tab (#3035). The default leaves the page
+// title untouched.
+function formatWindowTitle(title) {
+  const defaultTitle = "Microsoft Teams";
+  if (!config.appTitle || config.appTitle === defaultTitle) return title;
+  return title.endsWith(defaultTitle)
+    ? title.slice(0, -defaultTitle.length) + config.appTitle
+    : `${title} - ${config.appTitle}`;
+}
+
+function onPageTitleUpdated(event, title) {
   window.webContents.send("page-title", title);
+  // While another profile's view is shown its title owns the window, so
+  // Profile 0's background updates must not replace it (#3068).
+  if (titleOverride !== null) {
+    event.preventDefault();
+    return;
+  }
+  // The default app.title leaves Electron mirroring document.title.
+  const windowTitle = formatWindowTitle(title);
+  if (windowTitle !== title) {
+    event.preventDefault();
+    window.setTitle(windowTitle);
+  }
+}
+
+// Multi-account: ProfileViewManager passes the active profile view's page
+// title, or null when Profile 0 (the root webContents) is shown again. A
+// null while Profile 0 already owns the title leaves it alone.
+function setTitleOverride(title) {
+  if (title === null && titleOverride === null) return;
+  titleOverride = title;
+  if (!window || window.isDestroyed()) return;
+  window.setTitle(formatWindowTitle(title ?? window.webContents.getTitle()));
 }
 
 function onNavigationChanged() {
@@ -1543,7 +1592,18 @@ function secureOpenLink(details) {
 
 function openInBrowser(details) {
   if (config.defaultURLHandler.trim() === "") {
-    shell.openExternal(details.url);
+    // A scheme with no handling app rejects; uncaught, that reaches the
+    // process-wide unhandledRejection handler and exits the app.
+    // Only the scheme is logged: the OS error message can echo the URL.
+    shell.openExternal(details.url).catch(() => {
+      let scheme = "unparseable";
+      try {
+        scheme = new URL(details.url).protocol;
+      } catch {
+        // keep "unparseable"
+      }
+      console.error("[LINK] Could not open link externally", { scheme });
+    });
   } else {
     execFile(
       config.defaultURLHandler.trim(),

@@ -32,6 +32,13 @@ const log = require("./log");
 // app/browser/tools/webauthnOverride.js builds the same set.
 let allowedOrigins = new Set(DEFAULT_ORIGINS);
 
+// A sign-in frame outside the allowlist keeps Chromium's own WebAuthn, which
+// has no PIN or touch UI here, so the key prompt silently never appears
+// (#3008). The hint is logged once per distinct origin, as the frame loads, so
+// it lines up with the sign-in step it explains. The origin itself stays in
+// memory: an IdP host identifies the tenant, and debug logs get shared.
+const skippedOrigins = new Set();
+
 let initialized = false;
 let phoneBackend = null;
 
@@ -188,6 +195,19 @@ async function handleWebauthnRequest(operation, event, options) {
 }
 
 /**
+ * Point at auth.webauthn.extraOrigins when a subframe is left without the
+ * override. Opaque origins (about:blank, data:) are not sign-in pages.
+ * @param {string} frameOrigin
+ */
+function logSkippedFrame(frameOrigin) {
+  if (!frameOrigin.startsWith("https://") || skippedOrigins.has(frameOrigin)) return;
+  skippedOrigins.add(frameOrigin);
+  log.info("[WEBAUTHN] Skipped a subframe outside the login allowlist", {
+    hint: "if this is your sign-in page and the security key prompt never appears, add its origin to auth.webauthn.extraOrigins",
+  });
+}
+
+/**
  * Inject the WebAuthn override into a subframe if it's a Microsoft login origin.
  * Called from did-frame-finish-load for non-main frames.
  *
@@ -206,6 +226,7 @@ function injectIntoFrame(wf) {
   }
 
   if (!isAllowedOrigin(frameOrigin)) {
+    logSkippedFrame(frameOrigin);
     return;
   }
 
@@ -407,11 +428,11 @@ async function initialize(mainWindow, config) {
 
 module.exports = {
   initialize,
-  _injectIntoFrame: injectIntoFrame,
   // Exported for tests: the allowlist is the security gate, so it is asserted
   // on directly rather than through a replica.
   _applyExtraOrigins: (extraOrigins) => {
     allowedOrigins = buildAllowedOrigins(extraOrigins);
   },
   _isAllowedOrigin: isAllowedOrigin,
+  _injectIntoFrame: injectIntoFrame,
 };

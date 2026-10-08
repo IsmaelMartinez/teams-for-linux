@@ -63,7 +63,7 @@ class SpeakingIndicator {
 
 	init(config, ipcRenderer) {
 		const overlayEnabled = config.media?.microphone?.speakingIndicator === true;
-		const mqttEnabled = config.mqtt?.enabled === true;
+		const mqttEnabled = config.mqtt?.enabled === true || (process.platform === 'linux' && config.dbusControl?.enabled === true);
 
 		if (!overlayEnabled && !mqttEnabled) {
 			return;

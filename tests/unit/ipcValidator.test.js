@@ -4,7 +4,13 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert');
 const { readdirSync, readFileSync, statSync } = require('node:fs');
 const path = require('node:path');
-const { validateIpcChannel, allowedChannels } = require('../../app/security/ipcValidator');
+const { pathToFileURL } = require('node:url');
+const {
+	validateIpcChannel,
+	isSenderAllowed,
+	allowedChannels,
+	appPageOnlyChannels,
+} = require('../../app/security/ipcValidator');
 
 const APP_DIR = path.join(__dirname, '..', '..', 'app');
 
@@ -156,5 +162,48 @@ describe('IPC Validator - Allowlist completeness', () => {
 			literalCount,
 			'An ipcMain.handle/on/once registration does not pass its channel as a string literal, so this scanner cannot verify it against the allowlist. A human must check the channel is allowlisted consciously (or make it a literal).'
 		);
+	});
+});
+
+describe('isSenderAllowed (GHSA-3vg9-cwq9-p773)', () => {
+	const pickerUrl = pathToFileURL(path.join(APP_DIR, 'screenSharing', 'index.html')).href;
+	const remote = { senderFrame: { url: 'https://teams.microsoft.com/' } };
+
+	it('pins every picker-only channel to app pages', () => {
+		for (const channel of appPageOnlyChannels) {
+			assert.ok(allowedChannels.has(channel), `${channel} must also be allowlisted`);
+			assert.strictEqual(isSenderAllowed(channel, { senderFrame: { url: pickerUrl } }), true);
+			assert.strictEqual(isSenderAllowed(channel, remote), false);
+		}
+	});
+
+	it('rejects file URLs outside the app directory, including traversal', () => {
+		const channel = 'desktop-capturer-get-sources';
+		assert.strictEqual(isSenderAllowed(channel, { senderFrame: { url: 'file:///etc/passwd' } }), false);
+		const sibling = pathToFileURL(`${APP_DIR}-evil/index.html`).href;
+		assert.strictEqual(isSenderAllowed(channel, { senderFrame: { url: sibling } }), false);
+		const traversal = `${pathToFileURL(APP_DIR).href}/../evil.html`;
+		assert.strictEqual(isSenderAllowed(channel, { senderFrame: { url: traversal } }), false);
+	});
+
+	it('rejects a missing or destroyed sender frame', () => {
+		assert.strictEqual(isSenderAllowed('selected-source', {}), false);
+		assert.strictEqual(isSenderAllowed('selected-source', { senderFrame: null }), false);
+		const disposed = {
+			get senderFrame() {
+				throw new Error('Render frame was disposed before WebFrameMain could be accessed');
+			},
+		};
+		assert.strictEqual(isSenderAllowed('selected-source', disposed), false);
+	});
+
+	it('pins the legacy picker reply, which page script could otherwise forge', () => {
+		assert.strictEqual(isSenderAllowed('source-selected', remote), false);
+		const legacyPicker = pathToFileURL(path.join(APP_DIR, 'screenPicker', 'index.html')).href;
+		assert.strictEqual(isSenderAllowed('source-selected', { senderFrame: { url: legacyPicker } }), true);
+	});
+
+	it('does not restrict channels outside the picker set', () => {
+		assert.strictEqual(isSenderAllowed('get-config', remote), true);
 	});
 });

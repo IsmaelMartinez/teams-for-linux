@@ -28,6 +28,18 @@
 const defaults = require("./defaults");
 
 module.exports = {
+      dbusControl: {
+        default: { enabled: false },
+        describe: "Opt-in Linux user session D-Bus control and observed Teams state. Requires restart.",
+        type: "object",
+        fields: {
+          enabled: {
+            type: "boolean",
+            describe: "Enable the Linux D-Bus service and its local status monitors.",
+          },
+        },
+        applyMode: "restart",
+      },
       appActiveCheckInterval: {
         default: 2,
         describe:
@@ -96,7 +108,7 @@ module.exports = {
       },
       appTitle: {
         default: "Microsoft Teams",
-        describe: "A text to be suffixed with page title",
+        describe: "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip",
         type: "string",
         applyMode: "restart",
         deprecated: "use app.title instead",
@@ -1321,7 +1333,7 @@ module.exports = {
         fields: {
           "title": {
             type: "string",
-            describe: "A text to be suffixed with page title",
+            describe: "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip",
           },
           "url": {
             type: "string",

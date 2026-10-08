@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "2.23.0",
+  "version": "2.24.0",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -70,7 +70,7 @@
     "electron": "43.7.0",
     "electron-builder": "26.15.7",
     "eslint": "^10.11.0",
-    "globals": "^17.12.0",
+    "globals": "^17.13.0",
     "http-server": "^14.1.1",
     "xml2js": "^0.6.2"
   },
@@ -146,6 +146,19 @@
       ]
     },
     "deb": {
+      "depends": [
+        "libgtk-3-0",
+        "libnotify4",
+        "libnss3",
+        "libxss1",
+        "libxtst6",
+        "xdg-utils",
+        "libatspi2.0-0",
+        "libuuid1",
+        "libsecret-1-0",
+        "libgbm1",
+        "libasound2t64 | libasound2"
+      ],
       "recommends": [
         "libappindicator3-1",
         "fido2-tools"

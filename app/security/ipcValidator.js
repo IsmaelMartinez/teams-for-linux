@@ -5,6 +5,9 @@
  * for disabled contextIsolation and sandbox features.
  */
 
+const path = require('node:path');
+const { fileURLToPath } = require('node:url');
+
 // Allowlist of legitimate IPC channels used by Teams for Linux
 const allowedChannels = new Set([
   // Core application channels
@@ -166,7 +169,16 @@ const allowedChannels = new Set([
   'profile-switcher-open-add',
   'profile-switcher-open-manage',
   'profile-switcher-set-expanded',
-  'profile-switcher-state'
+  'profile-switcher-state',
+
+  // Aggregate tray badge (ADR-020 Phase 2). The renderer's reply to main's
+  // render-aggregate-badge request: the summed unread count composited onto
+  // the tray icon by trayIconRenderer's canvas path. Matched by requestId
+  // and sender identity in main; registered only when multi-account is on.
+  'aggregate-badge-rendered',
+  // main → renderer only (webContents.send); not gated by this validator,
+  // listed so the allowlist stays authoritative per CLAUDE.md.
+  'render-aggregate-badge'
 ]);
 
 const DANGEROUS_PROPS = new Set(['__proto__', 'constructor', 'prototype']);
@@ -214,4 +226,40 @@ function validateIpcChannel(channel, payload = null) {
   return true;
 }
 
-module.exports = { validateIpcChannel, allowedChannels };
+// Channels only the in-app screen-share picker may use. The picker is a local
+// page (app/screenSharing/index.html), so a web page in the Teams window must
+// not be able to capture the screen or pick a source through them
+// (GHSA-3vg9-cwq9-p773).
+const appPageOnlyChannels = new Set([
+  'close-view',
+  'desktop-capturer-get-sources',
+  'get-screen-sharing-displays',
+  'selected-source',
+  'source-selected',
+]);
+
+const APP_ROOT = path.join(__dirname, '..');
+
+/**
+ * Check that the frame sending an IPC message may use the channel.
+ * Channels outside appPageOnlyChannels accept any sender; those inside accept
+ * only frames showing a file shipped in the app directory.
+ *
+ * @param {string} channel
+ * @param {{ senderFrame?: { url?: string } | null }} event
+ * @returns {boolean}
+ */
+function isSenderAllowed(channel, event) {
+  if (!appPageOnlyChannels.has(channel)) return true;
+  // senderFrame is a getter that throws once the frame is disposed, so it is
+  // read inside the try: a gone frame is simply refused.
+  try {
+    const url = event?.senderFrame?.url;
+    if (typeof url !== 'string' || !url.startsWith('file:')) return false;
+    return fileURLToPath(url).startsWith(APP_ROOT + path.sep);
+  } catch {
+    return false;
+  }
+}
+
+module.exports = { validateIpcChannel, isSenderAllowed, allowedChannels, appPageOnlyChannels };

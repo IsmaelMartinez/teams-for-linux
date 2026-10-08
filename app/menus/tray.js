@@ -20,10 +20,47 @@ class ApplicationTray {
     ipcMain.on("tray-update", this.#handleTrayUpdate.bind(this));
   }
 
-  #handleTrayUpdate(_event, data) {
+  #handleTrayUpdate(event, data) {
+    // With multi-account on, updates arrive from every profile view and
+    // applying them directly is last-write-wins — the aggregator decides.
+    if (this.aggregator) {
+      this.aggregator.onTrayUpdate(event, data);
+      return;
+    }
+    // Stash per sender for the aggregator to replay on attach — renderers
+    // dedupe and never re-send an unchanged count. Flag-gated: with
+    // multi-account off nothing ever drains it.
+    if (this.config.multiAccount?.enabled) {
+      this.lastDirectUpdates ??= new Map();
+      this.lastDirectUpdates.set(event?.sender?.id, data);
+    }
     // Handle both old format { icon, flash } and new format { icon, flash, count }
     const { icon, flash, count } = data;
     this.updateTrayImage(icon, flash, count);
+  }
+
+  setAggregator(aggregator) {
+    this.aggregator = aggregator;
+    if (this.lastDirectUpdates) {
+      const replays = this.lastDirectUpdates;
+      this.lastDirectUpdates = null;
+      for (const [senderId, data] of replays) {
+        aggregator.onTrayUpdate({ sender: { id: senderId } }, data);
+      }
+    }
+  }
+
+  applyAggregate({ icon, flash, tooltip }) {
+    if (!this.tray || this.tray.isDestroyed()) return;
+    // createFromDataURL yields an EMPTY image (not a throw) for a malformed
+    // payload, which would blank the tray.
+    let image = this.getIconImage(icon || this.iconPath);
+    if (image.isEmpty()) {
+      image = this.getIconImage(this.iconPath);
+    }
+    this.tray.setImage(image);
+    this.window.flashFrame(flash);
+    this.tray.setToolTip(tooltip);
   }
 
   getIconImage(iconPath) {

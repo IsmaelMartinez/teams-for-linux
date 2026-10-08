@@ -1,8 +1,25 @@
 {
   "$generatedBy": "scripts/generateConfigDocs.js",
   "source": "app/config/options.js",
-  "optionCount": 84,
+  "optionCount": 85,
   "options": [
+    {
+      "name": "dbusControl",
+      "type": "object",
+      "default": {
+        "enabled": false
+      },
+      "description": "Opt-in Linux user session D-Bus control and observed Teams state. Requires restart.",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable the Linux D-Bus service and its local status monitors."
+        }
+      ]
+    },
     {
       "name": "appActiveCheckInterval",
       "type": "number",
@@ -81,7 +98,7 @@
       "name": "appTitle",
       "type": "string",
       "default": "Microsoft Teams",
-      "description": "A text to be suffixed with page title",
+      "description": "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip",
       "applyMode": "restart",
       "deprecated": "use app.title instead"
     },
@@ -1476,7 +1493,7 @@
           "path": "title",
           "type": "string",
           "default": "Microsoft Teams",
-          "description": "A text to be suffixed with page title"
+          "description": "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip"
         },
         {
           "path": "url",

@@ -30,6 +30,8 @@ class BrowserWindowManager {
     this.window = null;
     this.incomingCallCommandProcess = null;
     this.incomingCallToast = null;
+    this.hasIncomingCall = false;
+    this.incomingCallWebContents = null;
   }
 
   /**
@@ -110,7 +112,7 @@ class BrowserWindowManager {
         preload: path.join(__dirname, "..", "browser", "preload.js"),
         plugins: true,
         spellcheck: true,
-        webviewTag: true,
+        webviewTag: false,
         // SECURITY: Disabled for Teams DOM access, compensated by IPC validation
         contextIsolation: false,  // Required for ReactHandler DOM access
         nodeIntegration: false,   // Secure: preload scripts don't need this
@@ -215,6 +217,8 @@ class BrowserWindowManager {
 
   assignOnIncomingCallCreatedHandler() {
     return async (e, data) => {
+      this.hasIncomingCall = true;
+      this.incomingCallWebContents = e?.sender ?? null;
       if (this.config.incomingCallCommand) {
         this.handleOnIncomingCallEnded();
         const commandArgs = [
@@ -240,10 +244,27 @@ class BrowserWindowManager {
   }
 
   assignOnIncomingCallEndedHandler() {
-    return async () => {
+    return async (e) => {
+      if (this.incomingCallWebContents && e?.sender !== this.incomingCallWebContents) return;
+      this.hasIncomingCall = false;
+      this.incomingCallWebContents = null;
       this.handleOnIncomingCallEnded();
       app.emit('teams-incoming-call-ended');
     };
+  }
+
+  performIncomingCallAction(action) {
+    if (!["ACCEPT_AUDIO", "ACCEPT_VIDEO", "DECLINE"].includes(action) || !this.hasIncomingCall) return false;
+    try {
+      let target = this.incomingCallWebContents;
+      if (!target) target = this.window?.webContents;
+      if (!target || target.isDestroyed()) return false;
+      target.send("incoming-call-action", action);
+      return true;
+    } catch (error) {
+      console.warn("[IncomingCall] Failed to dispatch call action", { message: error.message });
+      return false;
+    }
   }
 
   handleOnIncomingCallEnded() {
@@ -257,25 +278,25 @@ class BrowserWindowManager {
   }
 
   assignOnCallConnectedHandler() {
-    return async () => {
+    return async (event) => {
       this.isOnCall = true;
       const result = this.screenLockInhibitionMethod === "Electron"
         ? this.disableScreenLockElectron()
         : this.disableScreenLockWakeLockSentinel();
 
-      app.emit('teams-call-connected');
+      app.emit('teams-call-connected', event?.sender ?? null);
       return result;
     };
   }
 
   assignOnCallDisconnectedHandler() {
-    return async () => {
+    return async (event) => {
       this.isOnCall = false;
       const result = this.screenLockInhibitionMethod === "Electron"
         ? this.enableScreenLockElectron()
         : this.enableScreenLockWakeLockSentinel();
 
-      app.emit('teams-call-disconnected');
+      app.emit('teams-call-disconnected', event?.sender ?? null);
       return result;
     };
   }
