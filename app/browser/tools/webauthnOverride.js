@@ -84,28 +84,7 @@ function init(config, ipcRenderer) {
 
     console.info("[WEBAUTHN] Intercepting credentials.get()");
 
-    if (phone) {
-      const policy = document.permissionsPolicy || document.featurePolicy;
-      if (policy?.allowsFeature("publickey-credentials-get") !== true) throw new DOMException("Frame policy blocks passkeys", "SecurityError");
-      if (options.signal?.aborted) throw new DOMException("Cancelled", "AbortError");
-      const requestId = crypto.randomUUID();
-      const cancel = async () => {
-        try {
-          await ipcRenderer.invoke("webauthn:get", { cancelRequestId: requestId });
-        } catch {
-          // Navigation may remove the IPC endpoint while aborting the page.
-        }
-      };
-      options.signal?.addEventListener("abort", cancel, { once: true });
-      try {
-        const result = await ipcRenderer.invoke("webauthn:get", { ...serializeGetOptions(options.publicKey, true), requestId });
-        if (options.signal?.aborted) throw new DOMException("Cancelled", "AbortError");
-        if (!result.success) throw mapError(result.error);
-        return reconstructGetResponse(result.data);
-      } finally {
-        options.signal?.removeEventListener("abort", cancel);
-      }
-    }
+    if (phone) return getPhoneAssertion(options, ipcRenderer);
 
     // Observe only, never act on it. Knowing whether the page gives up on a
     // ceremony (and after how long) is what separates "the user was slow to
@@ -186,6 +165,29 @@ function init(config, ipcRenderer) {
   console.info("[WEBAUTHN] postMessage relay registered for subframe support");
 }
 
+async function getPhoneAssertion(options, ipcRenderer) {
+  const policy = document.permissionsPolicy || document.featurePolicy;
+  if (policy?.allowsFeature("publickey-credentials-get") !== true) throw new DOMException("Frame policy blocks passkeys", "SecurityError");
+  if (options.signal?.aborted) throw new DOMException("Cancelled", "AbortError");
+  const requestId = crypto.randomUUID();
+  const cancel = async () => {
+    try {
+      await ipcRenderer.invoke("webauthn:get", { cancelRequestId: requestId });
+    } catch {
+      // Navigation may remove the IPC endpoint while aborting the page.
+    }
+  };
+  options.signal?.addEventListener("abort", cancel, { once: true });
+  try {
+    const result = await ipcRenderer.invoke("webauthn:get", { ...serializeGetOptions(options.publicKey, true), requestId });
+    if (options.signal?.aborted) throw new DOMException("Cancelled", "AbortError");
+    if (!result.success) throw mapError(result.error);
+    return reconstructGetResponse(result.data);
+  } finally {
+    options.signal?.removeEventListener("abort", cancel);
+  }
+}
+
 /**
  * Convert ArrayBuffer/Uint8Array fields to base64url for IPC transport.
  */
@@ -241,13 +243,15 @@ function serializeCreateOptions(publicKey) {
 }
 
 function serializeGetOptions(publicKey, phone = false) {
+  // The phone adapter accepts fractional seconds; preserve subsecond budgets.
+  // Keep the existing integer-seconds contract for fido2-tools.
+  let timeout;
+  if (phone) timeout = (publicKey.timeout ?? 60000) / 1000;
+  else timeout = publicKey.timeout ? Math.floor(publicKey.timeout / 1000) : 60;
   return {
     challenge: bufferToBase64url(publicKey.challenge),
     rpId: publicKey.rpId || "",
-    // The phone adapter accepts fractional seconds; preserve subsecond budgets.
-    // Keep the existing integer-seconds contract for fido2-tools.
-    timeout: phone ? (publicKey.timeout ?? 60000) / 1000 :
-      publicKey.timeout ? Math.floor(publicKey.timeout / 1000) : 60,
+    timeout,
     userVerification: publicKey.userVerification || "preferred",
     allowCredentials: (publicKey.allowCredentials || []).map((c) => ({
       id: bufferToBase64url(c.id),

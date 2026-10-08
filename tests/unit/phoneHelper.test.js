@@ -57,3 +57,19 @@ test("timeout and premature exit reject instead of leaving a pending sign-in", a
   early.emit("close", 1);
   await assert.rejects(promise, { name: "NotAllowedError" });
 });
+
+test("helper errors retain allowed names and bound untrusted diagnostics", async () => {
+  const cases = [
+    [{ type: "error", name: "SecurityError", message: "x".repeat(300) }, "SecurityError", "x".repeat(256)],
+    [{ type: "error", name: "UnexpectedError", message: "failed" }, "NotAllowedError", "failed"],
+    [{ type: "error" }, "NotAllowedError", "Phone authentication failed."],
+  ];
+  await Promise.all(cases.map(async ([message, name, errorMessage]) => {
+    const child = fakeProcess();
+    const pending = runBackend({ helperPath: "/helper", request: {}, timeout: 1000,
+      onQr: () => {}, spawnProcess: () => child });
+    child.stdout.write(JSON.stringify(message) + "\n");
+    await assert.rejects(pending, { name, message: errorMessage });
+    assert.equal(child.killed, true);
+  }));
+});

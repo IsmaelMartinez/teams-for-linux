@@ -2,6 +2,27 @@
 const { spawn } = require("node:child_process");
 const MAX_BYTES = 1024 * 1024;
 
+const ERROR_NAMES = new Set(["SecurityError", "NotSupportedError", "NotAllowedError", "OperationError", "TypeError"]);
+
+function parseMessage(line) {
+  const message = JSON.parse(line);
+  switch (message.type) {
+    case "qr":
+      if (typeof message.svg === "string" && message.svg.length <= MAX_BYTES) return message;
+      break;
+    case "result":
+      if (message.credential?.type === "public-key" && typeof message.credential.id === "string" &&
+          message.credential.response) return message;
+      break;
+    case "error":
+      return { type: "error", name: ERROR_NAMES.has(message.name) ? message.name : "NotAllowedError",
+        message: typeof message.message === "string" ? message.message.slice(0, 256) : "Phone authentication failed." };
+    default:
+      break;
+  }
+  throw new Error("Invalid authentication helper output.");
+}
+
 function runBackend({ helperPath, request, timeout, signal, onQr, spawnProcess = spawn }) {
   return new Promise((resolve, reject) => {
     let child;
@@ -39,19 +60,10 @@ function runBackend({ helperPath, request, timeout, signal, onQr, spawnProcess =
           const line = pending.slice(0, end);
           pending = pending.slice(end + 1);
           try {
-            const message = JSON.parse(line);
-            if (message.type === "qr" && typeof message.svg === "string" && message.svg.length <= MAX_BYTES) {
-              onQr(message.svg);
-            } else if (message.type === "result" && message.credential?.type === "public-key" &&
-                typeof message.credential.id === "string" && message.credential.response) {
-              finish(null, message.credential);
-            } else if (message.type === "error") {
-              const names = new Set(["SecurityError", "NotSupportedError", "NotAllowedError", "OperationError", "TypeError"]);
-              fail(names.has(message.name) ? message.name : "NotAllowedError",
-                typeof message.message === "string" ? message.message.slice(0, 256) : "Phone authentication failed.");
-            } else {
-              fail("OperationError", "Invalid authentication helper output.");
-            }
+            const message = parseMessage(line);
+            if (message.type === "qr") onQr(message.svg);
+            else if (message.type === "result") finish(null, message.credential);
+            else fail(message.name, message.message);
           } catch {
             fail("OperationError", "Invalid authentication helper output.");
           }

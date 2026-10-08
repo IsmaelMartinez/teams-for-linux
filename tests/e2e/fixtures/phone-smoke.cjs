@@ -39,6 +39,7 @@ function loginDocument(request) {
 }
 
 async function injectedFrame(win, suffix) {
+  // Polling must wait between checks until frame injection completes.
   for (let attempt = 0; attempt < 100; attempt++) {
     const frame = win.webContents.mainFrame.framesInSubtree.find((candidate) => candidate !== win.webContents.mainFrame && candidate.url.endsWith(suffix));
     if (frame && await frame.executeJavaScript('!!window.__webauthnOverrideInjected')) return frame;
@@ -66,7 +67,7 @@ async function checkRelay(win) {
     [frame, 'https://login.microsoft.com', 'https://login.microsoftonline.com'],
     [nested, 'https://login.live.com', 'https://login.microsoftonline.com'],
   ];
-  for (const [target, origin, top] of targets) {
+  await Promise.all(targets.map(async ([target, origin, top]) => {
     // Regress the integer-seconds conversion that rounded 500ms down to zero.
     const result = await target.executeJavaScript(assertionScript(500));
     assert.equal(result.credential, true);
@@ -83,7 +84,7 @@ async function checkRelay(win) {
       return pending;
     })()`);
     assert.equal(aborted, 'AbortError');
-  }
+  }));
   const denied = await injectedFrame(win, '/denied');
   const error = await denied.executeJavaScript(
     'navigator.credentials.get({publicKey:{challenge:new Uint8Array([1,2,3])}}).catch(e=>e.name)');
@@ -164,6 +165,7 @@ async function main() {
     await webauthn.initialize(win, { auth: { webauthn: { enabled: true, backend: 'phone', helperPath: helper } } });
     await win.loadURL('https://login.microsoftonline.com/test');
     const checks = { relay: checkRelay, prompt: checkPrompt, lifecycle: checkLifecycle };
+    // Scenarios mutate the same window and backend, so keep them ordered.
     for (const scenario of scenarios) {
       assert.ok(checks[scenario], `Unknown phone test scenario: ${scenario}`);
       await checks[scenario](win);

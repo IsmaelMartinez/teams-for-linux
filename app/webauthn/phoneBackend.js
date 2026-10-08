@@ -12,6 +12,45 @@ function available(helperPath) {
   }
 }
 
+function requestTimeout(options) {
+  const requestedTimeout = options.timeout ?? 60;
+  if (typeof requestedTimeout !== "number" || !Number.isFinite(requestedTimeout) || requestedTimeout <= 0) {
+    throw new TypeError("Invalid phone passkey request.");
+  }
+  const timeout = Math.min(requestedTimeout * 1000, 120000);
+  const requestBytes = Buffer.byteLength(JSON.stringify(options));
+  if (!Number.isFinite(timeout) || timeout <= 0 || typeof options.requestId !== "string" ||
+      !options.requestId.length || options.requestId.length > 128 ||
+      typeof options.challenge !== "string" || !/^[A-Za-z0-9_-]+$/.test(options.challenge) ||
+      options.challenge.length > 65536 || requestBytes > 1024 * 1024) {
+    throw new TypeError("Invalid phone passkey request.");
+  }
+  return timeout;
+}
+
+function credentialData(result, options, context) {
+  const response = result.response;
+  const fields = [result.id, result.rawId, response.clientDataJSON, response.authenticatorData, response.signature];
+  if (fields.some((field) => typeof field !== "string" || !/^[A-Za-z0-9_-]+$/.test(field)) ||
+      (response.userHandle != null && (typeof response.userHandle !== "string" || !/^[A-Za-z0-9_-]+$/.test(response.userHandle)))) {
+    throw Object.assign(new Error("Invalid authentication helper response."), { name: "OperationError" });
+  }
+  let client;
+  try {
+    client = JSON.parse(Buffer.from(response.clientDataJSON, "base64url"));
+  } catch {
+    throw Object.assign(new Error("Invalid authentication helper response."), { name: "OperationError" });
+  }
+  if (client.type !== "webauthn.get" || client.challenge !== options.challenge ||
+      client.origin !== context.origin || client.crossOrigin !== Boolean(context.topOrigin) ||
+      client.topOrigin !== context.topOrigin) {
+    throw Object.assign(new Error("The authentication response belongs to another request."), { name: "SecurityError" });
+  }
+  return { credentialId: result.id, rawId: result.rawId, type: "public-key",
+    clientDataJson: response.clientDataJSON, authenticatorData: response.authenticatorData,
+    signature: response.signature, userHandle: response.userHandle || null };
+}
+
 function createPhoneBackend({ electron, helperPath, mainWindow, origins }) {
   const active = new Map();
   const sender = mainWindow?.webContents;
@@ -54,21 +93,10 @@ function createPhoneBackend({ electron, helperPath, mainWindow, origins }) {
     }
     if (operation !== "get") return { success: false, error: "NotSupportedError: Phone passkey registration is not supported." };
     if (!available(helperPath)) return unavailable();
-    const requestedTimeout = options.timeout ?? 60;
-    if (typeof requestedTimeout !== "number" || !Number.isFinite(requestedTimeout) || requestedTimeout <= 0) {
-      return { success: false, error: "TypeError: Invalid phone passkey request." };
-    }
-    const timeout = Math.min(requestedTimeout * 1000, 120000);
-    let requestBytes;
+    let timeout;
     try {
-      requestBytes = Buffer.byteLength(JSON.stringify(options));
+      timeout = requestTimeout(options);
     } catch {
-      return { success: false, error: "TypeError: Invalid phone passkey request." };
-    }
-    if (!Number.isFinite(timeout) || timeout <= 0 || typeof options.requestId !== "string" ||
-        !options.requestId.length || options.requestId.length > 128 ||
-        typeof options.challenge !== "string" || !/^[A-Za-z0-9_-]+$/.test(options.challenge) ||
-        options.challenge.length > 65536 || requestBytes > 1024 * 1024) {
       return { success: false, error: "TypeError: Invalid phone passkey request." };
     }
     if (active.has(frameKey)) return { success: false, error: "InvalidStateError: A phone sign-in is already in progress." };
@@ -92,8 +120,9 @@ function createPhoneBackend({ electron, helperPath, mainWindow, origins }) {
         prompt.on("closed", () => controller.abort());
         await prompt.loadFile(path.join(__dirname, "phonePrompt.html"));
         if (controller.signal.aborted || prompt.isDestroyed()) return;
+        const qrDataUrl = `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
         await prompt.webContents.executeJavaScript(`document.getElementById("origin").textContent = ${JSON.stringify(context.origin)};
-          document.getElementById("qr").src = ${JSON.stringify(`data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`)};`);
+          document.getElementById("qr").src = ${JSON.stringify(qrDataUrl)};`);
         if (!controller.signal.aborted && !prompt.isDestroyed()) prompt.show();
       } catch {
         controller.abort();
@@ -108,26 +137,7 @@ function createPhoneBackend({ electron, helperPath, mainWindow, origins }) {
       if (current.origin !== context.origin || current.topOrigin !== context.topOrigin || controller.signal.aborted) {
         throw Object.assign(new Error("The sign-in page changed."), { name: "AbortError" });
       }
-      const response = result.response;
-      const fields = [result.id, result.rawId, response.clientDataJSON, response.authenticatorData, response.signature];
-      if (fields.some((field) => typeof field !== "string" || !/^[A-Za-z0-9_-]+$/.test(field)) ||
-          (response.userHandle != null && (typeof response.userHandle !== "string" || !/^[A-Za-z0-9_-]+$/.test(response.userHandle)))) {
-        throw Object.assign(new Error("Invalid authentication helper response."), { name: "OperationError" });
-      }
-      let client;
-      try {
-        client = JSON.parse(Buffer.from(response.clientDataJSON, "base64url"));
-      } catch {
-        throw Object.assign(new Error("Invalid authentication helper response."), { name: "OperationError" });
-      }
-      if (client.type !== "webauthn.get" || client.challenge !== options.challenge ||
-          client.origin !== context.origin || client.crossOrigin !== Boolean(context.topOrigin) ||
-          client.topOrigin !== context.topOrigin) {
-        throw Object.assign(new Error("The authentication response belongs to another request."), { name: "SecurityError" });
-      }
-      return { success: true, data: { credentialId: result.id, rawId: result.rawId, type: "public-key",
-        clientDataJson: response.clientDataJSON, authenticatorData: response.authenticatorData,
-        signature: response.signature, userHandle: response.userHandle || null } };
+      return { success: true, data: credentialData(result, options, context) };
     } catch (error) {
       return { success: false, error: `${error.name}: ${error.message}` };
     } finally {
