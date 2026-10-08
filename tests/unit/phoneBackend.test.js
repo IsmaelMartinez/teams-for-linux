@@ -26,7 +26,7 @@ const success = `let data=''; process.stdin.on('data',c=>data+=c);process.stdin.
 const r=JSON.parse(data);const client={type:'webauthn.get',origin:r.origin,challenge:r.publicKey.challenge,crossOrigin:!!r.topOrigin};
 if(r.topOrigin)client.topOrigin=r.topOrigin;
 console.log(JSON.stringify({type:'result',credential:{id:'AQID',rawId:'AQID',type:'public-key',response:{clientDataJSON:Buffer.from(JSON.stringify(client)).toString('base64url'),authenticatorData:'AQID',signature:'AQID',userHandle:null}}}));});`;
-const options = { challenge:'AQID',rpId:'login.microsoftonline.com',timeout:1,requestId:'request' };
+const options = { challenge:'AQID',rpId:'login.microsoftonline.com',timeout:10,requestId:'request' };
 
 test('real helper protocol converts WebAuthn JSON to the existing renderer contract', posix, async t => {
   const {adapter,event} = setup(t,success);
@@ -46,11 +46,23 @@ test('relayed login iframe uses Electron frame origin and top-origin metadata', 
   assert.equal(client.origin,'https://login.microsoft.com');
   assert.equal(client.topOrigin,'https://login.microsoftonline.com');
 });
+test('direct calls ignore supplied frame IDs and keep their own sender frame', posix, async t => {
+  const { adapter, event, frame } = setup(t, success);
+  const child = { url: 'https://login.microsoft.com/frame', processId: 1, routingId: 3, parent: frame, top: frame };
+  frame.framesInSubtree.push(child);
+  for (const phoneFrameId of [{ processId: 1, routingId: 3 }, { processId: 5, routingId: 9 }]) {
+    const result = await adapter.handle('get', event, { ...options, phoneFrameId });
+    assert.equal(result.success, true);
+    const client = JSON.parse(Buffer.from(result.data.clientDataJson, 'base64url'));
+    assert.equal(client.origin, 'https://login.microsoftonline.com');
+    assert.equal(client.crossOrigin, false);
+  }
+});
 test('unknown windows, detached/mismatched frames and invalid input fail before spawning', posix, async t => {
   const {adapter,event,frame}=setup(t,'process.exit(99)');
   assert.match((await adapter.handle('get',{...event,sender:{}},options)).error,/SecurityError/);
   assert.match((await adapter.handle('get',event,{...options,frameOrigin:'https://evil.example'})).error,/SecurityError/);
-  assert.match((await adapter.handle('get',event,{...options,phoneFrameId:{processId:5,routingId:9}})).error,/SecurityError/);
+  assert.match((await adapter.handle('get',event,{...options,frameOrigin:new URL(frame.url).origin,phoneFrameId:{processId:5,routingId:9}})).error,/SecurityError/);
   frame.detached=true;
   assert.match((await adapter.handle('get',event,options)).error,/SecurityError/);
   frame.detached=false;

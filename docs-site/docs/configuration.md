@@ -1212,6 +1212,15 @@ Phone mode uses an external helper for QR sign-in on Linux. It requires BlueZ,
 a powered Bluetooth adapter, a nearby phone with an existing accepted passkey,
 and network access for the caBLE tunnel.
 
+Earlier real-phone testing used a custom Arch package; automated adapter
+checks also run against the unpacked Linux build. Debian, RPM and AppImage phone
+sign-in have not been tested. They require an accessible helper executable and
+host BlueZ access. Snap and Flatpak phone mode is unsupported: the current Snap
+has no `bluez` plug and the Flathub manifest does not grant `org.bluez`. Successful
+package builds do not establish phone-authentication support.
+
+![Phone sign-in QR dialog](/img/phone-qr-preview.png)
+
 Download `phone-passkey-helper-0.1.0-source.tar.gz` and `SHA256SUMS` from the
 [helper v0.1.0 release](https://github.com/Excellence308/phone-passkey-helper/releases/tag/v0.1.0). The archive includes locked dependency sources.
 Install the native build requirements in the [helper README](https://github.com/Excellence308/phone-passkey-helper/blob/v0.1.0/README.md), then

@@ -1,7 +1,19 @@
+// app/webauthn/index.js
+
 /**
- * Linux WebAuthn interception for hardware keys and opt-in phone passkeys.
- * The non-isolated preload handles the main frame; injected overrides handle
- * login subframes where that preload does not run. Other platforms use Chromium.
+ * WebAuthn / FIDO2 Hardware Keys and Phone Passkeys
+ *
+ * Two-layer interception:
+ * Layer 1 (preload): webauthnOverride.js patches navigator.credentials in the
+ *   main frame via the preload script. This works because contextIsolation is false.
+ * Layer 2 (frame injection): This module injects the override into subframes
+ *   (iframes) where the preload doesn't run. Microsoft's login page loads in
+ *   the main frame but the WebAuthn ceremony may be triggered from a child frame.
+ *   We use did-frame-finish-load + webFrameMain.executeJavaScript() following
+ *   the same pattern as customCSS/index.js.
+ *
+ * Linux-only: on macOS/Windows, Electron's Chromium handles WebAuthn natively.
+ * Hardware mode requires fido2-tools; phone mode requires an external helper.
  */
 
 const { app, BrowserWindow, ipcMain, webFrameMain } = require("electron");
@@ -201,6 +213,9 @@ function injectIntoFrame(wf) {
     originClass: log.classifyOrigin(frameOrigin),
   });
 
+  // The injected script patches navigator.credentials in the frame and uses
+  // postMessage to communicate with the main-frame preload (which has ipcRenderer).
+  // Hardware uses the parent frame; phone mode reaches window.top from nested frames.
   wf.executeJavaScript(String.raw`
     (function() {
       if (window.__webauthnOverrideInjected) return;

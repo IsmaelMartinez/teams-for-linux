@@ -6,9 +6,21 @@ Proposed.
 
 ## Context
 
-The Linux WebAuthn bridge uses fido2-tools for hardware keys. Phone passkeys
-need a caBLE helper. [Issue #2767](https://github.com/IsmaelMartinez/teams-for-linux/issues/2767)
-proposes a second backend with JSON input and output over stdin/stdout.
+[Issue #2714](https://github.com/IsmaelMartinez/teams-for-linux/issues/2714)
+requests phone/QR passkey sign-in. The Linux bridge uses fido2-tools for USB
+hardware keys, which does not provide caBLE phone transport.
+[Issue #2767](https://github.com/IsmaelMartinez/teams-for-linux/issues/2767)
+proposes an external-helper interface for password-manager bridging; this phone
+backend uses that stdin/stdout interface.
+
+[ADR 021](./021-webauthn-fido2-linux.md#external-helper-process-in-rust-or-go)
+rejected a Rust/Go helper for v1 because distributing a compiled sidecar and
+maintaining another toolchain added little over distro-shipped fido2-tools.
+Phone transport needs capabilities that fido2-tools does not supply. This opt-in
+backend therefore revisits that tradeoff: the separately maintained helper owns
+native dependencies and releases, and users explicitly configure its executable.
+Teams does not bundle or automatically install it; the build and distribution
+burden remains with helper maintainers and users.
 
 ## Decision
 

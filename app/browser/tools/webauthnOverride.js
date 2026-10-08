@@ -1,3 +1,5 @@
+// app/browser/tools/webauthnOverride.js
+
 /**
  * WebAuthn Override Browser Tool
  *
@@ -69,7 +71,12 @@ function init(config, ipcRenderer) {
       return originalGet(options);
     }
 
-    // Autofill probes must not trigger hardware PIN or phone QR prompts.
+    // Do not intercept conditional mediation (passkey autofill probes).
+    // Microsoft's login page calls credentials.get({ mediation: "conditional" })
+    // on page load to check for discoverable credentials. This is an ambient
+    // check that should be handled natively, not routed to fido2-tools which
+    // would immediately trigger device discovery and a PIN dialog.
+    // Phone mode also leaves silent probes native so they cannot open a QR prompt.
     if (options.mediation === "conditional" || (phone && options.mediation === "silent")) {
       console.debug("[WEBAUTHN] Skipping conditional mediation (passkey autofill)");
       return originalGet(options);

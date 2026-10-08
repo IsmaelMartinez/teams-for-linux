@@ -20,7 +20,7 @@ function createPhoneBackend({ electron, helperPath, mainWindow, origins }) {
   function caller(event, options) {
     if (!sender || event.sender !== sender || sender.isDestroyed()) throw new Error("Unregistered window.");
     let frame = event.senderFrame;
-    if (options.phoneFrameId) {
+    if (options.phoneFrameId && options.frameOrigin) {
       frame = sender.mainFrame.framesInSubtree.find((candidate) =>
         candidate.processId === options.phoneFrameId.processId && candidate.routingId === options.phoneFrameId.routingId);
     }

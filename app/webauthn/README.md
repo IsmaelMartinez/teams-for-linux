@@ -82,3 +82,9 @@ terminate the helper; same-document navigation preserves the request.
 See the [configuration guide](../../docs-site/docs/configuration.md#experimental-phone-passkey-backend)
 for setup and [ADR 033](../../docs-site/docs/development/adr/033-phone-passkey-backend-prototype.md)
 for the protocol and security boundaries.
+
+The MIT-licensed `phoneHelper.js` protocol runner is shared with Prospect Mail's
+[`backend.js`](https://github.com/Excellence308/prospect-mail/blob/fe108b6d3c70d51b29844781376b715e2097436e/vendor/electron-phone-passkey/backend.js).
+Teams uses a local size constant instead of importing Prospect's policy module;
+the runner implementation is otherwise the same. Its notice is retained in
+`phone-helper-LICENSE`; the Teams-specific adapter follows this repository's licence.
