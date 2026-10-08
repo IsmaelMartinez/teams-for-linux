@@ -393,6 +393,8 @@ Hardware security key authentication (YubiKey, SoloKeys, etc.) for Microsoft Ent
 
 Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debian/Ubuntu) or `sudo dnf install fido2-tools` (Fedora) or `sudo pacman -S libfido2` (Arch). The official deb and rpm packages list it as a recommended dependency, so it is installed automatically unless weak dependencies are disabled.
 
+The snap bundles `fido2-tools`, but its access to security keys goes through the `u2f-devices` interface, which is not connected automatically. Connect it once with `sudo snap connect teams-for-linux:u2f-devices`.
+
 ```json
 {
   "auth": {

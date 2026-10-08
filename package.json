@@ -182,7 +182,12 @@
         "removable-media",
         "screen-inhibit-control",
         "system-observe",
+        "u2f-devices",
         "upower-observe"
+      ],
+      "stagePackages": [
+        "default",
+        "fido2-tools"
       ],
       "publish": [
         "snapStore"
