@@ -623,13 +623,13 @@ describe('WebAuthn main-frame override', () => {
 // not working inside the login iframe. Nothing else parses it.
 describe('WebAuthn subframe injection - injected script', () => {
 	const injected = (() => {
-		const src = readFileSync(path.join(__dirname, '..', '..', 'app', 'webauthn', 'index.js'), 'utf8');
-		const start = src.indexOf('wf.executeJavaScript(String.raw`');
-		assert.notStrictEqual(start, -1, 'injected block not found');
-		const open = src.indexOf('`', start);
-		const close = src.indexOf('`)', open + 1);
-		assert.notStrictEqual(close, -1, 'closing backtick not found');
-		return src.slice(open + 1, close);
+		let script;
+		require('../../app/webauthn')._injectIntoFrame({
+			url: 'https://login.microsoftonline.com/test', processId: 1, routingId: 2,
+			executeJavaScript: (source) => { script = source; return Promise.resolve(); },
+		});
+		assert.ok(script, 'real frame injection must produce a script');
+		return script;
 	})();
 
 	it('parses as valid JavaScript', () => {
@@ -655,6 +655,7 @@ describe('WebAuthn subframe injection - injected script', () => {
 			parent: {
 				postMessage: ({ id }) => messageListener({
 					data: { type: 'webauthn-response', id, result: credentialResponse },
+					source: window.parent,
 				}),
 			},
 		};
@@ -670,6 +671,7 @@ describe('WebAuthn subframe injection - injected script', () => {
 			crypto: { randomUUID: () => 'request-id' },
 			navigator: { credentials },
 			setTimeout: () => 0,
+			clearTimeout: () => {},
 			window,
 		});
 

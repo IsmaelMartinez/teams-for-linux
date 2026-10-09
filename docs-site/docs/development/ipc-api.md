@@ -30,7 +30,7 @@ As a compensating control for disabled `contextIsolation` and `sandbox` features
 
 Unauthorized IPC channels will be blocked and logged. If you encounter "Unauthorized IPC channel" errors, verify the channel name is in the official allowlist.
 
-For more information, see the [IPC Channel Validation documentation](./security-architecture.md#ipc-channel-validation).
+For more information, see the [IPC Channel Validation documentation](./security-architecture.md#2-ipc-channel-validation).
 
 ## Usage from Renderer Process
 
@@ -175,6 +175,18 @@ Use Electron DevTools to monitor IPC messages:
 1. Open DevTools (`Ctrl+Shift+I`)
 2. Go to Console tab
 3. Look for IPC-related log messages
+
+## Experimental phone assertions
+
+The phone backend reuses `webauthn:get` and the existing login-frame relay.
+An assertion carries an opaque `requestId`; cancellation sends
+`{ cancelRequestId }` through that same channel. Login iframe calls also carry
+`phoneFrameId` (Electron process/routing IDs injected by the main process).
+The adapter resolves the actual registered frame and rejects mismatched origin
+metadata. No phone-specific IPC channels or session preloads are installed.
+
+See [ADR 033](./adr/033-phone-passkey-backend-prototype.md) for the helper protocol,
+security boundaries and current limitations.
 
 ## Related Documentation
 
