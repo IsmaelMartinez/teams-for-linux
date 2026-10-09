@@ -334,6 +334,10 @@ function buildScreenTile(item) {
   tile.addEventListener("focus", () => setHoveredScreen(item.source.id));
   tile.addEventListener("blur", () => setHoveredScreen(null));
   tile.addEventListener("click", () => setSelectedScreen(item.source.id));
+  tile.addEventListener("dblclick", () => {
+    setSelectedScreen(item.source.id);
+    shareSelection();
+  });
   tile.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -522,6 +526,10 @@ function buildWindowTile(source) {
   tile.appendChild(metaRow);
 
   tile.addEventListener("click", () => setSelectedWindow(source.id));
+  tile.addEventListener("dblclick", () => {
+    setSelectedWindow(source.id);
+    shareSelection();
+  });
   tile.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
