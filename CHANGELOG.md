@@ -1,5 +1,46 @@
 # Changelog
 
+## [2.25.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.24.0...v2.25.0) (2026-10-09)
+
+
+### Features
+
+* add discoverable user themes ([#3081](https://github.com/IsmaelMartinez/teams-for-linux/issues/3081)) ([2084629](https://github.com/IsmaelMartinez/teams-for-linux/commit/2084629225fe3a0e3609dc88f44db6193b7485b2))
+* add session D-Bus controls and Teams state signals ([#3059](https://github.com/IsmaelMartinez/teams-for-linux/issues/3059)) ([0b63f8d](https://github.com/IsmaelMartinez/teams-for-linux/commit/0b63f8df4614910c25fd15050af1557a9827fcdc))
+* **multi-account:** aggregate unread across profiles into one tray badge (ADR-020 Phase 2) ([#2980](https://github.com/IsmaelMartinez/teams-for-linux/issues/2980)) ([0fa00f0](https://github.com/IsmaelMartinez/teams-for-linux/commit/0fa00f0845a63b5ba306fec57bae1d095abdf8c5))
+
+
+### Bug Fixes
+
+* **multi-account:** keep profile views attached so switched-to profiles take input ([#3061](https://github.com/IsmaelMartinez/teams-for-linux/issues/3061)) ([a1a5ba3](https://github.com/IsmaelMartinez/teams-for-linux/commit/a1a5ba34b5fcece59c11490909c109f65c219bd0))
+* **multi-account:** refocus the active profile when the window regains focus ([#3065](https://github.com/IsmaelMartinez/teams-for-linux/issues/3065)) ([44579ea](https://github.com/IsmaelMartinez/teams-for-linux/commit/44579eae84056e8a2afefbed3e4078458b82a411))
+* **multi-account:** window title follows the active profile ([#3069](https://github.com/IsmaelMartinez/teams-for-linux/issues/3069)) ([3324c0e](https://github.com/IsmaelMartinez/teams-for-linux/commit/3324c0edb649bd8fb659a2c38d4f7a1526795fc4))
+* **packaging:** declare ALSA and libgbm in the .deb Depends ([#3070](https://github.com/IsmaelMartinez/teams-for-linux/issues/3070)) ([29f6e9b](https://github.com/IsmaelMartinez/teams-for-linux/commit/29f6e9b5f3c479ecd7121b5bbb71ea0d6d494e16))
+* **startup:** disable UsePortalAccentColor on Linux so the OS dark theme is followed ([#3071](https://github.com/IsmaelMartinez/teams-for-linux/issues/3071)) ([d308758](https://github.com/IsmaelMartinez/teams-for-linux/commit/d308758590cfe465bdcc6c59b185f127a9db391e)), closes [#3023](https://github.com/IsmaelMartinez/teams-for-linux/issues/3023)
+
+
+### Code Improvements
+
+* **startup:** check disable-features tokens through a Set ([#3079](https://github.com/IsmaelMartinez/teams-for-linux/issues/3079)) ([afee6b1](https://github.com/IsmaelMartinez/teams-for-linux/commit/afee6b1e3aafc280d9ed9fd6b0512a290c494105))
+
+
+### Documentation
+
+* **adr:** ADR-032 opt-in secondary window for calls, supersedes ADR-010 ([#3000](https://github.com/IsmaelMartinez/teams-for-linux/issues/3000)) ([b1259b9](https://github.com/IsmaelMartinez/teams-for-linux/commit/b1259b92a412a594ccc5036dfd4e9c4cabe81770))
+* **troubleshooting:** add XWayland screen sharing issue ([#3088](https://github.com/IsmaelMartinez/teams-for-linux/issues/3088)) ([a3dc2cb](https://github.com/IsmaelMartinez/teams-for-linux/commit/a3dc2cbe1e741c49899f9e55a70ae8e2d8a307b3))
+
+
+### Maintenance
+
+* **deps-dev:** bump globals ([#3062](https://github.com/IsmaelMartinez/teams-for-linux/issues/3062)) ([12cbfd4](https://github.com/IsmaelMartinez/teams-for-linux/commit/12cbfd4dcaa89980537262253e20a171ff4c7839))
+* **deps-dev:** bump http-cache-semantics from 4.2.0 to 4.3.0 ([#3072](https://github.com/IsmaelMartinez/teams-for-linux/issues/3072)) ([3aa453c](https://github.com/IsmaelMartinez/teams-for-linux/commit/3aa453c0583c53266e4f981f456c0902f5ee8b8d))
+* **deps:** bump compression from 1.8.1 to 1.8.2 in /docs-site ([#3073](https://github.com/IsmaelMartinez/teams-for-linux/issues/3073)) ([caa6c22](https://github.com/IsmaelMartinez/teams-for-linux/commit/caa6c2288fb85d619557c65e9cc8d6ece11e3441))
+* **deps:** bump http-cache-semantics from 4.2.0 to 4.3.0 in /docs-site ([#3077](https://github.com/IsmaelMartinez/teams-for-linux/issues/3077)) ([9cb20f1](https://github.com/IsmaelMartinez/teams-for-linux/commit/9cb20f19098f81bacb757ddbe62e5a2989705f14))
+* **deps:** bump joi from 17.13.7 to 17.13.8 in /docs-site ([#3074](https://github.com/IsmaelMartinez/teams-for-linux/issues/3074)) ([b982e1c](https://github.com/IsmaelMartinez/teams-for-linux/commit/b982e1c05979aefd878cd42107e3fbe83bc08006))
+* **deps:** bump proxy-addr from 2.0.7 to 2.0.8 in /docs-site ([#3076](https://github.com/IsmaelMartinez/teams-for-linux/issues/3076)) ([a366d61](https://github.com/IsmaelMartinez/teams-for-linux/commit/a366d613c72651c51d15f69d71c546a12e320f45))
+* **deps:** bump shell-quote from 1.10.0 to 1.12.0 in /docs-site ([#3078](https://github.com/IsmaelMartinez/teams-for-linux/issues/3078)) ([53e3af1](https://github.com/IsmaelMartinez/teams-for-linux/commit/53e3af1d97f8c336a3d0727492d5667461e7e304))
+* **deps:** bump source-map-js from 1.2.1 to 1.2.2 in /docs-site ([#3075](https://github.com/IsmaelMartinez/teams-for-linux/issues/3075)) ([64d64c1](https://github.com/IsmaelMartinez/teams-for-linux/commit/64d64c177b1e74db39d1cf590a71b8afd0b4ddf0))
+
 ## [2.24.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.23.0...v2.24.0) (2026-10-03)
 
 
