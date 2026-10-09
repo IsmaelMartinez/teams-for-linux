@@ -41,6 +41,10 @@
 * **deps:** bump shell-quote from 1.10.0 to 1.12.0 in /docs-site ([#3078](https://github.com/IsmaelMartinez/teams-for-linux/issues/3078)) ([53e3af1](https://github.com/IsmaelMartinez/teams-for-linux/commit/53e3af1d97f8c336a3d0727492d5667461e7e304))
 * **deps:** bump source-map-js from 1.2.1 to 1.2.2 in /docs-site ([#3075](https://github.com/IsmaelMartinez/teams-for-linux/issues/3075)) ([64d64c1](https://github.com/IsmaelMartinez/teams-for-linux/commit/64d64c177b1e74db39d1cf590a71b8afd0b4ddf0))
 
+### Thanks
+
+Big thanks to @app/dependabot, @gauner666, @jorge-buggy, @jpenberthy, @mvanhorn, @poietikon for contributing to this release.
+
 ## [2.24.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.23.0...v2.24.0) (2026-10-03)
 
 

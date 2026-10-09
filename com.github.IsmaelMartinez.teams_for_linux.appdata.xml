@@ -14,6 +14,31 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.25.0" date="2026-10-09">
+      <description>
+        <ul>
+          <li>add discoverable user themes (#3081)</li>
+          <li>add session D-Bus controls and Teams state signals (#3059)</li>
+          <li>multi-account: aggregate unread across profiles into one tray badge (ADR-020 Phase 2) (#2980)</li>
+          <li>multi-account: keep profile views attached so switched-to profiles take input (#3061)</li>
+          <li>multi-account: refocus the active profile when the window regains focus (#3065)</li>
+          <li>multi-account: window title follows the active profile (#3069)</li>
+          <li>packaging: declare ALSA and libgbm in the .deb Depends (#3070)</li>
+          <li>startup: disable UsePortalAccentColor on Linux so the OS dark theme is followed (#3071) (d308758), closes #3023</li>
+          <li>startup: check disable-features tokens through a Set (#3079)</li>
+          <li>adr: ADR-032 opt-in secondary window for calls, supersedes ADR-010 (#3000)</li>
+          <li>troubleshooting: add XWayland screen sharing issue (#3088)</li>
+          <li>deps-dev: bump globals (#3062)</li>
+          <li>deps-dev: bump http-cache-semantics from 4.2.0 to 4.3.0 (#3072)</li>
+          <li>deps: bump compression from 1.8.1 to 1.8.2 in /docs-site (#3073)</li>
+          <li>deps: bump http-cache-semantics from 4.2.0 to 4.3.0 in /docs-site (#3077)</li>
+          <li>deps: bump joi from 17.13.7 to 17.13.8 in /docs-site (#3074)</li>
+          <li>deps: bump proxy-addr from 2.0.7 to 2.0.8 in /docs-site (#3076)</li>
+          <li>deps: bump shell-quote from 1.10.0 to 1.12.0 in /docs-site (#3078)</li>
+          <li>deps: bump source-map-js from 1.2.1 to 1.2.2 in /docs-site (#3075)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.24.0" date="2026-10-03">
       <description>
         <ul>
