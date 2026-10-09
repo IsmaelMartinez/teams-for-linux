@@ -1,7 +1,7 @@
 /**
  * Add custom tweaks for frameless window.
  *
- * In frameless mode the top bar is draggable and acts as the window title bar. This
+ * In frameless mode, or with window.hideTitleBar, the top bar is draggable and acts as the window title bar. This
  * means that all the clickable elements, like the navigation buttons, waffle menu and search box
  * need to be clickable (not draggable). This function adds CSS rules to make those elements
  * non-draggable.
@@ -11,7 +11,8 @@
  * respective module. This function only needs to make the search box and waffle menu non-draggable.
  */
 function init(config) {
-	if (!config.frame) {
+	// window.hideTitleBar (Linux) leaves the same job to the Teams top bar.
+	if (!config.frame || config.window?.hideTitleBar) {
 		const style = document.createElement('style');
 		style.id = 'frameless-tweaks';
 		style.textContent = `
