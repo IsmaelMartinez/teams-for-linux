@@ -550,6 +550,16 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
 
 **Related GitHub Issues:** [#2459](https://github.com/IsmaelMartinez/teams-for-linux/issues/2459)
 
+#### Issue: Sharing the whole screen shows black on Wayland, sharing a window works
+
+**Description:** On a Wayland session the app runs under XWayland (the `--ozone-platform=x11` default), so screen capture goes through the X11 capturer, which only sees X11 windows. Sharing a single window works, but sharing the whole screen shows a black feed.
+
+**Solutions/Workarounds:**
+
+1. **Share a window** instead of the whole screen.
+
+**Related GitHub Issues:** [#3066](https://github.com/IsmaelMartinez/teams-for-linux/issues/3066)
+
 :::note Important
 The `performance.electronCLIFlags` config option (`config.json`) **cannot** override `--ozone-platform` because the flag must be set before the Electron process starts, and config is loaded after. Use command-line arguments or `.desktop` file edits instead.
 :::
