@@ -1065,7 +1065,7 @@ function onDidFinishLoad() {
 
   injectScreenSharingLogic(window.webContents);
 
-  customCSS.onDidFinishLoad(window.webContents, config);
+  customCSS.onDidFinishLoad(window.webContents, config, appConfig.customCSSPath);
   initSystemThemeFollow(config);
 }
 
@@ -1121,7 +1121,7 @@ function onDidFrameFinishLoad(
   }
 
   const wf = webFrameMain.fromId(frameProcessId, frameRoutingId);
-  customCSS.onDidFrameFinishLoad(wf, config);
+  customCSS.onDidFrameFinishLoad(wf, config, appConfig.customCSSPath);
 }
 
 function restoreWindow() {

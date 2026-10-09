@@ -11,6 +11,7 @@ const {
 } = require("./deprecation");
 const { applyRenamedOptions, isOptionSetByUser } = require("./renames");
 const { mergeConfigFiles, applyObjectDefaults } = require("./mergeDefaults");
+const watchedConfigs = new WeakSet();
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
@@ -165,6 +166,7 @@ function argv(configPath, appVersion) {
       );
       ipcMain.emit("config-file-changed");
     });
+    watchedConfigs.add(config);
   }
 
   // Track whether disableGpu was explicitly set via CLI or config file
@@ -211,4 +213,5 @@ exports = module.exports = argv;
 // Exposed so the menu can open the very file this module reads, without
 // a second copy of the "config.json" literal drifting from this one.
 module.exports.getConfigFilePath = getConfigFilePath;
-
+// A requested watcher is not necessarily active (e.g. no file at startup).
+module.exports.isWatchingConfigFile = (config) => watchedConfigs.has(config);

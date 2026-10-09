@@ -61,6 +61,7 @@ describe("Settings menu config entries", () => {
       .map((item) => item.label);
 
     assert.deepStrictEqual(labels, [
+      "Theme",
       "Save",
       "Restore",
       "Show Updated Config…",

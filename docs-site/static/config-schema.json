@@ -183,7 +183,7 @@
       "name": "customCSSName",
       "type": "string",
       "default": "",
-      "description": "custom CSS name for the packaged available css files. Currently those are: \"compactDark\", \"compactLight\", \"tweaks\", \"condensedDark\" and \"condensedLight\"",
+      "description": "Packaged CSS theme name (compactDark, compactLight, tweaks, condensedDark, condensedLight), or custom:<id> for a discovered user theme. An empty name uses customCSSLocation when configured.",
       "applyMode": "restart",
       "deprecated": "use appearance.cssName instead"
     },
@@ -1406,7 +1406,7 @@
           "path": "cssName",
           "type": "string",
           "default": "",
-          "description": "custom CSS name for the packaged available css files. Currently those are: \"compactDark\", \"compactLight\", \"tweaks\", \"condensedDark\" and \"condensedLight\""
+          "description": "Packaged CSS theme name (compactDark, compactLight, tweaks, condensedDark, condensedLight), or custom:<id> for a discovered user theme. An empty name uses appearance.cssLocation when configured."
         },
         {
           "path": "cssLocation",
