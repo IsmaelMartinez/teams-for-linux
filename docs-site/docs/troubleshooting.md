@@ -550,9 +550,9 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
 
 **Related GitHub Issues:** [#2459](https://github.com/IsmaelMartinez/teams-for-linux/issues/2459)
 
-#### Issue: Sharing the whole screen shows black on Wayland, sharing a window works
+#### Issue: Sharing the whole screen shows black under XWayland, sharing a window works
 
-**Description:** On a Wayland session the app runs under XWayland (the `--ozone-platform=x11` default), so screen capture goes through the X11 capturer, which only sees X11 windows. Sharing a single window works, but sharing the whole screen shows a black feed.
+**Description:** The deb, rpm, AppImage and snap packages launch with `--ozone-platform=x11`, so on a Wayland session they run under XWayland and screen capture goes through the X11 capturer, which only sees X11 windows. Sharing a single window works, but sharing the whole screen shows a black feed. Flatpak and tar.gz builds run as native Wayland and are not affected by this.
 
 **Solutions/Workarounds:**
 
