@@ -201,6 +201,8 @@ For Flatpak, the directory is:
 
 Themes are local CSS files only; no JavaScript or executable theme code is loaded. Metadata must be valid JSON with `id`, `name`, and `css`. The CSS file must exist inside its theme folder. Absolute paths, parent-directory traversal, and symlinks escaping the theme folder are rejected.
 
+Theme CSS may load remote resources through `@import` and `url()`, so only install themes from trusted sources.
+
 Invalid themes are ignored with concise warnings and never prevent startup. Built-in IDs are reserved. If several custom folders use the same ID, the first valid folder in sorted folder-name order wins. If a selected custom theme is missing or invalid, the app warns and uses the default appearance while retaining the saved selection, so reinstalling the theme restores it on the next restart.
 
 Existing built-in names such as `compactDark` continue to work without migration. `appearance.cssName` takes precedence over `appearance.cssLocation`; a missing selected custom theme falls back to Default rather than loading a different stylesheet from `cssLocation`.

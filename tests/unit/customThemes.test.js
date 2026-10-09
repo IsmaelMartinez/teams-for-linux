@@ -6,7 +6,7 @@ const path = require("node:path");
 const { BUILTIN_THEMES, discoverThemes, resolveTheme } = require("../../app/customCSS/themes");
 
 function fixture(t) {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "tfl-themes-"));
+  const directory = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "tfl-themes-")));
   const configPath = path.join(directory, "config");
   const themesPath = path.join(configPath, "themes");
   fs.mkdirSync(themesPath, { recursive: true });

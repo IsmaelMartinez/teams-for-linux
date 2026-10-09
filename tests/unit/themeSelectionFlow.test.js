@@ -84,7 +84,7 @@ after(() => {
 });
 
 function createContext(t, initialConfig = {}) {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "teams-theme-menu-flow-"));
+  const directory = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "teams-theme-menu-flow-")));
   t.after(() => {
     app.removeAllListeners();
     fs.rmSync(directory, { recursive: true, force: true });

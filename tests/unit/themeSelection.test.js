@@ -63,7 +63,7 @@ after(() => {
 });
 
 beforeEach(() => {
-  directory = fs.mkdtempSync(path.join(os.tmpdir(), "teams-theme-selection-"));
+  directory = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "teams-theme-selection-")));
   const themeDirectory = path.join(directory, "themes", "glass-dark");
   fs.mkdirSync(themeDirectory, { recursive: true });
   fs.writeFileSync(path.join(themeDirectory, "theme.json"), JSON.stringify({ id: "glass-dark", name: "Glass Dark", css: "theme.css" }));
