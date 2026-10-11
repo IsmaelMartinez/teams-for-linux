@@ -136,7 +136,7 @@ When the app feels slow or heavy, seven configuration options are the first-line
     rm -rf ~/snap/teams-for-linux/common/.cache/fontconfig
     rm ~/.cache/fontconfig/*
     sudo rm /var/cache/fontconfig/*
-    sudo fc-cache -r
+    fc-cache -r
     ```
     The first line only applies to the snap, which keeps its own fontconfig cache under `~/snap/teams-for-linux/common/.cache`.
 
