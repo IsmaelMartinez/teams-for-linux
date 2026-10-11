@@ -131,15 +131,16 @@ When the app feels slow or heavy, seven configuration options are the first-line
 
 **Solutions/Workarounds:**
 
-1.  **Clear Fontconfig Cache:**
+1.  **Clear Fontconfig Cache:** quit the app, run the commands below, then start it again.
     ```bash
-    sudo rm /var/cache/fontconfig/*
+    rm -rf ~/snap/teams-for-linux/common/.cache/fontconfig
     rm ~/.cache/fontconfig/*
+    sudo rm /var/cache/fontconfig/*
     fc-cache -r
     ```
-    This issue is related to the fontconfig cache. The above commands will clear it.
+    The first line only applies to the snap, which keeps its own fontconfig cache under `~/snap/teams-for-linux/common/.cache`.
 
-**Related GitHub Issues:** [Issue #357](https://github.com/IsmaelMartinez/teams-for-linux/issues/357)
+**Related GitHub Issues:** [Issue #357](https://github.com/IsmaelMartinez/teams-for-linux/issues/357), [#1105](https://github.com/IsmaelMartinez/teams-for-linux/issues/1105), [#1328](https://github.com/IsmaelMartinez/teams-for-linux/issues/1328), [#3092](https://github.com/IsmaelMartinez/teams-for-linux/issues/3092)
 
 ---
 
