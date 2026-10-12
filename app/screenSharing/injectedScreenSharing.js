@@ -88,7 +88,7 @@
     };
     if (Array.isArray(video.optional)) {
       video.optional = video.optional
-        .map((opt) => dropKeys(opt, ["minWidth", "maxWidth", "minHeight", "maxHeight"]))
+        .map((opt) => dropKeys(opt, ["minWidth", "maxWidth", "minHeight", "maxHeight", "width", "height"]))
         .filter((opt) => Object.keys(opt).length > 0);
     }
     if (Array.isArray(video.advanced)) {
