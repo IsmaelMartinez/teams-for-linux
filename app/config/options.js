@@ -29,13 +29,17 @@ const defaults = require("./defaults");
 
 module.exports = {
       dbusControl: {
-        default: { enabled: false },
+        default: { enabled: false, busName: "" },
         describe: "Opt-in Linux user session D-Bus control and observed Teams state. Requires restart.",
         type: "object",
         fields: {
           enabled: {
             type: "boolean",
             describe: "Enable the Linux D-Bus service and its local status monitors.",
+          },
+          busName: {
+            type: "string",
+            describe: "Well-known D-Bus service name for this instance. Empty uses FLATPAK_ID or com.github.IsmaelMartinez.teams_for_linux. Use distinct names for separately launched profiles; invalid names disable the service.",
           },
         },
         applyMode: "restart",

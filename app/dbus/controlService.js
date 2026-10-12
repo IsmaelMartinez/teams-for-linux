@@ -3,6 +3,12 @@ const OBJECT_PATH = "/com/github/IsmaelMartinez/teams_for_linux";
 const INTERFACE_NAME = `${DEFAULT_BUS_NAME}.Control`;
 const DO_NOT_QUEUE = 0x4;
 
+function isValidBusName(name) {
+  return typeof name === "string" && name.length <= 255 &&
+    name.includes(".") && !/[^A-Za-z0-9_.-]/.test(name) &&
+    name.split(".").every((part) => /^[A-Za-z_-]/.test(part));
+}
+
 const INTERFACE = {
   name: INTERFACE_NAME,
   methods: {
@@ -48,6 +54,7 @@ const STATE_SIGNALS = [
 class DBusControlService {
   constructor(control, {
     dbus,
+    busName,
     env = process.env,
     platform = process.platform,
     logger = console,
@@ -55,7 +62,9 @@ class DBusControlService {
   } = {}) {
     this.control = control;
     this.dbus = dbus;
-    this.busName = env.FLATPAK_ID || DEFAULT_BUS_NAME;
+    this.busName = busName == null || busName === ""
+      ? env.FLATPAK_ID || DEFAULT_BUS_NAME
+      : busName;
     this.platform = platform;
     this.logger = logger;
     this.startupTimeout = startupTimeout;
@@ -69,6 +78,10 @@ class DBusControlService {
 
   start() {
     if (this.platform !== "linux" || this.bus) return;
+    if (!isValidBusName(this.busName)) {
+      this.logger.warn("[DBUS_CONTROL] Invalid bus name; service disabled");
+      return;
+    }
     try {
       // Lazy loading keeps this optional Linux feature out of other platforms.
       const dbus = this.dbus || require("@homebridge/dbus-native");

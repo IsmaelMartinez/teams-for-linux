@@ -8,8 +8,9 @@ const { EventEmitter } = require('node:events');
 const options = require('../../app/config/options');
 
 it('defines D-Bus as disabled by default and requiring restart', () => {
-	assert.deepEqual(options.dbusControl.default, { enabled: false });
+	assert.deepEqual(options.dbusControl.default, { enabled: false, busName: '' });
 	assert.equal(options.dbusControl.fields.enabled.type, 'boolean');
+	assert.equal(options.dbusControl.fields.busName.type, 'string');
 	assert.equal(options.dbusControl.applyMode, 'restart');
 });
 
@@ -45,6 +46,7 @@ it('starts D-Bus and its state observers only for explicit Linux opt-in', () => 
 		['linux', {}, 0], ['linux', { dbusControl: { enabled: false } }, 0],
 		['linux', { dbusControl: { enabled: 'true' } }, 0],
 		['linux', { dbusControl: { enabled: true } }, 1],
+		['linux', { dbusControl: { enabled: true, busName: 'org.example.Teams.Work' } }, 1],
 		['darwin', { dbusControl: { enabled: true } }, 0],
 		['win32', { dbusControl: { enabled: true } }, 0],
 	]) {
@@ -54,7 +56,13 @@ it('starts D-Bus and its state observers only for explicit Linux opt-in', () => 
 			getControlWebContents() {}, mainAppWindow: { performIncomingCallAction() {} },
 			TeamsStateService: class { initialize() { started.state++; } },
 			TeamsControlService: class { constructor() { started.control++; } },
-			require: () => class { start() { started.bus++; } }, console,
+			require: () => class {
+				constructor(control, settings) {
+					assert.equal(control, context.teamsControlService);
+					assert.equal(settings.busName, config.dbusControl.busName);
+				}
+				start() { started.bus++; }
+			}, console,
 		};
 		vm.runInNewContext(`${source.slice(helperStart, helperEnd)}\ninitializeDbusControl();`, context);
 		assert.deepEqual(started, { state: expected, control: expected, bus: expected }, `${platform}: ${JSON.stringify(config)}`);
