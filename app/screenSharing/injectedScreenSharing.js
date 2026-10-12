@@ -107,8 +107,8 @@
     stripResolutionConstraint(video);
     if (
       resolutionConfig.mode === "override" &&
-      Number.isFinite(resolutionConfig.width) &&
-      Number.isFinite(resolutionConfig.height)
+      resolutionConfig.width > 0 &&
+      resolutionConfig.height > 0
     ) {
       if (video.mandatory || video.optional) {
         video.mandatory = video.mandatory || {};
