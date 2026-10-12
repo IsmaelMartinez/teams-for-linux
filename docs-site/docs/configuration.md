@@ -555,7 +555,7 @@ Screen sharing settings are organized under the `screenSharing` configuration ob
 | `screenSharing.thumbnail.enabled` | `boolean` | `true` | Automatically show thumbnail window when screen sharing |
 | `screenSharing.thumbnail.alwaysOnTop` | `boolean` | `true` | Keep thumbnail window always on top |
 | `screenSharing.resolution.enabled` | `boolean` | `false` | Enable screen sharing resolution control |
-|| `screenSharing.resolution.mode` | `string` | `"remove"` | `remove` removes Teams' resolution constraints so capture can use the source's native resolution. `override` requests the configured width and height as a ceiling. |
+| `screenSharing.resolution.mode` | `string` | `"remove"` | `remove` removes Teams' resolution constraints so capture can use the source's native resolution. `override` requests the configured width and height as a ceiling. |
 | `screenSharing.resolution.width` | `number` | - | Target width used with `override` |
 | `screenSharing.resolution.height` | `number` | - | Target height used with `override` |
 | `screenSharing.lockInhibitionMethod` | `string` | `"Electron"` | Screen lock inhibition method. Choices: `Electron`, `WakeLockSentinel` |
