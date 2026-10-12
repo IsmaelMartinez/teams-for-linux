@@ -5,7 +5,7 @@ The optional control service exposes a deliberately small set of named Teams act
 | Item | Value |
 | --- | --- |
 | Bus | User session bus |
-| Service | `$FLATPAK_ID`, otherwise `com.github.IsmaelMartinez.teams_for_linux` |
+| Service | `dbusControl.busName` when set; otherwise `$FLATPAK_ID` or `com.github.IsmaelMartinez.teams_for_linux` |
 | Object path | `/com/github/IsmaelMartinez/teams_for_linux` |
 | Interface | `com.github.IsmaelMartinez.teams_for_linux.Control` |
 
@@ -45,4 +45,23 @@ busctl --user call "$BUS" "$OBJ_PATH" "$IFACE" Unmute b false
 busctl --user monitor "$BUS"
 ```
 
-Flatpak uses its app ID as the well-known service name. The service requests the regular well-known name without queueing. The Snap packaging currently declares no D-Bus slot, so acquiring this name may be denied under Snap confinement; this feature does not request broad permissions as a workaround. MQTT remains an independent, unchanged control and publishing path.
+## Separate application instances
+
+For profiles launched in separate processes with different `--user-data-dir` directories, set a distinct `dbusControl.busName` in each directory's `config.json`, then restart those instances. For example:
+
+```json
+{
+  "dbusControl": {
+    "enabled": true,
+    "busName": "com.github.IsmaelMartinez.teams_for_linux.Work"
+  }
+}
+```
+
+Use `com.github.IsmaelMartinez.teams_for_linux.Personal` in the other instance. In the commands above, change only `BUS` to the chosen name; the object path and interface stay the same. Read each instance with `GetState` and subscribe to its signals by service name.
+
+An empty or unset `busName` keeps the default. A custom name must be a well-known D-Bus name: at most 255 ASCII characters, at least two nonempty dot-separated components, using letters, digits, underscores or hyphens, with no component starting with a digit. Unique names such as `:1.42` are not accepted. An invalid name disables the D-Bus service with a warning; it does not fall back to another name. Names are requested without queueing, so if two instances use the same name, only the first exposes the service.
+
+This setting separates application processes. The built-in multi-account switcher still exposes one service per process and retains the selected-profile behavior described above.
+
+Flatpak defaults to its app ID. A custom name overrides that default, but the sandbox must permit ownership of the chosen name; this setting does not grant permissions. The Snap packaging currently declares no D-Bus slot, so acquiring a name may be denied under Snap confinement. MQTT remains an independent, unchanged control and publishing path.
