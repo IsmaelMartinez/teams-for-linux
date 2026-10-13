@@ -59,7 +59,9 @@ class TrayIconRenderer {
         const prevCount = this.#lastRequestedCount;
         this.#lastRequestedCount = undefined;
         if (typeof prevCount === "number" && prevCount > 0) {
-          this.updateActivityCount({ detail: { number: prevCount } });
+          this.updateActivityCount({ detail: { number: prevCount } }).catch((err) => {
+            console.error("[TRAY_DIAG] Failed to redraw activity count:", err);
+          });
         }
       }
     });
