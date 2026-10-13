@@ -349,7 +349,9 @@ class Menus {
       }
       this.configGroup.startupConfig.appIcon = selectedPath;
       this.configGroup.legacyConfigStore.set("appIcon", selectedPath);
-      this.tray?.setBaseIconPath(selectedPath);
+      const iconChooser = new TrayIconChooser(this.configGroup.startupConfig);
+      const theme = nativeTheme?.shouldUseDarkColors ? "dark" : "light";
+      this.tray?.setBaseIconPath(iconChooser.getFile(theme));
       this.#updateWindowIcon(selectedPath);
       this.updateMenu();
     }
@@ -357,13 +359,13 @@ class Menus {
 
   resetAppIcon() {
     this.configGroup.startupConfig.appIcon = "";
-    this.configGroup.startupConfig.appIconDark = "";
     this.configGroup.legacyConfigStore.set("appIcon", "");
-    this.configGroup.legacyConfigStore.set("appIconDark", "");
     const iconChooser = new TrayIconChooser(this.configGroup.startupConfig);
-    const iconPath = iconChooser.getFile();
-    this.tray?.setBaseIconPath(iconPath);
-    this.#updateWindowIcon(iconPath);
+    const theme = nativeTheme?.shouldUseDarkColors ? "dark" : "light";
+    const trayIconPath = iconChooser.getFile(theme);
+    const windowIconPath = iconChooser.getWindowFile();
+    this.tray?.setBaseIconPath(trayIconPath);
+    this.#updateWindowIcon(windowIconPath);
     this.updateMenu();
   }
 

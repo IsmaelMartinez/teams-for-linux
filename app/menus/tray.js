@@ -95,6 +95,7 @@ class ApplicationTray {
 
   updateTrayImage(iconUrl, flash, count) {
     if (this.tray && !this.tray.isDestroyed()) {
+      this.currentCount = count;
       // Use original icon path if iconUrl is null/undefined
       const effectiveIconPath = iconUrl || this.iconPath;
       const image = this.getIconImage(effectiveIconPath);
@@ -111,7 +112,9 @@ class ApplicationTray {
   setBaseIconPath(iconPath) {
     this.iconPath = iconPath;
     if (this.tray && !this.tray.isDestroyed()) {
-      this.tray.setImage(this.getIconImage(iconPath));
+      if (!this.currentCount || this.currentCount <= 0) {
+        this.tray.setImage(this.getIconImage(iconPath));
+      }
     }
   }
 

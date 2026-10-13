@@ -104,7 +104,7 @@ class BrowserWindowManager {
 
       show: false,
       autoHideMenuBar: this.config.menubar === "auto",
-      icon: this.iconChooser ? this.getIconImage(this.iconChooser.getFile()) : undefined,
+      icon: this.iconChooser ? this.getIconImage(this.iconChooser.getWindowFile()) : undefined,
       frame: this.config.frame,
 
       webPreferences: {

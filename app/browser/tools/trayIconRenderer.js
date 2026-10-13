@@ -49,16 +49,18 @@ class TrayIconRenderer {
       const themeMatters = themeMoved && Boolean(appIconDarkEffective?.trim());
 
       if (appIconMoved || appIconDarkMoved || themeMatters) {
-        const nextConfig = { ...this.config };
-        if ('appIcon' in changes) nextConfig.appIcon = changes.appIcon;
-        if ('appIconDark' in changes) nextConfig.appIconDark = changes.appIconDark;
-        this.config = nextConfig;
+        if ('appIcon' in changes) this.config.appIcon = changes.appIcon;
+        if ('appIconDark' in changes) this.config.appIconDark = changes.appIconDark;
         if ('theme' in changes) this.currentTheme = changes.theme;
         const chooser = new TrayIconChooser(this.config);
         this.baseIcon = nativeImage.createFromPath(chooser.getFile(this.currentTheme));
         this.iconSize = this.baseIcon.getSize();
         this.#baseIconDataUrl = null;
+        const prevCount = this.#lastRequestedCount;
         this.#lastRequestedCount = undefined;
+        if (typeof prevCount === "number" && prevCount > 0) {
+          this.updateActivityCount({ detail: { number: prevCount } });
+        }
       }
     });
   }

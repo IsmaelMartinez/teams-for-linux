@@ -153,4 +153,45 @@ describe('trayIconRenderer appIcon config changes', () => {
 
     assert.deepStrictEqual(createdPaths, ['/custom/dark.png']);
   });
+
+  it('preserves the shared config object reference on config-changed', () => {
+    const sharedConfig = { appIcon: '/custom/icon.png', appIconType: 'default' };
+    const renderer = require(rendererPath);
+    renderer.init(
+      sharedConfig,
+      { on: (channel, cb) => { if (channel === 'config-changed') handler = cb; } },
+    );
+
+    handler(null, { appIcon: '/updated/icon.png', disableBadgeCount: true });
+
+    assert.strictEqual(renderer.config, sharedConfig);
+    assert.strictEqual(sharedConfig.appIcon, '/updated/icon.png');
+  });
+
+  it('triggers an activity count redraw when base icon changes with an active count', async () => {
+    const sentUpdates = [];
+    const renderer = require(rendererPath);
+    renderer.init(
+      { appIcon: '/old/icon.png', appIconType: 'default', disableBadgeCount: true },
+      {
+        on: (channel, cb) => { if (channel === 'config-changed') handler = cb; },
+        send: (channel, data) => { if (channel === 'tray-update') sentUpdates.push(data); },
+      },
+    );
+    renderer.render = async () => 'data:image/png;base64,STUB';
+
+    await renderer.updateActivityCount({ detail: { number: 4 } });
+    assert.strictEqual(sentUpdates.length, 1);
+    assert.strictEqual(sentUpdates[0].count, 4);
+
+    sentUpdates.length = 0;
+    handler(null, { appIcon: '/another/icon.png' });
+
+    // Allow the microtask queue to process updateActivityCount
+    await new Promise((resolve) => setImmediate(resolve));
+
+    assert.strictEqual(sentUpdates.length, 1);
+    assert.strictEqual(sentUpdates[0].count, 4);
+  });
 });
+
