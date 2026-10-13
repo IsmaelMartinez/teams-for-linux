@@ -92,6 +92,20 @@ describe('trayIconChooser appIconDark resolution', () => {
     assert.match(path.basename(darkChooser.getFile('dark')), /^icon-monochrome-dark-/);
     assert.match(path.basename(darkChooser.getFile('light')), /^icon-monochrome-dark-/);
   });
+
+  it('falls back to system dark theme via window.matchMedia when theme is omitted', () => {
+    globalThis.window = { matchMedia: (query) => ({ matches: query.includes('dark') }) };
+    try {
+      const chooser = new TrayIconChooser({
+        appIcon: '/custom/light.png',
+        appIconDark: '/custom/dark.png',
+        appIconType: 'default',
+      });
+      assert.strictEqual(chooser.getFile(), '/custom/dark.png');
+    } finally {
+      delete globalThis.window;
+    }
+  });
 });
 
 describe('trayIconChooser getWindowFile', () => {

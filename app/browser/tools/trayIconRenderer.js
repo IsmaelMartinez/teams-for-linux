@@ -8,7 +8,11 @@ class TrayIconRenderer {
   init(config, ipcRenderer) {
     this.ipcRenderer = ipcRenderer;
     this.config = config;
-    this.currentTheme = config.theme;
+    const isDark =
+      typeof window !== "undefined" && typeof window.matchMedia === "function"
+        ? window.matchMedia("(prefers-color-scheme: dark)").matches
+        : false;
+    this.currentTheme = config.theme || (isDark ? "dark" : "light");
     const iconChooser = new TrayIconChooser(config);
     this.baseIcon = nativeImage.createFromPath(iconChooser.getFile(this.currentTheme));
     // Defensive cache reset only; re-running init() is not otherwise safe
@@ -59,7 +63,7 @@ class TrayIconRenderer {
         const prevCount = this.#lastRequestedCount;
         this.#lastRequestedCount = undefined;
         if (typeof prevCount === "number" && prevCount > 0) {
-          this.updateActivityCount({ detail: { number: prevCount } }).catch((err) => {
+          this.updateActivityCount({ detail: { number: prevCount } }, { flash: false }).catch((err) => {
             console.error("[TRAY_DIAG] Failed to redraw activity count:", err);
           });
         }
@@ -67,8 +71,9 @@ class TrayIconRenderer {
     });
   }
 
-  async updateActivityCount(event) {
+  async updateActivityCount(event, options = {}) {
     const count = event.detail.number;
+    const allowFlash = options.flash !== false && !options.skipFlash;
 
     // Deduplicate against the most recently *requested* count, not the last
     // one that finished sending. Comparing against the completed count
@@ -86,9 +91,10 @@ class TrayIconRenderer {
     const sequence = ++this.#updateSequence;
     const startTime = Date.now();
 
+    const willFlash = allowFlash && count > 0 && !this.config.disableNotificationWindowFlash;
     console.debug("[TRAY_DIAG] Activity count update initiated", {
       newCount: count,
-      willFlash: count > 0 && !this.config.disableNotificationWindowFlash
+      willFlash
     });
 
     // Count 0 uses the base icon directly, skipping canvas rendering
@@ -117,7 +123,7 @@ class TrayIconRenderer {
 
     this.ipcRenderer.send("tray-update", {
       icon: icon,
-      flash: count > 0 && !this.config.disableNotificationWindowFlash,
+      flash: willFlash,
       count: count,
     });
 

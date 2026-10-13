@@ -803,7 +803,8 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   connectionManager = new ConnectionManager();
 
   if (iconChooser) {
-    menus = new Menus(window, configGroup, iconChooser.getFile(), connectionManager, profilesManagerRef);
+    const initialTheme = nativeTheme?.shouldUseDarkColors ? "dark" : "light";
+    menus = new Menus(window, configGroup, iconChooser.getFile(initialTheme), connectionManager, profilesManagerRef);
     menus.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
   }
 

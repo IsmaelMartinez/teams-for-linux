@@ -1,4 +1,4 @@
-const { nativeImage } = require("electron");
+const { nativeImage, nativeTheme } = require("electron");
 const os = require("node:os");
 const path = require("node:path");
 const iconFolder = path.join(__dirname, "../..", "assets/icons");
@@ -21,6 +21,18 @@ class TrayIconChooser {
   static resolveIsDark(theme) {
     if (theme === "dark" || theme === true) return true;
     if (theme === "light" || theme === false) return false;
+    if (
+      typeof nativeTheme !== "undefined" &&
+      typeof nativeTheme?.shouldUseDarkColors === "boolean"
+    ) {
+      return nativeTheme.shouldUseDarkColors;
+    }
+    if (
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function"
+    ) {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
     return false;
   }
 

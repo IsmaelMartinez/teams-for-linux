@@ -168,7 +168,7 @@ describe('trayIconRenderer appIcon config changes', () => {
     assert.strictEqual(sharedConfig.appIcon, '/updated/icon.png');
   });
 
-  it('triggers an activity count redraw when base icon changes with an active count', async () => {
+  it('triggers an activity count redraw when base icon changes with an active count without flashing', async () => {
     const sentUpdates = [];
     const renderer = require(rendererPath);
     renderer.init(
@@ -183,6 +183,7 @@ describe('trayIconRenderer appIcon config changes', () => {
     await renderer.updateActivityCount({ detail: { number: 4 } });
     assert.strictEqual(sentUpdates.length, 1);
     assert.strictEqual(sentUpdates[0].count, 4);
+    assert.strictEqual(sentUpdates[0].flash, true);
 
     sentUpdates.length = 0;
     handler(null, { appIcon: '/another/icon.png' });
@@ -192,6 +193,23 @@ describe('trayIconRenderer appIcon config changes', () => {
 
     assert.strictEqual(sentUpdates.length, 1);
     assert.strictEqual(sentUpdates[0].count, 4);
+    assert.strictEqual(sentUpdates[0].flash, false);
+  });
+
+  it('initializes baseIcon using system dark theme when config.theme is omitted', () => {
+    globalThis.window = { matchMedia: (query) => ({ matches: query.includes('dark') }) };
+    try {
+      const renderer = require(rendererPath);
+      renderer.init(
+        { appIcon: '/custom/light.png', appIconDark: '/custom/dark.png', appIconType: 'default' },
+        { on: () => {} },
+      );
+
+      assert.deepStrictEqual(createdPaths, ['/custom/dark.png']);
+      assert.strictEqual(renderer.currentTheme, 'dark');
+    } finally {
+      delete globalThis.window;
+    }
   });
 });
 
