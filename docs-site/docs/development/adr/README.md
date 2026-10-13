@@ -53,7 +53,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [029](029-config-schema-single-source-of-truth.md) | Configuration Schema as Single Source of Truth | ✅ Accepted | 2026-09-05 | v2.12.0+ |
 | [030](030-graph-api-teams-session-token.md) | Graph API Access via the Teams Session Token | ✅ Implemented | 2025-11-21 | v2.6.17 |
 | [031](031-ozone-platform-x11-default.md) | Keep the `--ozone-platform=x11` Default on Wayland | ✅ Accepted | 2026-09-05 | N/A |
-| [032](032-secondary-window-for-calls.md) | Opt-in Secondary Window for the Same Account During Calls | 🚧 Proposed | 2026-09-18 | N/A |
+| [032](032-secondary-window-for-calls.md) | Opt-in Secondary Window for the Same Account During Calls | ✅ Accepted | 2026-10-05 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -387,8 +387,8 @@ When referencing code in ADRs:
 
 - **Total ADRs**: 31
 - **Implemented**: 19
-- **Accepted**: 4
-- **Proposed**: 1
+- **Accepted**: 5
+- **Proposed**: 0
 - **Rejected**: 4
 - **Superseded**: 3
 - **Average length**: ~1050 words

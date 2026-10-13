@@ -422,7 +422,17 @@ let lastAuthRecoveryAt = 0;
 const AUTH_RECOVERY_COOLDOWN_MS = 30 * 60 * 1000;
 // Worker UPRs are transient during active calls (#2428); suppress them only while
 // a call is in progress so startup recovery still works for stale-token loops (#2480).
-let callActive = false;
+// Call state lives in browserWindowManager's CallStateTracker (ADR-032):
+// per-window for what only concerns this document (the deep-link fallback
+// reload), app-wide for what ends every call on the shared session (auth
+// recovery clears the partition, so it waits on any call, in any window).
+function isMainCallActive() {
+  return Boolean(window && browserWindowManager?.callState.has(window.webContents));
+}
+
+function isAnyCallActive() {
+  return Boolean(browserWindowManager?.callState.anyActive);
+}
 // Timestamp of the last trusted auth-failure signal. Used to correlate login
 // popups with an actually-broken session: while the stale "sign in again"
 // banner is up the renderer keeps emitting failure signatures every few
@@ -493,7 +503,7 @@ function maybeScheduleAuthRecovery(message, sourceId) {
 
   if (Date.now() - lastAuthRecoveryAt < AUTH_RECOVERY_COOLDOWN_MS) return;
 
-  if (callActive) {
+  if (isAnyCallActive()) {
     handleMidCallAuthSignal(source);
     return;
   }
@@ -635,7 +645,7 @@ function triggerPopupRecovery(context) {
   const now = Date.now();
   if (now - lastPopupRecoveryAt < POPUP_RECOVERY_DEDUPE_MS) return;
   lastPopupRecoveryAt = now;
-  if (callActive) {
+  if (isAnyCallActive()) {
     // Recovery would end the active call — let the user decide. force=true:
     // an explicit click re-prompts even after an earlier "Not now".
     console.info(`[AUTH_RECOVERY] ${context} during an active call, asking user`);
@@ -827,21 +837,25 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // interactive login. Detection itself lives in maybeScheduleAuthRecovery
   // so the forwarded window-error path can reuse it.
   app.on('teams-call-connected', () => {
-    callActive = true;
     resetMidCallAuthState();
   });
-  app.on('teams-call-disconnected', () => {
-    callActive = false;
+  app.on('teams-call-disconnected', (sender) => {
     resetMidCallAuthState();
-    if (recoveryQueuedForCallEnd) {
-      // Recovery clears the session and reloads at the same deadline; a link
-      // opened alongside it would be replaced mid-load, so recovery wins.
-      deferredDeepLink.cancel();
-    } else if (deferredDeepLink.pending) {
-      console.info('[DEEPLINK] Call ended, opening the deferred link');
-      deferredDeepLink.release();
+    // A deferred link navigates this window, so only this window's call holds
+    // it; a call ending elsewhere leaves it waiting.
+    const mainCallEnded = !sender || sender === window?.webContents;
+    if (mainCallEnded) {
+      if (recoveryQueuedForCallEnd) {
+        // Recovery clears the session and reloads at the same deadline; a link
+        // opened alongside it would be replaced mid-load, so recovery wins.
+        deferredDeepLink.cancel();
+      } else if (deferredDeepLink.pending) {
+        console.info('[DEEPLINK] Call ended, opening the deferred link');
+        deferredDeepLink.release();
+      }
     }
-    if (recoveryQueuedForCallEnd) {
+    // Recovery ends every call on the partition, so it waits for all of them.
+    if (recoveryQueuedForCallEnd && !isAnyCallActive()) {
       recoveryQueuedForCallEnd = false;
       console.info('[AUTH_RECOVERY] Call ended, running queued recovery');
       // Short delay so the call teardown finishes before the reload
@@ -859,7 +873,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // A reload also moots any queued recovery: if the session is still broken,
   // fresh signals will re-trigger detection.
   window.webContents.on('did-navigate', () => {
-    callActive = false;
+    browserWindowManager?.clearCall(window.webContents);
     resetMidCallAuthState();
     recoveryQueuedForCallEnd = false;
     // The window moved on: a link still waiting, or released and not yet
@@ -985,7 +999,7 @@ async function openDeepLink(url) {
     return;
   }
 
-  if (callActive) {
+  if (isMainCallActive()) {
     // Only the URL is kept, never logged: it carries the recipient or meeting.
     console.info("[DEEPLINK] in-page routing unavailable during a call, deferring to the call end");
     deferredDeepLink.defer(url);

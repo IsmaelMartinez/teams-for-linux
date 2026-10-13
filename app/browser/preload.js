@@ -1,5 +1,17 @@
 const { ipcRenderer } = require("electron");
 
+// Which window this preload serves (ADR-032). The main process passes
+// `--tfl-window-role=<role>` through webPreferences.additionalArguments; no
+// argument means the main window, so every existing caller is unaffected.
+// Tools that must run once per app (tray and dock badges, MQTT status, the
+// meeting-start detector, the title observer) stay with the main window, and
+// a secondary window neither raises notifications nor reports incoming calls.
+const WINDOW_ROLE_ARG = "--tfl-window-role=";
+const WINDOW_ROLE =
+  (process.argv.find((arg) => arg.startsWith(WINDOW_ROLE_ARG)) || "").slice(WINDOW_ROLE_ARG.length) || "main";
+const IS_MAIN_WINDOW = WINDOW_ROLE === "main";
+const MAIN_WINDOW_ONLY_MODULES = new Set(["trayIconRenderer", "mqttStatusMonitor", "meetingStartDetector", "dockIconRenderer"]);
+
 // #2677: Electron removed the non-standard `File.path` from dropped files, so
 // Teams (which uploads by native path) rejects them as "File is missing data".
 // Restore it via webUtils.getPathForFile before Teams's drop handler reads it,
@@ -354,6 +366,11 @@ function createCustomNotification(title, options) {
 
   // Factory function that creates notification objects (avoids "return in constructor" issue)
   function CustomNotification(title, options) {
+    // A secondary window keeps the override (Teams must not reach the native
+    // Notification) but never shows anything: the main window owns alerts.
+    if (!IS_MAIN_WINDOW) {
+      return createNotificationStub();
+    }
     // Use config from closure scope (will be null initially, populated async)
     if (notificationConfig?.disableNotifications) {
       // Return dummy object to avoid Teams errors
@@ -411,7 +428,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       useMutationTitleLogic: config?.useMutationTitleLogic
     });
     
-    if (config.useMutationTitleLogic) {
+    if (config.useMutationTitleLogic && IS_MAIN_WINDOW) {
       const mutationTitle = require("./tools/mutationTitle");
       mutationTitle.init(config);
     }
@@ -448,6 +465,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let successCount = 0;
     for (const module of modules) {
+      if (!IS_MAIN_WINDOW && MAIN_WINDOW_ONLY_MODULES.has(module.name)) {
+        continue;
+      }
       try {
         const moduleInstance = require(module.path);
         if (modulesRequiringIpc.has(module.name)) {
@@ -461,11 +481,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
     
-    console.info(`Preload: ${successCount}/${modules.length} browser modules initialized successfully`);
+    console.info(`Preload: ${successCount}/${modules.length} browser modules initialized successfully`, { windowRole: WINDOW_ROLE });
 
     try {
       const ActivityManager = require("./notifications/activityManager");
-      new ActivityManager(ipcRenderer, config).start();
+      new ActivityManager(ipcRenderer, config, { forwardIncomingCalls: IS_MAIN_WINDOW }).start();
     } catch (err) {
       console.error("Preload: ActivityManager failed to initialize:", err.message);
     }
