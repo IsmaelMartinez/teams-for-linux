@@ -168,7 +168,7 @@ describe('trayIconRenderer appIcon config changes', () => {
     assert.strictEqual(sharedConfig.appIcon, '/updated/icon.png');
   });
 
-  it('triggers an activity count redraw when base icon changes with an active count without flashing', async () => {
+  it('triggers an activity count redraw when base icon changes with an active count without altering flash state', async () => {
     const sentUpdates = [];
     const renderer = require(rendererPath);
     renderer.init(
@@ -193,7 +193,48 @@ describe('trayIconRenderer appIcon config changes', () => {
 
     assert.strictEqual(sentUpdates.length, 1);
     assert.strictEqual(sentUpdates[0].count, 4);
-    assert.strictEqual(sentUpdates[0].flash, false);
+    // Redraw leaves flash undefined so updateTrayImage does not alter flashFrame state
+    assert.strictEqual(sentUpdates[0].flash, undefined);
+  });
+
+  it('preserves pending notification flash when base icon changes while notification is rendering', async () => {
+    const sentUpdates = [];
+    const renderer = require(rendererPath);
+    renderer.init(
+      { appIcon: '/old/icon.png', appIconType: 'default', disableBadgeCount: true },
+      {
+        on: (channel, cb) => { if (channel === 'config-changed') handler = cb; },
+        send: (channel, data) => { if (channel === 'tray-update') sentUpdates.push(data); },
+      },
+    );
+
+    let resolveFirstRender;
+    let renderCount = 0;
+    renderer.render = () => {
+      renderCount += 1;
+      if (renderCount === 1) {
+        return new Promise((resolve) => { resolveFirstRender = resolve; });
+      }
+      return Promise.resolve('data:image/png;base64,STUB2');
+    };
+
+    // Start a notification render that stays pending
+    const notificationPromise = renderer.updateActivityCount({ detail: { number: 3 } });
+
+    // While the notification is rendering, base icon changes
+    handler(null, { appIcon: '/new/icon.png' });
+
+    // Resolve the first render (which will be discarded as superseded)
+    resolveFirstRender('data:image/png;base64,STUB1');
+    await notificationPromise;
+
+    // Allow redraw to complete
+    await new Promise((resolve) => setImmediate(resolve));
+
+    // The redraw superseding the pending notification preserves flash: true
+    assert.strictEqual(sentUpdates.length, 1);
+    assert.strictEqual(sentUpdates[0].count, 3);
+    assert.strictEqual(sentUpdates[0].flash, true);
   });
 
   it('initializes baseIcon using system dark theme when config.theme is omitted', () => {

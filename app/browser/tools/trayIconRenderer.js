@@ -4,10 +4,12 @@ class TrayIconRenderer {
   #lastRequestedCount;
   #updateSequence = 0;
   #baseIconDataUrl = null;
+  #pendingNotificationFlash = false;
 
   init(config, ipcRenderer) {
     this.ipcRenderer = ipcRenderer;
     this.config = config;
+    this.#pendingNotificationFlash = false;
     const isDark =
       typeof window !== "undefined" && typeof window.matchMedia === "function"
         ? window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -61,9 +63,8 @@ class TrayIconRenderer {
         this.iconSize = this.baseIcon.getSize();
         this.#baseIconDataUrl = null;
         const prevCount = this.#lastRequestedCount;
-        this.#lastRequestedCount = undefined;
         if (typeof prevCount === "number" && prevCount > 0) {
-          this.updateActivityCount({ detail: { number: prevCount } }, { flash: false }).catch((err) => {
+          this.updateActivityCount({ detail: { number: prevCount } }, { redraw: true }).catch((err) => {
             console.error("[TRAY_DIAG] Failed to redraw activity count:", err);
           });
         }
@@ -71,15 +72,22 @@ class TrayIconRenderer {
     });
   }
 
-  async updateActivityCount(event, options = {}) {
+  async updateActivityCount(event, { redraw = false } = {}) {
     const count = event.detail.number;
-    const allowFlash = options.flash !== false && !options.skipFlash;
+
+    if (!redraw) {
+      if (count > 0 && !this.config.disableNotificationWindowFlash) {
+        this.#pendingNotificationFlash = true;
+      } else {
+        this.#pendingNotificationFlash = false;
+      }
+    }
 
     // Deduplicate against the most recently *requested* count, not the last
     // one that finished sending. Comparing against the completed count
     // swallows a clear-to-zero event that arrives while a non-zero render is
     // still awaiting the canvas, leaving the badge stuck (#2620).
-    if (count === this.#lastRequestedCount) {
+    if (count === this.#lastRequestedCount && !redraw) {
       console.debug("[TRAY_DIAG] Activity count unchanged, skipping update");
       return;
     }
@@ -91,10 +99,10 @@ class TrayIconRenderer {
     const sequence = ++this.#updateSequence;
     const startTime = Date.now();
 
-    const willFlash = allowFlash && count > 0 && !this.config.disableNotificationWindowFlash;
     console.debug("[TRAY_DIAG] Activity count update initiated", {
       newCount: count,
-      willFlash
+      isRedraw: redraw,
+      pendingFlash: this.#pendingNotificationFlash
     });
 
     // Count 0 uses the base icon directly, skipping canvas rendering
@@ -121,14 +129,30 @@ class TrayIconRenderer {
       return;
     }
 
-    this.ipcRenderer.send("tray-update", {
+    let flash;
+    if (redraw) {
+      if (this.#pendingNotificationFlash) {
+        flash = true;
+        this.#pendingNotificationFlash = false;
+      }
+    } else {
+      flash = count > 0 && !this.config.disableNotificationWindowFlash;
+      this.#pendingNotificationFlash = false;
+    }
+
+    const payload = {
       icon: icon,
-      flash: willFlash,
       count: count,
-    });
+    };
+    if (typeof flash === "boolean") {
+      payload.flash = flash;
+    }
+
+    this.ipcRenderer.send("tray-update", payload);
 
     console.debug("[TRAY_DIAG] Tray update IPC sent", {
       count: count,
+      flash: payload.flash,
       totalTimeMs: Date.now() - startTime
     });
 
