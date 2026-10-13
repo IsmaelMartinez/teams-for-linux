@@ -217,6 +217,8 @@ Direct CSS files remain supported through `appearance.cssLocation` and its legac
 | `trayIconEnabled` | `boolean` | `true` | Deprecated, use `tray.enabled` |
 | `tray.icon` | `string` | `""` | Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu |
 | `appIcon` | `string` | `""` | Deprecated, use `tray.icon` |
+| `tray.iconDark` | `string` | `""` | Custom app icon (PNG) for the tray when the system is in dark mode (optional) |
+| `appIconDark` | `string` | `""` | Deprecated, use `tray.iconDark` |
 | `tray.iconType` | `string` | `"default"` | Type of tray icon. Choices: `default`, `light`, `dark` |
 | `appIconType` | `string` | `"default"` | Deprecated, use `tray.iconType` |
 | `tray.useMutationTitleLogic` | `boolean` | `true` | Use MutationObserver to update counter from title |

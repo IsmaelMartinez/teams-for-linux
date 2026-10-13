@@ -5,6 +5,7 @@ const {
   clipboard,
   dialog,
   nativeImage,
+  nativeTheme,
   ipcMain,
   shell,
 } = require("electron");
@@ -37,6 +38,7 @@ class Menus {
   #profileChangeHandler = null;
   #switcherOpenAddHandler = null;
   #switcherOpenManageHandler = null;
+  #themeUpdateHandler = null;
 
   #multiAccountOn() {
     return Boolean(
@@ -280,8 +282,26 @@ class Menus {
         this.configGroup.startupConfig
       );
       this.tray.initialize();
+
+      this.#themeUpdateHandler = () => this.#onThemeUpdated();
+      nativeTheme?.on?.("updated", this.#themeUpdateHandler);
+      this.window.once("closed", () => {
+        if (this.#themeUpdateHandler) {
+          nativeTheme?.removeListener?.("updated", this.#themeUpdateHandler);
+          this.#themeUpdateHandler = null;
+        }
+      });
     }
     this.spellCheckProvider = new SpellCheckProvider(this.window);
+  }
+
+  #onThemeUpdated() {
+    if (!this.configGroup.startupConfig.appIconDark?.trim()) return;
+    const iconChooser = new TrayIconChooser(this.configGroup.startupConfig);
+    const theme = nativeTheme?.shouldUseDarkColors ? "dark" : "light";
+    const iconPath = iconChooser.getFile(theme);
+    this.tray?.setBaseIconPath(iconPath);
+    this.updateMenu();
   }
 
   initializeEventHandlers() {
@@ -337,7 +357,9 @@ class Menus {
 
   resetAppIcon() {
     this.configGroup.startupConfig.appIcon = "";
+    this.configGroup.startupConfig.appIconDark = "";
     this.configGroup.legacyConfigStore.set("appIcon", "");
+    this.configGroup.legacyConfigStore.set("appIconDark", "");
     const iconChooser = new TrayIconChooser(this.configGroup.startupConfig);
     const iconPath = iconChooser.getFile();
     this.tray?.setBaseIconPath(iconPath);
@@ -605,6 +627,8 @@ class Menus {
       disableBadgeCount: this.configGroup.startupConfig.disableBadgeCount,
       defaultNotificationUrgency: this.configGroup.startupConfig.defaultNotificationUrgency,
       appIcon: this.configGroup.startupConfig.appIcon,
+      appIconDark: this.configGroup.startupConfig.appIconDark,
+      theme: nativeTheme?.shouldUseDarkColors ? "dark" : "light",
     });
   }
 

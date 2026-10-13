@@ -91,6 +91,7 @@ const RENAMES = [
   // tray
   { flat: "trayIconEnabled", nested: "tray.enabled" },
   { flat: "appIcon", nested: "tray.icon" },
+  { flat: "appIconDark", nested: "tray.iconDark" },
   { flat: "appIconType", nested: "tray.iconType" },
   { flat: "useMutationTitleLogic", nested: "tray.useMutationTitleLogic" },
   // performance

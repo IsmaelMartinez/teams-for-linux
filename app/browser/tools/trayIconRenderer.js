@@ -8,8 +8,9 @@ class TrayIconRenderer {
   init(config, ipcRenderer) {
     this.ipcRenderer = ipcRenderer;
     this.config = config;
+    this.currentTheme = config.theme;
     const iconChooser = new TrayIconChooser(config);
-    this.baseIcon = nativeImage.createFromPath(iconChooser.getFile());
+    this.baseIcon = nativeImage.createFromPath(iconChooser.getFile(this.currentTheme));
     // Defensive cache reset only; re-running init() is not otherwise safe
     // (it would double-register the unread-count listener)
     this.#baseIconDataUrl = null;
@@ -40,9 +41,21 @@ class TrayIconRenderer {
       });
     }
     ipcRenderer.on('config-changed', (_event, changes) => {
-      if ('appIcon' in changes && changes.appIcon !== this.config.appIcon) {
-        const chooser = new TrayIconChooser({ ...this.config, appIcon: changes.appIcon });
-        this.baseIcon = nativeImage.createFromPath(chooser.getFile());
+      const appIconMoved = 'appIcon' in changes && changes.appIcon !== this.config.appIcon;
+      const appIconDarkMoved = 'appIconDark' in changes && changes.appIconDark !== this.config.appIconDark;
+      const themeMoved = 'theme' in changes && changes.theme !== this.currentTheme;
+
+      const appIconDarkEffective = 'appIconDark' in changes ? changes.appIconDark : this.config.appIconDark;
+      const themeMatters = themeMoved && Boolean(appIconDarkEffective?.trim());
+
+      if (appIconMoved || appIconDarkMoved || themeMatters) {
+        const nextConfig = { ...this.config };
+        if ('appIcon' in changes) nextConfig.appIcon = changes.appIcon;
+        if ('appIconDark' in changes) nextConfig.appIconDark = changes.appIconDark;
+        this.config = nextConfig;
+        if ('theme' in changes) this.currentTheme = changes.theme;
+        const chooser = new TrayIconChooser(this.config);
+        this.baseIcon = nativeImage.createFromPath(chooser.getFile(this.currentTheme));
         this.iconSize = this.baseIcon.getSize();
         this.#baseIconDataUrl = null;
         this.#lastRequestedCount = undefined;

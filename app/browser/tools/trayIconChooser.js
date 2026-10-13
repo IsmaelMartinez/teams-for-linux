@@ -1,4 +1,4 @@
-const { nativeImage } = require("electron");
+const { nativeImage, nativeTheme } = require("electron");
 const os = require("node:os");
 const path = require("node:path");
 const iconFolder = path.join(__dirname, "../..", "assets/icons");
@@ -17,13 +17,49 @@ class TrayIconChooser {
   constructor(config) {
     this.config = config;
   }
-  getFile() {
+
+  static resolveIsDark(theme) {
+    if (theme === "dark" || theme === true) return true;
+    if (theme === "light" || theme === false) return false;
+    if (
+      typeof nativeTheme !== "undefined" &&
+      typeof nativeTheme?.shouldUseDarkColors === "boolean"
+    ) {
+      return nativeTheme.shouldUseDarkColors;
+    }
+    if (
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function"
+    ) {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+    return false;
+  }
+
+  getFile(theme) {
+    const isDark = TrayIconChooser.resolveIsDark(theme);
+
+    if (isDark && this.config.appIconDark?.trim()) {
+      return this.config.appIconDark;
+    }
+
     if (this.config.appIcon?.trim()) {
       return this.config.appIcon;
     }
+
+    // Polarity: icon_dark is dark/black ink for a light panel; icon_light is
+    // light/white ink for a dark panel. Shipped icons follow theme when a theme
+    // is explicitly passed.
+    const iconType =
+      theme !== undefined && theme !== null
+        ? isDark
+          ? "light"
+          : "dark"
+        : this.config.appIconType || "default";
+
     return path.join(
       iconFolder,
-      icons[`icon_${this.config.appIconType}_${isMac ? 16 : 96}`],
+      icons[`icon_${iconType}_${isMac ? 16 : 96}`],
     );
   }
 

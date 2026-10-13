@@ -131,4 +131,26 @@ describe('trayIconRenderer appIcon config changes', () => {
       delete globalThis.Image;
     }
   });
+
+  it('rebuilds the base icon when appIconDark moves', () => {
+    initRenderer();
+    createdPaths.length = 0;
+
+    handler(null, { appIconDark: '/new/dark.png', theme: 'dark' });
+
+    assert.deepStrictEqual(createdPaths, ['/new/dark.png']);
+  });
+
+  it('rebuilds the base icon when theme changes with appIconDark set', () => {
+    const renderer = require(rendererPath);
+    renderer.init(
+      { appIcon: '/custom/light.png', appIconDark: '/custom/dark.png', appIconType: 'default', theme: 'light' },
+      { on: (channel, cb) => { if (channel === 'config-changed') handler = cb; } },
+    );
+    createdPaths.length = 0;
+
+    handler(null, { theme: 'dark' });
+
+    assert.deepStrictEqual(createdPaths, ['/custom/dark.png']);
+  });
 });
