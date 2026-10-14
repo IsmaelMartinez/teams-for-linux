@@ -1,5 +1,6 @@
 const { nativeImage } = require("electron");
 const path = require("node:path");
+const { presenceColor, isDoNotDisturb } = require("./presenceColors");
 
 class DockIconRenderer {
   init(config, ipcRenderer) {
@@ -62,25 +63,8 @@ class DockIconRenderer {
         ctx.drawImage(img, 0, 0, 256, 256);
 
         // Draw status dot in bottom right
-        let color = "#7f7f7f"; // Offline/Unknown
-        let isDnd = false;
-
-        switch (status) {
-          case 1: // Available
-            color = "#107c41"; // green
-            break;
-          case 2: // Busy
-            color = "#d83b01"; // red
-            break;
-          case 3: // Do Not Disturb
-            color = "#a80000"; // dark red
-            isDnd = true;
-            break;
-          case 4: // Away
-          case 5: // Be Right Back
-            color = "#ffb900"; // yellow
-            break;
-        }
+        const color = presenceColor(status);
+        const isDnd = isDoNotDisturb(status);
 
         // Status circle parameters (offset for standard macOS squircle spacing)
         const x = 205;
