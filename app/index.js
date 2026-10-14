@@ -900,6 +900,10 @@ function applyBadgeCount(count) {
 function createUnreadAggregator(viewManager) {
   const ProfileUnreadAggregator = require("./profileUnread");
   const { createBadgeRenderBridge } = require("./profileUnread/badgeRenderBridge");
+  // The predicate the renderer itself uses to decide whether it draws the dot
+  // (presenceColors.js): main only needs it to know whether a zero-unread icon
+  // is worth asking for at all.
+  const { wantsPresenceStatus } = require("./browser/tools/presenceColors");
 
   const requestBadgeRender = createBadgeRenderBridge({
     ipcMain,
@@ -932,6 +936,7 @@ function createUnreadAggregator(viewManager) {
     isPrimarySender: (event) => viewManager.isPrimaryProfileSurface(event),
     getProfileName,
     requestBadgeRender,
+    wantsPresenceOverlay: () => wantsPresenceStatus(config),
     applyTray: (update) => mainAppWindow.getTray()?.applyAggregate(update),
     applyBadgeCount,
     appTitle: config.appTitle,

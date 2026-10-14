@@ -28,6 +28,7 @@ class RecordingContext {
 
 let canvases = [];
 let listeners = new Map();
+let handlers = new Map();
 let sent = [];
 let platform;
 
@@ -45,6 +46,8 @@ const dispatch = (event, detail) => {
 };
 const trayUpdates = () => sent.filter((message) => message.channel === 'tray-update');
 const lastUpdate = () => trayUpdates().at(-1)?.data;
+const aggregateReplies = () =>
+  sent.filter((message) => message.channel === 'aggregate-badge-rendered').map((m) => m.data);
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 
 // The renderer is handed the fully defaulted config in the app; a test that
@@ -54,6 +57,7 @@ const BASE_CONFIG = { appIcon: '', appIconType: 'default', disableBadgeCount: fa
 
 function initRenderer(config) {
   listeners = new Map();
+  handlers = new Map();
   canvases = [];
   sent = [];
   delete require.cache[rendererPath];
@@ -61,7 +65,7 @@ function initRenderer(config) {
   renderer.init({ ...BASE_CONFIG, ...config }, {
     send: (channel, data) => sent.push({ channel, data }),
     invoke: async () => {},
-    on: () => {},
+    on: (channel, handler) => handlers.set(channel, handler),
   });
   return renderer;
 }
@@ -146,6 +150,40 @@ describe('tray presence status overlay', () => {
     const dot = ops().find((op) => op.op === 'arc' && op.color === '#107c41');
     assert.equal(badge.x, 34, 'the badge leaves the corner the dot owns');
     assert.ok(badge.x + badge.rx < dot.x - 30, 'the two marks do not overlap');
+    assert.ok(
+      badge.x - badge.rx >= 0 && badge.y - badge.ry >= 0,
+      'the whole badge stays inside the canvas, so the dot cannot clip its edge',
+    );
+  });
+
+  it('keeps the presence dot when the aggregate badge renders at zero unread', async () => {
+    initRenderer({
+      media: { showStatusOnDockIcon: true },
+      multiAccount: { enabled: true },
+    });
+    dispatch('user-status-changed-local', { status: 1 });
+    await tick();
+
+    canvases = [];
+    sent = [];
+    // Main asks for the aggregate icon when every profile is at zero unread
+    // (ProfileUnreadAggregator), which is where the dot used to be lost.
+    await handlers.get('render-aggregate-badge')({}, { requestId: 'r1', count: 0 });
+
+    assert.equal(aggregateReplies().at(-1).icon, RENDERED);
+    assert.ok(
+      ops().some((op) => op.op === 'arc' && op.color === '#107c41'),
+      'the dot is composited onto the zero-unread icon',
+    );
+  });
+
+  it('replies with no icon when there is nothing to draw', async () => {
+    initRenderer({ media: { showStatusOnDockIcon: true }, multiAccount: { enabled: true } });
+
+    await handlers.get('render-aggregate-badge')({}, { requestId: 'r1', count: 0 });
+
+    assert.equal(aggregateReplies().at(-1).icon, null);
+    assert.deepEqual(ops(), [], 'no canvas work without a dot or a badge');
   });
 
   it('keeps the badge in its usual corner with the setting off', async () => {

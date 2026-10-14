@@ -18,7 +18,12 @@ let badges;
 let renders;
 let renderResult;
 
-function build({ resolve = () => null, names = {}, primary = () => true } = {}) {
+function build({
+  resolve = () => null,
+  names = {},
+  primary = () => true,
+  presenceOverlay = false,
+} = {}) {
   applied = [];
   badges = [];
   renders = [];
@@ -31,6 +36,7 @@ function build({ resolve = () => null, names = {}, primary = () => true } = {}) 
       renders.push(count);
       return renderResult(count);
     },
+    wantsPresenceOverlay: () => presenceOverlay,
     applyTray: (update) => applied.push(update),
     applyBadgeCount: (count) => badges.push(count),
     appTitle: 'Teams',
@@ -71,6 +77,32 @@ describe('ProfileUnreadAggregator', () => {
       tooltip: 'Teams',
     });
     assert.strictEqual(badges.at(-1), 0);
+  });
+
+  it('zero unread keeps the presence overlay: the icon comes from a zero-count render', async () => {
+    const agg = build({ presenceOverlay: true });
+    renderResult = () => Promise.resolve('data:dot');
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:one', flash: true, count: 5 });
+    agg.onTrayUpdate(senderEvent(1), { icon: null, flash: false, count: 0 });
+    await settle();
+    assert.deepStrictEqual(renders, [0], 'the dot needs a composite at count 0');
+    assert.deepStrictEqual(applied.at(-1), {
+      icon: 'data:dot',
+      flash: false,
+      tooltip: 'Teams',
+    });
+  });
+
+  it('zero unread without the overlay asks for no render at all', async () => {
+    const agg = build();
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:one', flash: false, count: 0 });
+    await settle();
+    assert.deepStrictEqual(renders, []);
+    assert.deepStrictEqual(applied.at(-1), {
+      icon: null,
+      flash: false,
+      tooltip: 'Teams',
+    });
   });
 
   it('two unread profiles: badge = sum, aggregate icon rendered, tooltip lists both', async () => {
