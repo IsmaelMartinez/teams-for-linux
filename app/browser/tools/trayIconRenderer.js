@@ -1,9 +1,19 @@
 const { nativeImage } = require("electron");
 const TrayIconChooser = require("./trayIconChooser");
+const { presenceColor, isDoNotDisturb } = require("./presenceColors");
+
+// Opt-in presence overlay on the app icon (media.showStatusOnDockIcon): on
+// macOS the Dock draws it (dockIconRenderer.js), and the platforms that have no
+// Dock get it on the tray icon instead.
+const wantsPresenceStatus = (config) =>
+  config.media?.showStatusOnDockIcon === true && process.platform !== "darwin";
+
 class TrayIconRenderer {
   #lastRequestedCount;
   #updateSequence = 0;
   #baseIconDataUrl = null;
+  #statusCode = null;
+  #currentCount = 0;
 
   init(config, ipcRenderer) {
     this.ipcRenderer = ipcRenderer;
@@ -18,6 +28,13 @@ class TrayIconRenderer {
       "unread-count",
       this.updateActivityCount.bind(this),
     );
+    // The presence detector (mqttStatusMonitor.js) dispatches this event
+    // whenever it reads a different status off the Teams UI.
+    if (wantsPresenceStatus(this.config)) {
+      globalThis.addEventListener("user-status-changed-local", (event) => {
+        this.#updateStatus(event.detail?.status);
+      });
+    }
     // Read the new path from the delta, not from this.config: preload's own
     // config-changed listener registers after this one, so this.config still
     // holds the previous value when we run.
@@ -46,12 +63,33 @@ class TrayIconRenderer {
         this.iconSize = this.baseIcon.getSize();
         this.#baseIconDataUrl = null;
         this.#lastRequestedCount = undefined;
+        // A new base icon drops the composited dot, so re-render it instead of
+        // waiting for the next unread-count event.
+        if (wantsPresenceStatus(this.config) && this.#statusCode !== null) {
+          this.updateActivityCount({ detail: { number: this.#currentCount } })
+            .catch(() => {});
+        }
       }
     });
   }
 
+  #updateStatus(status) {
+    if (!Number.isInteger(status) || status === this.#statusCode) {
+      return;
+    }
+    this.#statusCode = status;
+    console.debug("[TRAY_DIAG] Presence status changed", {
+      status,
+      count: this.#currentCount,
+    });
+    // Force a render: the dot coexists with the unread badge.
+    this.#lastRequestedCount = undefined;
+    return this.updateActivityCount({ detail: { number: this.#currentCount } });
+  }
+
   async updateActivityCount(event) {
     const count = event.detail.number;
+    this.#currentCount = count;
 
     // Deduplicate against the most recently *requested* count, not the last
     // one that finished sending. Comparing against the completed count
@@ -74,9 +112,13 @@ class TrayIconRenderer {
       willFlash: count > 0 && !this.config.disableNotificationWindowFlash
     });
 
-    // Count 0 uses the base icon directly, skipping canvas rendering
+    // Count 0 uses the base icon directly, skipping canvas rendering, unless
+    // the presence dot is active: drawing it needs the canvas even when there
+    // are no unread messages.
+    const drawPresenceDot =
+      wantsPresenceStatus(this.config) && this.#statusCode !== null;
     let icon = null;
-    if (count > 0) {
+    if (count > 0 || drawPresenceDot) {
       try {
         icon = await this.render(count);
       } catch (error) {
@@ -163,10 +205,17 @@ class TrayIconRenderer {
     const ctx = canvas.getContext("2d");
 
     ctx.drawImage(image, 0, 0, 140, 140);
+    // The presence dot owns the bottom-right corner, so when both are drawn the
+    // unread badge moves to the bottom-left: the badge reaches x 74 and the
+    // dot's white ring starts at x 78.
+    const dotActive =
+      wantsPresenceStatus(this.config) && this.#statusCode !== null;
+    const badgeX = dotActive ? 34 : 100;
+    const badgeY = 90;
     if (newActivityCount > 0 && !this.config.disableBadgeCount) {
       ctx.fillStyle = "red";
       ctx.beginPath();
-      ctx.ellipse(100, 90, 40, 40, 40, 0, 2 * Math.PI);
+      ctx.ellipse(badgeX, badgeY, 40, 40, 40, 0, 2 * Math.PI);
       ctx.fill();
       ctx.textAlign = "center";
       ctx.fillStyle = "white";
@@ -174,13 +223,41 @@ class TrayIconRenderer {
       ctx.font =
         'bold 70px "Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif';
       if (newActivityCount > 9) {
-        ctx.fillText("+", 100, 110);
+        ctx.fillText("+", badgeX, badgeY + 20);
       } else {
-        ctx.fillText(newActivityCount.toString(), 100, 110);
+        ctx.fillText(newActivityCount.toString(), badgeX, badgeY + 20);
       }
+    }
+    if (dotActive) {
+      this._addPresenceDot(ctx);
     }
     const resizedCanvas = this._getResizeCanvasWithOriginalIconSize(canvas);
     resolve(resizedCanvas.toDataURL());
+  }
+
+  // Presence dot in the bottom-right corner, the way the Windows client shows
+  // it on its tray icon. Colours are shared with the macOS Dock overlay.
+  _addPresenceDot(ctx) {
+    const x = 108;
+    const y = 104;
+    const radius = 24;
+
+    // White ring, so the dot stays readable on a dark or busy icon.
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(x, y, radius + 6, 0, 2 * Math.PI);
+    ctx.fill();
+
+    ctx.fillStyle = presenceColor(this.#statusCode);
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Do Not Disturb reads as a white bar, exactly as on the macOS Dock.
+    if (isDoNotDisturb(this.#statusCode)) {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(x - 13, y - 4, 26, 8);
+    }
   }
 
   _getResizeCanvasWithOriginalIconSize(canvas) {
