@@ -157,6 +157,82 @@ function runXdgLinksBlock({ scriptPath, placement, emptyXdgDir = false }) {
 	}
 }
 
+// Slice the make_user_fontconfig definition through the update block
+function extractFontconfigBlock(source) {
+	const start = source.indexOf('function make_user_fontconfig');
+	assert.ok(start >= 0, 'launcher no longer has make_user_fontconfig');
+	const end = source.indexOf('\n# Build mime.cache', start);
+	assert.ok(end > start, 'launcher no longer has the mime.cache section after it');
+	return source.slice(start, end);
+}
+
+/**
+ * Runs the fontconfig initialization block under `bash -e` against a throwaway home.
+ *
+ * @param {object} options
+ * @param {string} options.scriptPath desktop-common.sh to take the block from.
+ * @param {boolean} options.needUpdate value for SNAP_DESKTOP_COMPONENTS_NEED_UPDATE.
+ */
+function runFontconfigBlock({ scriptPath, needUpdate }) {
+	const root = makeTempDir();
+	try {
+		const realHome = join(root, 'home', 'user');
+		const snapUserCommon = join(realHome, 'snap', 'teams-for-linux', 'common');
+		const snapUserData = join(realHome, 'snap', 'teams-for-linux', '2609');
+		const xdgDataHome = join(snapUserData, '.local', 'share');
+		const xdgConfigHome = join(snapUserData, '.config');
+		const xdgCacheHome = join(snapUserCommon, '.cache');
+		const snapCacheFontconfig = join(xdgCacheHome, 'fontconfig');
+		const hostCacheFontconfig = join(realHome, '.cache', 'fontconfig');
+		const snapThemes = join(root, 'snap', 'data-dir', 'themes');
+
+		mkdirSync(snapCacheFontconfig, { recursive: true });
+		mkdirSync(hostCacheFontconfig, { recursive: true });
+		mkdirSync(snapThemes, { recursive: true });
+		mkdirSync(xdgDataHome, { recursive: true });
+		mkdirSync(xdgConfigHome, { recursive: true });
+
+		writeFileSync(join(snapCacheFontconfig, 'stale.cache-7'), 'stale snap cache');
+		writeFileSync(join(hostCacheFontconfig, 'host.cache-11'), 'host cache data');
+
+		const fragment = join(root, 'fragment.sh');
+		writeFileSync(
+			fragment,
+			[
+				'#!/bin/bash -e',
+				`REALHOME="${realHome}"`,
+				`XDG_DATA_HOME="${xdgDataHome}"`,
+				`XDG_CONFIG_HOME="${xdgConfigHome}"`,
+				`XDG_CACHE_HOME="${xdgCacheHome}"`,
+				`SNAP_USER_DATA="${snapUserData}"`,
+				`SNAP="${join(root, 'snap')}"`,
+				`SNAP_DESKTOP_COMPONENTS_NEED_UPDATE="${needUpdate}"`,
+				'data_dirs_array=()',
+				extractFontconfigBlock(readFileSync(scriptPath, 'utf8')),
+				'echo REACHED_END',
+				'',
+			].join('\n'),
+			{ mode: 0o755 },
+		);
+
+		const result = spawnSync('bash', ['-e', fragment], { encoding: 'utf8' });
+		assert.strictEqual(result.status, 0, `fragment failed with: ${result.stderr}`);
+
+		const fontConfPath = join(xdgConfigHome, 'fontconfig', 'fonts.conf');
+		const generatedFontsConf = lstatSync(fontConfPath, { throwIfNoEntry: false })
+			? readFileSync(fontConfPath, 'utf8')
+			: null;
+
+		return {
+			snapCacheExists: lstatSync(snapCacheFontconfig, { throwIfNoEntry: false }) !== undefined,
+			hostCacheExists: lstatSync(join(hostCacheFontconfig, 'host.cache-11'), { throwIfNoEntry: false }) !== undefined,
+			generatedFontsConf,
+		};
+	} finally {
+		rmSync(root, { recursive: true, force: true });
+	}
+}
+
 describe('snap desktop launcher patch (#2946)', () => {
 	it('electron-builder still ships the unguarded rmdir block the patch targets', () => {
 		assert.ok(
@@ -284,6 +360,15 @@ describe('snap desktop launcher patch (#2946)', () => {
 				'unpatched script must contain host fontconfig cachedir reference',
 			);
 
+			// Unpatched behavior: update keeps host cachedir in fonts.conf and leaves stale snap cache
+			const unpatchedRun = runFontconfigBlock({ scriptPath: file, needUpdate: true });
+			assert.strictEqual(unpatchedRun.snapCacheExists, true, 'unpatched launcher does not clear snap cache');
+			assert.strictEqual(unpatchedRun.hostCacheExists, true);
+			assert.ok(
+				unpatchedRun.generatedFontsConf?.includes('/.cache/fontconfig</cachedir>'),
+				'unpatched fonts.conf includes host cache',
+			);
+
 			const modified = await patchScript(file);
 			assert.strictEqual(modified, true);
 
@@ -292,6 +377,26 @@ describe('snap desktop launcher patch (#2946)', () => {
 			assert.ok(!patchedContent.includes('echo "  <cachedir>$REALHOME/.cache/fontconfig</cachedir>"'));
 			assert.ok(patchedContent.includes("echo '  <cachedir prefix=\"xdg\">fontconfig</cachedir>'"));
 			assert.ok(patchedContent.includes('rm -rf "$XDG_CACHE_HOME/fontconfig"'));
+
+			// Patched behavior when needUpdate is true:
+			// Clears the stale snap font cache, leaves host cache untouched, and generates isolated fonts.conf
+			const updateRun = runFontconfigBlock({ scriptPath: file, needUpdate: true });
+			assert.strictEqual(updateRun.snapCacheExists, false, 'update must purge stale snap font cache');
+			assert.strictEqual(updateRun.hostCacheExists, true, 'host cache must remain untouched');
+			assert.ok(
+				!updateRun.generatedFontsConf?.includes('/.cache/fontconfig</cachedir>'),
+				'patched fonts.conf must not reference host cache',
+			);
+			assert.ok(
+				updateRun.generatedFontsConf?.includes('<cachedir prefix="xdg">fontconfig</cachedir>'),
+				'patched fonts.conf must include isolated xdg cache',
+			);
+
+			// Patched behavior when needUpdate is false (normal startup):
+			// Does not clear existing snap font cache, leaves host cache untouched
+			const normalRun = runFontconfigBlock({ scriptPath: file, needUpdate: false });
+			assert.strictEqual(normalRun.snapCacheExists, true, 'normal launch must preserve valid snap font cache');
+			assert.strictEqual(normalRun.hostCacheExists, true, 'host cache must remain untouched');
 
 			// Idempotent: running patchScript again on the same file does not double-patch or throw
 			const secondRun = await patchScript(file);
