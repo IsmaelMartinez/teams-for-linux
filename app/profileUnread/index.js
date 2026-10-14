@@ -27,6 +27,10 @@ class ProfileUnreadAggregator {
    *   reads 0) and must never write a bucket.
    * @param {(profileId: string) => string|null} deps.getProfileName
    * @param {(count: number) => Promise<string|null>} deps.requestBadgeRender
+   * @param {() => boolean} deps.wantsPresenceOverlay  The active renderer draws
+   *   a presence dot over the tray icon even at zero unread
+   *   (trayIconRenderer.js), so the zero path is worth a render request only
+   *   while that option is on.
    * @param {(update: {icon:string|null, flash:boolean, tooltip:string}) => void} deps.applyTray
    * @param {(count: number) => void} deps.applyBadgeCount
    * @param {string} deps.appTitle
@@ -151,38 +155,54 @@ class ProfileUnreadAggregator {
     const tooltip = this.#tooltip(sum, unread);
     const token = ++this.#renderToken;
 
-    let icon;
+    const icon = await this.#trayIcon(unread, sum);
+    // Token guard: a render that finished after a newer refresh started must
+    // not overwrite it.
+    if (token !== this.#renderToken) return;
+
+    // Only an icon that carries the unread count may become the fallback for a
+    // failed badged render; a zero-unread presence icon would drop the badge.
+    if (icon && sum > 0) this.#lastBadgedIcon = icon;
+    this.#deps.applyTray({ icon, flash, tooltip });
+  }
+
+  /**
+   * The icon for the current buckets: a single bucket's own composite when it
+   * is still fresh, a fresh render otherwise, and at zero unread the renderer's
+   * presence-only composite when the overlay is on. Null means the plain icon.
+   *
+   * @param {[string, {count:number, icon:string|null, iconCount:number}][]} unread
+   * @param {number} sum
+   * @returns {Promise<string|null>}
+   */
+  async #trayIcon(unread, sum) {
     if (unread.length === 0) {
-      icon = null;
-    } else if (unread.length === 1) {
+      // Nothing unread is the plain icon, unless the renderer still has a
+      // presence dot to draw: a zero-count composite resolves null when it has
+      // nothing to draw either.
+      if (!this.#deps.wantsPresenceOverlay()) return null;
+      return (await this.#deps.requestBadgeRender(0)) ?? null;
+    }
+    if (unread.length === 1) {
       const [, bucket] = unread[0];
       if (bucket.icon !== null && bucket.iconCount === bucket.count) {
-        icon = bucket.icon;
-      } else {
-        // The stored icon has a different number baked in (out-of-band
-        // badge change) — re-render.
-        icon =
-          (await this.#deps.requestBadgeRender(
-            Math.min(bucket.count, 9999)
-          )) ?? null;
-        if (token !== this.#renderToken) return;
-        icon ??= bucket.icon ?? this.#lastBadgedIcon;
+        return bucket.icon;
       }
-    } else {
-      // Token guard: only the newest render may apply.
-      icon = (await this.#deps.requestBadgeRender(Math.min(sum, 9999))) ?? null;
-      if (token !== this.#renderToken) return;
-      if (icon === null) {
-        const best = unread.reduce(
-          (a, b) => (b[1].count > a[1].count ? b : a),
-          unread[0]
-        );
-        icon = best[1].icon ?? this.#lastBadgedIcon;
-      }
+      // The stored icon has a different number baked in (out-of-band badge
+      // change) — re-render.
+      const icon =
+        (await this.#deps.requestBadgeRender(Math.min(bucket.count, 9999))) ??
+        null;
+      return icon ?? bucket.icon ?? this.#lastBadgedIcon;
     }
-
-    if (icon) this.#lastBadgedIcon = icon;
-    this.#deps.applyTray({ icon, flash, tooltip });
+    const icon =
+      (await this.#deps.requestBadgeRender(Math.min(sum, 9999))) ?? null;
+    if (icon !== null) return icon;
+    const best = unread.reduce(
+      (a, b) => (b[1].count > a[1].count ? b : a),
+      unread[0]
+    );
+    return best[1].icon ?? this.#lastBadgedIcon;
   }
 }
 

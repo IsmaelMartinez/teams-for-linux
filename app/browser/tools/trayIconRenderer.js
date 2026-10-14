@@ -1,12 +1,14 @@
 const { nativeImage } = require("electron");
 const TrayIconChooser = require("./trayIconChooser");
-const { presenceColor, isDoNotDisturb } = require("./presenceColors");
-
-// Opt-in presence overlay on the app icon (media.showStatusOnDockIcon): on
-// macOS the Dock draws it (dockIconRenderer.js), and the platforms that have no
-// Dock get it on the tray icon instead.
-const wantsPresenceStatus = (config) =>
-  config.media?.showStatusOnDockIcon === true && process.platform !== "darwin";
+// wantsPresenceStatus is the shared predicate (presenceColors.js): the Dock
+// draws the overlay on macOS (dockIconRenderer.js), the platforms that have no
+// Dock draw it on the tray icon, and main asks the same question for the
+// aggregate badge (profileUnread).
+const {
+  presenceColor,
+  isDoNotDisturb,
+  wantsPresenceStatus,
+} = require("./presenceColors");
 
 class TrayIconRenderer {
   #lastRequestedCount;
@@ -32,7 +34,9 @@ class TrayIconRenderer {
     // whenever it reads a different status off the Teams UI.
     if (wantsPresenceStatus(this.config)) {
       globalThis.addEventListener("user-status-changed-local", (event) => {
-        this.#updateStatus(event.detail?.status);
+        // Fire-and-forget: the listener's return value is ignored, and
+        // updateActivityCount never rejects.
+        void this.#updateStatus(event.detail?.status);
       });
     }
     // Read the new path from the delta, not from this.config: preload's own
@@ -44,7 +48,10 @@ class TrayIconRenderer {
     if (config.multiAccount?.enabled) {
       ipcRenderer.on('render-aggregate-badge', async (_event, { requestId, count }) => {
         let icon = null;
-        if (count > 0) {
+        // Count 0 still needs the canvas while there is a presence dot to
+        // draw; with nothing to draw the reply stays null and the tray keeps
+        // its plain icon.
+        if (count > 0 || this.#presenceDotActive()) {
           try {
             icon = await this.render(count);
           } catch (error) {
@@ -71,6 +78,13 @@ class TrayIconRenderer {
         }
       }
     });
+  }
+
+  // Whether the next render has a presence dot to draw. The dot needs the
+  // canvas even at zero unread, which is why it is asked separately from the
+  // unread count.
+  #presenceDotActive() {
+    return wantsPresenceStatus(this.config) && this.#statusCode !== null;
   }
 
   #updateStatus(status) {
@@ -115,8 +129,7 @@ class TrayIconRenderer {
     // Count 0 uses the base icon directly, skipping canvas rendering, unless
     // the presence dot is active: drawing it needs the canvas even when there
     // are no unread messages.
-    const drawPresenceDot =
-      wantsPresenceStatus(this.config) && this.#statusCode !== null;
+    const drawPresenceDot = this.#presenceDotActive();
     let icon = null;
     if (count > 0 || drawPresenceDot) {
       try {
@@ -206,26 +219,30 @@ class TrayIconRenderer {
 
     ctx.drawImage(image, 0, 0, 140, 140);
     // The presence dot owns the bottom-right corner, so when both are drawn the
-    // unread badge moves to the bottom-left: the badge reaches x 74 and the
-    // dot's white ring starts at x 78.
-    const dotActive =
-      wantsPresenceStatus(this.config) && this.#statusCode !== null;
+    // unread badge shrinks and moves to the bottom-left: the badge reaches x 64
+    // and the dot's white ring starts at x 78. The smaller radius is what keeps
+    // the whole badge inside the 140-pixel canvas (at the full size a badge
+    // centred on 34 would start at x -6).
+    const dotActive = this.#presenceDotActive();
+    const badgeRadius = dotActive ? 30 : 40;
     const badgeX = dotActive ? 34 : 100;
     const badgeY = 90;
     if (newActivityCount > 0 && !this.config.disableBadgeCount) {
       ctx.fillStyle = "red";
       ctx.beginPath();
-      ctx.ellipse(badgeX, badgeY, 40, 40, 40, 0, 2 * Math.PI);
+      ctx.ellipse(badgeX, badgeY, badgeRadius, badgeRadius, 40, 0, 2 * Math.PI);
       ctx.fill();
       ctx.textAlign = "center";
       ctx.fillStyle = "white";
 
+      // Scaled with the radius so the glyph keeps filling the badge.
       ctx.font =
-        'bold 70px "Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif';
+        `bold ${dotActive ? 52 : 70}px "Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif`;
+      const baseline = badgeY + badgeRadius / 2;
       if (newActivityCount > 9) {
-        ctx.fillText("+", badgeX, badgeY + 20);
+        ctx.fillText("+", badgeX, baseline);
       } else {
-        ctx.fillText(newActivityCount.toString(), badgeX, badgeY + 20);
+        ctx.fillText(newActivityCount.toString(), badgeX, baseline);
       }
     }
     if (dotActive) {
