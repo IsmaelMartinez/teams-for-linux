@@ -360,7 +360,6 @@ describe('snap desktop launcher patch (#2946)', () => {
 				'unpatched script must contain host fontconfig cachedir reference',
 			);
 
-			// Unpatched behavior: update keeps host cachedir in fonts.conf and leaves stale snap cache
 			const unpatchedRun = runFontconfigBlock({ scriptPath: file, needUpdate: true });
 			assert.strictEqual(unpatchedRun.snapCacheExists, true, 'unpatched launcher does not clear snap cache');
 			assert.strictEqual(unpatchedRun.hostCacheExists, true);
@@ -378,8 +377,6 @@ describe('snap desktop launcher patch (#2946)', () => {
 			assert.ok(patchedContent.includes("echo '  <cachedir prefix=\"xdg\">fontconfig</cachedir>'"));
 			assert.ok(patchedContent.includes('rm -rf "$XDG_CACHE_HOME/fontconfig"'));
 
-			// Patched behavior when needUpdate is true:
-			// Clears the stale snap font cache, leaves host cache untouched, and generates isolated fonts.conf
 			const updateRun = runFontconfigBlock({ scriptPath: file, needUpdate: true });
 			assert.strictEqual(updateRun.snapCacheExists, false, 'update must purge stale snap font cache');
 			assert.strictEqual(updateRun.hostCacheExists, true, 'host cache must remain untouched');
@@ -392,13 +389,10 @@ describe('snap desktop launcher patch (#2946)', () => {
 				'patched fonts.conf must include isolated xdg cache',
 			);
 
-			// Patched behavior when needUpdate is false (normal startup):
-			// Does not clear existing snap font cache, leaves host cache untouched
 			const normalRun = runFontconfigBlock({ scriptPath: file, needUpdate: false });
 			assert.strictEqual(normalRun.snapCacheExists, true, 'normal launch must preserve valid snap font cache');
 			assert.strictEqual(normalRun.hostCacheExists, true, 'host cache must remain untouched');
 
-			// Idempotent: running patchScript again on the same file does not double-patch or throw
 			const secondRun = await patchScript(file);
 			assert.strictEqual(secondRun, false);
 			assert.strictEqual(readFileSync(file, 'utf8'), patchedContent);
