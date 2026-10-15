@@ -27,6 +27,12 @@ class ProfileUnreadAggregator {
    *   reads 0) and must never write a bucket.
    * @param {(profileId: string) => string|null} deps.getProfileName
    * @param {(count: number) => Promise<string|null>} deps.requestBadgeRender
+   * @param {() => boolean} deps.wantsPresenceOverlay  The active renderer draws
+   *   a presence dot over the tray icon even at zero unread
+   *   (trayIconRenderer.js), so the zero path is worth a render request only
+   *   while that option is on — and the dot then belongs to the *selected*
+   *   profile, which is the one the render bridge targets: with it on, no
+   *   icon is reused from a bucket's own cache.
    * @param {(update: {icon:string|null, flash:boolean, tooltip:string}) => void} deps.applyTray
    * @param {(count: number) => void} deps.applyBadgeCount
    * @param {string} deps.appTitle
@@ -107,6 +113,16 @@ class ProfileUnreadAggregator {
     void this.#refreshTray();
   }
 
+  /**
+   * Re-render the aggregate for the currently selected profile. The dot
+   * belongs to the selection, and a switch changes whose renderer draws it
+   * without changing any count or status — both are deduped upstream — so the
+   * switch has to ask for the render explicitly. Never throws.
+   */
+  refresh() {
+    void this.#refreshTray();
+  }
+
   #sum() {
     let sum = 0;
     for (const bucket of this.#buckets.values()) sum += bucket.count;
@@ -151,38 +167,64 @@ class ProfileUnreadAggregator {
     const tooltip = this.#tooltip(sum, unread);
     const token = ++this.#renderToken;
 
-    let icon;
-    if (unread.length === 0) {
-      icon = null;
-    } else if (unread.length === 1) {
-      const [, bucket] = unread[0];
-      if (bucket.icon !== null && bucket.iconCount === bucket.count) {
-        icon = bucket.icon;
-      } else {
-        // The stored icon has a different number baked in (out-of-band
-        // badge change) — re-render.
-        icon =
-          (await this.#deps.requestBadgeRender(
-            Math.min(bucket.count, 9999)
-          )) ?? null;
-        if (token !== this.#renderToken) return;
-        icon ??= bucket.icon ?? this.#lastBadgedIcon;
-      }
-    } else {
-      // Token guard: only the newest render may apply.
-      icon = (await this.#deps.requestBadgeRender(Math.min(sum, 9999))) ?? null;
-      if (token !== this.#renderToken) return;
-      if (icon === null) {
-        const best = unread.reduce(
-          (a, b) => (b[1].count > a[1].count ? b : a),
-          unread[0]
-        );
-        icon = best[1].icon ?? this.#lastBadgedIcon;
-      }
-    }
+    const icon = await this.#trayIcon(unread, sum);
+    // Token guard: a render that finished after a newer refresh started must
+    // not overwrite it.
+    if (token !== this.#renderToken) return;
 
-    if (icon) this.#lastBadgedIcon = icon;
+    // Only an icon that carries the unread count may become the fallback for a
+    // failed badged render; a zero-unread presence icon would drop the badge.
+    if (icon && sum > 0) this.#lastBadgedIcon = icon;
     this.#deps.applyTray({ icon, flash, tooltip });
+  }
+
+  /**
+   * The icon for the current buckets: a single bucket's own composite when it
+   * is still fresh and no presence dot is drawn, a fresh render otherwise, and
+   * at zero unread the renderer's presence-only composite when the overlay is
+   * on. Null means the plain icon.
+   *
+   * @param {[string, {count:number, icon:string|null, iconCount:number}][]} unread
+   * @param {number} sum
+   * @returns {Promise<string|null>}
+   */
+  async #trayIcon(unread, sum) {
+    const presenceOverlay = this.#deps.wantsPresenceOverlay();
+    if (unread.length === 0) {
+      // Nothing unread is the plain icon, unless the renderer still has a
+      // presence dot to draw: a zero-count composite resolves null when it has
+      // nothing to draw either.
+      if (!presenceOverlay) return null;
+      return (await this.#deps.requestBadgeRender(0)) ?? null;
+    }
+    if (unread.length === 1) {
+      const [, bucket] = unread[0];
+      // A cached composite carries the presence dot of the profile that drew
+      // it, which is not necessarily the selected one — the render bridge
+      // targets the selection — so with the overlay on the icon is always
+      // rendered again; the cache is left as the fallback only.
+      if (
+        !presenceOverlay &&
+        bucket.icon !== null &&
+        bucket.iconCount === bucket.count
+      ) {
+        return bucket.icon;
+      }
+      // The stored icon has a different number baked in (out-of-band badge
+      // change) — re-render.
+      const icon =
+        (await this.#deps.requestBadgeRender(Math.min(bucket.count, 9999))) ??
+        null;
+      return icon ?? bucket.icon ?? this.#lastBadgedIcon;
+    }
+    const icon =
+      (await this.#deps.requestBadgeRender(Math.min(sum, 9999))) ?? null;
+    if (icon !== null) return icon;
+    const best = unread.reduce(
+      (a, b) => (b[1].count > a[1].count ? b : a),
+      unread[0]
+    );
+    return best[1].icon ?? this.#lastBadgedIcon;
   }
 }
 

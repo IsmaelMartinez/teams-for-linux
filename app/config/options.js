@@ -754,7 +754,7 @@ module.exports = {
           preventDeviceSwitching: false,
         },
         describe:
-          "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the Dock icon on macOS. macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications.",
+          "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the app icon (the Dock on macOS, the tray icon elsewhere). macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications.",
         type: "object",
         fields: {
           "microphone.disableAutogain": {
@@ -833,7 +833,7 @@ module.exports = {
           "showStatusOnDockIcon": {
             type: "boolean",
             describe:
-              "Overlay the user presence status on the Dock icon on macOS.",
+              "Overlay the user presence status on the app icon: the Dock on macOS, the tray icon on the platforms that have no Dock. While the dot is drawn the unread badge moves to the other corner.",
           },
           "macPerformanceMode": {
             type: "boolean",

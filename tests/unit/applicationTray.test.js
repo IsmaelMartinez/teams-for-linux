@@ -108,6 +108,27 @@ describe('ApplicationTray aggregation', () => {
     assert.strictEqual(nativeTray.tooltips.at(-1), 'Teams (3)');
   });
 
+  it('a redraw of the same unread state does not re-request attention', () => {
+    const { window } = build();
+    trayUpdateHandler({ sender: { id: 1 } }, { icon: 'data:dot', flash: true, count: 3 });
+    // trayIconRenderer re-sends the same count with the new dot when the Teams
+    // status changes: same unread state, so the window is not flashed again.
+    trayUpdateHandler({ sender: { id: 1 } }, { icon: 'data:dot-busy', flash: true, count: 3 });
+    assert.deepStrictEqual(window.flashes, [true]);
+    // Reading the messages still stops the flash.
+    trayUpdateHandler({ sender: { id: 1 } }, { icon: null, flash: false, count: 0 });
+    assert.deepStrictEqual(window.flashes, [true, false]);
+  });
+
+  it('the aggregate path asks for attention only when its unread state changes', () => {
+    const { tray, window } = build();
+    tray.applyAggregate({ icon: 'data:agg', flash: true, tooltip: 'Teams (3)' });
+    tray.applyAggregate({ icon: 'data:agg-dot', flash: true, tooltip: 'Teams (3)' });
+    assert.deepStrictEqual(window.flashes, [true]);
+    tray.applyAggregate({ icon: 'data:agg', flash: true, tooltip: 'Teams (4)' });
+    assert.deepStrictEqual(window.flashes, [true, true]);
+  });
+
   it('with an aggregator, tray-update is delegated and not applied directly', () => {
     const { tray, window } = build();
     const seen = [];

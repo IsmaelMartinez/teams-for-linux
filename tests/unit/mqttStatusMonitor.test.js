@@ -70,3 +70,19 @@ describe('MQTTStatusMonitor Linux transport-neutral presence detection', () => {
 		}));
 	});
 });
+
+describe('MQTTStatusMonitor presence overlay opt-in', () => {
+	it('starts on Linux for the tray overlay alone, without MQTT or D-Bus', () => {
+		withPlatform('linux', () => withBrowserGlobals(({ monitor, domEvents }) => {
+			monitor.init({ mqtt: { enabled: false }, dbusControl: { enabled: false }, media: { showStatusOnDockIcon: true } }, { invoke() {} });
+			assert.equal(domEvents[0][0], 'DOMContentLoaded');
+		}));
+	});
+
+	it('leaves monitoring off when nothing asks for the status', () => {
+		withPlatform('linux', () => withBrowserGlobals(({ monitor, domEvents }) => {
+			monitor.init({ mqtt: { enabled: false }, dbusControl: { enabled: false }, media: { showStatusOnDockIcon: false } }, { invoke() {} });
+			assert.deepEqual(domEvents, []);
+		}));
+	});
+});
