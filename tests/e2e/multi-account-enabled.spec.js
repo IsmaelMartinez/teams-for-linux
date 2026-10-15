@@ -193,8 +193,10 @@ test('switching to a profile view fills the window and keeps the pill topmost', 
 
     const view = await getContentViewChildBounds(ctx.electronApp);
     expect(view).not.toHaveProperty('error');
-    // Two children: the active profile view + the pill on top.
-    expect(view.count).toBe(2);
+    // Both profile views stay attached (#3057) with the pill on top; only
+    // the active one, raised just below the pill, is visible.
+    expect(view.count).toBe(3);
+    expect(view.visible).toEqual([false, true, true]);
 
     // The pill is the LAST (topmost) child, still in the bottom-left corner.
     const pill = view.bounds[view.count - 1];
@@ -207,7 +209,7 @@ test('switching to a profile view fills the window and keeps the pill topmost', 
     );
 
     // The active profile view fills the whole content area (no inset).
-    const profileView = view.bounds[0];
+    const profileView = view.bounds[view.count - 2];
     expect(profileView.x).toBe(0);
     expect(profileView.y).toBe(0);
     expect(profileView.width).toBe(view.contentWidth);

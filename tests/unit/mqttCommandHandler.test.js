@@ -91,6 +91,12 @@ describe('MQTT handleCommand - valid commands', () => {
 		assert.strictEqual(emitted.action, 'unmute');
 		assert.strictEqual(emitted.force, true);
 	});
+
+	it('emits command event for leave', () => {
+		const emitted = fireAndCapture({ action: 'leave' });
+		assert.strictEqual(emitted.action, 'leave');
+		assert.strictEqual(emitted.shortcut, 'Ctrl+Shift+H');
+	});
 });
 
 describe('MQTT handleCommand - invalid commands', () => {
@@ -133,6 +139,7 @@ describe('MQTT allowedActions', () => {
 		assert.ok(allowed.includes('toggle-mute'));
 		assert.ok(allowed.includes('toggle-video'));
 		assert.ok(allowed.includes('toggle-hand-raise'));
+		assert.ok(allowed.includes('leave'));
 	});
 
 	it('includes non-shortcut actions', () => {

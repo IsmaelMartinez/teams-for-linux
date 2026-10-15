@@ -27,7 +27,8 @@ class MQTTClient extends EventEmitter {
 			'mute': 'Ctrl+Shift+M',
 			'unmute': 'Ctrl+Shift+M',
 			'toggle-video': 'Ctrl+Shift+O',
-			'toggle-hand-raise': 'Ctrl+Shift+K'
+			'toggle-hand-raise': 'Ctrl+Shift+K',
+			'leave': 'Ctrl+Shift+H'
 		};
 
 		this.nonShortcutActions = ['get-calendar'];
@@ -122,6 +123,8 @@ class MQTTClient extends EventEmitter {
 	 * @param {object} options - MQTT publish options
 	 * @param {boolean} options.retain - Whether to retain the message (default: true)
 	 * @param {number} options.qos - Quality of Service level (default: 0)
+	 * @param {boolean} options.redactLog - Leave the topic and payload out of the
+	 *   log, for messages that carry personal details (default: false)
 	 */
 	async publish(topic, payload, options = {}) {
 		if (!this.isConnected || !this.client) {
@@ -139,9 +142,17 @@ class MQTTClient extends EventEmitter {
 				qos: options.qos ?? 0
 			});
 
-			console.debug(`[MQTT] Published to ${topic}: ${payloadString.substring(0, 100)}`);
+			if (options.redactLog) {
+				console.debug('[MQTT] Published a redacted message');
+			} else {
+				console.debug(`[MQTT] Published to ${topic}: ${payloadString.substring(0, 100)}`);
+			}
 		} catch (error) {
-			console.error(`[MQTT] Failed to publish to ${topic}:`, error);
+			if (options.redactLog) {
+				console.error('[MQTT] Failed to publish a redacted message:', { message: error.message });
+			} else {
+				console.error(`[MQTT] Failed to publish to ${topic}:`, error);
+			}
 		}
 	}
 

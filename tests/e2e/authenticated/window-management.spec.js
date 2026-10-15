@@ -17,7 +17,7 @@ test.describe('Window management', () => {
 
     // Use JavaScript to get the actual window dimensions since
     // Playwright's viewportSize() returns null for Electron windows
-    const dimensions = await mainWindow.evaluate(() => ({  // eslint-disable-line no-eval
+    const dimensions = await mainWindow.evaluate(() => ({
       innerWidth: window.innerWidth,
       innerHeight: window.innerHeight,
     }));

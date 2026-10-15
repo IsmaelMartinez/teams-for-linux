@@ -18,7 +18,9 @@ const GraphApiClient = require("./graphApi");
 const { registerGraphApiHandlers } = require("./graphApi/ipcHandlers");
 const { allowedChannels } = require("./security/ipcValidator");
 const { installIpcSecurity } = require("./security/ipcSecurity");
+const { installWebviewGuard } = require("./security/webviewGuard");
 const { sanitize: sanitizePii } = require("./utils/logSanitizer");
+const { isPreLoginAuthNoise, parseChunkLoadFailure, formatChunkLoadWarning } = require("./utils/rendererErrors");
 const { register: registerGlobalShortcuts, sendKeyboardEventToWindow } = require("./globalShortcuts");
 const CommandLineManager = require("./startup/commandLine");
 const NotificationService = require("./notifications/service");
@@ -29,6 +31,8 @@ const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
 const ProfilesManager = require("./profilesManager");
 const ProfileViewManager = require("./mainAppWindow/profileViewManager");
+const TeamsControlService = require("./control/teamsControlService");
+const TeamsStateService = require("./control/teamsStateService");
 const IdleMonitor = require("./idle/monitor");
 const AutoUpdater = require("./autoUpdater");
 const WebAuthn = require("./webauthn");
@@ -136,6 +140,8 @@ let mqttClient = null;
 let mqttMediaStatusService = null;
 let haDiscovery = null;
 let graphApiClient = null;
+let teamsStateService = null;
+let teamsControlService = null;
 let quickChatManager = null;
 
 const { createPlayer } = require("./audio/player");
@@ -172,6 +178,11 @@ const profilesManager = new ProfilesManager(appConfig.settingsStore);
 // multi-account flag is on; the manager is wired to the main window
 // after `mainAppWindow.onAppReady` resolves.
 let profileViewManager = null;
+let dbusControlService = null;
+
+// ADR-020 Phase 2 unread aggregation; null with the flag off, where the
+// tray/badge handlers keep their single-sender behaviour.
+let unreadAggregator = null;
 
 const idleMonitor = new IdleMonitor(config, getUserStatus);
 
@@ -226,6 +237,13 @@ if (gotTheLock) {
   app.on("render-process-gone", onRenderProcessGone);
   app.on("will-quit", async () => {
     console.debug("will-quit");
+    teamsStateService?.dispose();
+    teamsControlService?.dispose();
+    try {
+      dbusControlService?.stop();
+    } catch (error) {
+      console.warn("[DBUS_CONTROL] Failed to stop service", { message: error.message });
+    }
     if (mqttClient) {
       await mqttClient.disconnect();
     }
@@ -239,6 +257,8 @@ if (gotTheLock) {
   // The wrapping also covers removal, so listeners registered per short-lived
   // window can actually be taken off again. See app/security/ipcSecurity.js.
   installIpcSecurity(ipcMain);
+  // Refuse every <webview> attach (GHSA-6xpg-fhf9-chcr). See app/security/webviewGuard.js.
+  installWebviewGuard(app);
 
   // Restart application when configuration file changes
   ipcMain.on("config-file-changed", restartApp);
@@ -317,10 +337,12 @@ if (gotTheLock) {
     // messages were silently dropped. Fields are run through
     // sanitizeRendererLogField to scrub PII before logging.
     try {
-      // Run the noise check on the raw message — the sanitizer may strip
-      // query strings / fragments that contain the auth error code.
+      // Run the chunk and noise checks on the raw message — the sanitizer may
+      // strip query strings / fragments that contain the auth error code.
+      const chunk = parseChunkLoadFailure(errorData?.message);
+      if (chunk) console.warn(formatChunkLoadWarning(chunk));
       const preLoginNoise = isPreLoginAuthNoise(errorData?.message);
-      const log = preLoginNoise ? console.debug : console.error;
+      const log = chunk || preLoginNoise ? console.debug : console.error;
       log("[Renderer] Unhandled rejection:", {
         message: sanitizeRendererLogField(errorData?.message, "unknown"),
         stack: sanitizeRendererLogField(errorData?.stack),
@@ -345,8 +367,10 @@ if (gotTheLock) {
   // Log renderer-side uncaught window errors
   ipcMain.on("window-error", (_event, errorData) => {
     try {
+      const chunk = parseChunkLoadFailure(errorData?.message);
+      if (chunk) console.warn(formatChunkLoadWarning(chunk));
       const preLoginNoise = isPreLoginAuthNoise(errorData?.message);
-      const log = preLoginNoise ? console.debug : console.error;
+      const log = chunk || preLoginNoise ? console.debug : console.error;
       log("[Renderer] Window error:", {
         message: sanitizeRendererLogField(errorData?.message, "unknown"),
         filename: sanitizeRendererLogField(errorData?.filename, "") || "",
@@ -424,25 +448,6 @@ function toFiniteNumber(value, fallback = 0) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
-// Teams floods the renderer with these error signatures whenever no user is
-// signed in, until the auth-recovery layer (see app/mainAppWindow/index.js)
-// clears stale state and reloads. The recovery layer is the actionable
-// channel for these; mirroring them as console.error in our logs just buries
-// real issues. Down-leveling to console.debug keeps them available without
-// the noise.
-const PRE_LOGIN_AUTH_NOISE_PATTERNS = [
-  "login_required",
-  "aadsts50058",
-  "interactionrequired",
-  "authfailed",
-];
-
-function isPreLoginAuthNoise(message) {
-  if (typeof message !== "string") return false;
-  const lower = message.toLowerCase();
-  return PRE_LOGIN_AUTH_NOISE_PATTERNS.some((p) => lower.includes(p));
-}
-
 // A gone renderer (the Teams PWA) is usually unrecoverable — continuing
 // leaves a blank or unresponsive window, so quit for a clean restart.
 function onRenderProcessGone(event, webContents, details) {
@@ -452,6 +457,19 @@ function onRenderProcessGone(event, webContents, details) {
 
 function onAppTerminated() {
   app.quit();
+}
+
+function getControlWebContents() {
+  try {
+    if (profileViewManager) {
+      const active = profileViewManager.getActiveWebContents();
+      return active && !active.isDestroyed() ? active : null;
+    }
+    const window = mainAppWindow.getWindow();
+    return window && !window.isDestroyed() ? window.webContents : null;
+  } catch {
+    return null;
+  }
 }
 
 function handleShortcutCommand({ action, shortcut }) {
@@ -682,6 +700,27 @@ function initializeAutoUpdater() {
   }
 }
 
+function initializeDbusControl() {
+  if (process.platform !== "linux" || config.dbusControl?.enabled !== true) return;
+  teamsStateService = new TeamsStateService(config, {
+    getActiveWebContents: getControlWebContents,
+  });
+  teamsStateService.initialize();
+  teamsControlService = new TeamsControlService({
+    getShortcutWebContents: getControlWebContents,
+    performIncomingCallAction: (action) => mainAppWindow.performIncomingCallAction(action),
+    stateService: teamsStateService,
+  });
+  try {
+    const DBusControlService = require("./dbus/controlService");
+    dbusControlService = new DBusControlService(teamsControlService);
+    dbusControlService.start();
+  } catch (error) {
+    dbusControlService = null;
+    console.warn("[DBUS_CONTROL] Service unavailable; continuing without D-Bus control", { message: error.message });
+  }
+}
+
 async function handleAppReady() {
   try {
     await showConfigurationDialogs();
@@ -697,6 +736,7 @@ async function handleAppReady() {
       initializeMqtt();
     }
 
+    initializeDbusControl();
     loadMenuToggleSettings();
 
     const customBackground = new CustomBackground(app, config);
@@ -735,10 +775,12 @@ async function handleAppReady() {
           config,
           mainAppWindow.bindDisplayMediaHandler,
           mainAppWindow.bindWindowOpenHandler,
-          mainAppWindow.injectScreenSharingLogic
+          mainAppWindow.injectScreenSharingLogic,
+          mainAppWindow.setTitleOverride
         );
         profileViewManager.initialize();
         await profileViewManager.bootstrapProfileZeroIfNeeded();
+        unreadAggregator = createUnreadAggregator(profileViewManager);
       } else {
         console.warn(
           "[ProfileViewManager] main window unavailable after onAppReady; multi-account features disabled for this session"
@@ -752,6 +794,9 @@ async function handleAppReady() {
 
     initializeGraphApiClient();
     registerGraphApiHandlers(ipcMain, graphApiClient);
+    if (teamsControlService && config.multiAccount?.enabled) {
+      profilesManager.on("switch", () => setImmediate(() => teamsControlService.refreshState()));
+    }
     initializeQuickChat();
     registerGlobalShortcuts(config, mainAppWindow, app);
     initializeAutoUpdater();
@@ -798,6 +843,7 @@ async function requestMediaAccess() {
 
 async function userStatusChangedHandler(_event, options) {
   userStatus = options.data.status;
+  teamsStateService?.setPresence(userStatus, _event?.sender);
 
   if (mqttClient) {
     try {
@@ -808,7 +854,22 @@ async function userStatusChangedHandler(_event, options) {
   }
 }
 
-async function setBadgeCountHandler(_event, count) {
+// Replayed on aggregator attach — renderers dedupe and never re-send an
+// unchanged count, so a pre-attach report would otherwise be lost.
+const preAggregatorBadgeCounts = new Map();
+
+async function setBadgeCountHandler(event, count) {
+  if (unreadAggregator) {
+    unreadAggregator.onBadgeCount(event, count);
+    return;
+  }
+  if (config.multiAccount?.enabled && typeof event?.sender?.id === "number") {
+    preAggregatorBadgeCounts.set(event.sender.id, count);
+  }
+  applyBadgeCount(count);
+}
+
+function applyBadgeCount(count) {
   if (!config.disableBadgeCount) {
     app.setBadgeCount(count);
     // Electron's own Linux badge path loads libunity at runtime, which none
@@ -828,6 +889,64 @@ async function setBadgeCountHandler(_event, count) {
       }
     }
   }
+}
+
+// Factory so the flag-off path never touches any of this wiring.
+function createUnreadAggregator(viewManager) {
+  const ProfileUnreadAggregator = require("./profileUnread");
+  const { createBadgeRenderBridge } = require("./profileUnread/badgeRenderBridge");
+
+  const requestBadgeRender = createBadgeRenderBridge({
+    ipcMain,
+    getTarget: () => viewManager.getActiveWebContents(),
+    // createFromDataURL yields an EMPTY image (not a throw) for malformed
+    // payloads; a bad reply must resolve null, never become the fallback.
+    sanitizeIcon: (icon) =>
+      nativeImage.createFromDataURL(icon).isEmpty() ? null : icon,
+  });
+
+  // Cached: electron-store re-reads its JSON on every access, and this sits
+  // on the per-badge-tick path. Profile events invalidate it.
+  let nameCache = null;
+  const getProfileName = (profileId) => {
+    if (!nameCache) {
+      nameCache = new Map(profilesManager.list().map((p) => [p.id, p.name]));
+    }
+    return nameCache.get(profileId) ?? null;
+  };
+  const invalidateNames = () => {
+    nameCache = null;
+  };
+  profilesManager.on("add", invalidateNames);
+  profilesManager.on("update", invalidateNames);
+  profilesManager.on("remove", invalidateNames);
+
+  const aggregator = new ProfileUnreadAggregator({
+    // Pure map read; getProfileFor re-reads the settings file per call.
+    resolveProfileId: (event) => viewManager.resolveProfileId(event?.sender),
+    isPrimarySender: (event) => viewManager.isPrimaryProfileSurface(event),
+    getProfileName,
+    requestBadgeRender,
+    applyTray: (update) => mainAppWindow.getTray()?.applyAggregate(update),
+    applyBadgeCount,
+    appTitle: config.appTitle,
+  });
+
+  // No surface is left to report a zero after removal or a view dying on
+  // its own — holding the last count would inflate the badge all session.
+  profilesManager.on("remove", ({ removedId }) =>
+    aggregator.removeProfile(removedId)
+  );
+  viewManager.onProfileViewGone((profileId) =>
+    aggregator.removeProfile(profileId)
+  );
+
+  mainAppWindow.getTray()?.setAggregator(aggregator);
+  for (const [senderId, count] of preAggregatorBadgeCounts) {
+    aggregator.onBadgeCount({ sender: { id: senderId } }, count);
+  }
+  preAggregatorBadgeCounts.clear();
+  return aggregator;
 }
 
 function handleGlobalShortcutDisabled() {

@@ -179,7 +179,7 @@ class Menus {
   // cannot be built (no profilesManager).
   #attachMenu(menu) {
     if (
-      this.configGroup.startupConfig.menubar == "hidden" &&
+      this.configGroup.startupConfig.menubar === "hidden" &&
       this.#multiAccountOn()
     ) {
       const template = [buildProfilesMenu(this)].filter(Boolean);
@@ -199,13 +199,13 @@ class Menus {
     // With multi-account OFF the pre-feature `removeMenu()` behaviour is
     // untouched; otherwise #attachMenu picks the full or profiles-only menu.
     if (
-      this.configGroup.startupConfig.menubar == "hidden" &&
+      this.configGroup.startupConfig.menubar === "hidden" &&
       !this.#multiAccountOn()
     ) {
       this.window.removeMenu();
     } else {
       this.#attachMenu(menu);
-      if (this.configGroup.startupConfig.menubar == "hidden") {
+      if (this.configGroup.startupConfig.menubar === "hidden") {
         this.window.setMenuBarVisibility(false);
       }
     }
@@ -346,7 +346,7 @@ class Menus {
   }
 
   #updateWindowIcon(iconPath) {
-    this.window.setIcon(nativeImage.createFromPath(iconPath));
+    this.window.setIcon(TrayIconChooser.windowImage(iconPath));
     if (!app.dock) return;
     // The tray asset is 16px on macOS but the dock needs >=128px, so the
     // default is resolved separately here, exactly as startup does it.
@@ -496,6 +496,43 @@ class Menus {
     await this.#openPath("config folder", this.configGroup.configPath);
   }
 
+  async openThemesFolder() {
+    const directory = path.join(this.configGroup.configPath, "themes");
+    try {
+      fs.mkdirSync(directory, { recursive: true });
+      const error = await shell.openPath(directory);
+      if (error) throw new Error("Could not open themes folder");
+    } catch {
+      console.warn("[Themes] Could not open themes folder");
+      dialog.showErrorBox("Themes", "Could not open the themes folder.");
+    }
+  }
+
+  async selectTheme(selection) {
+    try {
+      const changed = this.configGroup.setThemeSelection(selection);
+      this.updateMenu();
+      // An enabled config watcher already relaunches after this write.
+      if (!changed || this.configGroup.isWatchingConfigFile) return;
+      const { response } = await dialog.showMessageBox(this.window, {
+        type: "info",
+        title: "Theme saved",
+        message: "Restart Teams for Linux to apply the selected theme.",
+        buttons: ["Restart now", "Later"],
+        defaultId: 0,
+        cancelId: 1,
+      });
+      if (response === 0) {
+        app.relaunch();
+        app.exit(0);
+      }
+    } catch {
+      this.updateMenu();
+      console.warn("[Themes] Could not save theme selection");
+      dialog.showErrorBox("Themes", "Could not save the theme selection. Check that config.json is valid and writable.");
+    }
+  }
+
   // shell.openPath resolves to an empty string on success and to the reason as
   // a string on failure — it does not reject — so the result has to be checked.
   async #openPath(what, target) {
@@ -551,7 +588,7 @@ class Menus {
     // behaviour stays byte-identical to pre-feature (where updateMenu also
     // re-attached the menu unconditionally).
     if (
-      this.configGroup.startupConfig.menubar == "hidden" &&
+      this.configGroup.startupConfig.menubar === "hidden" &&
       this.#multiAccountOn()
     ) {
       this.window.setMenuBarVisibility(false);
@@ -960,7 +997,7 @@ function chooseLanguage(item, menus) {
 }
 
 function removeFromList(list, item) {
-  const itemIndex = list.findIndex((l) => l == item);
+  const itemIndex = list.findIndex((l) => l === item);
   if (itemIndex >= 0) {
     list.splice(itemIndex, 1);
   }
@@ -969,7 +1006,7 @@ function removeFromList(list, item) {
 }
 
 function addToList(list, item) {
-  const itemIndex = list.findIndex((l) => l == item);
+  const itemIndex = list.findIndex((l) => l === item);
   if (itemIndex < 0) {
     list.push(item);
   }

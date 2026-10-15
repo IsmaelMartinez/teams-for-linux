@@ -10,6 +10,8 @@ const {
   isMigrationMenuAvailable,
 } = require("./deprecation");
 const { applyRenamedOptions, isOptionSetByUser } = require("./renames");
+const { mergeConfigFiles, applyObjectDefaults } = require("./mergeDefaults");
+const watchedConfigs = new WeakSet();
 
 function getConfigFilePath(configPath) {
   return path.join(configPath, "config.json");
@@ -70,9 +72,11 @@ function populateConfigObjectFromFile(configObject, configPath) {
     }
   }
 
-  // Merge configs with user config taking precedence over system config
+  // Merge configs with user config taking precedence over system config. Deep,
+  // so a user `mqtt` block overrides the admin's leaves rather than the whole
+  // namespace.
   if (hasUserConfig || hasSystemConfig) {
-    configObject.configFile = { ...systemConfig, ...userConfig };
+    configObject.configFile = mergeConfigFiles(systemConfig, userConfig);
     configObject.isConfigFile = true;
 
     if (hasUserConfig && hasSystemConfig) {
@@ -146,6 +150,10 @@ function argv(configPath, appVersion) {
     config["error"] = configObject.configError;
   }
 
+  // yargs replaces an object option wholesale when the file or CLI sets any
+  // leaf; restore the declared defaults of the leaves left unset.
+  applyObjectDefaults(config, configOptions);
+
   // ADR-025: project any nested value the user supplied onto the flat key that
   // modules still read. Must run before anything consumes the config. The raw
   // config file is the presence oracle; see app/config/renames.js for why.
@@ -158,6 +166,7 @@ function argv(configPath, appVersion) {
       );
       ipcMain.emit("config-file-changed");
     });
+    watchedConfigs.add(config);
   }
 
   // Track whether disableGpu was explicitly set via CLI or config file
@@ -204,4 +213,5 @@ exports = module.exports = argv;
 // Exposed so the menu can open the very file this module reads, without
 // a second copy of the "config.json" literal drifting from this one.
 module.exports.getConfigFilePath = getConfigFilePath;
-
+// A requested watcher is not necessarily active (e.g. no file at startup).
+module.exports.isWatchingConfigFile = (config) => watchedConfigs.has(config);

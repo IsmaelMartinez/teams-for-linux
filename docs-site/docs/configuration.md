@@ -117,7 +117,7 @@ ignored. The examples below use whichever spelling actually applies.
 |--------|------|---------|-------------|
 | `app.url` | `string` | `"https://teams.cloud.microsoft"` | Microsoft Teams URL |
 | `url` | `string` | `"https://teams.cloud.microsoft"` | Deprecated, use `app.url` |
-| `app.title` | `string` | `"Microsoft Teams"` | Text to be suffixed with page title |
+| `app.title` | `string` | `"Microsoft Teams"` | Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip |
 | `appTitle` | `string` | `"Microsoft Teams"` | Deprecated, use `app.title` |
 | `app.partition` | `string` | `"persist:teams-4-linux"` | BrowserWindow webpreferences partition |
 | `partition` | `string` | `"persist:teams-4-linux"` | Deprecated, use `app.partition` |
@@ -145,12 +145,69 @@ ignored. The examples below use whichever spelling actually applies.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `appearance.cssName` | `string` | `""` | Custom CSS name. Options: "compactDark", "compactLight", "tweaks", "condensedDark", "condensedLight" |
+| `appearance.cssName` | `string` | `""` | Packaged CSS theme (`compactDark`, `compactLight`, `tweaks`, `condensedDark`, `condensedLight`) or discovered user theme (`custom:<id>`) |
 | `customCSSName` | `string` | `""` | Deprecated, use `appearance.cssName` |
 | `appearance.cssLocation` | `string` | `""` | Custom CSS styles file location |
 | `customCSSLocation` | `string` | `""` | Deprecated, use `appearance.cssLocation` |
 | `appearance.followSystemTheme` | `boolean` | `false` | Follow the operating-system dark/light theme preference. Set `true` to drive Teams's theme from the OS preference. |
 | `followSystemTheme` | `boolean` | `false` | Deprecated, use `appearance.followSystemTheme` |
+
+#### Selecting a CSS Theme
+
+Open the application's **Settings → Theme** menu to select **Default**, a **Built-in** theme, or a discovered **Custom** theme. The menu displays human-readable theme names and saves your choice in `config.json`, preserving unrelated settings. Theme changes require a restart; the app offers to restart after saving, or you can restart later.
+
+CSS themes style the Teams web interface, including its iframe content. They do not change Teams' own dark/light preference. Choose the appropriate appearance in Teams itself, or use `appearance.followSystemTheme` to follow your desktop preference.
+
+#### Installing a User Theme
+
+Place each theme in its own folder under `themes` inside the application's [configuration directory](#configuration-locations). Use **Settings → Theme → Open themes folder** to open that directory in your file manager.
+
+```text
+themes/
+  my-theme/
+    theme.json
+    theme.css
+```
+
+The minimum `theme.json` is:
+
+```json
+{
+  "id": "my-theme",
+  "name": "My Theme",
+  "css": "theme.css"
+}
+```
+
+The `id` identifies the theme across restarts, `name` is the label shown in the menu, and `css` is the relative path to its CSS file. IDs must start with a letter or digit and contain only letters, digits, dots, underscores, or hyphens. Keep the `id` stable when renaming a theme or its folder. Optional string fields `author`, `version`, and `description` provide additional metadata. Metadata files are limited to 64 KiB.
+
+A minimal `theme.css` could contain:
+
+```css
+:root {
+  scrollbar-color: #657080 #20252c;
+}
+```
+
+Restart the app after installing, removing, or updating a theme. Discovery reads only immediate theme folders; there is no filesystem watcher or online theme service. Once discovered, **My Theme** appears under **Custom**, and selecting it saves `appearance.cssName` as `custom:my-theme`. Switching themes does not require manually editing the configuration file.
+
+For Flatpak, the directory is:
+
+```text
+~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/themes/
+```
+
+#### Theme Validation and Compatibility
+
+Themes are local CSS files only; no JavaScript or executable theme code is loaded. Metadata must be valid JSON with `id`, `name`, and `css`. The CSS file must exist inside its theme folder. Absolute paths, parent-directory traversal, and symlinks escaping the theme folder are rejected.
+
+Theme CSS may load remote resources through `@import` and `url()`, so only install themes from trusted sources.
+
+Invalid themes are ignored with concise warnings and never prevent startup. Built-in IDs are reserved. If several custom folders use the same ID, the first valid folder in sorted folder-name order wins. If a selected custom theme is missing or invalid, the app warns and uses the default appearance while retaining the saved selection, so reinstalling the theme restores it on the next restart.
+
+Existing built-in names such as `compactDark` continue to work without migration. `appearance.cssName` takes precedence over `appearance.cssLocation`; a missing selected custom theme falls back to Default rather than loading a different stylesheet from `cssLocation`.
+
+Direct CSS files remain supported through `appearance.cssLocation` and its legacy alias `customCSSLocation`. When a location is configured, **Custom CSS file** in the Theme menu lets you reuse that stylesheet. Choosing a built-in or discovered theme preserves the location for reuse; choosing **Default** clears both theme settings. Legacy `customCSSName` continues to work, with the nested `appearance` values taking precedence as described in [Renamed options](#renamed-options).
 
 ### Tray Icon
 
@@ -409,7 +466,7 @@ Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debia
 | `auth.webauthn.debug` | `boolean` | `false` | Enable verbose WebAuthn diagnostic logging (useful for beta testers troubleshooting key registration) |
 | `auth.webauthn.extraOrigins` | `array` | `[]` | Extra sign-in origins allowed to use hardware keys, in addition to the built-in Microsoft login origins |
 
-Interception is limited to the Microsoft login origins (`https://login.microsoftonline.com`, `https://login.microsoft.com`, `https://login.live.com`). If your tenant is federated and the key prompt is served by your own identity provider, the ceremony is blocked and the log shows `[WEBAUTHN] Blocked request { reason: 'origin-not-allowed' }`. Add that origin to `auth.webauthn.extraOrigins` and restart:
+Interception is limited to the Microsoft login origins (`https://login.microsoftonline.com`, `https://login.microsoft.com`, `https://login.live.com`). If your tenant is federated and the key prompt is served by your own identity provider, the ceremony is blocked and the log shows `[WEBAUTHN] Blocked request { reason: 'origin-not-allowed' }`, or, when the identity provider runs in an embedded frame, `[WEBAUTHN] Skipped a subframe outside the login allowlist` and no key prompt at all. The log never names the origin, since it identifies your tenant. To find it, sign in at teams.microsoft.com in a regular browser with its developer tools open, and note the scheme and host of the request that loads the page asking for your key (the address bar shows only the outer page when that step is embedded). Add that origin to `auth.webauthn.extraOrigins` and restart:
 
 ```json
 {
@@ -699,10 +756,11 @@ When MQTT is enabled, the following topics are automatically published:
 | `\{topicPrefix\}/in-call` | `"true"` or `"false"` | Active call state (connected/disconnected). Uses WebRTC fallback for reliable detection even from popup windows. |
 | `\{topicPrefix\}/camera` | `"true"` or `"false"` | Camera on/off state (monitors video sender track via WebRTC, filters out screen-sharing tracks) |
 | `\{topicPrefix\}/microphone` | `"speaking"` \| `"silent"` \| `"muted"` \| `"off"` | Microphone state derived from the WebRTC speaking-indicator. `speaking` = audio is being transmitted, `silent` = mic open but quiet, `muted` = Teams has zeroed the audio signal, `off` = not in a call. Activates when `mqtt.enabled` is true (no separate toggle required). |
-| `\{topicPrefix\}/incoming-call` | `"true"` or `"false"` | Incoming call ringing state. Fires before user accepts. Parity with `incomingCallCommand`. Covers 1:1 ring-type calls. |
+| `\{topicPrefix\}/incoming-call` | `"true"` or `"false"` | Incoming call ringing state. Fires before user accepts. Parity with `incomingCallCommand`. Covers 1:1 ring-type calls, calls from phone numbers, and call-queue calls. |
+| `\{topicPrefix\}/incoming-call/caller` | JSON object | Who is calling while `incoming-call` is `"true"`: `scenario`, and where known `number`, `name`, `queue`, `contact` and `callId`, and a `timestamp` and `clientId`. Published just before `incoming-call` goes `"true"`, and again if Teams fills the details in while ringing. Not retained. Off unless `mqtt.incomingCallCaller.enabled` is `true`. |
 | `\{topicPrefix\}/screen-sharing` | `"true"` or `"false"` | Screen sharing active state |
 
-All topics use retained messages by default, ensuring subscribers receive the last known state immediately upon connecting.
+All topics except `incoming-call/caller` use retained messages, ensuring subscribers receive the last known state immediately upon connecting.
 
 **Connection State:** The `connected` topic uses MQTT Last Will and Testament (LWT). If the app crashes or loses network connectivity, the broker automatically publishes `"false"`, allowing home automation to detect and handle stale state.
 
@@ -946,6 +1004,8 @@ Teams for Linux supports system-wide configuration files for enterprise and mult
 
 > [!NOTE]
 > User configurations take precedence over system-wide configurations. This allows administrators to set organization-wide defaults while still allowing individual users to customize their settings.
+>
+> The files merge per setting: a user file that sets one field inside an object option such as `mqtt` or `network` keeps every other field from the system file and the built-in defaults. Lists such as `electronCLIFlags` are replaced, not combined.
 
 #### Example System-wide Config
 
@@ -1001,12 +1061,12 @@ The configuration file can include Electron CLI flags that will be added when th
 Teams for Linux automatically sets Chromium feature flags for optimal functionality. These defaults are applied only if you don't provide your own flags.
 
 **Default Settings:**
-- `--disable-features=HardwareMediaKeyHandling` - Prevents conflicts with Teams media controls
+- `--disable-features=HardwareMediaKeyHandling` - Prevents conflicts with Teams media controls. On Linux the default is `--disable-features=HardwareMediaKeyHandling,UsePortalAccentColor`, which also stops Electron from applying the XDG portal accent color (that can select a sandbox light GTK theme instead of the host theme).
 - `--enable-features=WebRTCPipeWireCapturer` - Enables PipeWire screen sharing (Wayland only)
 
 **Using Custom Feature Flags:**
 
-If you need custom feature flags, provide them when launching the app. The application respects your flags and will not override them.
+If you need custom feature flags, provide them when launching the app. The application respects your flags and will not override them. A `--disable-features` list you pass replaces the default entirely.
 
 ```bash
 # Example: Adding your own features on Wayland
@@ -1014,11 +1074,15 @@ teams-for-linux --enable-features=MyCustomFeature,WebRTCPipeWireCapturer
 
 # Example: Disabling features
 teams-for-linux --disable-features=HardwareMediaKeyHandling,UnwantedFeature
+
+# Linux: your list replaces the default, so keep both required tokens
+teams-for-linux --disable-features=HardwareMediaKeyHandling,UsePortalAccentColor,UnwantedFeature
 ```
 
 > [!WARNING]
 > When providing custom flags, **you must include the required features** for proper functionality:
 > - **Always include:** `HardwareMediaKeyHandling` in `--disable-features`
+> - **On Linux:** Also include `UsePortalAccentColor` in `--disable-features`
 > - **On Wayland:** Also include `WebRTCPipeWireCapturer` in `--enable-features`
 >
 > Missing required features will trigger a warning but won't prevent the app from starting.
@@ -1028,7 +1092,7 @@ teams-for-linux --disable-features=HardwareMediaKeyHandling,UnwantedFeature
 ```bash
 # Wayland users with custom needs
 teams-for-linux --enable-features=MyFeature,WebRTCPipeWireCapturer \
-                --disable-features=HardwareMediaKeyHandling,OtherFeature
+                --disable-features=HardwareMediaKeyHandling,UsePortalAccentColor,OtherFeature
 ```
 
 ### Incoming Call Command

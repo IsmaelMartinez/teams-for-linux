@@ -53,7 +53,7 @@ describe('screen-sharing script injection target (#2979)', () => {
 describe('screen-share preview port routing (#2979)', () => {
 	const source = readFileSync(INDEX_PATH, 'utf8');
 	const handler = source.match(
-		/ipcMain\.on\("screen-sharing-started",\s*\((\w*)\)\s*=>\s*\{([\s\S]*?)\n  \}\);/,
+		/ipcMain\.on\("screen-sharing-started",\s*\((\w*)\)\s*=>\s*\{([\s\S]*?)\n {2}\}\);/,
 	);
 
 	it('posts the relay port to the renderer that started the share', () => {

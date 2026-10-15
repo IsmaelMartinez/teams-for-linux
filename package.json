@@ -1,6 +1,6 @@
 {
   "name": "teams-for-linux",
-  "version": "2.22.0",
+  "version": "2.25.0",
   "main": "app/index.js",
   "description": "Unofficial client for Microsoft Teams for Linux",
   "homepage": "https://github.com/IsmaelMartinez/teams-for-linux",
@@ -20,7 +20,7 @@
   "license": "GPL-3.0-or-later",
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
-    "lint": "eslint **/*.js",
+    "lint": "eslint .",
     "test:unit": "node --test 'tests/unit/*.test.js'",
     "test:e2e": "playwright test",
     "test:authenticated": "playwright test --config playwright.authenticated.config.js",
@@ -58,17 +58,17 @@
     "electron-store": "11.0.2",
     "electron-updater": "^6.8.9",
     "electron-window-state": "5.0.3",
-    "mqtt": "^5.15.2",
-    "yargs": "^18.1.0"
+    "mqtt": "^5.16.0",
+    "yargs": "^18.2.0"
   },
   "devDependencies": {
     "@electron/fuses": "^2.1.3",
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "1.63.0",
-    "electron": "44.4.3",
+    "@playwright/test": "1.64.0",
+    "electron": "44.7.2",
     "electron-builder": "26.15.7",
-    "eslint": "^10.10.0",
-    "globals": "^17.12.0",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
     "http-server": "^14.1.1",
     "xml2js": "^0.6.2"
   },
@@ -77,6 +77,11 @@
   },
   "build": {
     "appId": "teams-for-linux",
+    "files": [
+      "app/**/*",
+      "!app/customBackground/example${/*}",
+      "LICENSE.md"
+    ],
     "asarUnpack": [
       "node_modules/spellchecker/vendor/hunspell_dictionaries"
     ],
@@ -139,6 +144,19 @@
       ]
     },
     "deb": {
+      "depends": [
+        "libgtk-3-0",
+        "libnotify4",
+        "libnss3",
+        "libxss1",
+        "libxtst6",
+        "xdg-utils",
+        "libatspi2.0-0",
+        "libuuid1",
+        "libsecret-1-0",
+        "libgbm1",
+        "libasound2t64 | libasound2"
+      ],
       "recommends": [
         "libappindicator3-1",
         "fido2-tools"

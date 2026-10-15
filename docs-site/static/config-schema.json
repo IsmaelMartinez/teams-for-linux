@@ -1,8 +1,25 @@
 {
   "$generatedBy": "scripts/generateConfigDocs.js",
   "source": "app/config/options.js",
-  "optionCount": 84,
+  "optionCount": 85,
   "options": [
+    {
+      "name": "dbusControl",
+      "type": "object",
+      "default": {
+        "enabled": false
+      },
+      "description": "Opt-in Linux user session D-Bus control and observed Teams state. Requires restart.",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable the Linux D-Bus service and its local status monitors."
+        }
+      ]
+    },
     {
       "name": "appActiveCheckInterval",
       "type": "number",
@@ -81,7 +98,7 @@
       "name": "appTitle",
       "type": "string",
       "default": "Microsoft Teams",
-      "description": "A text to be suffixed with page title",
+      "description": "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip",
       "applyMode": "restart",
       "deprecated": "use app.title instead"
     },
@@ -166,7 +183,7 @@
       "name": "customCSSName",
       "type": "string",
       "default": "",
-      "description": "custom CSS name for the packaged available css files. Currently those are: \"compactDark\", \"compactLight\", \"tweaks\", \"condensedDark\" and \"condensedLight\"",
+      "description": "Packaged CSS theme name (compactDark, compactLight, tweaks, condensedDark, condensedLight), or custom:<id> for a discovered user theme. An empty name uses customCSSLocation when configured.",
       "applyMode": "restart",
       "deprecated": "use appearance.cssName instead"
     },
@@ -929,6 +946,9 @@
           "microphoneControl": "microphone/control",
           "screenSharing": "screen-sharing"
         },
+        "incomingCallCaller": {
+          "enabled": false
+        },
         "meetingStartDetection": {
           "enabled": false,
           "patterns": [
@@ -1012,6 +1032,12 @@
           "type": "string",
           "default": "Teams for Linux",
           "description": "Device name shown in Home Assistant."
+        },
+        {
+          "path": "incomingCallCaller.enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Publish the ringing call's caller (name, number, call queue) as JSON to the incoming-call/caller topic. Off by default because it sends callers' personal details to the broker."
         },
         {
           "path": "meetingStartDetection.enabled",
@@ -1380,7 +1406,7 @@
           "path": "cssName",
           "type": "string",
           "default": "",
-          "description": "custom CSS name for the packaged available css files. Currently those are: \"compactDark\", \"compactLight\", \"tweaks\", \"condensedDark\" and \"condensedLight\""
+          "description": "Packaged CSS theme name (compactDark, compactLight, tweaks, condensedDark, condensedLight), or custom:<id> for a discovered user theme. An empty name uses appearance.cssLocation when configured."
         },
         {
           "path": "cssLocation",
@@ -1449,7 +1475,7 @@
           "path": "title",
           "type": "string",
           "default": "Microsoft Teams",
-          "description": "A text to be suffixed with page title"
+          "description": "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip"
         },
         {
           "path": "url",

@@ -469,9 +469,9 @@ class DownloadManager {
    *
    * The title flow on Linux looks like:
    *   1. Teams DOM updates `document.title` -> Chromium fires
-   *      `page-title-updated`, which we don't preventDefault on, so the
-   *      window title gets set to the new page title (overwriting our
-   *      prefix).
+   *      `page-title-updated`, and the window title gets set to the new page title
+   *      (suffixed with a custom app.title, if set), overwriting our
+   *      prefix.
    *   2. The next `DownloadItem.on('updated')` fires (~500ms cadence) and
    *      re-applies the prefix here.
    *

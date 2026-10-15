@@ -28,6 +28,18 @@
 const defaults = require("./defaults");
 
 module.exports = {
+      dbusControl: {
+        default: { enabled: false },
+        describe: "Opt-in Linux user session D-Bus control and observed Teams state. Requires restart.",
+        type: "object",
+        fields: {
+          enabled: {
+            type: "boolean",
+            describe: "Enable the Linux D-Bus service and its local status monitors.",
+          },
+        },
+        applyMode: "restart",
+      },
       appActiveCheckInterval: {
         default: 2,
         describe:
@@ -96,7 +108,7 @@ module.exports = {
       },
       appTitle: {
         default: "Microsoft Teams",
-        describe: "A text to be suffixed with page title",
+        describe: "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip",
         type: "string",
         applyMode: "restart",
         deprecated: "use app.title instead",
@@ -173,7 +185,7 @@ module.exports = {
       customCSSName: {
         default: "",
         describe:
-          'custom CSS name for the packaged available css files. Currently those are: "compactDark", "compactLight", "tweaks", "condensedDark" and "condensedLight" ',
+          'Packaged CSS theme name (compactDark, compactLight, tweaks, condensedDark, condensedLight), or custom:<id> for a discovered user theme. An empty name uses customCSSLocation when configured.',
         type: "string",
         applyMode: "restart",
         deprecated: "use appearance.cssName instead",
@@ -855,6 +867,9 @@ module.exports = {
             microphoneControl: "microphone/control",
             screenSharing: "screen-sharing",
           },
+          incomingCallCaller: {
+            enabled: false,
+          },
           meetingStartDetection: {
             enabled: false,
             patterns: ["meeting started", "started the meeting"],
@@ -917,6 +932,11 @@ module.exports = {
           "homeAssistant.deviceName": {
             type: "string",
             describe: "Device name shown in Home Assistant.",
+          },
+          "incomingCallCaller.enabled": {
+            type: "boolean",
+            describe:
+              "Publish the ringing call's caller (name, number, call queue) as JSON to the incoming-call/caller topic. Off by default because it sends callers' personal details to the broker.",
           },
           "meetingStartDetection.enabled": {
             type: "boolean",
@@ -1242,7 +1262,7 @@ module.exports = {
         fields: {
           "cssName": {
             type: "string",
-            describe: "custom CSS name for the packaged available css files. Currently those are: \"compactDark\", \"compactLight\", \"tweaks\", \"condensedDark\" and \"condensedLight\" ",
+            describe: "Packaged CSS theme name (compactDark, compactLight, tweaks, condensedDark, condensedLight), or custom:<id> for a discovered user theme. An empty name uses appearance.cssLocation when configured.",
           },
           "cssLocation": {
             type: "string",
@@ -1300,7 +1320,7 @@ module.exports = {
         fields: {
           "title": {
             type: "string",
-            describe: "A text to be suffixed with page title",
+            describe: "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip",
           },
           "url": {
             type: "string",

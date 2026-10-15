@@ -101,7 +101,12 @@ globalThis.electronAPI = {
   sendScreenSharingStopped: () => ipcRenderer.send("screen-sharing-stopped"),
   stopSharing: () => ipcRenderer.send("stop-screen-sharing-from-thumbnail"),
   sendSelectSource: () => ipcRenderer.send("select-source"),
-  onSelectSource: (callback) => ipcRenderer.once("select-source", callback),
+  // Listener helpers return nothing and drop Electron's event: both the
+  // return value of ipcRenderer.on/once and event.sender are the raw
+  // ipcRenderer, which this non-isolated page must never see (GHSA-3vg9-cwq9-p773).
+  onSelectSource: (callback) => {
+    ipcRenderer.once("select-source", (_event, ...args) => callback(...args));
+  },
   send: (channel, ...args) => {
     return ipcRenderer.send(channel, ...args);
   },
@@ -144,7 +149,7 @@ globalThis.electronAPI = {
       console.error('Invalid callback for theme changed');
       return;
     }
-    return ipcRenderer.on("system-theme-changed", callback);
+    ipcRenderer.on("system-theme-changed", (_event, ...args) => callback(...args));
   },
 
   setUserStatus: (data) => {
@@ -175,7 +180,7 @@ globalThis.electronAPI = {
       console.error('Invalid callback for navigation state changed');
       return;
     }
-    return ipcRenderer.on("navigation-state-changed", callback);
+    ipcRenderer.on("navigation-state-changed", (_event, ...args) => callback(...args));
   },
 
   graphApi: {
