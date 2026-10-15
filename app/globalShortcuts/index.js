@@ -64,8 +64,10 @@ function sendKeyboardEventToWindow(window, accelerator) {
     });
 
     console.debug(`[GLOBAL_SHORTCUTS] Forwarded keyboard event: ${accelerator}`);
+    return true;
   } catch (err) {
     console.error(`[GLOBAL_SHORTCUTS] Error sending keyboard event for ${accelerator}: ${err.message}`);
+    return false;
   }
 }
 

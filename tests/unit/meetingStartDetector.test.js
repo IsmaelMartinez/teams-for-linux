@@ -2,6 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
+const { EventEmitter } = require('node:events');
 
 // The module exports a singleton whose DOM interaction only starts inside
 // init(); requiring it in plain Node is safe. These tests cover the pure
@@ -49,5 +50,53 @@ describe('MeetingStartDetector.matchesPatterns', () => {
 		assert.strictEqual(detector.matchesPatterns(''), false);
 		assert.strictEqual(detector.matchesPatterns(null), false);
 		assert.strictEqual(detector.matchesPatterns(42), false);
+	});
+});
+
+function withPlatform(platform, run) {
+	const descriptor = Object.getOwnPropertyDescriptor(process, 'platform');
+	Object.defineProperty(process, 'platform', { ...descriptor, value: platform });
+	try { run(); } finally { Object.defineProperty(process, 'platform', descriptor); }
+}
+
+function initDetector(platform, mqttEnabled, detectionEnabled, dbusEnabled = false) {
+	const detectorPath = require.resolve('../../app/browser/tools/meetingStartDetector');
+	const activityHubPath = require.resolve('../../app/browser/tools/activityHub');
+	const originalHub = require.cache[activityHubPath];
+	const hub = new EventEmitter();
+	const domEvents = [];
+	const oldDocument = globalThis.document;
+	globalThis.document = {
+		readyState: 'loading',
+		addEventListener: (name, listener) => domEvents.push([name, listener]),
+	};
+	require.cache[activityHubPath] = { id: activityHubPath, exports: hub, loaded: true };
+	delete require.cache[detectorPath];
+	const detector = require(detectorPath);
+	withPlatform(platform, () => detector.init({
+		mqtt: { enabled: mqttEnabled, meetingStartDetection: { enabled: detectionEnabled } },
+		dbusControl: { enabled: dbusEnabled },
+	}, { send() {} }));
+	const result = { detector, hub, domEvents };
+	delete require.cache[detectorPath];
+	if (originalHub) require.cache[activityHubPath] = originalHub;
+	else delete require.cache[activityHubPath];
+	if (oldDocument === undefined) delete globalThis.document;
+	else globalThis.document = oldDocument;
+	return result;
+}
+
+describe('MeetingStartDetector transport enablement', () => {
+	it('starts on Linux when meeting detection is enabled and MQTT is disabled', () => {
+		const { hub, domEvents } = initDetector('linux', false, true, true);
+		assert.equal(hub.listenerCount('meeting-started'), 1);
+		assert.equal(domEvents[0][0], 'DOMContentLoaded');
+	});
+
+	it('keeps the detection config gate and non-Linux MQTT gate', () => {
+		assert.equal(initDetector('linux', false, false, true).hub.listenerCount('meeting-started'), 0);
+		assert.equal(initDetector('linux', false, true).hub.listenerCount('meeting-started'), 0);
+		assert.equal(initDetector('darwin', false, true, true).hub.listenerCount('meeting-started'), 0);
+		assert.equal(initDetector('darwin', true, true).hub.listenerCount('meeting-started'), 1);
 	});
 });

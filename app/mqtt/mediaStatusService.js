@@ -11,6 +11,9 @@ const { getMediaTopics } = require('./mediaTopics');
  * - {topicPrefix}/camera - Camera on/off state (not yet wired)
  * - {topicPrefix}/microphone - Microphone state: 'speaking' | 'silent' | 'muted' | 'off'
  * - {topicPrefix}/in-call - Active call state
+ * - {topicPrefix}/incoming-call - Whether a call is ringing
+ * - {topicPrefix}/incoming-call/caller - JSON details of the ringing call's
+ *   caller (#3019), not retained, and only with mqtt.incomingCallCaller.enabled
  * - {topicPrefix}/screen-sharing - Screen sharing active state
  * - {topicPrefix}/meeting-started - Scheduled-meeting-start pulse (#2587):
  *   'true' on detection, back to 'false' on whichever comes first: joining
@@ -19,7 +22,9 @@ const { getMediaTopics } = require('./mediaTopics');
 class MQTTMediaStatusService {
 	#mqttClient;
 	#topicPrefix;
+	#clientId;
 	#mediaTopics;
+	#incomingCallCallerEnabled;
 	#lastMicrophoneState = null;
 	#lastMicrophoneControlState = null;
 	#meetingStartedResetMs;
@@ -28,7 +33,11 @@ class MQTTMediaStatusService {
 	constructor(mqttClient, config) {
 		this.#mqttClient = mqttClient;
 		this.#topicPrefix = config.mqtt.topicPrefix;
+		this.#clientId = config.mqtt.clientId;
 		this.#mediaTopics = getMediaTopics(config.mqtt);
+		// Opt-in: the caller's name and number are personal details that the
+		// other topics never carry.
+		this.#incomingCallCallerEnabled = config.mqtt.incomingCallCaller?.enabled === true;
 		this.#meetingStartedResetMs =
 			(config.mqtt.meetingStartDetection?.resetSeconds ?? 10) * 1000;
 	}
@@ -74,12 +83,50 @@ class MQTTMediaStatusService {
 		await this.#clearMeetingStarted('Meeting joined');
 	}
 
-	async #handleIncomingCallStarted() {
+	// The caller goes out before 'true' so that anything reacting to the ring
+	// has it already. A call-queue toast in conference mode arrives twice while
+	// ringing, the second with the name and queue filled in, and each is
+	// published.
+	async #handleIncomingCallStarted(details) {
+		if (this.#incomingCallCallerEnabled) {
+			await this.#publishIncomingCallCaller(details);
+		}
 		await this.#publishBoolean(this.#mediaTopics.incomingCall, 'true', 'Incoming call started');
 	}
 
+	// Nothing to clear on the caller topic: it is never retained.
 	async #handleIncomingCallEnded() {
 		await this.#publishBoolean(this.#mediaTopics.incomingCall, 'false', 'Incoming call ended');
+	}
+
+	/**
+	 * Only the known fields are copied, so nothing else the renderer sends
+	 * (the caller's picture, say) can reach the broker. The timestamp (when
+	 * this was published) and clientId are carried as on the status topic.
+	 *
+	 * Unlike the other media topics the caller is not retained. It describes a
+	 * call that is ringing now: if the app quits or the broker connection drops
+	 * mid-ring, a retained caller would stay behind with nothing left to clear
+	 * it, and while the call is still ringing when the app comes back Teams
+	 * raises the toast again and the caller is published afresh. Its topic and
+	 * payload are kept out of the log, since it holds names and numbers.
+	 */
+	async #publishIncomingCallCaller(details) {
+		const caller = {};
+		for (const key of ['scenario', 'number', 'name', 'queue', 'contact', 'callId']) {
+			if (details?.[key] !== undefined && details[key] !== null) {
+				caller[key] = details[key];
+			}
+		}
+		caller.timestamp = new Date().toISOString();
+		caller.clientId = this.#clientId;
+		try {
+			const topic = `${this.#topicPrefix}/${this.#mediaTopics.incomingCallCaller}`;
+			await this.#mqttClient.publish(topic, JSON.stringify(caller), { retain: false, redactLog: true });
+			console.debug('[MQTTMediaStatusService] Incoming call caller published');
+		} catch (error) {
+			console.error('[MQTTMediaStatusService] Failed to publish the incoming call caller:', { message: error.message });
+		}
 	}
 
 	/**

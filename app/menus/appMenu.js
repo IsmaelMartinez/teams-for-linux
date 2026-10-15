@@ -1,5 +1,6 @@
 const { shell } = require("electron");
 const buildProfilesMenu = require("./profilesMenu");
+const buildThemesMenu = require("./themesMenu");
 
 exports = module.exports = (Menus) => ({
   label: "Teams for Linux",
@@ -104,6 +105,8 @@ function getSettingsMenu(Menus) {
   return {
     label: "Settings",
     submenu: [
+      buildThemesMenu(Menus),
+      { type: "separator" },
       {
         label: "Save",
         click: () => Menus.saveSettings(),
@@ -129,6 +132,17 @@ function getSettingsMenu(Menus) {
               failed: true,
             }),
           ),
+      },
+      // Most config options are restart-only, so the file is the interface.
+      // Its directory differs per packaging format (deb, snap, flatpak,
+      // source), which is not something anyone should have to look up.
+      {
+        label: "Open config file",
+        click: () => Menus.openConfigFile(),
+      },
+      {
+        label: "Open config folder",
+        click: () => Menus.openConfigFolder(),
       },
     ],
   };

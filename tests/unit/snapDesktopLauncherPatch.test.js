@@ -13,8 +13,8 @@ const {
 } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join, relative, resolve, sep } = require('node:path');
-
 const { Arch } = require('builder-util');
+
 const {
 	patchScript,
 	patchSnapDesktopLauncher,
@@ -22,18 +22,28 @@ const {
 	ORIGINAL_BLOCK,
 	PATCHED_BLOCK,
 	PATCH_MARKER,
+	ORIGINAL_FONTCONFIG_BLOCK,
+	PATCHED_FONTCONFIG_BLOCK,
+	FONTCONFIG_PATCH_MARKER,
 } = require('../../scripts/patchSnapDesktopLauncher');
 
-// Regression guard for #2946. electron-builder's core22 snap launcher runs
-// desktop-common.sh under `set -e` with an unguarded `rmdir`, so the snap exits
-// 1 with completely empty output. scripts/patchSnapDesktopLauncher.js fixes the
-// script at build time; these tests exercise the real launcher, not a fixture.
+// Regression guard for #2946 and #3092. electron-builder's core22 snap launcher runs
+// desktop-common.sh with:
+// 1. An unguarded `rmdir`, which crashes if the XDG dir is non-empty (#2946).
+// 2. An unisolated fontconfig cache, which causes square fonts on modern distros (#3092).
+// scripts/patchSnapDesktopLauncher.js fixes both at build time.
 
 // A build may already have patched the copy in node_modules, so restore the
-// pristine block first. String replace, first occurrence only, no regex.
+// pristine blocks first. String replace, first occurrence only, no regex.
 function unpatchedSource() {
-	const source = readFileSync(BUNDLED_TEMPLATE_SCRIPT, 'utf8');
-	return source.includes(PATCH_MARKER) ? source.replace(PATCHED_BLOCK, ORIGINAL_BLOCK) : source;
+	let source = readFileSync(BUNDLED_TEMPLATE_SCRIPT, 'utf8');
+	if (source.includes(PATCH_MARKER)) {
+		source = source.replace(PATCHED_BLOCK, ORIGINAL_BLOCK);
+	}
+	if (source.includes(FONTCONFIG_PATCH_MARKER)) {
+		source = source.replace(PATCHED_FONTCONFIG_BLOCK, ORIGINAL_FONTCONFIG_BLOCK);
+	}
+	return source;
 }
 
 function makeTempDir() {
@@ -147,6 +157,82 @@ function runXdgLinksBlock({ scriptPath, placement, emptyXdgDir = false }) {
 	}
 }
 
+// Slice the make_user_fontconfig definition through the update block
+function extractFontconfigBlock(source) {
+	const start = source.indexOf('function make_user_fontconfig');
+	assert.ok(start >= 0, 'launcher no longer has make_user_fontconfig');
+	const end = source.indexOf('\n# Build mime.cache', start);
+	assert.ok(end > start, 'launcher no longer has the mime.cache section after it');
+	return source.slice(start, end);
+}
+
+/**
+ * Runs the fontconfig initialization block under `bash -e` against a throwaway home.
+ *
+ * @param {object} options
+ * @param {string} options.scriptPath desktop-common.sh to take the block from.
+ * @param {boolean} options.needUpdate value for SNAP_DESKTOP_COMPONENTS_NEED_UPDATE.
+ */
+function runFontconfigBlock({ scriptPath, needUpdate }) {
+	const root = makeTempDir();
+	try {
+		const realHome = join(root, 'home', 'user');
+		const snapUserCommon = join(realHome, 'snap', 'teams-for-linux', 'common');
+		const snapUserData = join(realHome, 'snap', 'teams-for-linux', '2609');
+		const xdgDataHome = join(snapUserData, '.local', 'share');
+		const xdgConfigHome = join(snapUserData, '.config');
+		const xdgCacheHome = join(snapUserCommon, '.cache');
+		const snapCacheFontconfig = join(xdgCacheHome, 'fontconfig');
+		const hostCacheFontconfig = join(realHome, '.cache', 'fontconfig');
+		const snapThemes = join(root, 'snap', 'data-dir', 'themes');
+
+		mkdirSync(snapCacheFontconfig, { recursive: true });
+		mkdirSync(hostCacheFontconfig, { recursive: true });
+		mkdirSync(snapThemes, { recursive: true });
+		mkdirSync(xdgDataHome, { recursive: true });
+		mkdirSync(xdgConfigHome, { recursive: true });
+
+		writeFileSync(join(snapCacheFontconfig, 'stale.cache-7'), 'stale snap cache');
+		writeFileSync(join(hostCacheFontconfig, 'host.cache-11'), 'host cache data');
+
+		const fragment = join(root, 'fragment.sh');
+		writeFileSync(
+			fragment,
+			[
+				'#!/bin/bash -e',
+				`REALHOME="${realHome}"`,
+				`XDG_DATA_HOME="${xdgDataHome}"`,
+				`XDG_CONFIG_HOME="${xdgConfigHome}"`,
+				`XDG_CACHE_HOME="${xdgCacheHome}"`,
+				`SNAP_USER_DATA="${snapUserData}"`,
+				`SNAP="${join(root, 'snap')}"`,
+				`SNAP_DESKTOP_COMPONENTS_NEED_UPDATE="${needUpdate}"`,
+				'data_dirs_array=()',
+				extractFontconfigBlock(readFileSync(scriptPath, 'utf8')),
+				'echo REACHED_END',
+				'',
+			].join('\n'),
+			{ mode: 0o755 },
+		);
+
+		const result = spawnSync('bash', ['-e', fragment], { encoding: 'utf8' });
+		assert.strictEqual(result.status, 0, `fragment failed with: ${result.stderr}`);
+
+		const fontConfPath = join(xdgConfigHome, 'fontconfig', 'fonts.conf');
+		const generatedFontsConf = lstatSync(fontConfPath, { throwIfNoEntry: false })
+			? readFileSync(fontConfPath, 'utf8')
+			: null;
+
+		return {
+			snapCacheExists: lstatSync(snapCacheFontconfig, { throwIfNoEntry: false }) !== undefined,
+			hostCacheExists: lstatSync(join(hostCacheFontconfig, 'host.cache-11'), { throwIfNoEntry: false }) !== undefined,
+			generatedFontsConf,
+		};
+	} finally {
+		rmSync(root, { recursive: true, force: true });
+	}
+}
+
 describe('snap desktop launcher patch (#2946)', () => {
 	it('electron-builder still ships the unguarded rmdir block the patch targets', () => {
 		assert.ok(
@@ -237,6 +323,7 @@ describe('snap desktop launcher patch (#2946)', () => {
 				'arm64 must not load the downloaded-template code path',
 			);
 			assert.ok(readFileSync(BUNDLED_TEMPLATE_SCRIPT, 'utf8').includes(PATCH_MARKER));
+			assert.ok(readFileSync(BUNDLED_TEMPLATE_SCRIPT, 'utf8').includes(FONTCONFIG_PATCH_MARKER));
 		} finally {
 			writeFileSync(BUNDLED_TEMPLATE_SCRIPT, original, { mode: 0o755 });
 		}
@@ -257,6 +344,58 @@ describe('snap desktop launcher patch (#2946)', () => {
 			await patchScript(file);
 			const after = runXdgLinksBlock({ scriptPath: file, placement: 'escape', emptyXdgDir: true });
 			assert.strictEqual(after.xdgDirIsRealDirectory, true);
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
+	});
+
+	it('patched: make_user_fontconfig isolates font cache and clears stale cache on update (#3092)', async () => {
+		const dir = makeTempDir();
+		try {
+			const file = writeScript(dir, unpatchedSource());
+			const initialContent = readFileSync(file, 'utf8');
+
+			assert.ok(
+				initialContent.includes('echo "  <cachedir>$REALHOME/.cache/fontconfig</cachedir>"'),
+				'unpatched script must contain host fontconfig cachedir reference',
+			);
+
+			const unpatchedRun = runFontconfigBlock({ scriptPath: file, needUpdate: true });
+			assert.strictEqual(unpatchedRun.snapCacheExists, true, 'unpatched launcher does not clear snap cache');
+			assert.strictEqual(unpatchedRun.hostCacheExists, true);
+			assert.ok(
+				unpatchedRun.generatedFontsConf?.includes('/.cache/fontconfig</cachedir>'),
+				'unpatched fonts.conf includes host cache',
+			);
+
+			const modified = await patchScript(file);
+			assert.strictEqual(modified, true);
+
+			const patchedContent = readFileSync(file, 'utf8');
+			assert.ok(patchedContent.includes(FONTCONFIG_PATCH_MARKER));
+			assert.ok(!patchedContent.includes('echo "  <cachedir>$REALHOME/.cache/fontconfig</cachedir>"'));
+			assert.ok(patchedContent.includes("echo '  <cachedir prefix=\"xdg\">fontconfig</cachedir>'"));
+			assert.ok(patchedContent.includes('rm -rf "$XDG_CACHE_HOME/fontconfig"'));
+
+			const updateRun = runFontconfigBlock({ scriptPath: file, needUpdate: true });
+			assert.strictEqual(updateRun.snapCacheExists, false, 'update must purge stale snap font cache');
+			assert.strictEqual(updateRun.hostCacheExists, true, 'host cache must remain untouched');
+			assert.ok(
+				!updateRun.generatedFontsConf?.includes('/.cache/fontconfig</cachedir>'),
+				'patched fonts.conf must not reference host cache',
+			);
+			assert.ok(
+				updateRun.generatedFontsConf?.includes('<cachedir prefix="xdg">fontconfig</cachedir>'),
+				'patched fonts.conf must include isolated xdg cache',
+			);
+
+			const normalRun = runFontconfigBlock({ scriptPath: file, needUpdate: false });
+			assert.strictEqual(normalRun.snapCacheExists, true, 'normal launch must preserve valid snap font cache');
+			assert.strictEqual(normalRun.hostCacheExists, true, 'host cache must remain untouched');
+
+			const secondRun = await patchScript(file);
+			assert.strictEqual(secondRun, false);
+			assert.strictEqual(readFileSync(file, 'utf8'), patchedContent);
 		} finally {
 			rmSync(dir, { recursive: true, force: true });
 		}

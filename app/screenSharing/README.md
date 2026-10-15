@@ -8,7 +8,7 @@ Provides native screen/window selection and preview window management for Teams 
 - **index.js** - StreamSelector for source selection UI
 - **browser.js** - Renderer process UI logic
 - **preload.js** - Context bridge for IPC
-- **injectedScreenSharing.js** - Client-side Teams DOM integration
+- **injectedScreenSharing.js** - Client-side Teams DOM integration, executed by `mainAppWindow` into the root window and into every multi-account profile view on `did-finish-load` (#2979)
 
 ## ScreenSharingService Class
 

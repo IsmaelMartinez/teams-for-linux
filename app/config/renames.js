@@ -31,14 +31,12 @@ const RENAMES = [
   },
   { flat: "clearStorageData", nested: "storage.clearData" },
 
-  // Batch 2 (2.18.0). Every remaining rename whose target namespace is
+  // Batch 2 (2.21.0). Every remaining rename whose target namespace is
   // brand new, taken in one pass because they share the batch 1 mechanics
   // exactly. The 18 renames that land in the already-shipped network, auth,
-  // idleDetection and notifications namespaces are deliberately NOT here:
-  // yargs replaces an object option wholesale rather than deep merging it,
-  // so a user moving one leaf into an existing namespace loses the declared
-  // defaults of its siblings. That is gate A in issue #2842 and must land
-  // first.
+  // idleDetection and notifications namespaces are not here yet: they were
+  // held on gate A in issue #2842 (yargs replacing an object option
+  // wholesale), which mergeDefaults.js now fixes (#3011).
   //
   // customBackground
   { flat: "isCustomBackgroundEnabled", nested: "customBackground.enabled" },
@@ -288,6 +286,7 @@ function toNestedConfigFile(configFile, renames = RENAMES) {
 
 module.exports = {
   RENAMES,
+  readPath,
   applyRenamedOptions,
   isOptionSetByUser,
   toNestedConfigFile,

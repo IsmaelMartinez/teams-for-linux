@@ -56,6 +56,7 @@ The MQTT module is configured through the main application configuration. Add th
 - **homeAssistant.enabled**: `boolean` - Enable Home Assistant MQTT auto-discovery (default: false)
 - **homeAssistant.discoveryPrefix**: `string` - HA discovery topic prefix (default: "homeassistant")
 - **homeAssistant.deviceName**: `string` - Device name shown in Home Assistant (default: "Teams for Linux")
+- **incomingCallCaller.enabled**: `boolean` - Publish the ringing call's caller (name, number, call queue) as JSON to `{topicPrefix}/incoming-call/caller` (default: false, since it sends callers' personal details to the broker — see issue #3019)
 - **meetingStartDetection.enabled**: `boolean` - Enable detection of a scheduled meeting starting, published as a pulse to `{topicPrefix}/meeting-started` (default: false, experimental — see issue #2587). Both the primary and DOM-fallback detection paths are described in [app/browser/tools/README.md](../browser/tools/README.md); an earlier calendar-polling design was dropped in favor of this approach and lives in [git history](https://github.com/IsmaelMartinez/teams-for-linux/commits/main/docs-site/docs/development/plan/mqtt-incoming-call-plan.md) under `docs-site/docs/development/plan/mqtt-incoming-call-plan.md`.
 - **meetingStartDetection.patterns**: `string[]` - Case-insensitive regular expressions for the DOM fallback path (default: `["meeting started", "started the meeting"]`; English-only — override for other Teams UI languages). Primary detection uses Teams' internal command stream and ignores these.
 - **meetingStartDetection.resetSeconds**: `number` - Seconds before the meeting-started topic auto-resets to `false` (default: 10)
@@ -113,6 +114,7 @@ Command messages should be sent as JSON with the following structure:
 - `toggle-mute` - Toggle microphone mute (Ctrl+Shift+M)
 - `toggle-video` - Toggle video on/off (Ctrl+Shift+O)
 - `toggle-hand-raise` - Toggle hand raise in meeting (Ctrl+Shift+K)
+- `leave` - Leave/hang up the active call (Ctrl+Shift+H)
 
 #### Command Security
 
@@ -134,6 +136,9 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 
 
 # Toggle hand raise
 mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-hand-raise"}' -q 1
+
+# Leave call
+mosquitto_pub -h localhost -t "teams/command" -m '{"action":"leave"}' -q 1
 ```
 
 ## Home Assistant Auto-Discovery
@@ -156,6 +161,7 @@ When `mqtt.homeAssistant.enabled` is `true`, Teams for Linux publishes MQTT disc
 | Teams Toggle Mute | `button` | Toggle microphone mute |
 | Teams Toggle Video | `button` | Toggle camera on/off |
 | Teams Toggle Hand Raise | `button` | Toggle hand raise in meeting |
+| Teams Leave Call | `button` | Leave/hang up the active call |
 
 All entities are grouped under a single **Teams for Linux** device in Home Assistant and respect the `availability_topic` (`{topicPrefix}/connected`) — entities show as unavailable when Teams for Linux is not running.
 

@@ -21,6 +21,7 @@ const ConnectionManager = require("../connectionManager");
 const ssoPasswordPrefill = require("../ssoPasswordPrefill");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
 const deepLinkRouter = require("./deepLinkRouter");
+const { DeferredDeepLink } = require("./deferredDeepLink");
 const os = require("node:os");
 const path = require("node:path");
 const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
@@ -48,6 +49,10 @@ let streamSelector;
 let screenSharingService = null;
 let connectionManager = null;
 let menus = null;
+let browserWindowManager = null;
+// Page title of the profile view currently shown over the root window, or
+// null while Profile 0 is (see setTitleOverride).
+let titleOverride = null;
 
 const isMac = os.platform() === "darwin";
 
@@ -527,6 +532,16 @@ let firstMidCallWorkerSignalAt = 0;
 let reauthPromptShownForCall = false;
 let reauthPromptOpen = false;
 let recoveryQueuedForCallEnd = false;
+// A deep link the SPA declined during a call: the fallback reload would end
+// the call, so the link waits for the call to end, as auth recovery does.
+// Same teardown delay as the queued recovery.
+const CALL_TEARDOWN_DELAY_MS = 5000;
+const deferredDeepLink = new DeferredDeepLink(
+  (url) => openDeepLink(url).catch(() => console.debug('[DEEPLINK] deferred navigation failed')),
+  CALL_TEARDOWN_DELAY_MS
+);
+// Bumped per `openDeepLink` call: after its await, only the newest call may fall back.
+let deepLinkGeneration = 0;
 // A single transient worker UPR must not prompt (#2428); require the worker
 // signals to persist this long into the same call before treating them as a
 // genuine mid-call auth failure.
@@ -713,7 +728,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     }
   }
 
-  const browserWindowManager = new BrowserWindowManager({
+  browserWindowManager = new BrowserWindowManager({
     config: config,
     iconChooser: iconChooser,
     // Lets the startup clear reach every profile partition (#2866).
@@ -748,7 +763,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // Teams renderer to it with a direct MessagePort so a single capture
   // feeds both windows (#2534). One of several listeners on this broadcast
   // channel; see the rationale above.
-  ipcMain.on("screen-sharing-started", () => {
+  ipcMain.on("screen-sharing-started", (event) => {
     if (!window || window.isDestroyed()) return;
     createScreenSharePreviewWindow();
     const previewWindow = screenSharingService.getPreviewWindow();
@@ -758,8 +773,18 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     }
     const postPorts = () => {
       try {
+        // The sharing renderer owns the capture and relays the snapshots, so
+        // the port must go to it, not to the root window: a share started in
+        // a multi-account profile view would otherwise leave the preview with
+        // no frame source and paint black (#2979). postPorts can be deferred
+        // to the preview window's did-finish-load, so the sender may be gone.
+        const sender = event.sender;
+        if (!sender || sender.isDestroyed()) {
+          console.debug("[SCREEN_SHARE_DIAG] Sharing renderer gone before port wiring - skipping");
+          return;
+        }
         const { port1, port2 } = new MessageChannelMain();
-        window.webContents.postMessage("screen-share-port", null, [port1]);
+        sender.postMessage("screen-share-port", null, [port1]);
         previewWindow.webContents.postMessage("screen-share-port", null, [port2]);
         console.debug("[SCREEN_SHARE_DIAG] Posted MessagePort to Teams renderer and preview window");
       } catch (error) {
@@ -809,6 +834,14 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     callActive = false;
     resetMidCallAuthState();
     if (recoveryQueuedForCallEnd) {
+      // Recovery clears the session and reloads at the same deadline; a link
+      // opened alongside it would be replaced mid-load, so recovery wins.
+      deferredDeepLink.cancel();
+    } else if (deferredDeepLink.pending) {
+      console.info('[DEEPLINK] Call ended, opening the deferred link');
+      deferredDeepLink.release();
+    }
+    if (recoveryQueuedForCallEnd) {
       recoveryQueuedForCallEnd = false;
       console.info('[AUTH_RECOVERY] Call ended, running queued recovery');
       // Short delay so the call teardown finishes before the reload
@@ -829,6 +862,9 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     callActive = false;
     resetMidCallAuthState();
     recoveryQueuedForCallEnd = false;
+    // The window moved on: a link still waiting, or released and not yet
+    // opened, would land on top of wherever this navigation went.
+    deferredDeepLink.cancel();
   });
   window.webContents.on('console-message', (event) => {
     maybeScheduleAuthRecovery(event.message, event.sourceId);
@@ -868,13 +904,24 @@ exports.show = function () {
 // "restore" (issue #2647).
 exports.restoreWindow = restoreWindow;
 
+// The tray is created inside Menus during onAppReady; Phase 2's unread
+// aggregator attaches to it afterwards. Null when trayIconEnabled is off.
+exports.getTray = function () {
+  return menus?.tray ?? null;
+};
+
 exports.getWindow = function () {
   return window;
+};
+
+exports.performIncomingCallAction = function (action) {
+  return browserWindowManager?.performIncomingCallAction(action) === true;
 };
 
 exports.bindDisplayMediaHandler = bindDisplayMediaHandler;
 exports.bindWindowOpenHandler = bindWindowOpenHandler;
 exports.injectScreenSharingLogic = injectScreenSharingLogic;
+exports.setTitleOverride = setTitleOverride;
 
 exports.setQuickChatManager = function (quickChatManager) {
   if (menus) {
@@ -916,9 +963,32 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
  * @param {string} url - Deep link URL resolved from the launch argument
  */
 async function openDeepLink(url) {
+  // The newest link wins, whichever way it ends up opening: one held from
+  // earlier must not open over it, and the full navigation below can outlast
+  // the release delay before `did-navigate` would get to cancel it.
+  deferredDeepLink.cancel();
+  const generation = ++deepLinkGeneration;
+
   const routed = await deepLinkRouter.navigateInPage(window, url, config.url);
   if (routed) {
     console.debug("[DEEPLINK] routed in page");
+    const { focused, afterMs } = await deepLinkRouter.focusCompose(window, url, config.url);
+    const outcome = focused ? `focused after ${afterMs} ms` : "not found";
+    console.debug(`[DEEPLINK] compose box ${outcome}`);
+    return;
+  }
+
+  // A released link is not held off by the second-instance cooldown, so a
+  // newer one can arrive during the wait above; it owns the fallback then.
+  if (generation !== deepLinkGeneration) {
+    console.debug("[DEEPLINK] superseded by a newer link, fallback skipped");
+    return;
+  }
+
+  if (callActive) {
+    // Only the URL is kept, never logged: it carries the recipient or meeting.
+    console.info("[DEEPLINK] in-page routing unavailable during a call, deferring to the call end");
+    deferredDeepLink.defer(url);
     return;
   }
 
@@ -995,10 +1065,14 @@ function onDidFinishLoad() {
 
   injectScreenSharingLogic(window.webContents);
 
-  customCSS.onDidFinishLoad(window.webContents, config);
+  customCSS.onDidFinishLoad(window.webContents, config, appConfig.customCSSPath);
   initSystemThemeFollow(config);
 }
 
+// Runs the screen-sharing script (audio stripping, preview relay, stop-button
+// monitoring) in the given Teams webContents. Called for the root window here
+// and for each multi-account profile view by ProfileViewManager, which
+// otherwise shared with Teams' raw constraints (#2979).
 function injectScreenSharingLogic(webContents) {
   const fs = require("node:fs");
   const scriptPath = path.join(
@@ -1052,7 +1126,7 @@ function onDidFrameFinishLoad(
   }
 
   const wf = webFrameMain.fromId(frameProcessId, frameRoutingId);
-  customCSS.onDidFrameFinishLoad(wf, config);
+  customCSS.onDidFrameFinishLoad(wf, config, appConfig.customCSSPath);
 }
 
 function restoreWindow() {
@@ -1063,6 +1137,10 @@ function restoreWindow() {
   }
 
   window.focus();
+  // A second instance has no user activation, so window.focus() alone can be
+  // refused as focus stealing; app.focus() raises the first visible window on
+  // X11 (Wayland may only flash the icon, which is the platform's call).
+  app.focus();
 }
 
 /**
@@ -1331,8 +1409,42 @@ function onNewWindow(details) {
   return secureOpenLink(details);
 }
 
-function onPageTitleUpdated(_event, title) {
+// A custom app.title replaces the trailing "Microsoft Teams" in the window
+// title (or is appended when Teams omits it) so multiple instances can be
+// told apart in taskbars and Alt+Tab (#3035). The default leaves the page
+// title untouched.
+function formatWindowTitle(title) {
+  const defaultTitle = "Microsoft Teams";
+  if (!config.appTitle || config.appTitle === defaultTitle) return title;
+  return title.endsWith(defaultTitle)
+    ? title.slice(0, -defaultTitle.length) + config.appTitle
+    : `${title} - ${config.appTitle}`;
+}
+
+function onPageTitleUpdated(event, title) {
   window.webContents.send("page-title", title);
+  // While another profile's view is shown its title owns the window, so
+  // Profile 0's background updates must not replace it (#3068).
+  if (titleOverride !== null) {
+    event.preventDefault();
+    return;
+  }
+  // The default app.title leaves Electron mirroring document.title.
+  const windowTitle = formatWindowTitle(title);
+  if (windowTitle !== title) {
+    event.preventDefault();
+    window.setTitle(windowTitle);
+  }
+}
+
+// Multi-account: ProfileViewManager passes the active profile view's page
+// title, or null when Profile 0 (the root webContents) is shown again. A
+// null while Profile 0 already owns the title leaves it alone.
+function setTitleOverride(title) {
+  if (title === null && titleOverride === null) return;
+  titleOverride = title;
+  if (!window || window.isDestroyed()) return;
+  window.setTitle(formatWindowTitle(title ?? window.webContents.getTitle()));
 }
 
 function onNavigationChanged() {
@@ -1485,7 +1597,18 @@ function secureOpenLink(details) {
 
 function openInBrowser(details) {
   if (config.defaultURLHandler.trim() === "") {
-    shell.openExternal(details.url);
+    // A scheme with no handling app rejects; uncaught, that reaches the
+    // process-wide unhandledRejection handler and exits the app.
+    // Only the scheme is logged: the OS error message can echo the URL.
+    shell.openExternal(details.url).catch(() => {
+      let scheme = "unparseable";
+      try {
+        scheme = new URL(details.url).protocol;
+      } catch {
+        // keep "unparseable"
+      }
+      console.error("[LINK] Could not open link externally", { scheme });
+    });
   } else {
     execFile(
       config.defaultURLHandler.trim(),

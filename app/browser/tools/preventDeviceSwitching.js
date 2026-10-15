@@ -23,7 +23,7 @@ class PreventDeviceSwitching {
 
         // Suppress ondevicechange property setter
         Object.defineProperty(navigator.mediaDevices, "ondevicechange", {
-          set(fn) {
+          set(_fn) {
             console.debug("[PreventDeviceSwitching] Suppressed ondevicechange setter");
           },
           get() {

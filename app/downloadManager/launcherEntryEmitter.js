@@ -63,7 +63,10 @@ function computeDesktopUri(appName, env) {
   if (env.FLATPAK_ID) {
     return `application://${env.FLATPAK_ID}.desktop`;
   }
-  return `application://${appName}.desktop`;
+  // Electron records the entry it was given (app.setDesktopName) in
+  // CHROME_DESKTOP. That is the file the host installed, whereas app.name is
+  // the display name notifications carry ("Teams for Linux" since #2898).
+  return `application://${env.CHROME_DESKTOP || `${appName}.desktop`}`;
 }
 
 let desktopUri = null;

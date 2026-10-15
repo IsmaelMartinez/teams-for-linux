@@ -14,18 +14,7 @@ const { ipcRenderer } = require("electron");
 // as a Blob with no path and is unaffected.
 try {
   const { webUtils } = require("electron");
-  const TEAMS_HOSTS = ["teams.cloud.microsoft", "teams.microsoft.com", "teams.live.com"];
-  const isTeamsHost = (hostname) => {
-    if (hostname.endsWith(".mcas.ms")) {
-      hostname = hostname.slice(0, -".mcas.ms".length);
-    }
-    return TEAMS_HOSTS.some(
-      (domain) =>
-        hostname === domain ||
-        (hostname.endsWith("." + domain) &&
-          !hostname.slice(0, -(domain.length + 1)).includes(".")),
-    );
-  };
+  const { isTeamsHost } = require("../helpers/teamsHosts");
   // Restore the non-standard `File.path` on every File in a FileList, in place.
   // No-op for blob-backed files (screenshots) since webUtils only resolves a
   // path for files that originated from the OS file list; those are left as-is.
@@ -112,7 +101,12 @@ globalThis.electronAPI = {
   sendScreenSharingStopped: () => ipcRenderer.send("screen-sharing-stopped"),
   stopSharing: () => ipcRenderer.send("stop-screen-sharing-from-thumbnail"),
   sendSelectSource: () => ipcRenderer.send("select-source"),
-  onSelectSource: (callback) => ipcRenderer.once("select-source", callback),
+  // Listener helpers return nothing and drop Electron's event: both the
+  // return value of ipcRenderer.on/once and event.sender are the raw
+  // ipcRenderer, which this non-isolated page must never see (GHSA-3vg9-cwq9-p773).
+  onSelectSource: (callback) => {
+    ipcRenderer.once("select-source", (_event, ...args) => callback(...args));
+  },
   send: (channel, ...args) => {
     return ipcRenderer.send(channel, ...args);
   },
@@ -155,7 +149,7 @@ globalThis.electronAPI = {
       console.error('Invalid callback for theme changed');
       return;
     }
-    return ipcRenderer.on("system-theme-changed", callback);
+    ipcRenderer.on("system-theme-changed", (_event, ...args) => callback(...args));
   },
 
   setUserStatus: (data) => {
@@ -186,7 +180,7 @@ globalThis.electronAPI = {
       console.error('Invalid callback for navigation state changed');
       return;
     }
-    return ipcRenderer.on("navigation-state-changed", callback);
+    ipcRenderer.on("navigation-state-changed", (_event, ...args) => callback(...args));
   },
 
   graphApi: {

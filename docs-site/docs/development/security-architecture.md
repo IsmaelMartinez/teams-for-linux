@@ -72,6 +72,8 @@ const responseHeaders = {
 - **Recursive Payload Sanitization**: Removes dangerous properties (`__proto__`, `constructor`, `prototype`) from payloads at all nesting depths
 - **Prototype Pollution Protection**: Guards against object prototype manipulation with depth-limited recursion (max 10 levels)
 - **Request Validation**: Validates all IPC requests before processing
+- **Sender Pinning**: Channels only the screen-share picker uses (`desktop-capturer-get-sources`, `get-screen-sharing-displays`, `selected-source`, `close-view`, and the legacy picker's `source-selected`) are answered only when the sending frame shows a file inside the app directory (`isSenderAllowed`), so page script cannot capture the screen or pick a source on its own
+- **No Raw `ipcRenderer` in the Page**: With `contextIsolation: false`, anything `electronAPI` returns is usable by page script, so its listener helpers return nothing and strip Electron's IPC event (whose `sender` is the raw `ipcRenderer`) before calling back
 
 ```javascript
 function validateIpcChannel(channel, payload = null) {
@@ -121,7 +123,7 @@ _isAllowedTeamsDomain(hostname) {
 
 **Features**:
 - **`uncaughtException` handler**: Logs error details and exits with code 1 (process state unknown after uncaught exception)
-- **`unhandledRejection` handler**: Logs rejection details, allows process to continue (non-fatal)
+- **`unhandledRejection` handler**: Logs rejection details; network errors are ignored, anything else exits with code 1, so every promise-returning Electron call (for example `shell.openExternal`) must be caught
 - **Startup try/catch**: `handleAppReady()` wrapped with error logging and graceful `app.quit()` on failure
 
 **Protection**: Prevents silent process termination and provides diagnostic output for crash reports.
@@ -135,6 +137,17 @@ _isAllowedTeamsDomain(hostname) {
 - Applied to all incoming call notification arguments (`caller`, `text`, `image`) before passing to `spawn()`
 
 **Protection**: Defense-in-depth against edge cases in user-configured notification commands receiving untrusted data from Teams messages.
+
+#### 7. Webview Attach Blocked
+
+**Implementation**: `app/security/webviewGuard.js`, `webviewTag: false` in `app/mainAppWindow/browserWindowManager.js` and `profileViewManager.js`
+
+**Features**:
+- **`webviewTag: false`**: Nothing in the app or in Teams web uses `<webview>`, so the tag is off in the root window and every profile view
+- **App-wide `will-attach-webview` refusal**: Covers any webContents created later, including popups, since a guest can request its own preload with `sandbox=no` and that preload would run with full Node.js
+- **Sticker import signature check**: `customStickers` URL import saves a file only when it starts with the declared image type's signature, rather than trusting the server's content-type header alone (a format sanity check; the webview block is the actual protection)
+
+**Protection**: Keeps page script from turning a file on disk into code running with Node.js, which preserves the `nodeIntegration: false` boundary above.
 
 ## Recommended User-Level Security
 

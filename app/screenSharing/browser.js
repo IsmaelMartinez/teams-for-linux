@@ -155,7 +155,7 @@ async function loadSources() {
   }
   state.displays = Array.isArray(displays) ? displays : [];
 
-  let sources = [];
+  let sources;
   try {
     sources = await globalThis.api.desktopCapturerGetSources({
       types: ["window", "screen"],
