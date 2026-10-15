@@ -19,6 +19,7 @@ const {
 } = require("../utils/storagePartitions");
 const Tray = require("./tray");
 const TrayIconChooser = require("../browser/tools/trayIconChooser");
+const themeIcon = require("./themeIcon");
 const { SpellCheckProvider } = require("../spellCheckProvider");
 const DocumentationWindow = require("../documentationWindow");
 const GpuInfoWindow = require("../gpuInfoWindow");
@@ -318,7 +319,8 @@ class Menus {
     });
     if (result && result.length > 0) {
       const selectedPath = result[0];
-      if (nativeImage.createFromPath(selectedPath).isEmpty()) {
+      const image = nativeImage.createFromPath(selectedPath);
+      if (image.isEmpty()) {
         dialog.showMessageBoxSync(this.window, {
           type: "error",
           title: "Choose App Icon",
@@ -332,6 +334,14 @@ class Menus {
       this.tray?.setBaseIconPath(selectedPath);
       this.#updateWindowIcon(selectedPath);
       this.updateMenu();
+      if (themeIcon.install(image)) {
+        dialog.showMessageBoxSync(this.window, {
+          type: "info",
+          title: "Choose App Icon",
+          message: "The taskbar and launcher pick up the new icon on the next start.",
+          detail: "Some desktops only refresh it after you log in again.",
+        });
+      }
     }
   }
 
@@ -343,6 +353,7 @@ class Menus {
     this.tray?.setBaseIconPath(iconPath);
     this.#updateWindowIcon(iconPath);
     this.updateMenu();
+    themeIcon.remove();
   }
 
   #updateWindowIcon(iconPath) {
