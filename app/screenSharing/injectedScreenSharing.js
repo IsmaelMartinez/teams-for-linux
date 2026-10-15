@@ -103,6 +103,13 @@
     if (!resolutionConfig.enabled || !video || typeof video !== "object") {
       return video;
     }
+    if (
+      resolutionConfig.mode === "override" &&
+      !(resolutionConfig.width > 0 && resolutionConfig.height > 0)
+    ) {
+      // An invalid override keeps Teams' own constraints rather than going native.
+      return video;
+    }
 
     stripResolutionConstraint(video);
     if (
