@@ -19,6 +19,10 @@ profile on screen.
   zero the icon is the plain one, unless the presence overlay is on
   (`media.showStatusOnDockIcon`): then main asks for a zero-count composite
   too, because the renderer draws the presence dot even with nothing unread.
+  That dot belongs to the **selected** profile — the one the render bridge
+  targets — so with the overlay on no icon is reused from a bucket's own
+  cache, and a profile switch re-renders (`refresh()`) even though neither a
+  count nor a status changed: both are deduped by the renderer.
 - Buckets are attributed via `SenderProfileMap`, and **only a profile's
   primary surface may write them** (the root window or a profile view —
   never popups/webview guests, whose own window titles scrape to 0 and
