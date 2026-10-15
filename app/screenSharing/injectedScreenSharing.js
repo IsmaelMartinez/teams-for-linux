@@ -77,7 +77,7 @@
       delete video[name];
     }
     if (video.mandatory) {
-      for (const name of ["minWidth", "maxWidth", "minHeight", "maxHeight"]) {
+      for (const name of ["minWidth", "maxWidth", "minHeight", "maxHeight", "width", "height"]) {
         delete video.mandatory[name];
       }
     }
