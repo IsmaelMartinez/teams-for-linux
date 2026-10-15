@@ -874,6 +874,7 @@ exports.getWindow = function () {
 
 exports.bindDisplayMediaHandler = bindDisplayMediaHandler;
 exports.bindWindowOpenHandler = bindWindowOpenHandler;
+exports.injectScreenSharingLogic = injectScreenSharingLogic;
 
 exports.setQuickChatManager = function (quickChatManager) {
   if (menus) {
@@ -992,13 +993,13 @@ function onDidFinishLoad() {
 			tryAgainLink && tryAgainLink.click()
 		`).catch(() => {});
 
-  injectScreenSharingLogic();
+  injectScreenSharingLogic(window.webContents);
 
   customCSS.onDidFinishLoad(window.webContents, config);
   initSystemThemeFollow(config);
 }
 
-function injectScreenSharingLogic() {
+function injectScreenSharingLogic(webContents) {
   const fs = require("node:fs");
   const scriptPath = path.join(
     __dirname,
@@ -1013,7 +1014,7 @@ function injectScreenSharingLogic() {
       mode: "remove",
     };
     const configScript = `globalThis.__tflScreenSharingResolution = ${JSON.stringify(resolutionConfig)};`;
-    window.webContents.executeJavaScript(`${configScript}\n${script}`).catch((err) => {
+    webContents.executeJavaScript(`${configScript}\n${script}`).catch((err) => {
       console.error("[SCREEN_SHARE] Failed to execute injected script:", err.message);
     });
   } catch (err) {
