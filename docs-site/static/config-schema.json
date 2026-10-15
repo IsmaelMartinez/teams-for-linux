@@ -7,7 +7,8 @@
       "name": "dbusControl",
       "type": "object",
       "default": {
-        "enabled": false
+        "enabled": false,
+        "busName": ""
       },
       "description": "Opt-in Linux user session D-Bus control and observed Teams state. Requires restart.",
       "applyMode": "restart",
@@ -17,6 +18,12 @@
           "type": "boolean",
           "default": false,
           "description": "Enable the Linux D-Bus service and its local status monitors."
+        },
+        {
+          "path": "busName",
+          "type": "string",
+          "default": "",
+          "description": "Well-known D-Bus service name for this instance. Empty uses FLATPAK_ID or com.github.IsmaelMartinez.teams_for_linux. Use distinct names for separately launched profiles; invalid names disable the service."
         }
       ]
     },

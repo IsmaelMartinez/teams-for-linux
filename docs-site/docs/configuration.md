@@ -28,6 +28,7 @@ For a complete, always-up-to-date list of every option generated directly from t
   - [Virtual Backgrounds](#virtual-backgrounds)
   - [URL & Protocol Handling](#url--protocol-handling)
   - [Keyboard Shortcuts](#keyboard-shortcuts)
+  - [D-Bus Integration](#d-bus-integration)
   - [MQTT Integration](#mqtt-integration)
   - [Microsoft Graph API](#microsoft-graph-api)
   - [Quick Chat](#quick-chat)
@@ -705,6 +706,17 @@ A floating sticker panel that lists image files from a local folder and pastes t
 | `shortcuts.disableWhileFocused` | `array` | `[]` | Array of global shortcuts to disable while app is in focus |
 | `globalShortcuts` | `array` | `[]` | Deprecated, use `shortcuts.global` |
 | `disableGlobalShortcuts` | `array` | `[]` | Deprecated, use `shortcuts.disableWhileFocused` |
+
+### D-Bus Integration
+
+The optional Linux session-bus interface exposes Teams controls and observed presence, call, and media state. Changes require an application restart.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `dbusControl.enabled` | `boolean` | `false` | Enable the local D-Bus interface |
+| `dbusControl.busName` | `string` | `""` | Service name for this instance. Empty uses the Flatpak app ID or `com.github.IsmaelMartinez.teams_for_linux`. Invalid names disable the service. |
+
+For separately launched profiles, set a different `busName` in each profile's `config.json`, such as `com.github.IsmaelMartinez.teams_for_linux.Work` and `com.github.IsmaelMartinez.teams_for_linux.Personal`. The object path and interface remain the same. See the [D-Bus control guide](development/dbus-control.md) for examples, name requirements, and sandbox limitations.
 
 ### MQTT Integration
 
