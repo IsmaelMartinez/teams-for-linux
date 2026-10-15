@@ -85,7 +85,11 @@ describe('ProfileUnreadAggregator', () => {
     agg.onTrayUpdate(senderEvent(1), { icon: 'data:one', flash: true, count: 5 });
     agg.onTrayUpdate(senderEvent(1), { icon: null, flash: false, count: 0 });
     await settle();
-    assert.deepStrictEqual(renders, [0], 'the dot needs a composite at count 0');
+    assert.deepStrictEqual(
+      renders,
+      [5, 0],
+      'the single unread bucket is rendered for the selected profile too, and the dot needs a composite at count 0'
+    );
     assert.deepStrictEqual(applied.at(-1), {
       icon: 'data:dot',
       flash: false,
@@ -103,6 +107,63 @@ describe('ProfileUnreadAggregator', () => {
       flash: false,
       tooltip: 'Teams',
     });
+  });
+
+  it('with the overlay on, a single unread bucket is rendered for the selected profile, not reused from its cache', async () => {
+    // p-a is the unread profile, p-b the selected one: the render bridge
+    // targets the selection, and the cached composite carries p-a's dot.
+    const agg = build({
+      presenceOverlay: true,
+      resolve: () => 'p-a',
+      names: { 'p-a': 'Work' },
+    });
+    renderResult = (count) => Promise.resolve(`data:selected-${count}`);
+    agg.onTrayUpdate(senderEvent(1), {
+      icon: 'data:dot-a',
+      flash: true,
+      count: 3,
+    });
+    await settle();
+    assert.deepStrictEqual(
+      renders,
+      [3],
+      'the cached composite is not reused while the dot is drawn'
+    );
+    assert.deepStrictEqual(applied.at(-1), {
+      icon: 'data:selected-3',
+      flash: true,
+      tooltip: 'Teams (3)',
+    });
+  });
+
+  it('refresh() re-renders for the newly selected profile: a switch changes neither count nor status', async () => {
+    const resolve = (e) => ({ 1: 'p-a', 2: 'p-b' })[e.sender.id];
+    const agg = build({
+      resolve,
+      presenceOverlay: true,
+      names: { 'p-a': 'A', 'p-b': 'B' },
+    });
+    let selected = 'p-a';
+    renderResult = (count) => Promise.resolve(`data:${selected}-${count}`);
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:a', flash: false, count: 4 });
+    await settle();
+    assert.strictEqual(applied.at(-1).icon, 'data:p-a-4');
+
+    const badgesBefore = badges.length;
+    selected = 'p-b'; // the switch itself; every count and status is unchanged
+    agg.refresh();
+    await settle();
+    assert.strictEqual(
+      applied.at(-1).icon,
+      'data:p-b-4',
+      'the dot follows the selection'
+    );
+    assert.strictEqual(applied.at(-1).tooltip, 'Teams (4)');
+    assert.strictEqual(
+      badges.length,
+      badgesBefore,
+      'a switch does not touch the dock badge'
+    );
   });
 
   it('two unread profiles: badge = sum, aggregate icon rendered, tooltip lists both', async () => {
@@ -253,6 +314,8 @@ describe('ProfileUnreadAggregator', () => {
     assert.doesNotThrow(() =>
       agg.onTrayUpdate(senderEvent(1), { icon: 'i', flash: false, count: 1 })
     );
+    // The switch entry point is fire-and-forget too.
+    assert.doesNotThrow(() => agg.refresh());
     await settle();
   });
 

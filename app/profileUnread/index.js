@@ -30,7 +30,9 @@ class ProfileUnreadAggregator {
    * @param {() => boolean} deps.wantsPresenceOverlay  The active renderer draws
    *   a presence dot over the tray icon even at zero unread
    *   (trayIconRenderer.js), so the zero path is worth a render request only
-   *   while that option is on.
+   *   while that option is on — and the dot then belongs to the *selected*
+   *   profile, which is the one the render bridge targets: with it on, no
+   *   icon is reused from a bucket's own cache.
    * @param {(update: {icon:string|null, flash:boolean, tooltip:string}) => void} deps.applyTray
    * @param {(count: number) => void} deps.applyBadgeCount
    * @param {string} deps.appTitle
@@ -111,6 +113,16 @@ class ProfileUnreadAggregator {
     void this.#refreshTray();
   }
 
+  /**
+   * Re-render the aggregate for the currently selected profile. The dot
+   * belongs to the selection, and a switch changes whose renderer draws it
+   * without changing any count or status — both are deduped upstream — so the
+   * switch has to ask for the render explicitly. Never throws.
+   */
+  refresh() {
+    void this.#refreshTray();
+  }
+
   #sum() {
     let sum = 0;
     for (const bucket of this.#buckets.values()) sum += bucket.count;
@@ -168,24 +180,34 @@ class ProfileUnreadAggregator {
 
   /**
    * The icon for the current buckets: a single bucket's own composite when it
-   * is still fresh, a fresh render otherwise, and at zero unread the renderer's
-   * presence-only composite when the overlay is on. Null means the plain icon.
+   * is still fresh and no presence dot is drawn, a fresh render otherwise, and
+   * at zero unread the renderer's presence-only composite when the overlay is
+   * on. Null means the plain icon.
    *
    * @param {[string, {count:number, icon:string|null, iconCount:number}][]} unread
    * @param {number} sum
    * @returns {Promise<string|null>}
    */
   async #trayIcon(unread, sum) {
+    const presenceOverlay = this.#deps.wantsPresenceOverlay();
     if (unread.length === 0) {
       // Nothing unread is the plain icon, unless the renderer still has a
       // presence dot to draw: a zero-count composite resolves null when it has
       // nothing to draw either.
-      if (!this.#deps.wantsPresenceOverlay()) return null;
+      if (!presenceOverlay) return null;
       return (await this.#deps.requestBadgeRender(0)) ?? null;
     }
     if (unread.length === 1) {
       const [, bucket] = unread[0];
-      if (bucket.icon !== null && bucket.iconCount === bucket.count) {
+      // A cached composite carries the presence dot of the profile that drew
+      // it, which is not necessarily the selected one — the render bridge
+      // targets the selection — so with the overlay on the icon is always
+      // rendered again; the cache is left as the fallback only.
+      if (
+        !presenceOverlay &&
+        bucket.icon !== null &&
+        bucket.iconCount === bucket.count
+      ) {
         return bucket.icon;
       }
       // The stored icon has a different number baked in (out-of-band badge

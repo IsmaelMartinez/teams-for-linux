@@ -945,6 +945,13 @@ function createUnreadAggregator(viewManager) {
   viewManager.onProfileViewGone((profileId) =>
     aggregator.removeProfile(profileId)
   );
+  // The presence dot belongs to the selected profile, and a switch changes
+  // whose renderer draws it without a status or a count changing — both are
+  // deduped upstream — so the aggregate has to be re-rendered on the switch
+  // itself (#3102). Registered after ProfileViewManager's own switch handler,
+  // which is what attaches and reveals the incoming view.
+  profilesManager.on("switch", () => setImmediate(() => aggregator.refresh()));
+
 
   mainAppWindow.getTray()?.setAggregator(aggregator);
   for (const [senderId, count] of preAggregatorBadgeCounts) {
