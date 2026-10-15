@@ -157,6 +157,10 @@ When the app feels slow or heavy, seven configuration options are the first-line
     ```
     The first line only applies to the snap, which keeps its own fontconfig cache under `~/snap/teams-for-linux/common/.cache`.
 
+    :::note
+    Versions with the build-time launcher patch (#3092) isolate the fontconfig cache automatically. The manual commands above serve as a workaround for older versions or prior to package update.
+    :::
+
 **Related GitHub Issues:** [Issue #357](https://github.com/IsmaelMartinez/teams-for-linux/issues/357), [#1105](https://github.com/IsmaelMartinez/teams-for-linux/issues/1105), [#1328](https://github.com/IsmaelMartinez/teams-for-linux/issues/1328), [#3092](https://github.com/IsmaelMartinez/teams-for-linux/issues/3092)
 
 ---
