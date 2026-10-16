@@ -14,6 +14,9 @@
  *     loaded IN THE ORIGINATING PROFILE VIEW — never in the root window, which
  *     is a different profile (#2867's window.open shape).
  *
+ *   - The Document Picture-in-Picture popup (documentPictureInPicture.js):
+ *     allowed with the same always-on-top window options as the root window.
+ *
  * Everything else stays on Electron's default `allow` — i.e. exactly what
  * profile views do today. The root window's remaining handling (ordinary
  * links → external browser with a Ctrl+click in-app override, auth popups →
@@ -29,6 +32,11 @@
  * unit-testable; `installProfileWindowOpenHandler` is the thin binder that
  * targets a real webContents.
  */
+const {
+  isDocumentPictureInPictureRequest,
+  documentPictureInPictureResponse,
+} = require("./documentPictureInPicture");
+
 function createProfileWindowOpenHandler({ config, loadInView }) {
   // Compiled once, not per window.open. `meetupJoinRegEx` is user-configurable
   // and the config validator only checks it is a string — a malformed pattern
@@ -46,6 +54,9 @@ function createProfileWindowOpenHandler({ config, loadInView }) {
     }
   }
   return (details) => {
+    if (isDocumentPictureInPictureRequest(details, config)) {
+      return documentPictureInPictureResponse();
+    }
     const url = typeof details?.url === "string" ? details.url : "";
     if (deepLinkRe?.test(url)) {
       if (config.onNewWindowOpenMeetupJoinUrlInApp) {
