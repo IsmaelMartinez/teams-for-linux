@@ -25,6 +25,10 @@
 
 * **deps-dev:** bump the minor-and-patch group with 2 updates ([#3100](https://github.com/IsmaelMartinez/teams-for-linux/issues/3100)) ([275fa76](https://github.com/IsmaelMartinez/teams-for-linux/commit/275fa76395cb65457e80d797b223b5dbed8c6a69))
 
+### Thanks
+
+Big thanks to @app/dependabot, @FingerlessGlov3s, @HamzaHassanM, @imamAtif, @jochimvd for contributing to this release.
+
 ## [2.25.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.24.0...v2.25.0) (2026-10-09)
 
 
