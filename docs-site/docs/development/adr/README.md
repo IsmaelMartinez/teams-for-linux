@@ -54,6 +54,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [030](030-graph-api-teams-session-token.md) | Graph API Access via the Teams Session Token | ✅ Implemented | 2025-11-21 | v2.6.17 |
 | [031](031-ozone-platform-x11-default.md) | Keep the `--ozone-platform=x11` Default on Wayland | ✅ Accepted | 2026-09-05 | N/A |
 | [032](032-secondary-window-for-calls.md) | Opt-in Secondary Window for the Same Account During Calls | 🚧 Proposed | 2026-09-18 | N/A |
+| [033](033-phone-passkey-backend-prototype.md) | Experimental Phone Passkey Backend | 🚧 Proposed | 2026-09-30 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production

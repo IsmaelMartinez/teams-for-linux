@@ -1,6 +1,7 @@
-# WebAuthn / FIDO2 Hardware Security Key Support
+# WebAuthn backends
 
-On Linux, Chromium's WebAuthn implementation lacks hardware support. This module intercepts WebAuthn calls (`navigator.credentials`) and routes them through `fido2-tools`.
+This module routes Linux WebAuthn requests through `fido2-tools` for hardware
+keys or an external helper for phone passkeys. Hardware is the default backend.
 
 ## Architecture
 
@@ -48,9 +49,9 @@ paths) and restart. The allowlist gates two places, `index.js` and the
 postMessage relay in `app/browser/tools/webauthnOverride.js`; both build it from
 `originAllowlist.js`, so neither can drift.
 
-## Reading a sign-in log
+## Hardware sign-in logs
 
-Every ceremony logs a `[WEBAUTHN]` line at each step, so `grep WEBAUTHN` over a session log shows the whole flow. Four fields matter when a sign-in fails but the ceremony itself reports success:
+Hardware ceremonies log a `[WEBAUTHN]` line at each step, so `grep WEBAUTHN` over a session log shows the whole flow. Four fields matter when a sign-in fails but the ceremony itself reports success:
 
 - `timeoutSec` on `Processing request` is how long the login page is prepared to wait. It is in seconds while every other timing here is in milliseconds, so compare it against `totalMs / 1000`: a ceremony that outlasts it was abandoned by the page, whatever our side reports.
 - `pinMs` and `touchMs` on `Succeeded` split the wall-clock between the user typing a PIN and the key waiting to be touched. A large `touchMs` is someone not realising the key wants a touch, not a slow device, since each call is a fresh process paying the same fixed costs. The field is `touchMs` rather than `keyMs` because the log sanitizer redacts any field name containing "key".
@@ -65,3 +66,25 @@ None of these carry credential material: no credential IDs, user handles, challe
 - Issue: [#802](https://github.com/IsmaelMartinez/teams-for-linux/issues/802)
 - Community validation: [#2332](https://github.com/IsmaelMartinez/teams-for-linux/issues/2332)
 - Touch prompt: [#2631](https://github.com/IsmaelMartinez/teams-for-linux/issues/2631), [ADR-021](../../docs-site/docs/development/adr/021-webauthn-fido2-linux.md)
+
+## Experimental phone backend
+
+Set `auth.webauthn.backend` to `"phone"` and `auth.webauthn.helperPath` to an
+absolute executable path. The adapter uses the existing IPC handlers, login-frame
+relay and origin allowlist. It skips hardware PIN and touch prompts.
+
+Phone mode supports interactive assertions in the primary window and its login
+frames. Registration and conditional/silent requests use Chromium. Extension
+inputs and outputs, multi-account profiles and detached windows are unsupported.
+Page abort, document replacement, renderer loss, QR cancellation and timeout
+terminate the helper; same-document navigation preserves the request.
+
+See the [configuration guide](../../docs-site/docs/configuration.md#experimental-phone-passkey-backend)
+for setup and [ADR 033](../../docs-site/docs/development/adr/033-phone-passkey-backend-prototype.md)
+for the protocol and security boundaries.
+
+The MIT-licensed `phoneHelper.js` protocol runner is adapted from Prospect Mail's
+[`backend.js`](https://github.com/Excellence308/prospect-mail/blob/fe108b6d3c70d51b29844781376b715e2097436e/vendor/electron-phone-passkey/backend.js).
+Teams uses a local size constant and extracts message parsing into a separate
+function; the protocol and process lifecycle remain shared. Its notice is retained in
+`phone-helper-LICENSE`; the Teams-specific adapter follows this repository's licence.
