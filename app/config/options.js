@@ -752,9 +752,10 @@ module.exports = {
           showStatusOnDockIcon: false,
           macPerformanceMode: true,
           preventDeviceSwitching: false,
+          documentPictureInPicture: true,
         },
         describe:
-          "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the Dock icon on macOS. macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications.",
+          "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the Dock icon on macOS. macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications. documentPictureInPicture: replace Electron's non-functional Document Picture-in-Picture API so Teams can show its floating call controls (Call Monitor) in a small always-on-top window; defaults to true, set false to fall back to Electron's native (broken) API.",
         type: "object",
         fields: {
           "microphone.disableAutogain": {
@@ -840,9 +841,9 @@ module.exports = {
             describe:
               "On macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; set false to opt out without disabling the GPU entirely.",
           },
-          // preventDeviceSwitching is documented in the option's `describe`
-          // above; see the note in the download.fields block on why it isn't a
-          // per-leaf entry.
+          // preventDeviceSwitching and documentPictureInPicture are documented
+          // in the option's `describe` above; see the note in the
+          // download.fields block on why they aren't per-leaf entries.
         },
         applyMode: "restart",
       },

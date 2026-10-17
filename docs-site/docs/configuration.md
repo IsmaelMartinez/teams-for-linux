@@ -636,6 +636,7 @@ Media settings are organized under the `media` configuration object with subgrou
 | `media.camera.resolution.height` | `number` | - | Target height when mode is `"override"` |
 | `media.camera.autoAdjustAspectRatio.enabled` | `boolean` | `false` | Fixes camera video stretching when moving Teams between monitors with different orientations by reapplying proper aspect ratio constraints |
 | `media.video.menuEnabled` | `boolean` | `false` | Enable menu entry for controlling video elements (PiP mode, video controls) |
+| `media.documentPictureInPicture` | `boolean` | `true` | Let the Teams web Call Monitor ([MC1462921](https://mc.merill.net/message/MC1462921)) show its floating call controls in a small always-on-top window, capped at 800×600. Electron's own Document Picture-in-Picture window closes as soon as it opens, so this replaces the API with a popup the app allows. Set to `false` to fall back to Electron's native API, which leaves the Call Monitor broken. Wayland compositors may not keep the window on top |
 
 **Example Media Configuration:**
 ```json
