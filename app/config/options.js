@@ -88,6 +88,14 @@ module.exports = {
         applyMode: "live",
         deprecated: "use tray.icon instead",
       },
+      appIconDark: {
+        default: "",
+        describe:
+          "Custom app icon (PNG) for the tray when the system is in dark mode (optional)",
+        type: "string",
+        applyMode: "live",
+        deprecated: "use tray.iconDark instead",
+      },
       appIconType: {
         default: "default",
         describe: "Type of tray icon to be used",
@@ -1388,11 +1396,12 @@ module.exports = {
         default: {
           enabled: true,
           icon: "",
+          iconDark: "",
           iconType: "default",
           useMutationTitleLogic: true,
         },
         describe:
-          "Tray icon configuration. Replaces the deprecated trayIconEnabled, appIcon, appIconType and useMutationTitleLogic options.",
+          "Tray icon configuration. Replaces the deprecated trayIconEnabled, appIcon, appIconDark, appIconType and useMutationTitleLogic options.",
         type: "object",
         fields: {
           "enabled": {
@@ -1402,6 +1411,10 @@ module.exports = {
           "icon": {
             type: "string",
             describe: "Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu",
+          },
+          "iconDark": {
+            type: "string",
+            describe: "Custom app icon (PNG) for the tray when the system is in dark mode (optional)",
           },
           "iconType": {
             type: "string",

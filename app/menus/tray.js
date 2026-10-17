@@ -95,12 +95,15 @@ class ApplicationTray {
 
   updateTrayImage(iconUrl, flash, count) {
     if (this.tray && !this.tray.isDestroyed()) {
+      this.currentCount = count;
       // Use original icon path if iconUrl is null/undefined
       const effectiveIconPath = iconUrl || this.iconPath;
       const image = this.getIconImage(effectiveIconPath);
 
       this.tray.setImage(image);
-      this.window.flashFrame(flash);
+      if (typeof flash === "boolean") {
+        this.window.flashFrame(flash);
+      }
 
       const baseTitle = this.config.appTitle;
       const tooltip = count > 0 ? `${baseTitle} (${count})` : baseTitle;
@@ -111,7 +114,9 @@ class ApplicationTray {
   setBaseIconPath(iconPath) {
     this.iconPath = iconPath;
     if (this.tray && !this.tray.isDestroyed()) {
-      this.tray.setImage(this.getIconImage(iconPath));
+      if (!this.currentCount || this.currentCount <= 0) {
+        this.tray.setImage(this.getIconImage(iconPath));
+      }
     }
   }
 

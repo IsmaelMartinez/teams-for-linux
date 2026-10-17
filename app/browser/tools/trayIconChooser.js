@@ -1,4 +1,4 @@
-const { nativeImage } = require("electron");
+const { nativeImage, nativeTheme } = require("electron");
 const os = require("node:os");
 const path = require("node:path");
 const iconFolder = path.join(__dirname, "../..", "assets/icons");
@@ -17,13 +17,64 @@ class TrayIconChooser {
   constructor(config) {
     this.config = config;
   }
-  getFile() {
+
+  static resolveIsDark(theme) {
+    if (theme === "dark" || theme === true) return true;
+    if (theme === "light" || theme === false) return false;
+    if (
+      typeof nativeTheme !== "undefined" &&
+      typeof nativeTheme?.shouldUseDarkColors === "boolean"
+    ) {
+      return nativeTheme.shouldUseDarkColors;
+    }
+    if (
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function"
+    ) {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+    return false;
+  }
+
+  /**
+   * Resolves the tray icon file.
+   * When appIconDark is configured and the theme is dark, appIconDark is chosen.
+   * Otherwise, falls back to appIcon if configured, or the bundled appIconType.
+   * @param {string|boolean} [theme] - 'dark', 'light', or boolean
+   * @returns {string} Path to the icon file
+   */
+  getFile(theme) {
+    const isDark = TrayIconChooser.resolveIsDark(theme);
+
+    if (isDark && this.config.appIconDark?.trim()) {
+      return this.config.appIconDark;
+    }
+
     if (this.config.appIcon?.trim()) {
       return this.config.appIcon;
     }
+
+    const iconType = this.config.appIconType || "default";
     return path.join(
       iconFolder,
-      icons[`icon_${this.config.appIconType}_${isMac ? 16 : 96}`],
+      icons[`icon_${iconType}_${isMac ? 16 : 96}`],
+    );
+  }
+
+  /**
+   * Resolves the window icon file.
+   * Window icons only observe appIcon or the bundled appIconType, never appIconDark.
+   * @returns {string} Path to the icon file
+   */
+  getWindowFile() {
+    if (this.config.appIcon?.trim()) {
+      return this.config.appIcon;
+    }
+
+    const iconType = this.config.appIconType || "default";
+    return path.join(
+      iconFolder,
+      icons[`icon_${iconType}_${isMac ? 16 : 96}`],
     );
   }
 
