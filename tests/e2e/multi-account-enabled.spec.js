@@ -218,3 +218,86 @@ test('switching to a profile view fills the window and keeps the pill topmost', 
     await closeAndCleanup(ctx);
   }
 });
+
+// Phase 2: unread in a background profile reaches the switcher pill through
+// the real pipeline — set-badge-count from that profile's view → aggregator →
+// ProfileViewManager → profile-switcher-unread → pill DOM.
+test('unread in a background profile lights the pill dot and its row badge', async () => {
+  const ctx = await startApp({
+    prefix: 'teams-e2e-unread-',
+    config: { multiAccount: { enabled: true } },
+    allowEval: true,
+  });
+
+  try {
+    const mainWindow = findMainTeamsWindow(ctx.electronApp);
+    expect(mainWindow).toBeTruthy();
+    await waitForLoginRedirect(mainWindow);
+
+    const a = await invokeHandler(ctx.electronApp, 'profile-add', [
+      { name: 'Profile A' },
+    ]);
+    const b = await invokeHandler(ctx.electronApp, 'profile-add', [
+      { name: 'Profile B' },
+    ]);
+    await invokeHandler(ctx.electronApp, 'profile-switch', [b.result.id]);
+
+    // Children are [A (hidden), B (active), pill]; report 3 unread from A.
+    const sent = await ctx.electronApp.evaluate(
+      async ({ BrowserWindow, ipcMain }, count) => {
+        const win = BrowserWindow.getAllWindows().find(
+          (w) => w.contentView.children.length === 3
+        );
+        if (!win) return { error: 'no window with three views' };
+        const children = win.contentView.children;
+        const background = children.find((c) => !c.getVisible());
+        const handler = ipcMain._invokeHandlers?.get?.('set-badge-count');
+        if (!background || !handler) return { error: 'missing view or handler' };
+        await handler({ sender: background.webContents }, count);
+        return { ok: true };
+      },
+      3
+    );
+    expect(sent).toEqual({ ok: true });
+
+    const readPill = () =>
+      ctx.electronApp.evaluate(async ({ BrowserWindow }) => {
+        const win = BrowserWindow.getAllWindows().find(
+          (w) => w.contentView.children.length === 3
+        );
+        const pill = win.contentView.children.at(-1);
+        return pill.webContents.executeJavaScript(`(() => {
+          renderList();
+          return {
+            dotHidden: document.getElementById('pill-unread').hidden,
+            badges: [...document.querySelectorAll('.profile-row')].map((row) => ({
+              name: row.querySelector('.name').textContent,
+              badge: row.querySelector('.unread-badge')?.textContent ?? null,
+            })),
+          };
+        })()`);
+      });
+
+    await expect.poll(async () => (await readPill()).dotHidden).toBe(false);
+    const lit = await readPill();
+    expect(lit.badges).toEqual([
+      { name: a.result.name, badge: '3' },
+      { name: 'Profile B', badge: null },
+    ]);
+
+    // Reading the background profile clears both.
+    await ctx.electronApp.evaluate(async ({ BrowserWindow, ipcMain }) => {
+      const win = BrowserWindow.getAllWindows().find(
+        (w) => w.contentView.children.length === 3
+      );
+      const background = win.contentView.children.find((c) => !c.getVisible());
+      await ipcMain._invokeHandlers.get('set-badge-count')(
+        { sender: background.webContents },
+        0
+      );
+    });
+    await expect.poll(async () => (await readPill()).dotHidden).toBe(true);
+  } finally {
+    await closeAndCleanup(ctx);
+  }
+});
