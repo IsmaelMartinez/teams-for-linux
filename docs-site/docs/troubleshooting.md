@@ -359,11 +359,27 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 
 **Related GitHub Issues:** [Issue #2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)
 
+#### Issue: Sign-in stuck on "Face, fingerprint, PIN or security key"
+
+**Description:** Microsoft's sign-in page stops on "Face, fingerprint, PIN or security key" and offers no other method until it times out, which can take up to ten minutes. This affects accounts with a passkey registered, including people who have no security key to hand or normally sign in with a password and Microsoft Authenticator.
+
+**Cause:** Electron on Linux has no WebAuthn user interface (tracked upstream in [electron/electron#24573](https://github.com/electron/electron/issues/24573)). When Teams for Linux does not handle the request itself, Electron waits silently for the page's own timeout, with no dialog and no way to cancel. Microsoft's sign-in page has been seen asking for ten minutes. Phone and QR passkeys do not work either, because Electron never starts that flow on Linux.
+
+**Solutions/Workarounds:**
+
+1. Wait for the timeout, then choose another sign-in method.
+
+2. To skip the wait, install `fido2-tools` and enable `auth.webauthn.enabled` as described in the next entry, then restart. Teams for Linux now answers the request itself: either its PIN dialog appears, and you click Cancel, or the request fails at once because no key is connected. Either way the page goes straight to its other sign-in methods, such as password plus Microsoft Authenticator. The Flathub build bundles `fido2-tools`; the snap does not yet ([PR #3085](https://github.com/IsmaelMartinez/teams-for-linux/pull/3085)), so on the snap only the first option applies.
+
+If you start Teams for Linux with `--user-data-dir`, put `config.json` in that directory, not in `~/.config/teams-for-linux`.
+
+**Related GitHub Issues:** [Issue #2624](https://github.com/IsmaelMartinez/teams-for-linux/issues/2624), [Issue #3037](https://github.com/IsmaelMartinez/teams-for-linux/issues/3037), [Issue #2944](https://github.com/IsmaelMartinez/teams-for-linux/issues/2944).
+
 #### Issue: Security Key (FIDO2 / WebAuthn) sign-in fails on Linux
 
 **Description:** When signing in to Teams with a hardware security key (YubiKey, SoloKeys, Nitrokey, Feitian, etc.) on Linux, the login page spins indefinitely, shows an error, or no PIN dialog appears. macOS and Windows are unaffected.
 
-**Cause:** Electron and Chromium on Linux do not ship a native FIDO2 authenticator backend (tracked upstream in [electron/electron#24573](https://github.com/electron/electron/issues/24573)). Teams for Linux ships an opt-in beta that routes `navigator.credentials` through the `fido2-tools` command-line suite, which talks to the security key over `/dev/hidraw*`.
+**Cause:** Electron and Chromium on Linux do not ship a native FIDO2 authenticator backend (tracked upstream in [electron/electron#24573](https://github.com/electron/electron/issues/24573); as of Electron 44 there is still no PIN entry, no phone flow and no cancel prompt on Linux). Teams for Linux ships an opt-in beta that routes `navigator.credentials` through the `fido2-tools` command-line suite, which talks to the security key over `/dev/hidraw*`.
 
 **Solutions/Workarounds:**
 
