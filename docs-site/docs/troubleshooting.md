@@ -369,7 +369,7 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 
 1. Wait for the timeout, then choose another sign-in method.
 
-2. To skip the wait, install `fido2-tools` and enable `auth.webauthn.enabled` as described in the next entry, then restart. Teams for Linux now answers the request itself: either its PIN dialog appears, and you click Cancel, or the request fails at once because no key is connected. Either way the page goes straight to its other sign-in methods, such as password plus Microsoft Authenticator. The Flathub build bundles `fido2-tools`; the snap does not yet ([PR #3085](https://github.com/IsmaelMartinez/teams-for-linux/pull/3085)), so on the snap only the first option applies.
+2. To skip the wait, install `fido2-tools` and enable `auth.webauthn.enabled` as described in the next entry, then restart. Teams for Linux now answers the request itself: either its PIN dialog or its "Waiting for your security key" prompt appears, and you click Cancel, or the request fails at once because no key is connected. Either way the page goes straight to its other sign-in methods, such as password plus Microsoft Authenticator. The Flathub build bundles `fido2-tools`; the snap does not yet ([PR #3085](https://github.com/IsmaelMartinez/teams-for-linux/pull/3085)). On the snap, enabling the setting still ends the wait when the sign-in page is the top-level page, but not when it is embedded in a frame, so the first option may still be needed.
 
 If you start Teams for Linux with `--user-data-dir`, put `config.json` in that directory, not in `~/.config/teams-for-linux`.
 
