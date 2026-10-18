@@ -713,7 +713,9 @@ function initializeDbusControl() {
   });
   try {
     const DBusControlService = require("./dbus/controlService");
-    dbusControlService = new DBusControlService(teamsControlService);
+    dbusControlService = new DBusControlService(teamsControlService, {
+      busName: config.dbusControl.busName,
+    });
     dbusControlService.start();
   } catch (error) {
     dbusControlService = null;

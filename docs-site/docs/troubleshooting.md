@@ -59,6 +59,23 @@ When the app feels slow or heavy, seven configuration options are the first-line
 
 2.  **If you cannot update yet**, either create the missing locale file with `touch ~/.config/user-dirs.locale`, connect the interface your XDG directories need with `sudo snap connect teams-for-linux:removable-media`, or roll back with `sudo snap revert teams-for-linux`.
 
+#### Issue: Kernel log flood or kauditd suppression from AppArmor netlink denials
+
+**Description:** System logs show millions of AppArmor audit denials (`apparmor="DENIED" operation="recvmsg" class="net" family="netlink" protocol=15 comm="ThreadPoolForeg"`), and kernel logs (`dmesg` or `journalctl -k`) report thousands of callbacks suppressed by `kauditd_printk_skb` ([#3096](https://github.com/IsmaelMartinez/teams-for-linux/issues/3096)).
+
+**Potential Causes:**
+* Chromium/Electron's background device discovery thread (`ThreadPoolForegroundWorker`) polls a kernel `NETLINK_KOBJECT_UEVENT` socket (`protocol=15`) to monitor device hotplugging (e.g. webcams, USB audio headsets).
+* On modern Linux distributions (such as Ubuntu 24.04+ and 26.04+) with AppArmor 4.x, strict netlink socket mediation blocks this socket unless the snap has the `hardware-observe` interface connected. When denied, Chromium's event polling loop can rapidly spin on `recvmsg()`, generating hundreds of thousands of audit denial events per second.
+
+**Solutions/Workarounds:**
+
+1.  **Connect the `hardware-observe` interface:**
+    ```bash
+    sudo snap connect teams-for-linux:hardware-observe
+    ```
+
+2.  **Restart the application.** Once connected, the netlink socket read succeeds without AppArmor denials and the log flood stops completely.
+
 #### Issue: No History after Electron version update
 
 **Description:** When updating the Electron version, the channel history may sometimes disappear. This issue is typically related to a change in the user agent.
@@ -139,6 +156,10 @@ When the app feels slow or heavy, seven configuration options are the first-line
     fc-cache -r
     ```
     The first line only applies to the snap, which keeps its own fontconfig cache under `~/snap/teams-for-linux/common/.cache`.
+
+    :::note
+    Versions with the build-time launcher patch (#3092) isolate the fontconfig cache automatically. The manual commands above serve as a workaround for older versions or prior to package update.
+    :::
 
 **Related GitHub Issues:** [Issue #357](https://github.com/IsmaelMartinez/teams-for-linux/issues/357), [#1105](https://github.com/IsmaelMartinez/teams-for-linux/issues/1105), [#1328](https://github.com/IsmaelMartinez/teams-for-linux/issues/1328), [#3092](https://github.com/IsmaelMartinez/teams-for-linux/issues/3092)
 
