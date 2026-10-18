@@ -14,6 +14,19 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.26.0" date="2026-10-17">
+      <description>
+        <ul>
+          <li>dbus: support distinct service names for separate instances (#3094)</li>
+          <li>docs-site: override tinypool to 2.x for GHSA-5gmw-xhrv-c9v3 / GHSA-85c8-ppgw-ccpr (#3104)</li>
+          <li>media: restore meeting pop-out by replacing Document Picture-in-Picture (#3107) (7dee649), closes #3106</li>
+          <li>snap: isolate fontconfig cache to prevent square font rendering (#3103)</li>
+          <li>troubleshooting: document hardware-observe fix for snap netlink denials (#3097) (d1643b4), closes #3096</li>
+          <li>troubleshooting: update fontconfig cache clearing steps (#3093)</li>
+          <li>deps-dev: bump the minor-and-patch group with 2 updates (#3100)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.25.0" date="2026-10-09">
       <description>
         <ul>

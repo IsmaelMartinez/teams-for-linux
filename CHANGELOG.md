@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.26.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.25.0...v2.26.0) (2026-10-17)
+
+
+### Features
+
+* **dbus:** support distinct service names for separate instances ([#3094](https://github.com/IsmaelMartinez/teams-for-linux/issues/3094)) ([8ae34ee](https://github.com/IsmaelMartinez/teams-for-linux/commit/8ae34ee53ef8a92adda494950d7b781c2def704d))
+
+
+### Bug Fixes
+
+* **docs-site:** override tinypool to 2.x for GHSA-5gmw-xhrv-c9v3 / GHSA-85c8-ppgw-ccpr ([#3104](https://github.com/IsmaelMartinez/teams-for-linux/issues/3104)) ([1a51275](https://github.com/IsmaelMartinez/teams-for-linux/commit/1a512753007fd29969652a39a66f1392d20d0718))
+* **media:** restore meeting pop-out by replacing Document Picture-in-Picture ([#3107](https://github.com/IsmaelMartinez/teams-for-linux/issues/3107)) ([7dee649](https://github.com/IsmaelMartinez/teams-for-linux/commit/7dee649e3a58b5e0e0d026426abef0f997f796d3)), closes [#3106](https://github.com/IsmaelMartinez/teams-for-linux/issues/3106)
+* **snap:** isolate fontconfig cache to prevent square font rendering ([#3103](https://github.com/IsmaelMartinez/teams-for-linux/issues/3103)) ([383766c](https://github.com/IsmaelMartinez/teams-for-linux/commit/383766cad87da4fe163d41e770dc5efaf93048c2))
+
+
+### Documentation
+
+* **troubleshooting:** document hardware-observe fix for snap netlink denials ([#3097](https://github.com/IsmaelMartinez/teams-for-linux/issues/3097)) ([d1643b4](https://github.com/IsmaelMartinez/teams-for-linux/commit/d1643b43c74493f45df4b3f95ddc75469476408d)), closes [#3096](https://github.com/IsmaelMartinez/teams-for-linux/issues/3096)
+* **troubleshooting:** update fontconfig cache clearing steps ([#3093](https://github.com/IsmaelMartinez/teams-for-linux/issues/3093)) ([2e19058](https://github.com/IsmaelMartinez/teams-for-linux/commit/2e19058a9b9eb517f1ce4a240c9eb82ba2f08b8f))
+
+
+### Maintenance
+
+* **deps-dev:** bump the minor-and-patch group with 2 updates ([#3100](https://github.com/IsmaelMartinez/teams-for-linux/issues/3100)) ([275fa76](https://github.com/IsmaelMartinez/teams-for-linux/commit/275fa76395cb65457e80d797b223b5dbed8c6a69))
+
+### Thanks
+
+Big thanks to @app/dependabot, @FingerlessGlov3s, @HamzaHassanM, @imamAtif, @jochimvd for contributing to this release.
+
 ## [2.25.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.24.0...v2.25.0) (2026-10-09)
 
 
