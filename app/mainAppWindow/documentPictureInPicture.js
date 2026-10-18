@@ -2,8 +2,8 @@
  * Window-open handling for the Document Picture-in-Picture replacement
  * (app/browser/tools/documentPictureInPicture.js, MC1462921 "Call Monitor").
  *
- * The browser tool opens its PiP window as an `about:blank` popup with a fixed
- * frame name. The root window's `onNewWindow` denies every other
+ * The browser tool opens its PiP window as an `about:blank` popup named
+ * PIP_FRAME_NAME. The root window's `onNewWindow` denies every other
  * `about:blank` popup (they belong to the silent SSO flow), so this request
  * has to be recognised first and allowed as a small, always-on-top window.
  * Profile views allow `about:blank` already but get the same window options
@@ -12,8 +12,14 @@
  * Pure (no Electron imports) so the decision is unit-testable.
  */
 
-// Must match PIP_FRAME_NAME in app/browser/tools/documentPictureInPicture.js.
-const PIP_FRAME_NAME = "teams-for-linux-document-pip";
+const { randomUUID } = require("node:crypto");
+
+// Random per launch and handed to the browser tool through the config, so only
+// Teams' own scripts know it. With a fixed name, any cross-origin frame inside
+// Teams (an app tab, for example) could open this always-on-top window and draw
+// into it; the referrer cannot tell them apart, as Chromium sends none for an
+// about:blank popup opened from an https page.
+const PIP_FRAME_NAME = `teams-for-linux-document-pip-${randomUUID()}`;
 
 /**
  * @param {{ url?: string, frameName?: string }} details - window-open details

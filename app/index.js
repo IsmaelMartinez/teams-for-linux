@@ -31,6 +31,7 @@ const ScreenSharingService = require("./screenSharing/service");
 const PartitionsManager = require("./partitions/manager");
 const ProfilesManager = require("./profilesManager");
 const ProfileViewManager = require("./mainAppWindow/profileViewManager");
+const { PIP_FRAME_NAME } = require("./mainAppWindow/documentPictureInPicture");
 const TeamsControlService = require("./control/teamsControlService");
 const TeamsStateService = require("./control/teamsStateService");
 const IdleMonitor = require("./idle/monitor");
@@ -118,6 +119,8 @@ const appConfig = new AppConfiguration(
 
 const config = appConfig.startupConfig;
 config.appPath = path.join(__dirname, app.isPackaged ? "../../" : "");
+// Runtime-only: the per-launch PiP frame name reaches the browser tool through get-config.
+config.documentPictureInPictureFrameName = PIP_FRAME_NAME;
 
 CommandLineManager.addSwitchesAfterConfigLoad(config);
 
