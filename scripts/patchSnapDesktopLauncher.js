@@ -31,10 +31,10 @@
  * Why patch at build time rather than fixing it upstream or in config:
  *
  *   - `desktop-common.sh` is not ours. For arm64 it comes from
- *     `app-builder-lib/templates/snap/`; for x64 and armv7l it comes from the
+ *     `app-builder-lib/templates/snap/`; for x64 it comes from the
  *     `snap-template-electron-4.0-*` tarball that electron-builder downloads
  *     from electron-builder-binaries. That tarball is a frozen 2019 release, so
- *     an electron-builder upgrade would not fix x64/armv7l anyway.
+ *     an electron-builder upgrade would not fix x64 anyway.
  *   - electron-builder is deliberately frozen at 26.15.7 (see
  *     `.github/dependabot.yml`, refs #2756, #2684, #2905) and the core24
  *     migration that would take a different code path was reverted in #2906.
@@ -61,21 +61,15 @@ const SNAP_TEMPLATES = {
     filenameWithExt: "snap-template-electron-4.0-2-amd64.tar.7z",
     checksum: "5e3ab4e09364ac06f0072b1c2dab9138318c933f6b2c7374f893b5ec44d19e6f",
   },
-  armhf: {
-    releaseName: "snap-template-4.0-1",
-    filenameWithExt: "snap-template-electron-4.0-1-armhf.tar.7z",
-    checksum: "6f7553e904f4e043bc3019f0899d05e01a283b00b61fec22e932296490e3be6b",
-  },
 };
 
-// Only these two arches take the downloaded-template path (coreLegacy.js:59).
-// arm64 is packed by snapcraft from the scripts bundled in app-builder-lib.
-const TEMPLATE_ARCH_BY_ARCH = new Map([
-  [Arch.x64, "amd64"],
-  [Arch.armv7l, "armhf"],
-]);
+// Only x64 takes the downloaded-template path (coreLegacy.js:59); armv7l did
+// too until Electron 44 dropped 32-bit builds (#2994). arm64 is packed by
+// snapcraft from the scripts bundled in app-builder-lib.
+const TEMPLATE_ARCH_BY_ARCH = new Map([[Arch.x64, "amd64"]]);
 
 const PATCH_MARKER = "teams-for-linux #2946";
+const FONTCONFIG_PATCH_MARKER = "teams-for-linux #3092";
 
 // The exact block shipped by both copies of desktop-common.sh. Matched literally
 // (indexOf, no regex) so a changed upstream script fails loudly instead of
@@ -105,40 +99,98 @@ const PATCHED_BLOCK = [
   "      fi",
 ].join("\n");
 
+// #3092: Isolates snap font cache from host fontconfig cache to prevent
+// incompatible binary cache collisions (e.g. cache-11/12 on host vs cache-7 in snap).
+const ORIGINAL_FONTCONFIG_BLOCK = [
+  '  echo \'  <include ignore_missing="yes">conf.d</include>\'',
+  '  # We need to include this default cachedir first so that caching',
+  '  # works: without it, fontconfig will try to write to the real user home',
+  '  # cachedir and be blocked by AppArmor.',
+  "  echo '  <cachedir prefix=\"xdg\">fontconfig</cachedir>'",
+  '  if [ -d "$REALHOME/.cache/fontconfig" ]; then',
+  '    echo "  <cachedir>$REALHOME/.cache/fontconfig</cachedir>"',
+  '  fi',
+  '  echo "</fontconfig>"',
+  "}",
+  "",
+  'if [ "$SNAP_DESKTOP_COMPONENTS_NEED_UPDATE" = "true" ]; then',
+  '  rm -rf "$XDG_DATA_HOME"/{fontconfig,fonts,fonts-*,themes,.themes}',
+].join("\n");
+
+const PATCHED_FONTCONFIG_BLOCK = [
+  '  echo \'  <include ignore_missing="yes">conf.d</include>\'',
+  '  # We need to include this default cachedir first so that caching',
+  '  # works: without it, fontconfig will try to write to the real user home',
+  '  # cachedir and be blocked by AppArmor.',
+  "  echo '  <cachedir prefix=\"xdg\">fontconfig</cachedir>'",
+  "  # " + FONTCONFIG_PATCH_MARKER + ": do not reference $REALHOME/.cache/fontconfig.",
+  "  # Host fontconfig caches (e.g. cache-11/12 on modern distros) are incompatible",
+  "  # with the runtime's fontconfig (cache-7) and cause characters to render as squares.",
+  '  echo "</fontconfig>"',
+  "}",
+  "",
+  'if [ "$SNAP_DESKTOP_COMPONENTS_NEED_UPDATE" = "true" ]; then',
+  '  rm -rf "$XDG_DATA_HOME"/{fontconfig,fonts,fonts-*,themes,.themes}',
+  "  # " + FONTCONFIG_PATCH_MARKER + ": clear stale snap font cache on revision update",
+  '  rm -rf "$XDG_CACHE_HOME/fontconfig"',
+].join("\n");
+
 /**
- * Rewrites the XDG-links block in one desktop-common.sh. Idempotent: a file that
- * already carries the marker is left alone. Throws if the expected block is
- * absent, so an upstream change can never turn this into a silent no-op.
+ * Rewrites desktop-common.sh to fix both #2946 and #3092. Idempotent:
+ * sections already carrying their respective marker are left alone.
+ * Throws if an expected block is absent, so upstream changes fail loudly.
  */
 async function patchScript(scriptPath) {
   let source;
   try {
     source = await readFile(scriptPath, "utf8");
   } catch (error) {
-    throw new Error(`#2946 snap launcher patch: cannot read ${scriptPath}: ${error.message}`, { cause: error });
+    throw new Error(`snap launcher patch: cannot read ${scriptPath}: ${error.message}`, { cause: error });
   }
 
-  if (source.includes(PATCH_MARKER)) {
-    console.log(`   already patched: ${scriptPath}`);
-    return false;
+  let modified = false;
+
+  if (!source.includes(PATCH_MARKER)) {
+    const at = source.indexOf(ORIGINAL_BLOCK);
+    if (at < 0) {
+      throw new Error(
+        `#2946 snap launcher patch: the expected rmdir block was not found in ${scriptPath}. ` +
+          "electron-builder's snap launcher changed — re-check the workaround before building.",
+      );
+    }
+    if (source.includes(ORIGINAL_BLOCK, at + ORIGINAL_BLOCK.length)) {
+      throw new Error(`#2946 snap launcher patch: the rmdir block appears more than once in ${scriptPath}.`);
+    }
+
+    source = source.slice(0, at) + PATCHED_BLOCK + source.slice(at + ORIGINAL_BLOCK.length);
+    modified = true;
   }
 
-  const at = source.indexOf(ORIGINAL_BLOCK);
-  if (at < 0) {
-    throw new Error(
-      `#2946 snap launcher patch: the expected rmdir block was not found in ${scriptPath}. ` +
-        "electron-builder's snap launcher changed — re-check the workaround before building.",
-    );
-  }
-  if (source.includes(ORIGINAL_BLOCK, at + ORIGINAL_BLOCK.length)) {
-    throw new Error(`#2946 snap launcher patch: the rmdir block appears more than once in ${scriptPath}.`);
+  if (!source.includes(FONTCONFIG_PATCH_MARKER)) {
+    const at = source.indexOf(ORIGINAL_FONTCONFIG_BLOCK);
+    if (at < 0) {
+      throw new Error(
+        `#3092 snap launcher patch: the expected fontconfig block was not found in ${scriptPath}. ` +
+          "electron-builder's snap launcher changed — re-check the workaround before building.",
+      );
+    }
+    if (source.includes(ORIGINAL_FONTCONFIG_BLOCK, at + ORIGINAL_FONTCONFIG_BLOCK.length)) {
+      throw new Error(`#3092 snap launcher patch: the fontconfig block appears more than once in ${scriptPath}.`);
+    }
+
+    source = source.slice(0, at) + PATCHED_FONTCONFIG_BLOCK + source.slice(at + ORIGINAL_FONTCONFIG_BLOCK.length);
+    modified = true;
   }
 
-  const patched = source.slice(0, at) + PATCHED_BLOCK + source.slice(at + ORIGINAL_BLOCK.length);
-  await writeFile(scriptPath, patched, "utf8");
-  await chmod(scriptPath, 0o755);
-  console.log(`   patched: ${scriptPath}`);
-  return true;
+  if (modified) {
+    await writeFile(scriptPath, source, "utf8");
+    await chmod(scriptPath, 0o755);
+    console.log(`   patched: ${scriptPath}`);
+    return true;
+  }
+
+  console.log(`   already patched: ${scriptPath}`);
+  return false;
 }
 
 /**
@@ -187,12 +239,12 @@ async function patchDownloadedTemplate(templateArch) {
  * @param {number} arch electron-builder Arch enum value.
  */
 async function patchSnapDesktopLauncher(arch) {
-  console.log("🔄 Patching snap desktop launcher (#2946)...");
+  console.log("🔄 Patching snap desktop launcher (#2946, #3092)...");
 
   // Used by the no-template path (arm64, and any build with custom packages).
   await patchScript(BUNDLED_TEMPLATE_SCRIPT);
 
-  // Used by the template path (x64, armv7l).
+  // Used by the template path (x64).
   if (TEMPLATE_ARCH_BY_ARCH.has(arch)) {
     await patchDownloadedTemplate(TEMPLATE_ARCH_BY_ARCH.get(arch));
   }
@@ -207,4 +259,7 @@ module.exports = {
   ORIGINAL_BLOCK,
   PATCHED_BLOCK,
   PATCH_MARKER,
+  ORIGINAL_FONTCONFIG_BLOCK,
+  PATCHED_FONTCONFIG_BLOCK,
+  FONTCONFIG_PATCH_MARKER,
 };

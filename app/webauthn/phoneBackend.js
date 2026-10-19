@@ -1,6 +1,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { runBackend } = require("./phoneHelper");
+const { createFrameRelay } = require("./phoneFrameRelay");
 
 function available(helperPath) {
   if (!path.isAbsolute(helperPath || "")) return false;
@@ -53,6 +54,7 @@ function credentialData(result, options, context) {
 
 function createPhoneBackend({ electron, helperPath, mainWindow, origins }) {
   const active = new Map();
+  const relay = createFrameRelay();
   const sender = mainWindow?.webContents;
   const unavailable = () => ({ success: false, error: "NotSupportedError: Configure an executable phone-passkey helper using an absolute path." });
 
@@ -75,7 +77,7 @@ function createPhoneBackend({ electron, helperPath, mainWindow, origins }) {
     return { frame, origin, topOrigin: crossOrigin ? new URL(frame.top.url).origin : undefined };
   }
 
-  async function handle(operation, event, options = {}) {
+  async function handleRequest(operation, event, options = {}) {
     if (!options || typeof options !== "object" || Array.isArray(options)) {
       return { success: false, error: "TypeError: Invalid phone passkey request." };
     }
@@ -146,6 +148,24 @@ function createPhoneBackend({ electron, helperPath, mainWindow, origins }) {
     }
   }
 
+  async function handle(operation, event, options = {}) {
+    if (!options?.frameOrigin) return handleRequest(operation, event, options);
+    let frame;
+    let request;
+    try {
+      ({ frame } = caller(event, options));
+      const origin = new URL(frame.url).origin;
+      request = await relay.read(frame, options.requestId || options.cancelRequestId);
+      if (frame.detached || new URL(frame.url).origin !== origin) throw new Error("Sign-in frame changed.");
+    } catch {
+      return { success: false, error: "SecurityError: Unknown phone sign-in request." };
+    }
+    const result = await handleRequest(operation, { ...event, senderFrame: frame }, request);
+    await relay.respond(frame, request.requestId || request.cancelRequestId, result).catch(() => {});
+    // Never return credential data to the untrusted postMessage reply target.
+    return { success: result.success, error: result.error };
+  }
+
   const abortAll = () => { for (const pending of active.values()) pending.controller.abort(); };
   const onNavigation = (_event, _url, inPlace, isMainFrame, processId, routingId) => {
     if (inPlace) return;
@@ -156,7 +176,7 @@ function createPhoneBackend({ electron, helperPath, mainWindow, origins }) {
   sender?.on("did-start-navigation", onNavigation);
   sender?.on("render-process-gone", abortAll);
   sender?.on("destroyed", abortAll);
-  return { handle, dispose() {
+  return { handle, registerFrame: (frame) => relay.register(frame), dispose() {
     abortAll();
     sender?.removeListener("did-start-navigation", onNavigation);
     sender?.removeListener("render-process-gone", abortAll);

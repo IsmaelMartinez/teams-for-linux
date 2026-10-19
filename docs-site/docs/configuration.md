@@ -28,6 +28,7 @@ For a complete, always-up-to-date list of every option generated directly from t
   - [Virtual Backgrounds](#virtual-backgrounds)
   - [URL & Protocol Handling](#url--protocol-handling)
   - [Keyboard Shortcuts](#keyboard-shortcuts)
+  - [D-Bus Integration](#d-bus-integration)
   - [MQTT Integration](#mqtt-integration)
   - [Microsoft Graph API](#microsoft-graph-api)
   - [Quick Chat](#quick-chat)
@@ -145,12 +146,69 @@ ignored. The examples below use whichever spelling actually applies.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `appearance.cssName` | `string` | `""` | Custom CSS name. Options: "compactDark", "compactLight", "tweaks", "condensedDark", "condensedLight" |
+| `appearance.cssName` | `string` | `""` | Packaged CSS theme (`compactDark`, `compactLight`, `tweaks`, `condensedDark`, `condensedLight`) or discovered user theme (`custom:<id>`) |
 | `customCSSName` | `string` | `""` | Deprecated, use `appearance.cssName` |
 | `appearance.cssLocation` | `string` | `""` | Custom CSS styles file location |
 | `customCSSLocation` | `string` | `""` | Deprecated, use `appearance.cssLocation` |
 | `appearance.followSystemTheme` | `boolean` | `false` | Follow the operating-system dark/light theme preference. Set `true` to drive Teams's theme from the OS preference. |
 | `followSystemTheme` | `boolean` | `false` | Deprecated, use `appearance.followSystemTheme` |
+
+#### Selecting a CSS Theme
+
+Open the application's **Settings → Theme** menu to select **Default**, a **Built-in** theme, or a discovered **Custom** theme. The menu displays human-readable theme names and saves your choice in `config.json`, preserving unrelated settings. Theme changes require a restart; the app offers to restart after saving, or you can restart later.
+
+CSS themes style the Teams web interface, including its iframe content. They do not change Teams' own dark/light preference. Choose the appropriate appearance in Teams itself, or use `appearance.followSystemTheme` to follow your desktop preference.
+
+#### Installing a User Theme
+
+Place each theme in its own folder under `themes` inside the application's [configuration directory](#configuration-locations). Use **Settings → Theme → Open themes folder** to open that directory in your file manager.
+
+```text
+themes/
+  my-theme/
+    theme.json
+    theme.css
+```
+
+The minimum `theme.json` is:
+
+```json
+{
+  "id": "my-theme",
+  "name": "My Theme",
+  "css": "theme.css"
+}
+```
+
+The `id` identifies the theme across restarts, `name` is the label shown in the menu, and `css` is the relative path to its CSS file. IDs must start with a letter or digit and contain only letters, digits, dots, underscores, or hyphens. Keep the `id` stable when renaming a theme or its folder. Optional string fields `author`, `version`, and `description` provide additional metadata. Metadata files are limited to 64 KiB.
+
+A minimal `theme.css` could contain:
+
+```css
+:root {
+  scrollbar-color: #657080 #20252c;
+}
+```
+
+Restart the app after installing, removing, or updating a theme. Discovery reads only immediate theme folders; there is no filesystem watcher or online theme service. Once discovered, **My Theme** appears under **Custom**, and selecting it saves `appearance.cssName` as `custom:my-theme`. Switching themes does not require manually editing the configuration file.
+
+For Flatpak, the directory is:
+
+```text
+~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/themes/
+```
+
+#### Theme Validation and Compatibility
+
+Themes are local CSS files only; no JavaScript or executable theme code is loaded. Metadata must be valid JSON with `id`, `name`, and `css`. The CSS file must exist inside its theme folder. Absolute paths, parent-directory traversal, and symlinks escaping the theme folder are rejected.
+
+Theme CSS may load remote resources through `@import` and `url()`, so only install themes from trusted sources.
+
+Invalid themes are ignored with concise warnings and never prevent startup. Built-in IDs are reserved. If several custom folders use the same ID, the first valid folder in sorted folder-name order wins. If a selected custom theme is missing or invalid, the app warns and uses the default appearance while retaining the saved selection, so reinstalling the theme restores it on the next restart.
+
+Existing built-in names such as `compactDark` continue to work without migration. `appearance.cssName` takes precedence over `appearance.cssLocation`; a missing selected custom theme falls back to Default rather than loading a different stylesheet from `cssLocation`.
+
+Direct CSS files remain supported through `appearance.cssLocation` and its legacy alias `customCSSLocation`. When a location is configured, **Custom CSS file** in the Theme menu lets you reuse that stylesheet. Choosing a built-in or discovered theme preserves the location for reuse; choosing **Default** clears both theme settings. Legacy `customCSSName` continues to work, with the nested `appearance` values taking precedence as described in [Renamed options](#renamed-options).
 
 ### Tray Icon
 
@@ -578,6 +636,7 @@ Media settings are organized under the `media` configuration object with subgrou
 | `media.camera.resolution.height` | `number` | - | Target height when mode is `"override"` |
 | `media.camera.autoAdjustAspectRatio.enabled` | `boolean` | `false` | Fixes camera video stretching when moving Teams between monitors with different orientations by reapplying proper aspect ratio constraints |
 | `media.video.menuEnabled` | `boolean` | `false` | Enable menu entry for controlling video elements (PiP mode, video controls) |
+| `media.documentPictureInPicture` | `boolean` | `true` | Let the Teams web Call Monitor ([MC1462921](https://mc.merill.net/message/MC1462921)) show its floating call controls in a small always-on-top window, capped at 800×600. Electron's own Document Picture-in-Picture window closes as soon as it opens, so this replaces the API with a popup the app allows. Set to `false` to fall back to Electron's native API, which leaves the Call Monitor broken. Wayland compositors may not keep the window on top |
 
 **Example Media Configuration:**
 ```json
@@ -648,6 +707,17 @@ A floating sticker panel that lists image files from a local folder and pastes t
 | `shortcuts.disableWhileFocused` | `array` | `[]` | Array of global shortcuts to disable while app is in focus |
 | `globalShortcuts` | `array` | `[]` | Deprecated, use `shortcuts.global` |
 | `disableGlobalShortcuts` | `array` | `[]` | Deprecated, use `shortcuts.disableWhileFocused` |
+
+### D-Bus Integration
+
+The optional Linux session-bus interface exposes Teams controls and observed presence, call, and media state. Changes require an application restart.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `dbusControl.enabled` | `boolean` | `false` | Enable the local D-Bus interface |
+| `dbusControl.busName` | `string` | `""` | Service name for this instance. Empty uses the Flatpak app ID or `com.github.IsmaelMartinez.teams_for_linux`. Invalid names disable the service. |
+
+For separately launched profiles, set a different `busName` in each profile's `config.json`, such as `com.github.IsmaelMartinez.teams_for_linux.Work` and `com.github.IsmaelMartinez.teams_for_linux.Personal`. The object path and interface remain the same. See the [D-Bus control guide](development/dbus-control.md) for examples, name requirements, and sandbox limitations.
 
 ### MQTT Integration
 
@@ -1216,9 +1286,10 @@ Phone mode uses an external helper for QR sign-in on Linux. It requires BlueZ,
 a powered Bluetooth adapter, a nearby phone with an existing accepted passkey,
 and network access for the caBLE tunnel.
 
-Earlier real-phone testing used a custom Arch package; automated adapter
-checks also run against the unpacked Linux build. Debian, RPM and AppImage phone
-sign-in have not been tested. They require an accessible helper executable and
+Real-phone QR sign-in succeeded on commit `1cd08841` using the unpacked Linux
+x86_64 build on Arch, helper v0.1.0 and iOS 27.2. Earlier testing also used a
+custom Arch package. Automated adapter checks run against the unpacked build.
+Debian, RPM and AppImage phone sign-in have not been tested. They require an accessible helper executable and
 host BlueZ access. Snap and Flatpak phone mode is unsupported: the current Snap
 has no `bluez` plug and the Flathub manifest does not grant `org.bluez`. Successful
 package builds do not establish phone-authentication support.

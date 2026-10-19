@@ -245,9 +245,12 @@ function injectIntoFrame(wf) {
       if (!navigator.credentials || !navigator.credentials.create) return;
 
       const phone = ${Boolean(phoneBackend)};
+      const phoneRelayKey = ${JSON.stringify(phoneBackend ? phoneBackend.registerFrame(wf) : null)};
       const relayWindow = phone ? window.top : window.parent;
       const phoneFrameId = {processId: ${wf.processId}, routingId: ${wf.routingId}};
-      const permitted = () => (document.permissionsPolicy || document.featurePolicy)?.allowsFeature("publickey-credentials-get") === true;
+      const policy = phone ? (document.permissionsPolicy || document.featurePolicy) : null;
+      const allowsFeature = policy?.allowsFeature.bind(policy);
+      const permitted = () => allowsFeature?.("publickey-credentials-get") === true;
       const origCreate = navigator.credentials.create.bind(navigator.credentials);
       const origGet = navigator.credentials.get.bind(navigator.credentials);
 
@@ -298,16 +301,29 @@ function injectIntoFrame(wf) {
         };
       }
 
+      const phoneRequests = new Map();
+      if (phone) Object.defineProperty(window, phoneRelayKey, { value: (id, result) => {
+        const pending = phoneRequests.get(id);
+        if (!pending) return null;
+        if (result !== undefined) { pending.finish(result); return null; }
+        return pending.data;
+      } });
+
       function ipcInvoke(channel, data, signal) {
         if (phone && signal?.aborted) return Promise.reject(new DOMException("Cancelled", "AbortError"));
         return new Promise((resolve, reject) => {
           const id = crypto.randomUUID();
           let timer;
-          const cleanup = () => { window.removeEventListener("message", onMsg); signal?.removeEventListener("abort", abort); clearTimeout(timer); };
+          const cleanup = () => { window.removeEventListener("message", onMsg); signal?.removeEventListener("abort", abort); clearTimeout(timer); phoneRequests.delete(id); };
           const send = (payload) => relayWindow.postMessage({ type: "webauthn-request", id, channel, data: payload }, "*");
           const abort = () => {
-            cleanup();
+            phoneRequests.get(id).data = { cancelRequestId: id };
             send({ cancelRequestId: id, phoneFrameId });
+            // Keep the cancellation record until the main process reads it.
+            setTimeout(() => phoneRequests.delete(id), 5000);
+            window.removeEventListener("message", onMsg);
+            signal?.removeEventListener("abort", abort);
+            clearTimeout(timer);
             reject(new DOMException("Cancelled", "AbortError"));
           };
           function onMsg(e) {
@@ -318,10 +334,15 @@ function injectIntoFrame(wf) {
               reject(new DOMException(e.data.error, name));
             } else resolve(e.data.result);
           }
-          window.addEventListener("message", onMsg);
+          if (phone) phoneRequests.set(id, { data: {...data, requestId:id}, finish: (result) => {
+            cleanup();
+            if (result.success) resolve(result.data);
+            else reject(new DOMException(result.error, /^(\w+):/.exec(result.error)?.[1] || "NotAllowedError"));
+          } });
+          if (!phone) window.addEventListener("message", onMsg);
           if (phone) signal?.addEventListener("abort", abort, {once:true});
-          send(phone ? {...data, requestId:id, phoneFrameId} : data);
-          timer = setTimeout(() => { cleanup(); if (phone) send({cancelRequestId:id,phoneFrameId}); reject(new DOMException("Timeout", "NotAllowedError")); }, 120000);
+          send(phone ? {requestId:id, phoneFrameId} : data);
+          timer = setTimeout(() => { if (phone) abort(); else { cleanup(); reject(new DOMException("Timeout", "NotAllowedError")); } }, 120000);
         });
       }
 

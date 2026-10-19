@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const vm = require('node:vm');
 const { EventEmitter } = require('node:events');
 const { createPhoneBackend, available } = require('../../app/webauthn/phoneBackend');
 const { buildAllowedOrigins } = require('../../app/webauthn/originAllowlist');
@@ -40,9 +41,18 @@ test('relayed login iframe uses Electron frame origin and top-origin metadata', 
   const {adapter,event,frame}=setup(t,success);
   const child={url:'https://login.microsoft.com/frame',processId:1,routingId:3,parent:frame,top:frame};
   frame.framesInSubtree.push(child);
-  const result=await adapter.handle('get',event,{...options,frameOrigin:'https://login.microsoft.com',phoneFrameId:{processId:1,routingId:3}});
+  const key = adapter.registerFrame(child);
+  const received = [];
+  const context = vm.createContext({ window: { [key]: (_id, result) => {
+    if (result) { received.push(result); return null; }
+    return options;
+  } } });
+  child.executeJavaScript = source => vm.runInContext(source, context);
+  const result=await adapter.handle('get',event,{...options,challenge:'BAUG',timeout:-1,frameOrigin:'https://login.microsoft.com',phoneFrameId:{processId:1,routingId:3}});
   assert.equal(result.success,true);
-  const client=JSON.parse(Buffer.from(result.data.clientDataJson,'base64url'));
+  assert.equal(result.data, undefined);
+  const client=JSON.parse(Buffer.from(received[0].data.clientDataJson,'base64url'));
+  assert.equal(client.challenge,'AQID');
   assert.equal(client.origin,'https://login.microsoft.com');
   assert.equal(client.topOrigin,'https://login.microsoftonline.com');
 });
@@ -114,4 +124,16 @@ test('non-object and unserializable IPC input returns a bounded error',posix,asy
   for(const input of [null,[],42,{...options,extension:1n},{...options,timeout:1n},cycle]) {
     assert.match((await adapter.handle('get',event,input)).error,/TypeError: Invalid phone passkey request/);
   }
+});
+
+test('forged relay requests cannot start a helper without a document-owned request', posix, async t => {
+  const { adapter, event, frame } = setup(t, 'process.exit(99)');
+  const child = { url: 'https://login.microsoft.com/frame', processId: 1, routingId: 3, parent: frame, top: frame };
+  frame.framesInSubtree.push(child);
+  adapter.registerFrame(child);
+  child.executeJavaScript = async () => null;
+  const result = await adapter.handle('get', event, { ...options, frameOrigin: 'https://login.microsoft.com',
+    phoneFrameId: { processId: 1, routingId: 3 } });
+  assert.match(result.error, /SecurityError: Unknown phone sign-in request/);
+  assert.equal(result.data, undefined);
 });

@@ -109,6 +109,14 @@ sudo emerald install teams-for-linux
 sudo snap install teams-for-linux
 ```
 
+:::tip Audio/Webcam Hotplug on Modern Distros
+On Ubuntu 24.04+ or distributions with AppArmor 4.x, connect the `hardware-observe` interface to allow media device hotplug detection via netlink without AppArmor sandbox denial loops:
+
+```bash
+sudo snap connect teams-for-linux:hardware-observe
+```
+:::
+
 :::tip Update Frequency
 Flatpak is the slowest update channel — it only receives a new version after the release has reached 100% across all other channels. Snap stable is the next slowest, with manual promotion after testing. If you prefer fewer update notifications, these are good choices. See the [Release Cadence](development/manual-release-process.md#release-cadence) section for details.
 :::
@@ -161,6 +169,8 @@ The beta remote carries pre-release builds and packaging changes that are still 
    - **rpm** - Red Hat/Fedora package
    - **snap** - Universal snap package
    - **tar.gz** - Portable archive
+
+Packages are built for x86_64 and arm64. 32-bit ARM (armv7l) builds ended with the move to Electron 44, which no longer ships 32-bit binaries; existing armv7l installs keep working but receive no further updates.
 
 ### Package Installation
 

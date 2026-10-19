@@ -1,4 +1,8 @@
 const { default: Store } = require("electron-store");
+const fs = require("node:fs");
+const path = require("node:path");
+const { BUILTIN_THEMES, discoverThemes, resolveTheme } = require("../customCSS/themes");
+const { isPlainObject } = require("../config/validator");
 
 // WeakMap-based private fields pattern provides true privacy without relying on newer
 // JavaScript private field syntax (#property). This ensures compatibility with older
@@ -14,6 +18,10 @@ let _AppConfiguration_settingsStore = new WeakMap();
  * or modified externally, providing a secure configuration management layer.
  */
 class AppConfiguration {
+  #customThemes;
+  #customCSSPath;
+  #themeSelection = null;
+
   /**
    * @param {string} configPath - Path to the configuration directory
    * @param {string} appVersion - Current application version for config compatibility
@@ -24,6 +32,8 @@ class AppConfiguration {
       this,
       require("../config")(configPath, appVersion)
     );
+    this.#customThemes = discoverThemes(configPath);
+    this.#customCSSPath = resolveTheme(this.startupConfig, configPath, this.#customThemes);
     _AppConfiguration_legacyConfigStore.set(
       this,
       new Store({
@@ -64,6 +74,88 @@ class AppConfiguration {
 
   get settingsStore() {
     return _AppConfiguration_settingsStore.get(this);
+  }
+
+  get customThemes() {
+    return this.#customThemes;
+  }
+
+  // Resolve once per launch, including missing-theme fallback. The saved
+  // selection below can change, but the running app keeps its startup CSS.
+  get customCSSPath() {
+    return this.#customCSSPath;
+  }
+
+  get isWatchingConfigFile() {
+    return require("../config").isWatchingConfigFile(this.startupConfig);
+  }
+
+  get themeSelection() {
+    return this.#themeSelection ?? {
+      cssName: this.startupConfig.customCSSName ?? this.startupConfig.appearance?.cssName ?? "",
+      cssLocation: this.startupConfig.customCSSLocation ?? this.startupConfig.appearance?.cssLocation ?? "",
+    };
+  }
+
+  // Theme selection is restart-only like appearance.cssName. Write only its
+  // canonical fields; do not mutate startupConfig or migrate unrelated keys.
+  // null chooses the existing direct CSS file; "" explicitly chooses Default.
+  setThemeSelection(selection) {
+    if (selection !== null && selection !== "" &&
+        ![...BUILTIN_THEMES, ...this.#customThemes].some((theme) => theme.value === selection)) {
+      throw new Error("Unknown theme selection");
+    }
+    const configFile = this.configFilePath;
+    const data = fs.existsSync(configFile)
+      ? JSON.parse(fs.readFileSync(configFile, "utf8")) : {};
+    if (!isPlainObject(data) ||
+        (Object.hasOwn(data, "appearance") && !isPlainObject(data.appearance))) {
+      throw new Error("Cannot update an invalid configuration");
+    }
+    const before = JSON.stringify(data);
+    const appearance = data.appearance ?? {};
+    if (selection === null) {
+      const cssLocation = appearance.cssLocation ?? data.customCSSLocation ?? this.themeSelection.cssLocation;
+      if (typeof cssLocation !== "string" || !cssLocation) {
+        throw new Error("No custom CSS file is configured");
+      }
+      appearance.cssLocation = cssLocation;
+    } else if (selection === "") {
+      appearance.cssLocation = "";
+    }
+    appearance.cssName = selection ?? "";
+    data.appearance = appearance;
+    const changed = before !== JSON.stringify(data);
+    if (changed) {
+      this.#writeThemeConfig(configFile, data);
+    }
+    this.#themeSelection = {
+      cssName: appearance.cssName,
+      cssLocation: appearance.cssLocation ?? data.customCSSLocation ?? this.themeSelection.cssLocation,
+    };
+    return changed;
+  }
+
+  #writeThemeConfig(configFile, data) {
+    fs.mkdirSync(this.configPath, { recursive: true });
+    // Preserve user config symlinks (common with dotfile managers), mode and
+    // unrelated options. Rename atomically so a failed write cannot truncate it.
+    const target = fs.existsSync(configFile) ? fs.realpathSync(configFile) : configFile;
+    const mode = fs.existsSync(target) ? fs.statSync(target).mode & 0o777 : 0o600;
+    const temp = path.join(path.dirname(target), `.config-theme-${process.pid}-${Date.now()}.tmp`);
+    const contents = JSON.stringify(data, null, 2) + "\n";
+    // A successful exclusive open establishes ownership even if writing fails.
+    const descriptor = fs.openSync(temp, "wx", mode);
+    try {
+      try {
+        fs.writeFileSync(descriptor, contents);
+      } finally {
+        fs.closeSync(descriptor);
+      }
+      fs.renameSync(temp, target);
+    } finally {
+      if (fs.existsSync(temp)) fs.unlinkSync(temp);
+    }
   }
 }
 

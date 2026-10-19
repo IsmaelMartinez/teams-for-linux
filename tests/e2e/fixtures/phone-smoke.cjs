@@ -89,6 +89,35 @@ async function checkRelay(win) {
   const error = await denied.executeJavaScript(
     'navigator.credentials.get({publicKey:{challenge:new Uint8Array([1,2,3])}}).catch(e=>e.name)');
   assert.equal(error, 'SecurityError');
+  const shadowedPolicy = await denied.executeJavaScript(`(() => {
+    const fake = { allowsFeature: () => true };
+    Object.defineProperty(document, 'permissionsPolicy', { value: fake });
+    Object.defineProperty(document, 'featurePolicy', { value: fake });
+    return navigator.credentials.get({publicKey:{challenge:new Uint8Array([1,2,3])}}).catch(e=>e.name);
+  })()`);
+  assert.equal(shadowedPolicy, 'SecurityError');
+  const forged = await denied.executeJavaScript(`Promise.all([
+    {processId:${denied.processId},routingId:${denied.routingId}},
+    {processId:${frame.processId},routingId:${frame.routingId}}
+  ].map((phoneFrameId, index) => new Promise((resolve, reject) => {
+    const id = 'forged-relay-' + index;
+    const timer = setTimeout(() => reject(new Error('Relay rejection missing')), 1000);
+    function listener(event) {
+      if (event.source !== window.top || event.data?.id !== id) return;
+      clearTimeout(timer);
+      window.removeEventListener('message', listener);
+      resolve(event.data);
+    }
+    window.addEventListener('message', listener);
+    window.top.postMessage({type:'webauthn-request', id, channel:'webauthn:get', data:{
+      requestId:id, challenge:'AQID', rpId:location.hostname, timeout:10, phoneFrameId
+    }}, '*');
+  })))`);
+  for (const response of forged) {
+    assert.match(response.error, /^SecurityError:/);
+    assert.equal(response.result, undefined);
+  }
+
 }
 
 async function checkPrompt(win) {

@@ -25,6 +25,10 @@ const { DeferredDeepLink } = require("./deferredDeepLink");
 const os = require("node:os");
 const path = require("node:path");
 const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
+const {
+  isDocumentPictureInPictureRequest,
+  documentPictureInPictureResponse,
+} = require("./documentPictureInPicture");
 
 const DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG = {
   enabled: true,
@@ -1065,7 +1069,7 @@ function onDidFinishLoad() {
 
   injectScreenSharingLogic(window.webContents);
 
-  customCSS.onDidFinishLoad(window.webContents, config);
+  customCSS.onDidFinishLoad(window.webContents, config, appConfig.customCSSPath);
   initSystemThemeFollow(config);
 }
 
@@ -1121,7 +1125,7 @@ function onDidFrameFinishLoad(
   }
 
   const wf = webFrameMain.fromId(frameProcessId, frameRoutingId);
-  customCSS.onDidFrameFinishLoad(wf, config);
+  customCSS.onDidFrameFinishLoad(wf, config, appConfig.customCSSPath);
 }
 
 function restoreWindow() {
@@ -1357,6 +1361,13 @@ function onBeforeSendHeadersHandler(detail, callback) {
 }
 
 function onNewWindow(details) {
+  // Must precede the about:blank handling below (auth breadcrumb and deny):
+  // the Document PiP replacement opens an about:blank popup that Teams renders
+  // its call controls into.
+  if (isDocumentPictureInPictureRequest(details, config)) {
+    return documentPictureInPictureResponse();
+  }
+
   // Breadcrumb for diagnosing which shape of popup the "sign in again"
   // banner opens (about:blank-then-navigate vs a direct login URL) — the two
   // take different paths below and only the direct form can be intercepted

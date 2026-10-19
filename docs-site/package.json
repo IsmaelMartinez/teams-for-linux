@@ -24,8 +24,8 @@
     "clsx": "^2.1.1",
     "prism-react-renderer": "^2.4.1",
     "prop-types": "^15.8.1",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "^3.9.2",
@@ -46,7 +46,7 @@
     ]
   },
   "engines": {
-    "node": ">=18.0"
+    "node": ">=20.0"
   },
   "overrides": {
     "minimatch": ">=10.2.1",
@@ -55,6 +55,7 @@
     "serialize-javascript": "^7.0.5",
     "follow-redirects": "^1.16.0",
     "uuid": "^14.0.0",
-    "qs": "^6.16.0"
+    "qs": "^6.16.0",
+    "tinypool": "^2.1.2"
   }
 }

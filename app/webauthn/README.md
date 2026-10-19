@@ -72,6 +72,9 @@ None of these carry credential material: no credential IDs, user handles, challe
 Set `auth.webauthn.backend` to `"phone"` and `auth.webauthn.helperPath` to an
 absolute executable path. The adapter uses the existing IPC handlers, login-frame
 relay and origin allowlist. It skips hardware PIN and touch prompts.
+`phoneFrameRelay.js` reads pending assertions from the injected document and
+returns responses directly to it; postMessage carries only a request notification,
+not authority to start an assertion or a credential reply destination.
 
 Phone mode supports interactive assertions in the primary window and its login
 frames. Registration and conditional/silent requests use Chromium. Extension

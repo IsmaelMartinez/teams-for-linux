@@ -31,8 +31,11 @@ login-frame relay, IPC handlers and `buildAllowedOrigins`.
 Resolve the calling frame from the registered primary window's Electron frame
 tree. Pass its origin, cross-origin top-origin metadata and assertion options to
 the helper. The helper validates the relying-party ID against the origin and
-public suffix list before using Bluetooth. Renderer overrides enforce the
-frame's WebAuthn Permissions Policy.
+public suffix list before using Bluetooth. Injected phone overrides capture the
+frame's policy check and keep pending requests in a closure. A relayed message
+only wakes the main process: it reads options from that document's pending
+request and delivers the result directly to the same document. Renderer-supplied
+frame IDs cannot create requests or redirect credential responses.
 
 Cancellation uses `webauthn:get` with a request ID bound to the calling frame.
 Abort, document replacement, window destruction, renderer loss, timeout and QR

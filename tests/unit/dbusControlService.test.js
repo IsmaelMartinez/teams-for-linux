@@ -76,6 +76,7 @@ function fixture(options = {}) {
 	};
 	const service = new DBusControlService(control, {
 		dbus,
+		busName: options.busName,
 		env: options.env || {},
 		platform: options.platform || 'linux',
 		logger,
@@ -117,6 +118,60 @@ describe('DBusControlService', () => {
 		const { bus, service } = fixture({ env: { FLATPAK_ID: 'org.example.Teams' } });
 		service.start();
 		assert.equal(bus.names[0].name, 'org.example.Teams');
+	});
+
+	it('uses the configured name for ownership and release without changing the API', () => {
+		const name = `${DEFAULT_NAME}.Work`;
+		const { bus, service } = fixture({ busName: name, env: { FLATPAK_ID: 'org.example.Teams' } });
+		service.start();
+		assert.equal(bus.names[0].name, name);
+		assert.equal(bus.names[0].flags, 0x4);
+		assert.equal(bus.exports[0].path, OBJECT_PATH);
+		assert.equal(bus.exports[0].descriptor.name, INTERFACE_NAME);
+		assert.deepEqual(JSON.parse(bus.exports[0].implementation.GetState()), STATE);
+		service.control.emit('state-changed', STATE);
+		assert.ok(bus.sentSignals.length > 0);
+		for (const [path, iface] of bus.sentSignals) {
+			assert.equal(path, OBJECT_PATH);
+			assert.equal(iface, INTERFACE_NAME);
+		}
+		service.stop();
+		assert.deepEqual(bus.releases, [name]);
+	});
+
+	it('preserves native and Flatpak defaults for an unset or empty name', () => {
+		for (const busName of [undefined, null, '']) {
+			for (const env of [{}, { FLATPAK_ID: 'org.example.Teams' }]) {
+				const { bus, service } = fixture({ busName, env });
+				service.start();
+				assert.equal(bus.names[0].name, env.FLATPAK_ID || DEFAULT_NAME);
+				service.stop();
+			}
+		}
+	});
+
+	it('accepts well-known bus names including hyphens, underscores and the length limit', () => {
+		for (const busName of ['org.example.Teams.work-1', 'org._profile.-work', `a.${'b'.repeat(253)}`]) {
+			const { bus, service } = fixture({ busName });
+			service.start();
+			assert.equal(bus.names[0].name, busName);
+			service.stop();
+		}
+	});
+
+	it('rejects invalid or unique names without connecting, falling back or logging their values', () => {
+		for (const busName of [
+			':1.42', 'single', '.org.example', 'org..example', 'org.example.',
+			'1org.example', 'org.1example', 'org.example/work', 'org.example work',
+			'org.exámple', 'org.example\n', 'org.example\0', `a.${'b'.repeat(254)}`,
+			false, 42, [], {},
+		]) {
+			const { bus, service, logs } = fixture({ busName });
+			assert.doesNotThrow(() => service.start());
+			assert.equal(bus.sessionBusCalls, 0);
+			assert.equal(service.active, false);
+			assert.deepEqual(logs.warn, ['[DBUS_CONTROL] Invalid bus name; service disabled']);
+		}
 	});
 
 	for (const result of [1, 4]) {
