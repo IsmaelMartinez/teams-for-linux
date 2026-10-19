@@ -84,15 +84,14 @@ jobs:
           sudo apt-get update
           # python3-yaml is not guaranteed on the runner image and the manifest
           # rewrite below depends on it, so install it here rather than assume.
-          #
-          # elfutils is required, not optional: flatpak-builder's post-build
-          # debuginfo stage shells out to eu-strip, and --no-install-recommends
-          # drops it, so the build gets all the way through every build-command
-          # and then dies with "Failed to execute child process eu-strip".
-          sudo apt-get install -y --no-install-recommends \
-            flatpak flatpak-builder python3-yaml elfutils
+          sudo apt-get install -y --no-install-recommends flatpak python3-yaml
           flatpak remote-add --if-not-exists --user \
             flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          # Build with Flathub's own builder, not Ubuntu's flatpak-builder
+          # 1.4.2: that one installs the fido2 modules' cmake libraries to
+          # /app/lib64, so libfido2 fails with "cannot find -lcbor" on a
+          # manifest flathubbot builds fine.
+          flatpak install --user --noninteractive flathub org.flatpak.Builder
 
       - name: Fetch the manifest from the packaging repo
         env:
@@ -172,7 +171,7 @@ jobs:
       - name: Build
         run: |
           set -euo pipefail
-          flatpak-builder --user --force-clean --disable-rofiles-fuse \
+          flatpak run org.flatpak.Builder --user --force-clean --disable-rofiles-fuse \
             --install-deps-from=flathub \
             --arch=x86_64 \
             build-dir manifest.yml
