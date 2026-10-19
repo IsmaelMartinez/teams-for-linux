@@ -55,7 +55,7 @@ gh-releases-zsync|IsmaelMartinez|teams-for-linux|latest|teams-for-linux-*<arch>*
 |--------------|----------|---------|
 | x86_64 | `x86_64` | `*x86_64*.AppImage.zsync` |
 | arm64 | `aarch64` | `*arm64*.AppImage.zsync` |
-| armv7l | `armhf` | `*armv7l*.AppImage.zsync` |
+| armv7l | `armhf` | `*armv7l*.AppImage.zsync` (until Electron 44 dropped 32-bit builds, #2994) |
 
 ### CI Compatibility
 
