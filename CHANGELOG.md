@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.27.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.26.0...v2.27.0) (2026-10-19)
+
+
+### Features
+
+* **deps:** upgrade to Electron 44.9.0 and drop the armv7l builds ([#2995](https://github.com/IsmaelMartinez/teams-for-linux/issues/2995)) ([fa5b086](https://github.com/IsmaelMartinez/teams-for-linux/commit/fa5b086ff3566c6b7f43a87e7bcf7be82f91b1e0))
+
+
+### Bug Fixes
+
+* **media:** give the Document PiP popup a per-launch frame name ([#3111](https://github.com/IsmaelMartinez/teams-for-linux/issues/3111)) ([7bf248c](https://github.com/IsmaelMartinez/teams-for-linux/commit/7bf248c9cc7e54831f770c7836a3fff32c801374))
+
+
+### Documentation
+
+* **troubleshooting:** explain the stuck passkey sign-in screen ([#3109](https://github.com/IsmaelMartinez/teams-for-linux/issues/3109)) ([cb6f53b](https://github.com/IsmaelMartinez/teams-for-linux/commit/cb6f53bad64f9e3015951cbcd76f04488a6fb5a4))
+
+
+### Maintenance
+
+* **deps:** bump the minor-and-patch group in /docs-site with 2 updates ([#3116](https://github.com/IsmaelMartinez/teams-for-linux/issues/3116)) ([d277244](https://github.com/IsmaelMartinez/teams-for-linux/commit/d277244996885fb833f01c8a8ac5841815f90ae2))
+* **deps:** bump the minor-and-patch group with 3 updates ([#3114](https://github.com/IsmaelMartinez/teams-for-linux/issues/3114)) ([d86551f](https://github.com/IsmaelMartinez/teams-for-linux/commit/d86551f7943df73136941ccdc15bd64d03d46e21))
+
+### Thanks
+
+Big thanks to @app/dependabot for contributing to this release.
+
 ## [2.26.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.25.0...v2.26.0) (2026-10-17)
 
 
