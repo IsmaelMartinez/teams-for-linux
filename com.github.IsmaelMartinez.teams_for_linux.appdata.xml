@@ -14,6 +14,17 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.27.0" date="2026-10-19">
+      <description>
+        <ul>
+          <li>deps: upgrade to Electron 44.9.0 and drop the armv7l builds (#2995)</li>
+          <li>media: give the Document PiP popup a per-launch frame name (#3111)</li>
+          <li>troubleshooting: explain the stuck passkey sign-in screen (#3109)</li>
+          <li>deps: bump the minor-and-patch group in /docs-site with 2 updates (#3116)</li>
+          <li>deps: bump the minor-and-patch group with 3 updates (#3114)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.26.0" date="2026-10-17">
       <description>
         <ul>
