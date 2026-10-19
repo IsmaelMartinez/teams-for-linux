@@ -7,7 +7,11 @@ const tool = require('../../app/browser/tools/documentPictureInPicture');
 const main = require('../../app/mainAppWindow/documentPictureInPicture');
 const { createProfileWindowOpenHandler } = require('../../app/mainAppWindow/profileWindowOpenPolicy');
 
-const ENABLED = { media: { documentPictureInPicture: true } };
+// app/index.js adds the per-launch frame name to the config the renderer gets.
+const ENABLED = {
+  media: { documentPictureInPicture: true },
+  documentPictureInPictureFrameName: main.PIP_FRAME_NAME,
+};
 
 // Popup returned by the fake window.open: an EventTarget with the `closed`
 // flag and a close() that fires pagehide, as a real same-origin popup does.
@@ -70,6 +74,12 @@ describe('documentPictureInPicture browser tool', () => {
     tool.init({ media: { documentPictureInPicture: false } }, win);
     assert.strictEqual(win.documentPictureInPicture.native, true);
     tool.init({}, win);
+    assert.strictEqual(win.documentPictureInPicture.native, true);
+  });
+
+  it('leaves the native API in place without a frame name from the main process', () => {
+    const win = new FakeWindow();
+    tool.init({ media: { documentPictureInPicture: true } }, win);
     assert.strictEqual(win.documentPictureInPicture.native, true);
   });
 
@@ -167,9 +177,20 @@ describe('documentPictureInPicture browser tool', () => {
     assert.match(pipLogs[0], /registered/);
     assert.match(pipLogs[1], /cleared/);
   });
+});
 
-  it('shares its frame name with the main process', () => {
-    assert.strictEqual(tool.PIP_FRAME_NAME, main.PIP_FRAME_NAME);
+describe('documentPictureInPicture frame name', () => {
+  it('is random per launch so cross-origin frames cannot guess it', () => {
+    const modulePath = require.resolve('../../app/mainAppWindow/documentPictureInPicture');
+    delete require.cache[modulePath];
+    const relaunched = require(modulePath);
+    assert.match(main.PIP_FRAME_NAME, /^teams-for-linux-document-pip-[0-9a-f-]{36}$/);
+    assert.notStrictEqual(relaunched.PIP_FRAME_NAME, main.PIP_FRAME_NAME);
+    // The fixed name that shipped in 2.26.0 must no longer open the window.
+    assert.strictEqual(
+      main.isDocumentPictureInPictureRequest({ url: 'about:blank', frameName: 'teams-for-linux-document-pip' }, ENABLED),
+      false
+    );
   });
 });
 
