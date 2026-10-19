@@ -138,7 +138,10 @@ jobs:
           with open("manifest.yml") as fh:
               manifest = yaml.safe_load(fh)
 
-          module = manifest["modules"][0]
+          # Pick the app module by name: the fido2 modules (libcbor, libfido2)
+          # sit ahead of it, and rewriting modules[0] broke every run from
+          # v2.24.0 to v2.27.0 with "libcbor: Can't find CMakeLists.txt".
+          module = next(m for m in manifest["modules"] if m["name"] == "teams-for-linux")
 
           # Keep the inline wrapper script verbatim; it is part of what we are
           # smoke testing. Everything else is a remote download we replace with
