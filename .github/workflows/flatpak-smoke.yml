@@ -85,14 +85,18 @@ jobs:
           # python3-yaml is not guaranteed on the runner image and the manifest
           # rewrite below depends on it, so install it here rather than assume.
           #
-          # elfutils is required, not optional: flatpak-builder's post-build
-          # debuginfo stage shells out to eu-strip, and --no-install-recommends
-          # drops it, so the build gets all the way through every build-command
-          # and then dies with "Failed to execute child process eu-strip".
+          # dbus-bin provides dbus-run-session: the sandboxed builder below
+          # reaches the host flatpak over a session bus, which a headless
+          # runner does not have ("Cannot autolaunch D-Bus without X11 $DISPLAY").
           sudo apt-get install -y --no-install-recommends \
-            flatpak flatpak-builder python3-yaml elfutils
+            flatpak python3-yaml dbus-bin
           flatpak remote-add --if-not-exists --user \
             flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          # Build with Flathub's own builder, not Ubuntu's flatpak-builder
+          # 1.4.2: that one installs the fido2 modules' cmake libraries to
+          # /app/lib64, so libfido2 fails with "cannot find -lcbor" on a
+          # manifest flathubbot builds fine.
+          flatpak install --user --noninteractive flathub org.flatpak.Builder
 
       - name: Fetch the manifest from the packaging repo
         env:
@@ -138,7 +142,10 @@ jobs:
           with open("manifest.yml") as fh:
               manifest = yaml.safe_load(fh)
 
-          module = manifest["modules"][0]
+          # Pick the app module by name: the fido2 modules (libcbor, libfido2)
+          # sit ahead of it, and rewriting modules[0] broke every run from
+          # v2.24.0 to v2.27.0 with "libcbor: Can't find CMakeLists.txt".
+          module = next(m for m in manifest["modules"] if m["name"] == "teams-for-linux")
 
           # Keep the inline wrapper script verbatim; it is part of what we are
           # smoke testing. Everything else is a remote download we replace with
@@ -169,7 +176,7 @@ jobs:
       - name: Build
         run: |
           set -euo pipefail
-          flatpak-builder --user --force-clean --disable-rofiles-fuse \
+          dbus-run-session -- flatpak run org.flatpak.Builder --user --force-clean --disable-rofiles-fuse \
             --install-deps-from=flathub \
             --arch=x86_64 \
             build-dir manifest.yml
