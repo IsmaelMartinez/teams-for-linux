@@ -84,7 +84,12 @@ jobs:
           sudo apt-get update
           # python3-yaml is not guaranteed on the runner image and the manifest
           # rewrite below depends on it, so install it here rather than assume.
-          sudo apt-get install -y --no-install-recommends flatpak python3-yaml
+          #
+          # dbus-bin provides dbus-run-session: the sandboxed builder below
+          # reaches the host flatpak over a session bus, which a headless
+          # runner does not have ("Cannot autolaunch D-Bus without X11 $DISPLAY").
+          sudo apt-get install -y --no-install-recommends \
+            flatpak python3-yaml dbus-bin
           flatpak remote-add --if-not-exists --user \
             flathub https://dl.flathub.org/repo/flathub.flatpakrepo
           # Build with Flathub's own builder, not Ubuntu's flatpak-builder
@@ -171,7 +176,7 @@ jobs:
       - name: Build
         run: |
           set -euo pipefail
-          flatpak run org.flatpak.Builder --user --force-clean --disable-rofiles-fuse \
+          dbus-run-session -- flatpak run org.flatpak.Builder --user --force-clean --disable-rofiles-fuse \
             --install-deps-from=flathub \
             --arch=x86_64 \
             build-dir manifest.yml
