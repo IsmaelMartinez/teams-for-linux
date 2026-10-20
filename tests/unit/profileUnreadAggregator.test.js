@@ -79,6 +79,28 @@ describe('ProfileUnreadAggregator', () => {
     assert.strictEqual(badges.at(-1), 0);
   });
 
+  it('a redraw without flash preserves an active notification flash', async () => {
+    const agg = build();
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:one', flash: true, count: 5 });
+    await settle();
+    assert.strictEqual(applied.at(-1).flash, true);
+    // Presence/theme redraw: new icon, no flash key.
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:one-dot', count: 5 });
+    await settle();
+    assert.strictEqual(applied.at(-1).flash, true, 'the omitted flag must not stop the flash');
+    // An explicit clear still stops it.
+    agg.onTrayUpdate(senderEvent(1), { icon: null, flash: false, count: 0 });
+    await settle();
+    assert.strictEqual(applied.at(-1).flash, false);
+  });
+
+  it('an omitted flash on a bucket with no request yet stays undefined', async () => {
+    const agg = build();
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:one', count: 4 });
+    await settle();
+    assert.strictEqual(applied.at(-1).flash, undefined);
+  });
+
   it('zero unread keeps the presence overlay: the icon comes from a zero-count render', async () => {
     const agg = build({ presenceOverlay: true });
     renderResult = () => Promise.resolve('data:dot');

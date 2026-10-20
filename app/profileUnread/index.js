@@ -11,7 +11,7 @@
  * error handlers exit on anything they cannot classify.
  */
 class ProfileUnreadAggregator {
-  /** @type {Map<string, {count:number, flash:boolean, icon:string|null}>} */
+  /** @type {Map<string, {count:number, flash:boolean|undefined, icon:string|null}>} */
   #buckets = new Map();
   #deps;
   #renderToken = 0;
@@ -33,7 +33,7 @@ class ProfileUnreadAggregator {
    *   while that option is on — and the dot then belongs to the *selected*
    *   profile, which is the one the render bridge targets: with it on, no
    *   icon is reused from a bucket's own cache.
-   * @param {(update: {icon:string|null, flash:boolean, tooltip:string}) => void} deps.applyTray
+   * @param {(update: {icon:string|null, flash:boolean|undefined, tooltip:string}) => void} deps.applyTray
    * @param {(count: number) => void} deps.applyBadgeCount
    * @param {string} deps.appTitle
    */
@@ -56,7 +56,9 @@ class ProfileUnreadAggregator {
   #bucket(key) {
     let bucket = this.#buckets.get(key);
     if (!bucket) {
-      bucket = { count: 0, flash: false, icon: null };
+      // `undefined` means no flash request has been seen for this bucket yet;
+      // a redraw omits the flag and must not be mistaken for "stop flashing".
+      bucket = { count: 0, flash: undefined, icon: null };
       this.#buckets.set(key, bucket);
     }
     return bucket;
@@ -86,7 +88,9 @@ class ProfileUnreadAggregator {
     if (!this.#deps.isPrimarySender(event)) return;
     const bucket = this.#bucket(this.#bucketKey(event));
     bucket.icon = icon ?? null;
-    bucket.flash = !!flash;
+    // An icon/theme redraw omits `flash`; preserving the previous request is
+    // what keeps an active notification flash running.
+    if (flash !== undefined) bucket.flash = !!flash;
     // Legacy {icon, flash} payloads say nothing about the count.
     if (count !== undefined && count !== null) {
       bucket.count = Number.isFinite(count) && count > 0 ? count : 0;
@@ -149,6 +153,19 @@ class ProfileUnreadAggregator {
     return lines.length > 0 ? `${base}\n${lines.join("\n")}` : base;
   }
 
+  // OR across every bucket, not only the unread ones: a bucket that cleared
+  // to zero still has to be able to stop an active flash. `undefined` means
+  // that bucket has not made a request, so it must not force `false` — all
+  // buckets without one leave the window's flash state untouched.
+  #flash() {
+    let cleared = false;
+    for (const bucket of this.#buckets.values()) {
+      if (bucket.flash === true) return true;
+      if (bucket.flash === false) cleared = true;
+    }
+    return cleared ? false : undefined;
+  }
+
   // Fire-and-forget at every call site (`void`): never rejects.
   async #refreshTray() {
     try {
@@ -163,7 +180,7 @@ class ProfileUnreadAggregator {
   async #applyRefresh() {
     const unread = this.#unread();
     const sum = this.#sum();
-    const flash = unread.some(([, b]) => b.flash);
+    const flash = this.#flash();
     const tooltip = this.#tooltip(sum, unread);
     const token = ++this.#renderToken;
 

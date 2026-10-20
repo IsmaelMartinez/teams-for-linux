@@ -120,6 +120,10 @@ class ApplicationTray {
   // icon, and re-requesting attention there would flash the window on every
   // Teams status change.
   #requestAttention(flash, tooltip) {
+    // A redraw omits `flash` because it is not a notification event. Calling
+    // flashFrame() with no value would clear a flash that is still running, so
+    // an omitted flag means "leave the window's flash state alone".
+    if (typeof flash !== "boolean") return;
     const key = `${flash}|${tooltip}`;
     if (key === this.#attentionKey) return;
     this.#attentionKey = key;

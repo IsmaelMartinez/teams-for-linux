@@ -129,6 +129,26 @@ describe('ApplicationTray aggregation', () => {
     assert.deepStrictEqual(window.flashes, [true, true]);
   });
 
+  it('a redraw that omits flash leaves the window flash state untouched', () => {
+    const { window } = build();
+    trayUpdateHandler({ sender: { id: 1 } }, { icon: 'data:dot', flash: true, count: 3 });
+    // #3098's redraw payload has no `flash` key: it is not a notification.
+    trayUpdateHandler({ sender: { id: 1 } }, { icon: 'data:dot-busy', count: 3 });
+    assert.deepStrictEqual(window.flashes, [true]);
+    // Reading the messages is an explicit stop and must still get through.
+    trayUpdateHandler({ sender: { id: 1 } }, { icon: null, flash: false, count: 0 });
+    assert.deepStrictEqual(window.flashes, [true, false]);
+  });
+
+  it('the aggregate path skips attention when flash is omitted', () => {
+    const { tray, window } = build();
+    tray.applyAggregate({ icon: 'data:agg', flash: true, tooltip: 'Teams (3)' });
+    tray.applyAggregate({ icon: 'data:agg-dot', tooltip: 'Teams (3)' });
+    assert.deepStrictEqual(window.flashes, [true]);
+    tray.applyAggregate({ icon: null, flash: false, tooltip: 'Teams' });
+    assert.deepStrictEqual(window.flashes, [true, false]);
+  });
+
   it('with an aggregator, tray-update is delegated and not applied directly', () => {
     const { tray, window } = build();
     const seen = [];
