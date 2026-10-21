@@ -63,7 +63,7 @@ class SpeakingIndicator {
 	#cameraEnabled = false;
 	#lastEmittedCameraState = null; // true | false | null
 	#audioPc = null; // connection that last carried our outgoing audio level
-	#lastMuteSignals = null; // serialized signals from the last debug line
+	#lastMuteSignals = ''; // serialized signals from the last debug line
 
 	init(config, ipcRenderer) {
 		const overlayEnabled = config.media?.microphone?.speakingIndicator === true;
@@ -169,7 +169,7 @@ class SpeakingIndicator {
 		this.#polling = false;
 		this.#state = 'silent';
 		this.#audioPc = null;
-		this.#lastMuteSignals = null;
+		this.#lastMuteSignals = '';
 		console.info(`${LOG_PREFIX} Polling stopped`);
 	}
 
@@ -212,14 +212,7 @@ class SpeakingIndicator {
 		}
 
 		const foundAudioStats = audioPc !== null;
-		if (foundAudioStats) {
-			this.#audioPc = audioPc;
-		} else if (this.#peerConnections.includes(this.#audioPc)) {
-			// Detaching the track on mute removes the media-source stat; keep
-			// judging the connection that carried it so the state does not freeze.
-			audioPc = this.#audioPc;
-		}
-		const hasMicState = audioPc !== null && this.#applyMicState(audioPc, level);
+		const hasMicState = this.#evaluateMic(audioPc, level);
 
 		this.#updateCameraState();
 
@@ -266,6 +259,18 @@ class SpeakingIndicator {
 			}
 		});
 		return level;
+	}
+
+	// Without stats, keep judging the connection that last carried audio:
+	// detaching the track on mute removes its media-source stat, and the state
+	// must not freeze. Returns true when there was something to judge.
+	#evaluateMic(statsPc, level) {
+		if (statsPc) {
+			this.#audioPc = statsPc;
+		} else if (!this.#peerConnections.includes(this.#audioPc)) {
+			return false;
+		}
+		return this.#applyMicState(this.#audioPc, level);
 	}
 
 	// Returns true when there was something to judge: an audio level, or an
