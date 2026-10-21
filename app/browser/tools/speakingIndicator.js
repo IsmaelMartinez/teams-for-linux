@@ -23,14 +23,15 @@
  * Overlay states:
  * - Green (pulsing): speaking — audio is being transmitted
  * - Grey: silent — mic is open but quiet
- * - Red: muted — Teams has zeroed the audio signal
+ * - Red: muted — no audio is going out
  *
- * Teams zeroes media-source.audioLevel when the user mutes, and that is the
- * only mute signal WebRTC exposes: Teams leaves the sender's track enabled
- * (#3099).
- * A mic with its own noise reduction can also read zero while unmuted and
- * quiet (#2465), so that case shows as muted. A disabled track still counts
- * as muted in case Teams starts using it.
+ * The outgoing audio sender is checked first: a disabled, muted, ended or
+ * detached track, paused encodings, or a negotiated direction without "send"
+ * read as muted at once. Teams can mute without touching any of these (the
+ * track stays enabled, #3099), so otherwise media-source.audioLevel decides:
+ * Teams zeroes it on mute. A mic with its own noise reduction can also read
+ * zero while unmuted and quiet (#2465), so that case shows as muted. The raw
+ * sender signals are logged at debug level whenever they change.
  *
  * When ipcRenderer is provided (always true today since the module is in
  * modulesRequiringIpc), the same state transitions are forwarded to the main
@@ -69,6 +70,9 @@ class SpeakingIndicator {
 	#lastEmittedState = null; // 'speaking' | 'silent' | 'muted' | 'off' | null
 	#cameraEnabled = false;
 	#lastEmittedCameraState = null; // true | false | null
+	#audioPc = null; // connection that last carried our outgoing audio level
+	#audioTransceiver = null; // its transceiver, still judged once the track is detached
+	#lastMuteSignals = ''; // serialized signals from the last debug line
 
 	init(config, ipcRenderer) {
 		const overlayEnabled = config.media?.microphone?.speakingIndicator === true;
@@ -175,6 +179,9 @@ class SpeakingIndicator {
 		this.#state = 'silent';
 		this.#callLive = false;
 		this.#mutedTicks = 0;
+		this.#audioPc = null;
+		this.#audioTransceiver = null;
+		this.#lastMuteSignals = '';
 		console.info(`${LOG_PREFIX} Polling stopped`);
 	}
 
@@ -194,7 +201,8 @@ class SpeakingIndicator {
 			return;
 		}
 
-		let foundAudioStats = false;
+		let audioPc = null;
+		let sources = [];
 
 		try {
 			for (const pc of this.#peerConnections) {
@@ -205,24 +213,18 @@ class SpeakingIndicator {
 					continue;
 				}
 
-				// One reading per poll, so the mute hysteresis counts polls rather
-				// than stats; the loudest source wins so any live audio blocks muted.
-				let level = null;
-				report.forEach(stat => {
-					if (stat.type === 'media-source' && stat.kind === 'audio' && typeof stat.audioLevel === 'number') {
-						level = Math.max(level ?? 0, stat.audioLevel);
-					}
-				});
-
-				if (level !== null) {
-					this.#applyAudioLevel(pc, level);
-					foundAudioStats = true;
+				sources = this.#audioSourcesFrom(report);
+				if (sources.length > 0) {
+					audioPc = pc;
 					break; // Use the first connection that has audio stats
 				}
 			}
 		} finally {
 			this.#polling = false;
 		}
+
+		const foundAudioStats = audioPc !== null;
+		const hasMicState = this.#evaluateMic(audioPc, sources);
 
 		this.#updateCameraState();
 
@@ -236,10 +238,10 @@ class SpeakingIndicator {
 			activityHub.emit('call-connected');
 		}
 
-		if (foundAudioStats && !this.#overlayVisible && this.#overlayEnabled) {
+		if (hasMicState && !this.#overlayVisible && this.#overlayEnabled) {
 			console.info(`${LOG_PREFIX} Audio stats detected, showing overlay`);
 			this.#showOverlay();
-		} else if (!foundAudioStats && this.#overlayVisible) {
+		} else if (!hasMicState && this.#overlayVisible) {
 			console.info(`${LOG_PREFIX} No audio stats found, hiding overlay`);
 			this.#hideOverlay();
 		}
@@ -259,20 +261,93 @@ class SpeakingIndicator {
 		}
 	}
 
-	#applyAudioLevel(pc, level) {
-		const newState = this.#micStateFor(pc, level);
+	// Every outgoing audio source in a stats report as { level, trackId }.
+	#audioSourcesFrom(report) {
+		const sources = [];
+		report.forEach(stat => {
+			if (stat.type === 'media-source' && stat.kind === 'audio' && typeof stat.audioLevel === 'number') {
+				sources.push({ level: stat.audioLevel, trackId: stat.trackIdentifier });
+			}
+		});
+		return sources;
+	}
 
+	// Without stats, keep judging the transceiver that last carried audio:
+	// detaching the track on mute removes its media-source stat, and the state
+	// must not freeze. Returns true when there was something to judge.
+	#evaluateMic(statsPc, sources) {
+		if (!statsPc) {
+			return this.#peerConnections.includes(this.#audioPc)
+				&& this.#applyMicState(this.#audioPc, this.#audioTransceiver, null);
+		}
+		const transceiver = this.#pickTransceiver(statsPc, sources);
+		// A report taken just before a detach still names the old track, which
+		// no sender holds any more; keep the transceiver we already know.
+		if (transceiver || statsPc !== this.#audioPc) {
+			this.#audioTransceiver = transceiver;
+		}
+		this.#audioPc = statsPc;
+		// One reading per poll, so the mute hysteresis counts polls rather than
+		// stats; the loudest source wins so any live audio blocks muted.
+		const level = Math.max(...sources.map(s => s.level));
+		return this.#applyMicState(statsPc, this.#audioTransceiver, level);
+	}
+
+	// The transceiver whose sender feeds a measured source, preferring one that
+	// is sending, so neither an idle sender that kept its track nor a stale
+	// source can mask the live microphone, whatever order the report uses.
+	#pickTransceiver(pc, sources) {
+		const matched = sources.map(s => this.#transceiverFor(pc, s.trackId)).filter(Boolean);
+		return matched.find(t => !this.#isSenderMuted(this.#audioSenderSignals(t))) ?? matched[0] ?? null;
+	}
+
+	#transceiverFor(pc, trackId) {
+		try {
+			const sending = pc.getTransceivers().filter(t => t.sender?.track?.kind === 'audio');
+			if (trackId === undefined) {
+				return sending[0] ?? null; // No trackIdentifier: best guess.
+			}
+			return sending.find(t => t.sender.track.id === trackId) ?? null;
+		} catch {
+			return null;
+		}
+	}
+
+	// Returns true when there was something to judge: an audio level, or the
+	// audio transceiver that carried one before.
+	#applyMicState(pc, transceiver, level) {
+		const signals = this.#audioSenderSignals(transceiver);
+		if (!signals.hasAudioTransceiver && level === null) {
+			return false;
+		}
+		this.#logMuteSignals({ ...signals, hasAudioLevel: level !== null });
+
+		const newState = this.#micStateFor(pc, signals, level);
 		if (newState !== this.#state) {
-			console.info(`${LOG_PREFIX} State: ${this.#state} → ${newState} (audioLevel=${level.toFixed(5)})`);
+			const levelText = level === null ? 'none' : level.toFixed(5);
+			console.info(`${LOG_PREFIX} State: ${this.#state} → ${newState} (audioLevel=${levelText})`);
 			this.#state = newState;
 			if (this.#overlayVisible) {
 				this.#updateOverlay();
 			}
 		}
 		this.#emitMicrophoneState(newState);
+		return true;
 	}
 
-	#micStateFor(pc, level) {
+	// A sender-side mute is definite; otherwise the audio level decides, with
+	// hysteresis. A poll without a level leaves the zero streak as it was.
+	#micStateFor(pc, signals, level) {
+		if (level !== null) {
+			this.#countMutedPoll(pc, level);
+		}
+		if (this.#isSenderMuted(signals)) return 'muted';
+		if ((level ?? 0) >= SPEAKING_THRESHOLD) return 'speaking';
+		if (this.#mutedTicks >= MUTED_TICKS_REQUIRED) return 'muted';
+		return 'silent';
+	}
+
+	#countMutedPoll(pc, level) {
 		// Zeros only mean muted once the call is live: either audio has been
 		// seen or the connection is up (joining already muted never sends audio).
 		if (level >= MUTED_LEVEL || pc.connectionState === 'connected') {
@@ -286,21 +361,61 @@ class SpeakingIndicator {
 		} else {
 			this.#mutedTicks = 0;
 		}
+	}
 
-		let trackEnabled = true;
-		try {
-			const audioSender = pc.getSenders().find(s => s.track?.kind === 'audio');
-			if (audioSender?.track) {
-				trackEnabled = audioSender.track.enabled;
-			}
-		} catch {
-			// Fall through with trackEnabled = true.
+	// Raw sender-side state of the outgoing audio m-line.
+	#audioSenderSignals(transceiver) {
+		if (!transceiver) {
+			return { hasAudioTransceiver: false };
 		}
+		const track = transceiver.sender?.track ?? null;
+		return {
+			hasAudioTransceiver: true,
+			trackPresent: track !== null,
+			enabled: track?.enabled ?? null,
+			muted: track?.muted ?? null,
+			readyState: track?.readyState ?? null,
+			encodingsActive: this.#encodingsActive(transceiver.sender),
+			direction: transceiver.direction ?? null,
+			currentDirection: transceiver.currentDirection ?? null,
+		};
+	}
 
-		if (!trackEnabled) return 'muted';
-		if (level >= SPEAKING_THRESHOLD) return 'speaking';
-		if (this.#mutedTicks >= MUTED_TICKS_REQUIRED) return 'muted';
-		return 'silent';
+	// false only when every encoding is paused; null when unknown. Polling
+	// getParameters is safe: setParameters needs a getParameters result from
+	// the same task, so a poll in its own task cannot invalidate a Teams update.
+	#encodingsActive(sender) {
+		try {
+			const encodings = sender?.getParameters?.().encodings;
+			return encodings?.length ? encodings.some(e => e.active !== false) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	// Any sender sign that no audio is going out. Only the negotiated
+	// currentDirection says what is sending (direction is what the next offer
+	// asks for), and it is null until negotiation finishes.
+	#isSenderMuted(signals) {
+		if (!signals.hasAudioTransceiver) return false;
+		const sending = signals.currentDirection;
+		return !signals.trackPresent
+			|| signals.enabled === false
+			|| signals.muted === true
+			|| signals.readyState === 'ended'
+			|| signals.encodingsActive === false
+			|| (typeof sending === 'string' && !sending.includes('send'));
+	}
+
+	// One debug line per change, so a test call shows which signal Teams uses
+	// on mute without logging every poll. Holds no labels or ids.
+	#logMuteSignals(signals) {
+		const serialized = JSON.stringify(signals);
+		if (serialized === this.#lastMuteSignals) {
+			return;
+		}
+		this.#lastMuteSignals = serialized;
+		console.debug(`${LOG_PREFIX} Mute signals ${serialized}`);
 	}
 
 	// Camera state: check video sender track.enabled across all connections.
