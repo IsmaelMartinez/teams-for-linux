@@ -6,18 +6,19 @@ const assert = require('node:assert');
 const speakingIndicatorPath = require.resolve('../../app/browser/tools/speakingIndicator');
 const activityHubPath = require.resolve('../../app/browser/tools/activityHub');
 
-// No level means no media-source stat, as when the sender has no track.
+// No level means no media-source stat, as when the sender has no track. The
+// stat names the microphone track, as Chromium's trackIdentifier does.
 function makeStatsReport(audioLevel) {
 	const entries = audioLevel === undefined
 		? []
-		: [{ type: 'media-source', kind: 'audio', audioLevel }];
+		: [{ type: 'media-source', kind: 'audio', audioLevel, trackIdentifier: 'mic' }];
 	return { forEach: (fn) => entries.forEach(entry => fn(entry)) };
 }
 
 // A healthy, unmuted outgoing audio m-line; tests change one field at a time.
-function makeAudioTransceiver() {
+function makeAudioTransceiver(trackId = 'mic') {
 	const sender = {
-		track: { kind: 'audio', enabled: true, muted: false, readyState: 'live' },
+		track: { id: trackId, kind: 'audio', enabled: true, muted: false, readyState: 'live' },
 		encodings: [{ active: true }],
 		getParameters() { return { encodings: this.encodings }; },
 	};
@@ -32,15 +33,17 @@ function makeAudioTransceiver() {
 let createdPeerConnections = [];
 let getStatsFn = async () => makeStatsReport(0);
 let audioTransceiver = makeAudioTransceiver();
+let transceivers = [audioTransceiver];
 
 function setupGlobals() {
 	createdPeerConnections = [];
 	audioTransceiver = makeAudioTransceiver();
+	transceivers = [audioTransceiver];
 	const originalRTC = function RTCPeerConnection() {
 		this.connectionState = 'connected';
 		this.getStats = (...args) => getStatsFn.call(this, ...args);
-		this.getTransceivers = () => [audioTransceiver];
-		this.getSenders = () => [audioTransceiver.sender];
+		this.getTransceivers = () => transceivers;
+		this.getSenders = () => transceivers.map(t => t.sender);
 		createdPeerConnections.push(this);
 	};
 	originalRTC.prototype = {};
@@ -92,6 +95,7 @@ function cleanup() {
 	delete globalThis.document;
 	getStatsFn = async () => makeStatsReport(0);
 	audioTransceiver = makeAudioTransceiver();
+	transceivers = [audioTransceiver];
 }
 
 const wait = (ms) => new Promise(r => setTimeout(r, ms));
@@ -405,7 +409,7 @@ describe('SpeakingIndicator', () => {
 		['track.muted is true', () => { audioTransceiver.sender.track.muted = true; }],
 		["track.readyState is 'ended'", () => { audioTransceiver.sender.track.readyState = 'ended'; }],
 		['every encoding is inactive', () => { audioTransceiver.sender.encodings = [{ active: false }]; }],
-		["direction is 'recvonly'", () => { audioTransceiver.direction = 'recvonly'; }],
+		["currentDirection is 'recvonly'", () => { audioTransceiver.currentDirection = 'recvonly'; }],
 		["currentDirection is 'inactive'", () => { audioTransceiver.currentDirection = 'inactive'; }],
 	];
 	for (const [signal, apply] of muteSignals) {
@@ -431,6 +435,34 @@ describe('SpeakingIndicator', () => {
 
 		assert.deepStrictEqual(micStates(ipcRenderer), ['speaking']);
 	});
+
+	it('does not emit muted for a direction change that is not negotiated yet (#3099)', async () => {
+		setupGlobals();
+		// direction is only what the next offer asks for; audio still goes out.
+		audioTransceiver.direction = 'recvonly';
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const ipcRenderer = startMonitoring();
+		await wait(300);
+
+		assert.deepStrictEqual(micStates(ipcRenderer), ['speaking']);
+	});
+
+	for (const order of ['before', 'after']) {
+		it(`judges the transceiver feeding the audio stat when an idle one with a track sits ${order} it (#3099)`, async () => {
+			setupGlobals();
+			const idle = makeAudioTransceiver('old-mic');
+			idle.direction = 'inactive';
+			idle.currentDirection = 'inactive';
+			transceivers = order === 'before' ? [idle, audioTransceiver] : [audioTransceiver, idle];
+			getStatsFn = async () => makeStatsReport(0.05);
+
+			const ipcRenderer = startMonitoring();
+			await wait(300);
+
+			assert.deepStrictEqual(micStates(ipcRenderer), ['speaking']);
+		});
+	}
 
 	it('emits muted when the audio track is detached and its stat disappears, then off on close (#3099)', async () => {
 		setupGlobals();

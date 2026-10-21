@@ -30,7 +30,7 @@
  * not kept to one mechanism: `track.enabled = false` worked when this was
  * added (#2497) but does not flip on every client (#3099), so any of a
  * disabled, muted, ended or detached track, paused encodings, or a
- * transceiver direction without "send" counts as muted. The raw signals are
+ * negotiated direction without "send" counts as muted. The raw signals are
  * logged at debug level whenever they change.
  *
  * When ipcRenderer is provided (always true today since the module is in
@@ -63,6 +63,7 @@ class SpeakingIndicator {
 	#cameraEnabled = false;
 	#lastEmittedCameraState = null; // true | false | null
 	#audioPc = null; // connection that last carried our outgoing audio level
+	#audioTransceiver = null; // its transceiver, still judged once the track is detached
 	#lastMuteSignals = ''; // serialized signals from the last debug line
 
 	init(config, ipcRenderer) {
@@ -169,6 +170,7 @@ class SpeakingIndicator {
 		this.#polling = false;
 		this.#state = 'silent';
 		this.#audioPc = null;
+		this.#audioTransceiver = null;
 		this.#lastMuteSignals = '';
 		console.info(`${LOG_PREFIX} Polling stopped`);
 	}
@@ -190,7 +192,7 @@ class SpeakingIndicator {
 		}
 
 		let audioPc = null;
-		let level = null;
+		let source = null;
 
 		try {
 			for (const pc of this.#peerConnections) {
@@ -201,8 +203,8 @@ class SpeakingIndicator {
 					continue;
 				}
 
-				level = this.#audioLevelFrom(report);
-				if (level !== null) {
+				source = this.#audioSourceFrom(report);
+				if (source) {
 					audioPc = pc;
 					break; // Use the first connection that has audio stats
 				}
@@ -212,7 +214,7 @@ class SpeakingIndicator {
 		}
 
 		const foundAudioStats = audioPc !== null;
-		const hasMicState = this.#evaluateMic(audioPc, level);
+		const hasMicState = this.#evaluateMic(audioPc, source);
 
 		this.#updateCameraState();
 
@@ -249,34 +251,47 @@ class SpeakingIndicator {
 		}
 	}
 
-	// Returns the first usable outgoing audio level in a stats report, or null.
-	#audioLevelFrom(report) {
-		let level = null;
+	// Returns the first outgoing audio source in a stats report as
+	// { level, trackId }, or null.
+	#audioSourceFrom(report) {
+		let source = null;
 		report.forEach(stat => {
-			if (level === null && stat.type === 'media-source' && stat.kind === 'audio'
+			if (source === null && stat.type === 'media-source' && stat.kind === 'audio'
 				&& typeof stat.audioLevel === 'number') {
-				level = stat.audioLevel;
+				source = { level: stat.audioLevel, trackId: stat.trackIdentifier };
 			}
 		});
-		return level;
+		return source;
 	}
 
-	// Without stats, keep judging the connection that last carried audio:
+	// Without stats, keep judging the transceiver that last carried audio:
 	// detaching the track on mute removes its media-source stat, and the state
 	// must not freeze. Returns true when there was something to judge.
-	#evaluateMic(statsPc, level) {
+	#evaluateMic(statsPc, source) {
 		if (statsPc) {
 			this.#audioPc = statsPc;
+			this.#audioTransceiver = this.#transceiverFor(statsPc, source.trackId);
 		} else if (!this.#peerConnections.includes(this.#audioPc)) {
 			return false;
 		}
-		return this.#applyMicState(this.#audioPc, level);
+		return this.#applyMicState(this.#audioTransceiver, source?.level ?? null);
 	}
 
-	// Returns true when there was something to judge: an audio level, or an
-	// audio sender on a connection that carried one before.
-	#applyMicState(pc, level) {
-		const signals = this.#audioSenderSignals(pc);
+	// The transceiver whose sender feeds the measured source, so an idle audio
+	// transceiver that still holds a track is never judged in its place.
+	#transceiverFor(pc, trackId) {
+		try {
+			const sending = pc.getTransceivers().filter(t => t.sender?.track?.kind === 'audio');
+			return sending.find(t => t.sender.track.id === trackId) ?? sending[0] ?? null;
+		} catch {
+			return null;
+		}
+	}
+
+	// Returns true when there was something to judge: an audio level, or the
+	// audio transceiver that carried one before.
+	#applyMicState(transceiver, level) {
+		const signals = this.#audioSenderSignals(transceiver);
 		if (!signals.hasAudioTransceiver && level === null) {
 			return false;
 		}
@@ -301,21 +316,8 @@ class SpeakingIndicator {
 		return true;
 	}
 
-	// Raw sender-side state of the outgoing audio m-line. Transceivers are
-	// matched on the receiver's kind so a sender whose track was nulled on
-	// mute still counts as audio; the one carrying a track wins.
-	#audioSenderSignals(pc) {
-		let transceivers = [];
-		try {
-			transceivers = pc.getTransceivers().filter(
-				t => (t.receiver?.track ?? t.sender?.track)?.kind === 'audio'
-			);
-		} catch {
-			// Closed connection: nothing to judge.
-		}
-		const transceiver = transceivers.find(t => t.sender?.track)
-			?? transceivers.find(t => t.direction?.includes('send'))
-			?? transceivers[0];
+	// Raw sender-side state of the outgoing audio m-line.
+	#audioSenderSignals(transceiver) {
 		if (!transceiver) {
 			return { hasAudioTransceiver: false };
 		}
@@ -344,18 +346,18 @@ class SpeakingIndicator {
 		}
 	}
 
-	// Any sign that no audio is going out counts. currentDirection is null
-	// until negotiation finishes, which says nothing about mute.
+	// Any sign that no audio is going out counts. Only the negotiated
+	// currentDirection says what is sending (direction is what the next offer
+	// asks for), and it is null until negotiation finishes.
 	#isMuted(signals) {
 		if (!signals.hasAudioTransceiver) return false;
-		const withoutSend = dir => typeof dir === 'string' && !dir.includes('send');
+		const sending = signals.currentDirection;
 		return !signals.trackPresent
 			|| signals.enabled === false
 			|| signals.muted === true
 			|| signals.readyState === 'ended'
 			|| signals.encodingsActive === false
-			|| withoutSend(signals.direction)
-			|| withoutSend(signals.currentDirection);
+			|| (typeof sending === 'string' && !sending.includes('send'));
 	}
 
 	// One debug line per change, so a test call shows which signal Teams uses
