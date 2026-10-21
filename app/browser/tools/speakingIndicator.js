@@ -192,7 +192,7 @@ class SpeakingIndicator {
 		}
 
 		let audioPc = null;
-		let source = null;
+		let sources = [];
 
 		try {
 			for (const pc of this.#peerConnections) {
@@ -203,8 +203,8 @@ class SpeakingIndicator {
 					continue;
 				}
 
-				source = this.#audioSourceFrom(report);
-				if (source) {
+				sources = this.#audioSourcesFrom(report);
+				if (sources.length > 0) {
 					audioPc = pc;
 					break; // Use the first connection that has audio stats
 				}
@@ -214,7 +214,7 @@ class SpeakingIndicator {
 		}
 
 		const foundAudioStats = audioPc !== null;
-		const hasMicState = this.#evaluateMic(audioPc, source);
+		const hasMicState = this.#evaluateMic(audioPc, sources);
 
 		this.#updateCameraState();
 
@@ -251,38 +251,54 @@ class SpeakingIndicator {
 		}
 	}
 
-	// Returns the first outgoing audio source in a stats report as
-	// { level, trackId }, or null.
-	#audioSourceFrom(report) {
-		let source = null;
+	// Every outgoing audio source in a stats report as { level, trackId }.
+	#audioSourcesFrom(report) {
+		const sources = [];
 		report.forEach(stat => {
-			if (source === null && stat.type === 'media-source' && stat.kind === 'audio'
-				&& typeof stat.audioLevel === 'number') {
-				source = { level: stat.audioLevel, trackId: stat.trackIdentifier };
+			if (stat.type === 'media-source' && stat.kind === 'audio' && typeof stat.audioLevel === 'number') {
+				sources.push({ level: stat.audioLevel, trackId: stat.trackIdentifier });
 			}
 		});
-		return source;
+		return sources;
 	}
 
 	// Without stats, keep judging the transceiver that last carried audio:
 	// detaching the track on mute removes its media-source stat, and the state
 	// must not freeze. Returns true when there was something to judge.
-	#evaluateMic(statsPc, source) {
-		if (statsPc) {
-			this.#audioPc = statsPc;
-			this.#audioTransceiver = this.#transceiverFor(statsPc, source.trackId);
-		} else if (!this.#peerConnections.includes(this.#audioPc)) {
-			return false;
+	#evaluateMic(statsPc, sources) {
+		if (!statsPc) {
+			return this.#peerConnections.includes(this.#audioPc)
+				&& this.#applyMicState(this.#audioTransceiver, null);
 		}
-		return this.#applyMicState(this.#audioTransceiver, source?.level ?? null);
+		const chosen = this.#pickSource(statsPc, sources);
+		// A report taken just before a detach still names the old track, which
+		// no sender holds any more; keep the transceiver we already know.
+		if (chosen.transceiver || statsPc !== this.#audioPc) {
+			this.#audioTransceiver = chosen.transceiver;
+		}
+		this.#audioPc = statsPc;
+		return this.#applyMicState(this.#audioTransceiver, chosen.level);
 	}
 
-	// The transceiver whose sender feeds the measured source, so an idle audio
-	// transceiver that still holds a track is never judged in its place.
+	// Resolves each source to the transceiver whose sender feeds it and prefers
+	// one that is sending, so an idle sender that kept its track cannot mask
+	// the live microphone whatever order the report lists them in.
+	#pickSource(pc, sources) {
+		const candidates = sources.map(source => ({
+			level: source.level,
+			transceiver: this.#transceiverFor(pc, source.trackId),
+		}));
+		return candidates.find(c => !this.#isMuted(this.#audioSenderSignals(c.transceiver)))
+			?? candidates[0];
+	}
+
 	#transceiverFor(pc, trackId) {
 		try {
 			const sending = pc.getTransceivers().filter(t => t.sender?.track?.kind === 'audio');
-			return sending.find(t => t.sender.track.id === trackId) ?? sending[0] ?? null;
+			if (trackId === undefined) {
+				return sending[0] ?? null; // No trackIdentifier: best guess.
+			}
+			return sending.find(t => t.sender.track.id === trackId) ?? null;
 		} catch {
 			return null;
 		}

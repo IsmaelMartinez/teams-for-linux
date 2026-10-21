@@ -6,12 +6,12 @@ const assert = require('node:assert');
 const speakingIndicatorPath = require.resolve('../../app/browser/tools/speakingIndicator');
 const activityHubPath = require.resolve('../../app/browser/tools/activityHub');
 
-// No level means no media-source stat, as when the sender has no track. The
-// stat names the microphone track, as Chromium's trackIdentifier does.
-function makeStatsReport(audioLevel) {
+// No level means no media-source stat, as when the sender has no track. Each
+// stat names its track, as Chromium's trackIdentifier does.
+function makeStatsReport(audioLevel, trackIds = ['mic']) {
 	const entries = audioLevel === undefined
 		? []
-		: [{ type: 'media-source', kind: 'audio', audioLevel, trackIdentifier: 'mic' }];
+		: trackIds.map(trackIdentifier => ({ type: 'media-source', kind: 'audio', audioLevel, trackIdentifier }));
 	return { forEach: (fn) => entries.forEach(entry => fn(entry)) };
 }
 
@@ -448,21 +448,46 @@ describe('SpeakingIndicator', () => {
 		assert.deepStrictEqual(micStates(ipcRenderer), ['speaking']);
 	});
 
-	for (const order of ['before', 'after']) {
-		it(`judges the transceiver feeding the audio stat when an idle one with a track sits ${order} it (#3099)`, async () => {
-			setupGlobals();
-			const idle = makeAudioTransceiver('old-mic');
-			idle.direction = 'inactive';
-			idle.currentDirection = 'inactive';
-			transceivers = order === 'before' ? [idle, audioTransceiver] : [audioTransceiver, idle];
-			getStatsFn = async () => makeStatsReport(0.05);
+	// An idle transceiver that kept its track also reports a media-source; the
+	// live microphone must win whichever order either list puts them in.
+	for (const transceiverOrder of ['idle first', 'live first']) {
+		for (const statOrder of ['idle first', 'live first']) {
+			it(`judges the live microphone over an idle sender (transceivers ${transceiverOrder}, stats ${statOrder}) (#3099)`, async () => {
+				setupGlobals();
+				const idle = makeAudioTransceiver('old-mic');
+				idle.direction = 'inactive';
+				idle.currentDirection = 'inactive';
+				transceivers = transceiverOrder === 'idle first' ? [idle, audioTransceiver] : [audioTransceiver, idle];
+				const trackIds = statOrder === 'idle first' ? ['old-mic', 'mic'] : ['mic', 'old-mic'];
+				getStatsFn = async () => makeStatsReport(0.05, trackIds);
 
-			const ipcRenderer = startMonitoring();
-			await wait(300);
+				const ipcRenderer = startMonitoring();
+				await wait(300);
 
-			assert.deepStrictEqual(micStates(ipcRenderer), ['speaking']);
-		});
+				assert.deepStrictEqual(micStates(ipcRenderer), ['speaking']);
+			});
+		}
 	}
+
+	it('emits muted when a report taken before the detach still names the old track (#3099)', async () => {
+		setupGlobals();
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const ipcRenderer = startMonitoring();
+		await wait(300);
+
+		// The first report after the detach is stale, then the stat is gone.
+		audioTransceiver.sender.track = null;
+		let stale = true;
+		getStatsFn = async () => {
+			const report = stale ? makeStatsReport(0.05) : makeStatsReport();
+			stale = false;
+			return report;
+		};
+		await wait(450);
+
+		assert.deepStrictEqual(micStates(ipcRenderer), ['speaking', 'muted']);
+	});
 
 	it('emits muted when the audio track is detached and its stat disappears, then off on close (#3099)', async () => {
 		setupGlobals();
