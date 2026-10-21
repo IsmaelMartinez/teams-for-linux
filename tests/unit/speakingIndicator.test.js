@@ -469,6 +469,26 @@ describe('SpeakingIndicator', () => {
 		}
 	}
 
+	for (const statOrder of ['stale first', 'live first']) {
+		it(`judges a live replacement sender over a stale source (${statOrder}) (#3099)`, async () => {
+			setupGlobals();
+			getStatsFn = async () => makeStatsReport(0.05);
+
+			const ipcRenderer = startMonitoring();
+			await wait(300);
+
+			// The remembered sender lost its track and a new sender took over,
+			// while the report still lists the old track's source.
+			audioTransceiver.sender.track = null;
+			transceivers = [audioTransceiver, makeAudioTransceiver('mic-2')];
+			const trackIds = statOrder === 'stale first' ? ['mic', 'mic-2'] : ['mic-2', 'mic'];
+			getStatsFn = async () => makeStatsReport(0.05, trackIds);
+			await wait(300);
+
+			assert.deepStrictEqual(micStates(ipcRenderer), ['speaking']);
+		});
+	}
+
 	it('emits muted when a report taken before the detach still names the old track (#3099)', async () => {
 		setupGlobals();
 		getStatsFn = async () => makeStatsReport(0.05);

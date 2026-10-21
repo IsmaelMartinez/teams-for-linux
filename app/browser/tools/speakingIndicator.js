@@ -281,14 +281,16 @@ class SpeakingIndicator {
 	}
 
 	// Resolves each source to the transceiver whose sender feeds it and prefers
-	// one that is sending, so an idle sender that kept its track cannot mask
-	// the live microphone whatever order the report lists them in.
+	// one that is sending, then any matched one, so neither an idle sender that
+	// kept its track nor a stale source can mask the live microphone, whatever
+	// order the report lists them in.
 	#pickSource(pc, sources) {
 		const candidates = sources.map(source => ({
 			level: source.level,
 			transceiver: this.#transceiverFor(pc, source.trackId),
 		}));
-		return candidates.find(c => !this.#isMuted(this.#audioSenderSignals(c.transceiver)))
+		return candidates.find(c => c.transceiver && !this.#isMuted(this.#audioSenderSignals(c.transceiver)))
+			?? candidates.find(c => c.transceiver)
 			?? candidates[0];
 	}
 
