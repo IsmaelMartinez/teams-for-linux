@@ -320,8 +320,7 @@ describe('SpeakingIndicator', () => {
 
 	it('emits muted when audio sender track is disabled, regardless of audioLevel (#2465)', async () => {
 		setupGlobals();
-		// audioLevel reads zero (would have read as muted under the old logic),
-		// but the second signal (track.enabled = false) is the authoritative one.
+		// A disabled track counts as muted even before any audio was seen.
 		audioTrackEnabled = false;
 		getStatsFn = async () => makeStatsReport(0);
 
@@ -340,10 +339,47 @@ describe('SpeakingIndicator', () => {
 		);
 	});
 
-	it('does not emit muted when track is enabled and audioLevel reads zero (#2465 false-positive guard)', async () => {
+	it('emits muted when audioLevel drops to zero after audio was seen, with the track still enabled (#3099)', async () => {
 		setupGlobals();
-		// Quiet mic: audioLevel reads zero but track is still enabled. Must
-		// report silent, not muted (this was the #2465 regression).
+		// Teams zeroes the level on mute but leaves the track enabled.
+		let tick = 0;
+		getStatsFn = async () => makeStatsReport(tick++ < 2 ? 0.005 : 0);
+
+		const { instance } = loadSpeakingIndicator();
+		const ipcRenderer = { send: mock.fn() };
+		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
+
+		openPeerConnection();
+		await new Promise(r => setTimeout(r, 1200));
+
+		const states = ipcRenderer.send.mock.calls
+			.filter(c => c.arguments[0] === 'microphone-state-changed')
+			.map(c => c.arguments[1]);
+		assert.deepStrictEqual(states, ['silent', 'muted'], `got: ${states.join(',')}`);
+	});
+
+	it('does not emit muted when single zero ticks interleave with a quiet noise floor (#2465 hysteresis)', async () => {
+		setupGlobals();
+		let tick = 0;
+		getStatsFn = async () => makeStatsReport(tick++ % 2 === 0 ? 0.005 : 0);
+
+		const { instance } = loadSpeakingIndicator();
+		const ipcRenderer = { send: mock.fn() };
+		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
+
+		openPeerConnection();
+		await new Promise(r => setTimeout(r, 1200));
+
+		const states = ipcRenderer.send.mock.calls
+			.filter(c => c.arguments[0] === 'microphone-state-changed')
+			.map(c => c.arguments[1]);
+		assert.ok(!states.includes('muted'), `got: ${states.join(',')}`);
+	});
+
+	it('does not emit muted for zero audioLevel before any audio was seen (pre-join guard)', async () => {
+		setupGlobals();
+		// Before join the level reads zero with the track enabled; that must
+		// stay silent rather than read as muted.
 		audioTrackEnabled = true;
 		getStatsFn = async () => makeStatsReport(0);
 
