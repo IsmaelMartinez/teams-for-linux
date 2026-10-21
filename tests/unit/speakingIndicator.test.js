@@ -59,6 +59,27 @@ function openPeerConnection() {
 	return new globalThis.RTCPeerConnection();
 }
 
+// Runs one MQTT-only session where levelsForPoll(n) gives the audio level(s)
+// of poll n, and returns each microphone state emitted with the poll count.
+async function recordMicStates(levelsForPoll, { waitMs = 1200, connectionState } = {}) {
+	setupGlobals();
+	let polls = 0;
+	getStatsFn = async () => makeStatsReport(...[levelsForPoll(polls++)].flat());
+
+	const { instance } = loadSpeakingIndicator();
+	const emitted = [];
+	instance.init({ mqtt: { enabled: true } }, {
+		send: (channel, state) => {
+			if (channel === 'microphone-state-changed') emitted.push({ state, polls });
+		},
+	});
+
+	const pc = openPeerConnection();
+	if (connectionState) pc.connectionState = connectionState;
+	await new Promise(r => setTimeout(r, waitMs));
+	return emitted;
+}
+
 function closePeerConnections() {
 	for (const pc of createdPeerConnections) {
 		pc.connectionState = 'closed';
@@ -337,59 +358,22 @@ describe('SpeakingIndicator', () => {
 		);
 	});
 
+	const ZERO_AFTER_FIRST_POLL = poll => (poll === 0 ? 0.005 : 0);
+
 	it('emits muted when audioLevel drops to zero after audio was seen, with the track still enabled (#3099)', async () => {
-		setupGlobals();
 		// Teams zeroes the level on mute but leaves the track enabled.
-		let tick = 0;
-		getStatsFn = async () => makeStatsReport(tick++ < 2 ? 0.005 : 0);
-
-		const { instance } = loadSpeakingIndicator();
-		const ipcRenderer = { send: mock.fn() };
-		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
-
-		openPeerConnection();
-		await new Promise(r => setTimeout(r, 1200));
-
-		const states = ipcRenderer.send.mock.calls
-			.filter(c => c.arguments[0] === 'microphone-state-changed')
-			.map(c => c.arguments[1]);
-		assert.deepStrictEqual(states, ['silent', 'muted'], `got: ${states.join(',')}`);
+		const states = (await recordMicStates(poll => (poll < 2 ? 0.005 : 0))).map(e => e.state);
+		assert.deepStrictEqual(states, ['silent', 'muted']);
 	});
 
 	it('does not emit muted when single zero ticks interleave with a quiet noise floor (#2465 hysteresis)', async () => {
-		setupGlobals();
-		let tick = 0;
-		getStatsFn = async () => makeStatsReport(tick++ % 2 === 0 ? 0.005 : 0);
-
-		const { instance } = loadSpeakingIndicator();
-		const ipcRenderer = { send: mock.fn() };
-		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
-
-		openPeerConnection();
-		await new Promise(r => setTimeout(r, 1200));
-
-		const states = ipcRenderer.send.mock.calls
-			.filter(c => c.arguments[0] === 'microphone-state-changed')
-			.map(c => c.arguments[1]);
+		const states = (await recordMicStates(poll => (poll % 2 === 0 ? 0.005 : 0))).map(e => e.state);
 		assert.ok(!states.includes('muted'), `got: ${states.join(',')}`);
 	});
 
 	it('enters muted on the third consecutive zero poll, not the second (#2465 hysteresis boundary)', async () => {
-		setupGlobals();
-		let polls = 0;
-		getStatsFn = async () => makeStatsReport(polls++ === 0 ? 0.005 : 0);
-
-		const { instance } = loadSpeakingIndicator();
-		const emitted = [];
-		const ipcRenderer = { send: mock.fn((channel, state) => {
-			if (channel === 'microphone-state-changed') emitted.push({ state, polls });
-		}) };
-		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
-
-		openPeerConnection();
-		await new Promise(r => setTimeout(r, 1200));
-
 		// Poll 1 is audio, polls 2 and 3 are zeros (still silent), poll 4 is the third zero.
+		const emitted = await recordMicStates(ZERO_AFTER_FIRST_POLL);
 		assert.deepStrictEqual(emitted.slice(0, 2), [
 			{ state: 'silent', polls: 1 },
 			{ state: 'muted', polls: 4 },
@@ -397,23 +381,7 @@ describe('SpeakingIndicator', () => {
 	});
 
 	it('counts one reading per poll when a connection reports several audio sources', async () => {
-		setupGlobals();
-		let polls = 0;
-		getStatsFn = async () => {
-			const level = polls++ === 0 ? 0.005 : 0;
-			return makeStatsReport(level, level, level);
-		};
-
-		const { instance } = loadSpeakingIndicator();
-		const emitted = [];
-		const ipcRenderer = { send: mock.fn((channel, state) => {
-			if (channel === 'microphone-state-changed') emitted.push({ state, polls });
-		}) };
-		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
-
-		openPeerConnection();
-		await new Promise(r => setTimeout(r, 1200));
-
+		const emitted = await recordMicStates(poll => Array(3).fill(ZERO_AFTER_FIRST_POLL(poll)));
 		assert.deepStrictEqual(emitted.slice(0, 2), [
 			{ state: 'silent', polls: 1 },
 			{ state: 'muted', polls: 4 },
@@ -421,62 +389,18 @@ describe('SpeakingIndicator', () => {
 	});
 
 	it('does not emit muted while any audio source is live', async () => {
-		setupGlobals();
-		getStatsFn = async () => makeStatsReport(0, 0.005);
-
-		const { instance } = loadSpeakingIndicator();
-		const ipcRenderer = { send: mock.fn() };
-		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
-
-		openPeerConnection();
-		await new Promise(r => setTimeout(r, 900));
-
-		const states = ipcRenderer.send.mock.calls
-			.filter(c => c.arguments[0] === 'microphone-state-changed')
-			.map(c => c.arguments[1]);
+		const states = (await recordMicStates(() => [0, 0.005])).map(e => e.state);
 		assert.ok(!states.includes('muted'), `got: ${states.join(',')}`);
 	});
 
 	it('emits muted when joining a connected call already muted, with no audio ever seen', async () => {
-		setupGlobals();
-		getStatsFn = async () => makeStatsReport(0);
-
-		const { instance } = loadSpeakingIndicator();
-		const ipcRenderer = { send: mock.fn() };
-		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
-
-		openPeerConnection();
-		await new Promise(r => setTimeout(r, 900));
-
-		const states = ipcRenderer.send.mock.calls
-			.filter(c => c.arguments[0] === 'microphone-state-changed')
-			.map(c => c.arguments[1]);
+		const states = (await recordMicStates(() => 0)).map(e => e.state);
 		assert.ok(states.includes('muted'), `got: ${states.join(',')}`);
 	});
 
 	it('does not emit muted for zero audioLevel before the connection is up (pre-join guard)', async () => {
-		setupGlobals();
-		// Before join the level reads zero with the track enabled; that must
-		// stay silent rather than read as muted.
-		audioTrackEnabled = true;
-		getStatsFn = async () => makeStatsReport(0);
-
-		const { instance } = loadSpeakingIndicator();
-		const ipcRenderer = { send: mock.fn() };
-		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
-
-		openPeerConnection().connectionState = 'connecting';
-		await new Promise(r => setTimeout(r, 600));
-
-		const micCalls = ipcRenderer.send.mock.calls.filter(c => c.arguments[0] === 'microphone-state-changed');
-		const states = micCalls.map(c => c.arguments[1]);
-		assert.ok(
-			!states.includes('muted'),
-			`should not emit muted while audioLevel is zero but track is enabled, got: ${states.join(',')}`
-		);
-		assert.ok(
-			states.includes('silent'),
-			`should emit silent in this case, got: ${states.join(',')}`
-		);
+		const states = (await recordMicStates(() => 0, { connectionState: 'connecting' })).map(e => e.state);
+		assert.ok(!states.includes('muted'), `got: ${states.join(',')}`);
+		assert.ok(states.includes('silent'), `got: ${states.join(',')}`);
 	});
 });
