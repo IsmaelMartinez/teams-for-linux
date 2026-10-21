@@ -9,7 +9,12 @@ const activityHubPath = require.resolve('../../app/browser/tools/activityHub');
 // Each stat names its track, as Chromium's trackIdentifier does. No levels
 // means no media-source stat, as when the sender has no track.
 function makeTrackStatsReport(audioLevel, trackIds) {
-	const entries = trackIds.map(trackIdentifier => ({ type: 'media-source', kind: 'audio', audioLevel, trackIdentifier }));
+	return makeTrackLevelsReport(trackIds.map(trackId => [trackId, audioLevel]));
+}
+
+// [[trackId, audioLevel], ...] in report order.
+function makeTrackLevelsReport(levelsByTrack) {
+	const entries = levelsByTrack.map(([trackIdentifier, audioLevel]) => ({ type: 'media-source', kind: 'audio', audioLevel, trackIdentifier }));
 	return { forEach: (fn) => entries.forEach(entry => fn(entry)) };
 }
 
@@ -512,6 +517,37 @@ describe('SpeakingIndicator', () => {
 			});
 		}
 	}
+
+	for (const statOrder of ['idle first', 'live first']) {
+		it(`emits muted when the live mic is zero while an idle sender still reports audio (stats ${statOrder}) (#3099)`, async () => {
+			setupGlobals();
+			const idle = makeAudioTransceiver('old-mic');
+			idle.direction = 'inactive';
+			idle.currentDirection = 'inactive';
+			transceivers = [idle, audioTransceiver];
+			const levels = [['old-mic', 0.05], ['mic', 0]];
+			getStatsFn = async () => makeTrackLevelsReport(statOrder === 'idle first' ? levels : levels.reverse());
+
+			const ipcRenderer = startMonitoring();
+			await wait(900);
+
+			assert.deepStrictEqual(micStates(ipcRenderer), ['silent', 'muted']);
+		});
+	}
+
+	it('judges the sending transceiver when an idle one kept the same track (#3099)', async () => {
+		setupGlobals();
+		const idle = makeAudioTransceiver('mic');
+		idle.direction = 'inactive';
+		idle.currentDirection = 'inactive';
+		transceivers = [idle, audioTransceiver];
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const ipcRenderer = startMonitoring();
+		await wait(300);
+
+		assert.deepStrictEqual(micStates(ipcRenderer), ['speaking']);
+	});
 
 	for (const statOrder of ['stale first', 'live first']) {
 		it(`judges a live replacement sender over a stale source (${statOrder}) (#3099)`, async () => {

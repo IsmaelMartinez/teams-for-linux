@@ -280,36 +280,42 @@ class SpeakingIndicator {
 			return this.#peerConnections.includes(this.#audioPc)
 				&& this.#applyMicState(this.#audioPc, this.#audioTransceiver, null);
 		}
-		const transceiver = this.#pickTransceiver(statsPc, sources);
+		const { transceiver, level } = this.#pickMic(statsPc, sources);
 		// A report taken just before a detach still names the old track, which
 		// no sender holds any more; keep the transceiver we already know.
 		if (transceiver || statsPc !== this.#audioPc) {
 			this.#audioTransceiver = transceiver;
 		}
 		this.#audioPc = statsPc;
-		// One reading per poll, so the mute hysteresis counts polls rather than
-		// stats; the loudest source wins so any live audio blocks muted.
-		const level = Math.max(...sources.map(s => s.level));
 		return this.#applyMicState(statsPc, this.#audioTransceiver, level);
 	}
 
-	// The transceiver whose sender feeds a measured source, preferring one that
-	// is sending, so neither an idle sender that kept its track nor a stale
-	// source can mask the live microphone, whatever order the report uses.
-	#pickTransceiver(pc, sources) {
-		const matched = sources.map(s => this.#transceiverFor(pc, s.trackId)).filter(Boolean);
-		return matched.find(t => !this.#isSenderMuted(this.#audioSenderSignals(t))) ?? matched[0] ?? null;
+	// The live microphone and its level, whatever order the report uses. The
+	// transceiver prefers a sending one, so an idle sender that kept its track
+	// cannot mask it. One level per poll, so the mute hysteresis counts polls;
+	// it is the loudest source fed by a sending transceiver, so neither an idle
+	// sender nor a stale source can hide a zeroed live mic or block muted.
+	#pickMic(pc, sources) {
+		const isLive = t => !this.#isSenderMuted(this.#audioSenderSignals(t));
+		const matched = sources.map(s => ({ level: s.level, transceivers: this.#transceiversFor(pc, s.trackId) }));
+		const live = matched.filter(m => m.transceivers.some(isLive));
+		const transceiver = live.flatMap(m => m.transceivers).find(isLive)
+			?? matched.flatMap(m => m.transceivers)[0] ?? null;
+		const levels = (live.length ? live : matched).map(m => m.level);
+		return { transceiver, level: Math.max(...levels) };
 	}
 
-	#transceiverFor(pc, trackId) {
+	// Every audio transceiver whose sender holds the track: a new sending
+	// transceiver can share the track an old idle one kept.
+	#transceiversFor(pc, trackId) {
 		try {
 			const sending = pc.getTransceivers().filter(t => t.sender?.track?.kind === 'audio');
 			if (trackId === undefined) {
-				return sending[0] ?? null; // No trackIdentifier: best guess.
+				return sending.slice(0, 1); // No trackIdentifier: best guess.
 			}
-			return sending.find(t => t.sender.track.id === trackId) ?? null;
+			return sending.filter(t => t.sender.track.id === trackId);
 		} catch {
-			return null;
+			return [];
 		}
 	}
 
