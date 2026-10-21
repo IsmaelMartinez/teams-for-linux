@@ -376,12 +376,14 @@ function createCustomNotification(title, options) {
     // Default to "web" if config not loaded yet
     const method = notificationConfig?.notificationMethod || "web";
 
+    // options.title already prefers the sender over the page title (see
+    // above); web and custom need it too, or they show the open chat (#2768).
     if (method === "custom") {
-      return createCustomNotification(title, options);
+      return createCustomNotification(options.title, options);
     }
 
     if (method === "web") {
-      const notification = createWebNotification(classicNotification, title, options);
+      const notification = createWebNotification(classicNotification, options.title, options);
       return notification || { onclick: null, onclose: null, onerror: null };
     }
 
