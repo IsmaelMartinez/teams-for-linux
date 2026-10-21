@@ -53,6 +53,7 @@ The `notifications`, `idleDetection`, `network` and `auth` targets are shipped o
 | `followSystemTheme` | `appearance.followSystemTheme` | |
 | `trayIconEnabled` | `tray.enabled` | |
 | `appIcon` | `tray.icon` | |
+| `appIconDark` | `tray.iconDark` | |
 | `appIconType` | `tray.iconType` | |
 | `useMutationTitleLogic` | `tray.useMutationTitleLogic` | |
 | `disableNotifications` | `notifications.enabled` | Yes |

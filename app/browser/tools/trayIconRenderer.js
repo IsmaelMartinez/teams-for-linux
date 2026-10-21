@@ -4,12 +4,19 @@ class TrayIconRenderer {
   #lastRequestedCount;
   #updateSequence = 0;
   #baseIconDataUrl = null;
+  #pendingNotificationFlash = false;
 
   init(config, ipcRenderer) {
     this.ipcRenderer = ipcRenderer;
     this.config = config;
+    this.#pendingNotificationFlash = false;
+    const isDark =
+      typeof window !== "undefined" && typeof window.matchMedia === "function"
+        ? window.matchMedia("(prefers-color-scheme: dark)").matches
+        : false;
+    this.currentTheme = config.theme || (isDark ? "dark" : "light");
     const iconChooser = new TrayIconChooser(config);
-    this.baseIcon = nativeImage.createFromPath(iconChooser.getFile());
+    this.baseIcon = nativeImage.createFromPath(iconChooser.getFile(this.currentTheme));
     // Defensive cache reset only; re-running init() is not otherwise safe
     // (it would double-register the unread-count listener)
     this.#baseIconDataUrl = null;
@@ -40,24 +47,47 @@ class TrayIconRenderer {
       });
     }
     ipcRenderer.on('config-changed', (_event, changes) => {
-      if ('appIcon' in changes && changes.appIcon !== this.config.appIcon) {
-        const chooser = new TrayIconChooser({ ...this.config, appIcon: changes.appIcon });
-        this.baseIcon = nativeImage.createFromPath(chooser.getFile());
+      const appIconMoved = 'appIcon' in changes && changes.appIcon !== this.config.appIcon;
+      const appIconDarkMoved = 'appIconDark' in changes && changes.appIconDark !== this.config.appIconDark;
+      const themeMoved = 'theme' in changes && changes.theme !== this.currentTheme;
+
+      const appIconDarkEffective = 'appIconDark' in changes ? changes.appIconDark : this.config.appIconDark;
+      const themeMatters = themeMoved && Boolean(appIconDarkEffective?.trim());
+
+      if (appIconMoved || appIconDarkMoved || themeMatters) {
+        if ('appIcon' in changes) this.config.appIcon = changes.appIcon;
+        if ('appIconDark' in changes) this.config.appIconDark = changes.appIconDark;
+        if ('theme' in changes) this.currentTheme = changes.theme;
+        const chooser = new TrayIconChooser(this.config);
+        this.baseIcon = nativeImage.createFromPath(chooser.getFile(this.currentTheme));
         this.iconSize = this.baseIcon.getSize();
         this.#baseIconDataUrl = null;
-        this.#lastRequestedCount = undefined;
+        const prevCount = this.#lastRequestedCount;
+        if (typeof prevCount === "number" && prevCount > 0) {
+          this.updateActivityCount({ detail: { number: prevCount } }, { redraw: true }).catch((err) => {
+            console.error("[TRAY_DIAG] Failed to redraw activity count:", err);
+          });
+        }
       }
     });
   }
 
-  async updateActivityCount(event) {
+  async updateActivityCount(event, { redraw = false } = {}) {
     const count = event.detail.number;
+
+    if (!redraw) {
+      if (count > 0 && !this.config.disableNotificationWindowFlash) {
+        this.#pendingNotificationFlash = true;
+      } else {
+        this.#pendingNotificationFlash = false;
+      }
+    }
 
     // Deduplicate against the most recently *requested* count, not the last
     // one that finished sending. Comparing against the completed count
     // swallows a clear-to-zero event that arrives while a non-zero render is
     // still awaiting the canvas, leaving the badge stuck (#2620).
-    if (count === this.#lastRequestedCount) {
+    if (count === this.#lastRequestedCount && !redraw) {
       console.debug("[TRAY_DIAG] Activity count unchanged, skipping update");
       return;
     }
@@ -71,7 +101,8 @@ class TrayIconRenderer {
 
     console.debug("[TRAY_DIAG] Activity count update initiated", {
       newCount: count,
-      willFlash: count > 0 && !this.config.disableNotificationWindowFlash
+      isRedraw: redraw,
+      pendingFlash: this.#pendingNotificationFlash
     });
 
     // Count 0 uses the base icon directly, skipping canvas rendering
@@ -98,14 +129,30 @@ class TrayIconRenderer {
       return;
     }
 
-    this.ipcRenderer.send("tray-update", {
+    let flash;
+    if (redraw) {
+      if (this.#pendingNotificationFlash) {
+        flash = true;
+        this.#pendingNotificationFlash = false;
+      }
+    } else {
+      flash = count > 0 && !this.config.disableNotificationWindowFlash;
+      this.#pendingNotificationFlash = false;
+    }
+
+    const payload = {
       icon: icon,
-      flash: count > 0 && !this.config.disableNotificationWindowFlash,
       count: count,
-    });
+    };
+    if (typeof flash === "boolean") {
+      payload.flash = flash;
+    }
+
+    this.ipcRenderer.send("tray-update", payload);
 
     console.debug("[TRAY_DIAG] Tray update IPC sent", {
       count: count,
+      flash: payload.flash,
       totalTimeMs: Date.now() - startTime
     });
 

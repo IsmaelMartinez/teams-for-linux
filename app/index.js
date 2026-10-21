@@ -5,6 +5,7 @@ const {
   globalShortcut,
   systemPreferences,
   nativeImage,
+  nativeTheme,
   session,
 } = require("electron");
 const path = require("node:path");
@@ -267,7 +268,10 @@ if (gotTheLock) {
   ipcMain.on("config-file-changed", restartApp);
   // Get current application configuration
   ipcMain.handle("get-config", async () => {
-    return config;
+    return {
+      ...config,
+      theme: config.theme || (nativeTheme?.shouldUseDarkColors ? "dark" : "light"),
+    };
   });
 
   notificationService.initialize();
