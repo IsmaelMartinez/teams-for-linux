@@ -364,12 +364,8 @@ function createCustomNotification(title, options) {
     // Default to "web" if config not loaded yet
     const method = notificationConfig?.notificationMethod || "web";
 
-    // `options.title` was resolved at line ~353 to `options.title || title`,
-    // so it prefers the sender name Teams sets in options.title over the page
-    // title passed as the constructor argument. The electron path already uses
-    // options.title; web and custom must use it too, otherwise the notification
-    // title shows the currently open conversation instead of the sender
-    // (issue #2768).
+    // options.title already prefers the sender over the page title (see
+    // above); web and custom need it too, or they show the open chat (#2768).
     if (method === "custom") {
       return createCustomNotification(options.title, options);
     }
