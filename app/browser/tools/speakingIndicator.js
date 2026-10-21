@@ -62,7 +62,7 @@ class SpeakingIndicator {
 	#polling = false;
 	#overlayVisible = false;
 	#overlayEnabled = false;
-	#hasSeenAudio = false; // true once audioLevel >= MUTED_LEVEL — prevents pre-join zeros reading as muted
+	#callLive = false; // true once audio is seen or the connection is up; pre-join zeros must not read as muted
 	#mutedTicks = 0; // consecutive below-threshold ticks; required for silent → muted transition
 	#inCall = false;
 	#ipcRenderer = null;
@@ -173,7 +173,7 @@ class SpeakingIndicator {
 		}
 		this.#polling = false;
 		this.#state = 'silent';
-		this.#hasSeenAudio = false;
+		this.#callLive = false;
 		this.#mutedTicks = 0;
 		console.info(`${LOG_PREFIX} Polling stopped`);
 	}
@@ -205,13 +205,18 @@ class SpeakingIndicator {
 					continue;
 				}
 
+				// One reading per poll, so the mute hysteresis counts polls rather
+				// than stats; the loudest source wins so any live audio blocks muted.
+				let level = null;
 				report.forEach(stat => {
-					if (this.#applyAudioStat(pc, stat)) {
-						foundAudioStats = true;
+					if (stat.type === 'media-source' && stat.kind === 'audio' && typeof stat.audioLevel === 'number') {
+						level = Math.max(level ?? 0, stat.audioLevel);
 					}
 				});
 
-				if (foundAudioStats) {
+				if (level !== null) {
+					this.#applyAudioLevel(pc, level);
+					foundAudioStats = true;
 					break; // Use the first connection that has audio stats
 				}
 			}
@@ -254,16 +259,7 @@ class SpeakingIndicator {
 		}
 	}
 
-	// Returns true when the stat carried a usable audio level.
-	#applyAudioStat(pc, stat) {
-		if (stat.type !== 'media-source' || stat.kind !== 'audio') {
-			return false;
-		}
-		const level = stat.audioLevel;
-		if (typeof level !== 'number') {
-			return false;
-		}
-
+	#applyAudioLevel(pc, level) {
 		const newState = this.#micStateFor(pc, level);
 
 		if (newState !== this.#state) {
@@ -274,17 +270,18 @@ class SpeakingIndicator {
 			}
 		}
 		this.#emitMicrophoneState(newState);
-		return true;
 	}
 
 	#micStateFor(pc, level) {
-		if (level >= MUTED_LEVEL) {
-			this.#hasSeenAudio = true;
+		// Zeros only mean muted once the call is live: either audio has been
+		// seen or the connection is up (joining already muted never sends audio).
+		if (level >= MUTED_LEVEL || pc.connectionState === 'connected') {
+			this.#callLive = true;
 		}
 		// Hysteresis on the muted threshold: quiet-mic noise floors can
 		// oscillate across MUTED_LEVEL, so only consecutive below-threshold
-		// ticks count, and only once real audio has been seen (pre-join zeros).
-		if (level < MUTED_LEVEL && this.#hasSeenAudio) {
+		// polls count.
+		if (level < MUTED_LEVEL && this.#callLive) {
 			this.#mutedTicks += 1;
 		} else {
 			this.#mutedTicks = 0;
