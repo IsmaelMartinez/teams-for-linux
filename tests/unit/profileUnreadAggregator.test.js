@@ -260,6 +260,37 @@ describe('ProfileUnreadAggregator', () => {
     });
   });
 
+  it('removing the only flashing profile stops the window flash when nobody else requested attention', async () => {
+    const resolve = (e) => ({ 1: 'p-a', 2: 'p-b' })[e.sender.id];
+    const agg = build({ resolve, names: { 'p-a': 'Work', 'p-b': 'Client' } });
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:a', flash: true, count: 2 });
+    // p-b only ever reported a count: no flash request of its own, so once p-a
+    // is gone `#flash()` answers undefined — "leave the window alone" — and the
+    // flash p-a started would never stop.
+    agg.onBadgeCount(senderEvent(2), 1);
+    await settle();
+    agg.removeProfile('p-a');
+    await settle();
+    assert.strictEqual(badges.at(-1), 1);
+    assert.strictEqual(
+      applied.at(-1).flash,
+      false,
+      'removal has to stop the flash explicitly'
+    );
+  });
+
+  it("removing a profile leaves another profile's attention request alone", async () => {
+    const resolve = (e) => ({ 1: 'p-a', 2: 'p-b' })[e.sender.id];
+    const agg = build({ resolve, names: { 'p-a': 'Work', 'p-b': 'Client' } });
+    // Both asked, so the surviving request still wins over the removal.
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:a', flash: true, count: 2 });
+    agg.onTrayUpdate(senderEvent(2), { icon: 'data:b', flash: true, count: 3 });
+    await settle();
+    agg.removeProfile('p-b');
+    await settle();
+    assert.strictEqual(applied.at(-1).flash, true);
+  });
+
   it('falls back on render failure: highest-count bucket icon, then last badged icon — never the bare base', async () => {
     const resolve = (e) => ({ 1: 'p-a', 2: 'p-b' })[e.sender.id];
     const agg = build({ resolve, names: { 'p-a': 'A', 'p-b': 'B' } });

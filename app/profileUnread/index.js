@@ -112,9 +112,17 @@ class ProfileUnreadAggregator {
   }
 
   removeProfile(profileId) {
-    if (!this.#buckets.delete(profileId)) return;
+    const removed = this.#buckets.get(profileId);
+    if (!removed) return;
+    this.#buckets.delete(profileId);
     this.#deps.applyBadgeCount(this.#sum());
-    void this.#refreshTray();
+    // The bucket takes its attention request with it, and `#flash()` answers
+    // `undefined` once no bucket has made one — which the tray reads as "leave
+    // the window alone". So a flash started by the removed profile would
+    // outlive it; stop it explicitly. Another bucket's `true` or `false` still
+    // wins, because those are real requests.
+    const stopFlash = removed.flash === true && this.#flash() === undefined;
+    void this.#refreshTray(stopFlash ? false : undefined);
   }
 
   /**
@@ -166,10 +174,17 @@ class ProfileUnreadAggregator {
     return cleared ? false : undefined;
   }
 
-  // Fire-and-forget at every call site (`void`): never rejects.
-  async #refreshTray() {
+  /**
+   * Fire-and-forget at every call site (`void`): never rejects.
+   *
+   * @param {boolean} [flashOverride]  Forces the flash value instead of the
+   *   one the remaining buckets ask for; used by removeProfile, which is the
+   *   only caller that can be left with no request at all while the window is
+   *   already flashing.
+   */
+  async #refreshTray(flashOverride) {
     try {
-      await this.#applyRefresh();
+      await this.#applyRefresh(flashOverride);
     } catch (error) {
       console.error("[ProfileUnread] tray refresh failed", {
         message: error.message,
@@ -177,10 +192,11 @@ class ProfileUnreadAggregator {
     }
   }
 
-  async #applyRefresh() {
+  /** @param {boolean} [flashOverride]  See #refreshTray. */
+  async #applyRefresh(flashOverride) {
     const unread = this.#unread();
     const sum = this.#sum();
-    const flash = this.#flash();
+    const flash = flashOverride ?? this.#flash();
     const tooltip = this.#tooltip(sum, unread);
     const token = ++this.#renderToken;
 
