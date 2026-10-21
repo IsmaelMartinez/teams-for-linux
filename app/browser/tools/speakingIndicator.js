@@ -281,10 +281,16 @@ class SpeakingIndicator {
 				&& this.#applyMicState(this.#audioPc, this.#audioTransceiver, null);
 		}
 		const { transceiver, level } = this.#pickMic(statsPc, sources);
+		const newPc = statsPc !== this.#audioPc;
 		// A report taken just before a detach still names the old track, which
 		// no sender holds any more; keep the transceiver we already know.
-		if (transceiver || statsPc !== this.#audioPc) {
+		if (transceiver || newPc) {
 			this.#audioTransceiver = transceiver;
+		}
+		// A replacement connection starts its own pre-join guard and zero streak.
+		if (newPc) {
+			this.#callLive = false;
+			this.#mutedTicks = 0;
 		}
 		this.#audioPc = statsPc;
 		return this.#applyMicState(statsPc, this.#audioTransceiver, level);

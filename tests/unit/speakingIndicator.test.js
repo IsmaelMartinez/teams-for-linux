@@ -535,6 +535,23 @@ describe('SpeakingIndicator', () => {
 		});
 	}
 
+	it('applies the pre-join guard again when a replacement connection takes over (#3099)', async () => {
+		setupGlobals();
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const ipcRenderer = startMonitoring();
+		await wait(300);
+
+		// The established peer closes and a still-connecting one replaces it
+		// before the next poll, with no call-disconnected in between.
+		getStatsFn = async () => makeStatsReport(0);
+		closePeerConnections();
+		openPeerConnection().connectionState = 'connecting';
+		await wait(900);
+
+		assert.ok(!micStates(ipcRenderer).includes('muted'), `got: ${micStates(ipcRenderer).join(',')}`);
+	});
+
 	it('judges the sending transceiver when an idle one kept the same track (#3099)', async () => {
 		setupGlobals();
 		const idle = makeAudioTransceiver('mic');
