@@ -333,16 +333,56 @@ class Menus {
       this.configGroup.legacyConfigStore.set("appIcon", selectedPath);
       this.tray?.setBaseIconPath(selectedPath);
       this.#updateWindowIcon(selectedPath);
-      this.updateMenu();
-      if (themeIcon.install(image)) {
-        dialog.showMessageBoxSync(this.window, {
-          type: "info",
-          title: "Choose App Icon",
-          message: "The taskbar and launcher pick up the new icon on the next start.",
-          detail: "Some desktops only refresh it after you log in again.",
-        });
+      if (themeIcon.supported()) {
+        this.#askThemeIcon(image);
       }
+      this.updateMenu();
     }
+  }
+
+  #askThemeIcon(image) {
+    const opts = this.#themeIconOptions();
+    const choice = dialog.showMessageBoxSync(this.window, {
+      type: "question",
+      title: "App Icon",
+      message: "Also use it for the taskbar and launcher?",
+      detail:
+        "This copies the icon into your icon theme under ~/.local/share/icons. " +
+        "It shows on the next start, on some desktops after you log in again. " +
+        "You can change this later under App Icon.",
+      buttons: ["Yes", "No"],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (choice === 0) {
+      themeIcon.install(image, opts);
+    } else {
+      themeIcon.remove(opts);
+    }
+  }
+
+  toggleThemeIcon() {
+    const opts = this.#themeIconOptions();
+    if (themeIcon.installed(opts)) {
+      themeIcon.remove(opts);
+    } else {
+      this.#installThemeIcon(nativeImage.createFromPath(this.configGroup.startupConfig.appIcon));
+    }
+    this.updateMenu();
+  }
+
+  #themeIconOptions() {
+    return { windowClass: this.configGroup.startupConfig.class };
+  }
+
+  #installThemeIcon(image) {
+    if (!themeIcon.install(image, this.#themeIconOptions())) return;
+    dialog.showMessageBoxSync(this.window, {
+      type: "info",
+      title: "App Icon",
+      message: "The taskbar and launcher pick up the icon on the next start.",
+      detail: "Some desktops only refresh it after you log in again.",
+    });
   }
 
   resetAppIcon() {
@@ -352,8 +392,8 @@ class Menus {
     const iconPath = iconChooser.getFile();
     this.tray?.setBaseIconPath(iconPath);
     this.#updateWindowIcon(iconPath);
+    themeIcon.remove(this.#themeIconOptions());
     this.updateMenu();
-    themeIcon.remove();
   }
 
   #updateWindowIcon(iconPath) {

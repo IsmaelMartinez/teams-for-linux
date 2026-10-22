@@ -54,12 +54,11 @@ function readDesktopFiles() {
 // by its StartupWMClass (see multiple-instances.md), otherwise the packaged
 // entry by file name, otherwise whichever launches this binary (AppImage
 // integrations install one under their own icon name).
-function iconName() {
+function iconName({ windowClass } = {}) {
   const files = readDesktopFiles();
-  const wmClass = process.argv.find((arg) => arg.startsWith("--class="))?.slice(8);
   const exe = process.env.APPIMAGE || process.execPath;
   const match =
-    (wmClass && files.find((f) => f.text.includes(`StartupWMClass=${wmClass}`))) ||
+    (windowClass && files.find((f) => f.text.includes(`StartupWMClass=${windowClass}`))) ||
     files.find((f) => f.name === `${DEFAULT_NAME}.desktop`) ||
     files.find((f) => f.text.includes(exe));
   const icon = match && /^Icon=(.+)$/m.exec(match.text)?.[1].trim();
@@ -70,17 +69,24 @@ function iconFile(size, name) {
   return path.join(hicolorDir(), `${size}x${size}`, "apps", `${name}.png`);
 }
 
+// One manifest per user, keyed by icon name, so profiles with their own
+// launcher (and icon name) never touch each other's files.
 function readManifest() {
   try {
-    return JSON.parse(fs.readFileSync(manifestFile(), "utf8"));
+    const data = JSON.parse(fs.readFileSync(manifestFile(), "utf8"));
+    return Array.isArray(data) ? {} : data;
   } catch {
-    return [];
+    return {};
   }
 }
 
-function writeManifest(files) {
+function writeManifest(manifest) {
+  if (Object.keys(manifest).length === 0) {
+    fs.rmSync(manifestFile(), { force: true });
+    return;
+  }
   fs.mkdirSync(path.dirname(manifestFile()), { recursive: true });
-  fs.writeFileSync(manifestFile(), JSON.stringify(files));
+  fs.writeFileSync(manifestFile(), JSON.stringify(manifest));
 }
 
 function refresh() {
@@ -99,37 +105,50 @@ function refresh() {
   }
 }
 
-function install(image) {
+function installed(opts) {
+  return supported() && Boolean(readManifest()[iconName(opts)]);
+}
+
+// Every size goes to a temp name first and is renamed over the real file only
+// once all of them are written, so a failed replacement leaves the previous
+// icon set whole.
+function install(image, opts) {
   if (!supported()) return false;
-  const name = iconName();
+  const name = iconName(opts);
   const { width, height } = image.getSize();
-  const written = [];
+  const pending = [];
   try {
     for (const size of SIZES) {
       const file = iconFile(size, name);
+      const temp = `${file}.tmp-${process.pid}`;
       fs.mkdirSync(path.dirname(file), { recursive: true });
       const resized = image.resize(width >= height ? { width: size } : { height: size });
-      fs.writeFileSync(file, resized.toPNG());
-      written.push(file);
+      fs.writeFileSync(temp, resized.toPNG());
+      pending.push({ temp, file });
     }
-    writeManifest(written);
+    for (const { temp, file } of pending) fs.renameSync(temp, file);
+    writeManifest({ ...readManifest(), [name]: pending.map((p) => p.file) });
   } catch (error) {
     console.warn("[ThemeIcon] could not write the icon theme, leaving it untouched", { message: error.message });
-    for (const file of written) fs.rmSync(file, { force: true });
+    for (const { temp } of pending) fs.rmSync(temp, { force: true });
     return false;
   }
   refresh();
   return true;
 }
 
-// Only files this app wrote are removed; hand-placed icons are left alone.
-function remove() {
+// Only files this app wrote under this name are removed; hand-placed icons
+// and other profiles' icons are left alone.
+function remove(opts) {
   if (!supported()) return false;
-  const files = readManifest();
-  if (files.length === 0) return false;
+  const manifest = readManifest();
+  const name = iconName(opts);
+  const files = manifest[name];
+  if (!files) return false;
   try {
     for (const file of files) fs.rmSync(file, { force: true });
-    fs.rmSync(manifestFile(), { force: true });
+    delete manifest[name];
+    writeManifest(manifest);
   } catch (error) {
     console.warn("[ThemeIcon] could not remove the icon theme files", { message: error.message });
     return false;
@@ -138,4 +157,4 @@ function remove() {
   return true;
 }
 
-module.exports = { install, remove, iconName, supported };
+module.exports = { install, installed, remove, iconName, supported };

@@ -13,7 +13,6 @@ describe('themeIcon', { skip: process.platform !== 'linux' }, () => {
   let tmp;
   let signals;
   const env = { ...process.env };
-  const argv = [...process.argv];
 
   beforeEach(() => {
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'theme-icon-'));
@@ -37,16 +36,17 @@ describe('themeIcon', { skip: process.platform !== 'linux' }, () => {
     delete require.cache[modulePath];
     for (const key of Object.keys(process.env)) delete process.env[key];
     Object.assign(process.env, env);
-    process.argv = [...argv];
     fs.rmSync(tmp, { recursive: true, force: true });
   });
 
-  const fakeImage = (width, height) => ({
+  const fakeImage = (width, height, tag = '') => ({
     getSize: () => ({ width, height }),
-    resize: (opts) => ({ toPNG: () => Buffer.from(JSON.stringify(opts)) }),
+    resize: (opts) => ({ toPNG: () => Buffer.from(JSON.stringify({ ...opts, tag })) }),
   });
   const iconPath = (size, name = 'teams-for-linux') =>
     path.join(tmp, 'icons', 'hicolor', `${size}x${size}`, 'apps', `${name}.png`);
+  const readIcon = (size, name) => JSON.parse(fs.readFileSync(iconPath(size, name), 'utf8'));
+  const manifest = () => JSON.parse(fs.readFileSync(path.join(tmp, 'teams-for-linux', 'theme-icon.json'), 'utf8'));
   const writeDesktop = (file, text) => {
     const apps = path.join(tmp, 'applications');
     fs.mkdirSync(apps, { recursive: true });
@@ -55,13 +55,18 @@ describe('themeIcon', { skip: process.platform !== 'linux' }, () => {
 
   it('writes every hicolor size, keeping the aspect on the longer side, then removes them', () => {
     const themeIcon = require(modulePath);
+    assert.strictEqual(themeIcon.installed(), false);
     assert.strictEqual(themeIcon.install(fakeImage(250, 264)), true);
     assert.strictEqual(fs.readdirSync(path.join(tmp, 'icons', 'hicolor')).length, 10);
-    assert.deepStrictEqual(JSON.parse(fs.readFileSync(iconPath(48), 'utf8')), { height: 48 });
+    assert.deepStrictEqual(readIcon(48), { height: 48, tag: '' });
+    assert.ok(!fs.existsSync(`${iconPath(48)}.tmp-${process.pid}`));
+    assert.strictEqual(themeIcon.installed(), true);
     assert.deepStrictEqual(signals[0], ['/KIconLoader', 'org.kde.KIconLoader', 'iconChanged', 'i', [0]]);
 
     assert.strictEqual(themeIcon.remove(), true);
     assert.ok(!fs.existsSync(iconPath(48)));
+    assert.strictEqual(themeIcon.installed(), false);
+    assert.ok(!fs.existsSync(path.join(tmp, 'teams-for-linux', 'theme-icon.json')));
   });
 
   it('removes only the files it wrote itself', () => {
@@ -77,16 +82,38 @@ describe('themeIcon', { skip: process.platform !== 'linux' }, () => {
     assert.ok(!fs.existsSync(iconPath(64)));
   });
 
-  it('rolls back and reports failure when the theme directory is not writable', () => {
+  it('keeps the previous icon set whole when a replacement fails partway', () => {
     const themeIcon = require(modulePath);
-    fs.mkdirSync(path.dirname(iconPath(24)), { recursive: true });
-    fs.mkdirSync(iconPath(24));
-    assert.strictEqual(themeIcon.install(fakeImage(64, 64)), false);
-    assert.ok(!fs.existsSync(iconPath(16)));
+    assert.strictEqual(themeIcon.install(fakeImage(64, 64, 'first')), true);
+    fs.mkdirSync(`${iconPath(96)}.tmp-${process.pid}`);
+    signals = [];
+
+    assert.strictEqual(themeIcon.install(fakeImage(64, 64, 'second')), false);
+    for (const size of [16, 48, 64, 512]) assert.strictEqual(readIcon(size).tag, 'first');
+    assert.ok(!fs.existsSync(`${iconPath(16)}.tmp-${process.pid}`));
+    assert.strictEqual(manifest()['teams-for-linux'].length, 10);
     assert.strictEqual(signals.length, 0);
   });
 
-  it('prefers the profile launcher, then the packaged entry, then the binary match', () => {
+  it('keeps one manifest entry per icon name so profiles do not clobber each other', () => {
+    writeDesktop('teams-for-linux.desktop', 'Exec=/opt/teams-for-linux/teams-for-linux\nIcon=teams-for-linux\n');
+    writeDesktop('work.desktop', 'Exec=/opt/teams-for-linux/teams-for-linux --class teams-work\nIcon=teams-work\nStartupWMClass=teams-work\n');
+    const themeIcon = require(modulePath);
+    const work = { windowClass: 'teams-work' };
+
+    themeIcon.install(fakeImage(64, 64, 'default'));
+    themeIcon.install(fakeImage(64, 64, 'work'), work);
+    assert.deepStrictEqual(Object.keys(manifest()).sort(), ['teams-for-linux', 'teams-work']);
+    assert.strictEqual(readIcon(32, 'teams-work').tag, 'work');
+
+    assert.strictEqual(themeIcon.remove(work), true);
+    assert.ok(!fs.existsSync(iconPath(32, 'teams-work')));
+    assert.strictEqual(readIcon(32).tag, 'default');
+    assert.strictEqual(themeIcon.installed(), true);
+    assert.strictEqual(themeIcon.installed(work), false);
+  });
+
+  it('prefers the launcher for the window class, then the packaged entry, then the binary match', () => {
     writeDesktop('other.desktop', `Exec=${process.execPath} %U\nIcon=other\n`);
     assert.strictEqual(require(modulePath).iconName(), 'other');
 
@@ -94,10 +121,10 @@ describe('themeIcon', { skip: process.platform !== 'linux' }, () => {
     delete require.cache[modulePath];
     assert.strictEqual(require(modulePath).iconName(), 'teams-for-linux');
 
-    writeDesktop('work.desktop', 'Exec=/opt/teams-for-linux/teams-for-linux --class=teams-work\nIcon=teams-work\nStartupWMClass=teams-work\n');
-    process.argv.push('--class=teams-work');
+    writeDesktop('work.desktop', 'Exec=/opt/teams-for-linux/teams-for-linux --class teams-work\nIcon=teams-work\nStartupWMClass=teams-work\n');
     delete require.cache[modulePath];
-    assert.strictEqual(require(modulePath).iconName(), 'teams-work');
+    assert.strictEqual(require(modulePath).iconName({ windowClass: 'teams-work' }), 'teams-work');
+    assert.strictEqual(require(modulePath).iconName({ windowClass: null }), 'teams-for-linux');
   });
 
   it('falls back to the default name when the desktop file icon is not a plain name', () => {
@@ -111,7 +138,9 @@ describe('themeIcon', { skip: process.platform !== 'linux' }, () => {
   it('does nothing inside a snap or flatpak', () => {
     process.env.FLATPAK_ID = 'com.example.Teams';
     const themeIcon = require(modulePath);
+    assert.strictEqual(themeIcon.supported(), false);
     assert.strictEqual(themeIcon.install(fakeImage(64, 64)), false);
+    assert.strictEqual(themeIcon.installed(), false);
     assert.ok(!fs.existsSync(path.join(tmp, 'icons')));
   });
 });
