@@ -239,6 +239,10 @@ reads it off the Teams UI, so the two are enabled independently: with only
 `media.showStatusOnDockIcon` set, the monitor runs and the icon follows it, and
 nothing is published anywhere.
 
+This is best effort. Teams exposes no presence API the app can use, and Teams can
+change its UI without notice, so until the monitor is updated the dot can go
+missing or show the wrong status.
+
 ### Notification System
 
 | Option | Type | Default | Description |
