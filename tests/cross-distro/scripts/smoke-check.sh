@@ -28,7 +28,7 @@ MIN_LOG_BYTES=500
 #   - not found.*GLIBC_: missing libc version, only ever emitted on
 #     real dynamic-linker failure (benign contexts say "GLIBC_2.x" without
 #     "not found").
-FAIL_PATTERNS='exec format error|cannot execute binary file|Trace/breakpoint trapped|not found.*GLIBC_'
+FAIL_PATTERNS='exec format error|cannot execute binary file|Trace/breakpoint trapped|not found.*GLIBC_|The platform failed to initialize'
 
 echo "[smoke] Checking container: ${CONTAINER} (timeout: ${TIMEOUT}s)"
 
@@ -72,6 +72,34 @@ dump_diagnostics() {
 }
 
 # Phase 1 — log file appears.
+# On the Sway scenarios, also require that the app mapped a window with the
+# expected shell: xdg_shell for native Wayland, xwayland for the X11 client.
+# A log that grows past MIN_LOG_BYTES proves the main process ran, not that
+# the backend Chromium picked is the one the scenario is named after.
+check_backend() {
+    case "${DISPLAY_SERVER:-}" in
+        wayland) WANT="xdg_shell" ;;
+        xwayland) WANT="xwayland" ;;
+        *) return 0 ;;
+    esac
+    local waited=0
+    while [[ "$waited" -lt 60 ]]; do
+        SHELLS=$(docker exec "$CONTAINER" sh -c '
+            S=$(find /tmp /run -name "sway-ipc*" 2>/dev/null | head -1)
+            swaymsg -s "$S" -t get_tree 2>/dev/null | grep -o "\"shell\": \"[a-z_]*\"" | sort -u | tr "\n" " "
+        ' 2>/dev/null)
+        if [[ "$SHELLS" == *"\"$WANT\""* ]]; then
+            echo "[smoke] PASS: window mapped with shell ${WANT} (${SHELLS})"
+            return 0
+        fi
+        sleep "$POLL_INTERVAL"
+        waited=$((waited + POLL_INTERVAL))
+    done
+    echo "[smoke] FAIL: no window with shell ${WANT} after 60s (seen: ${SHELLS:-none})"
+    dump_diagnostics
+    return 1
+}
+
 ELAPSED=0
 while [[ "$ELAPSED" -lt "$TIMEOUT" ]]; do
     if ! container_running; then
@@ -115,7 +143,8 @@ while [[ "$ELAPSED" -lt "$TIMEOUT" ]]; do
 
     if [[ "$LOG_SIZE" =~ ^[0-9]+$ ]] && [[ "$LOG_SIZE" -ge "$MIN_LOG_BYTES" ]]; then
         echo "[smoke] PASS: ${LOG_FILE} reached ${LOG_SIZE} bytes after ${ELAPSED}s (app launched)"
-        exit 0
+        check_backend
+        exit $?
     fi
 
     sleep "$POLL_INTERVAL"

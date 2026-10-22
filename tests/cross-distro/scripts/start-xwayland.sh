@@ -18,6 +18,8 @@ export XDG_CURRENT_DESKTOP=sway
 sway &
 SWAY_PID=$!
 sleep 2
+# swaymsg needs the IPC socket; Sway only exports SWAYSOCK to its own children.
+export SWAYSOCK=$(find "${XDG_RUNTIME_DIR:-/tmp}" -name 'sway-ipc.*.sock' 2>/dev/null | head -1)
 
 # Create virtual output with desired resolution
 swaymsg create_output WLR_HEADLESS 2>/dev/null || true
@@ -54,7 +56,12 @@ if [[ -n "$APP_CMD" ]]; then
     APP_LOG="/tmp/app.log"
     if [[ "${AUTO_LAUNCH}" == "true" ]]; then
         echo "[XWayland] Auto-launching app (X11 client via XWayland, logs: tail -f ${APP_LOG})..."
-        bash -c "$XWAYLAND_APP_CMD > $APP_LOG 2>&1" &
+        # Through swaymsg so the app inherits DISPLAY, which Sway only sets for
+        # its own children once Xwayland is up; launched from here it has no X
+        # server and Chromium exits with "Missing X server or $DISPLAY". The
+        # inner quotes stop Sway splitting the command on the commas in
+        # --disable-features.
+        swaymsg exec "'${XWAYLAND_APP_CMD} > ${APP_LOG} 2>&1'"
     else
         echo "[XWayland] Launch app (runs as X11 client via XWayland):"
         echo "      $XWAYLAND_APP_CMD"

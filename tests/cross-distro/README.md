@@ -100,10 +100,9 @@ With `--no-launch`, start the app from the terminal inside VNC:
 /home/tester/app-local/teams-for-linux.AppImage --appimage-extract-and-run \
     --no-sandbox --disable-gpu --disable-dev-shm-usage --ozone-platform=x11
 
-# Wayland (native)
+# Wayland (native): no flag, Chromium picks the Wayland backend from WAYLAND_DISPLAY
 /home/tester/app-local/teams-for-linux.AppImage --appimage-extract-and-run \
-    --no-sandbox --disable-gpu --disable-dev-shm-usage \
-    --enable-features=UseOzonePlatform --ozone-platform=wayland
+    --no-sandbox --disable-gpu --disable-dev-shm-usage
 ```
 
 ### Apple Silicon (ARM64 Macs)
@@ -159,7 +158,7 @@ The entrypoint handles these automatically:
 | Shared memory | `--disable-dev-shm-usage`, `shm_size: 2gb` |
 | No namespaces | `--no-sandbox` |
 | Wayland detection | `XDG_SESSION_TYPE` set per display server |
-| Ozone override | AppImage ships no flag; the Wayland script passes `--ozone-platform=wayland` and the XWayland script `--ozone-platform=x11` |
+| Ozone override | AppImage ships no flag; the Wayland script launches it as shipped (native Wayland by auto-selection) and the XWayland script passes `--ozone-platform=x11` |
 
 **X11** -- high confidence, mirrors CI exactly (`xvfb-run` + Electron).
 **XWayland** -- high confidence, app sees X11 through Sway's XWayland bridge.
