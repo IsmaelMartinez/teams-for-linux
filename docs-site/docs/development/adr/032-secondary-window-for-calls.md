@@ -6,7 +6,9 @@ id: 032-secondary-window-for-calls
 
 ## Status
 
-🚧 Proposed (2026-09-18). Supersedes [ADR-010](010-multiple-windows-support.md).
+✅ Accepted (2026-10-05). Supersedes [ADR-010](010-multiple-windows-support.md).
+
+Proposed on 2026-09-18 and accepted with [PR #3000](https://github.com/IsmaelMartinez/teams-for-linux/pull/3000). Phase 1 lands in two parts: the per-window call state and the preload window role first, then the secondary window itself and its triggers.
 
 ## Context
 

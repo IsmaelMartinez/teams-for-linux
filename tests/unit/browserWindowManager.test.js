@@ -161,3 +161,94 @@ describe('BrowserWindowManager incoming call routing', () => {
 	});
 
 });
+
+// ADR-032: call state is tracked per reporting renderer, and screen-lock
+// inhibition follows "any call active" rather than the last event.
+describe('BrowserWindowManager per-window call state', () => {
+	function renderer() {
+		const sent = [];
+		return { sent, isDestroyed: () => false, send: (...args) => sent.push(args) };
+	}
+
+	it('keeps the Electron blocker while another window is still in a call', async () => {
+		const manager = new BrowserWindowManager({ config: {} });
+		const calls = [];
+		manager.disableScreenLockElectron = () => { calls.push('disable'); return true; };
+		manager.enableScreenLockElectron = () => { calls.push('enable'); return true; };
+		const main = renderer();
+		const secondary = renderer();
+
+		await manager.assignOnCallConnectedHandler()({ sender: main });
+		await manager.assignOnCallConnectedHandler()({ sender: secondary });
+		assert.strictEqual(manager.isOnCall, true);
+
+		assert.strictEqual(await manager.assignOnCallDisconnectedHandler()({ sender: main }), false);
+		assert.strictEqual(manager.isOnCall, true, 'the secondary call keeps the app in a call');
+		assert.deepStrictEqual(calls, ['disable', 'disable']);
+
+		assert.strictEqual(await manager.assignOnCallDisconnectedHandler()({ sender: secondary }), true);
+		assert.strictEqual(manager.isOnCall, false);
+		assert.deepStrictEqual(calls, ['disable', 'disable', 'enable']);
+	});
+
+	it('sends wake lock messages to the renderer that holds the call', async () => {
+		const manager = new BrowserWindowManager({ config: { screenSharing: { lockInhibitionMethod: 'WakeLockSentinel' } } });
+		const main = renderer();
+		const secondary = renderer();
+		manager.window = { webContents: main };
+
+		await manager.assignOnCallConnectedHandler()({ sender: secondary });
+		assert.deepStrictEqual(secondary.sent, [['enable-wakelock']]);
+		assert.deepStrictEqual(main.sent, []);
+
+		manager.reacquireWakeLock(main);
+		manager.reacquireWakeLock(secondary);
+		assert.deepStrictEqual(main.sent, [], 'no lock is requested for a window without a call');
+		assert.deepStrictEqual(secondary.sent, [['enable-wakelock'], ['enable-wakelock']]);
+
+		await manager.assignOnCallDisconnectedHandler()({ sender: secondary });
+		assert.deepStrictEqual(secondary.sent.at(-1), ['disable-wakelock']);
+	});
+
+	it('falls back to the main window when the event carries no sender', async () => {
+		const manager = new BrowserWindowManager({ config: { screenSharing: { lockInhibitionMethod: 'WakeLockSentinel' } } });
+		const main = renderer();
+		manager.window = { webContents: main };
+
+		await manager.assignOnCallConnectedHandler()({});
+		assert.strictEqual(manager.callState.has(main), true);
+		assert.deepStrictEqual(main.sent, [['enable-wakelock']]);
+		assert.deepStrictEqual(appEvents.at(-1), ['teams-call-connected', null]);
+	});
+
+	it('releases the call and tells listeners when the renderer is destroyed mid-call', async () => {
+		const { EventEmitter } = require('node:events');
+		const manager = new BrowserWindowManager({ config: {} });
+		const calls = [];
+		manager.disableScreenLockElectron = () => { calls.push('disable'); return true; };
+		manager.enableScreenLockElectron = () => { calls.push('enable'); return true; };
+		const secondary = new EventEmitter();
+		secondary.isDestroyed = () => true;
+
+		await manager.assignOnCallConnectedHandler()({ sender: secondary });
+		secondary.emit('destroyed');
+
+		assert.strictEqual(manager.isOnCall, false);
+		assert.deepStrictEqual(calls, ['disable', 'enable']);
+		assert.deepStrictEqual(appEvents.at(-1), ['teams-call-disconnected', secondary]);
+	});
+
+	it('clearCall forgets an unreported call and releases its inhibition', async () => {
+		const manager = new BrowserWindowManager({ config: {} });
+		const calls = [];
+		manager.disableScreenLockElectron = () => { calls.push('disable'); return true; };
+		manager.enableScreenLockElectron = () => { calls.push('enable'); return true; };
+		const main = renderer();
+
+		await manager.assignOnCallConnectedHandler()({ sender: main });
+		assert.strictEqual(manager.clearCall(main), true);
+		assert.strictEqual(manager.clearCall(main), false);
+		assert.strictEqual(manager.isOnCall, false);
+		assert.deepStrictEqual(calls, ['disable', 'enable']);
+	});
+});

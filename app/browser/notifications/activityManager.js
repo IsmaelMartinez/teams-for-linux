@@ -2,17 +2,25 @@ const activityHub = require("../tools/activityHub");
 const wakeLock = require("../tools/wakeLock");
 
 class ActivityManager {
-  constructor(ipcRenderer, config) {
+  constructor(ipcRenderer, config, options = {}) {
     this.ipcRenderer = ipcRenderer;
     this.config = config;
     this.myStatus = -1;
+    // The incoming-call payload carries no call identity, so the main process
+    // cannot dedupe the same ring reported by two windows. Only the main window
+    // forwards it (ADR-032); call state is forwarded from every window.
+    this.forwardIncomingCalls = options.forwardIncomingCalls !== false;
   }
 
   start() {
-    setActivityHandlers(this);
+    this.registerActivityHandlers();
     setEventHandlers(this);
     activityHub.start();
     this.watchSystemIdleState();
+  }
+
+  registerActivityHandlers() {
+    setActivityHandlers(this);
   }
 
   watchSystemIdleState() {
@@ -85,8 +93,10 @@ function setEventHandlers(self) {
 }
 
 function setActivityHandlers(self) {
-  activityHub.on("incoming-call-created", incomingCallCreatedHandler(self));
-  activityHub.on("incoming-call-ended", incomingCallEndedHandler(self));
+  if (self.forwardIncomingCalls) {
+    activityHub.on("incoming-call-created", incomingCallCreatedHandler(self));
+    activityHub.on("incoming-call-ended", incomingCallEndedHandler(self));
+  }
   activityHub.on("call-connected", callConnectedHandler(self));
   activityHub.on("call-disconnected", callDisconnectedHandler(self));
 }
