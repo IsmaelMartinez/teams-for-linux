@@ -42,9 +42,11 @@ class MQTTStatusMonitor {
 
 		// D-Bus status observation is explicitly opt-in, independently of MQTT.
 		const dbusEnabled = process.platform === 'linux' && config.dbusControl?.enabled === true;
-		const dockIconWantsStatus =
-			config.media?.showStatusOnDockIcon && process.platform === 'darwin';
-		if (!config.mqtt?.enabled && !dbusEnabled && !dockIconWantsStatus) {
+		// media.showStatusOnDockIcon asks for the presence overlay: the Dock on
+		// macOS, the tray icon on the platforms that have no Dock. Either way
+		// the monitor has to run, so there is no platform test here.
+		const statusOverlayWanted = config.media?.showStatusOnDockIcon === true;
+		if (!config.mqtt?.enabled && !dbusEnabled && !statusOverlayWanted) {
 			console.debug('Status monitoring disabled');
 			return;
 		}

@@ -18,7 +18,12 @@ let badges;
 let renders;
 let renderResult;
 
-function build({ resolve = () => null, names = {}, primary = () => true } = {}) {
+function build({
+  resolve = () => null,
+  names = {},
+  primary = () => true,
+  presenceOverlay = false,
+} = {}) {
   applied = [];
   badges = [];
   renders = [];
@@ -31,6 +36,7 @@ function build({ resolve = () => null, names = {}, primary = () => true } = {}) 
       renders.push(count);
       return renderResult(count);
     },
+    wantsPresenceOverlay: () => presenceOverlay,
     applyTray: (update) => applied.push(update),
     applyBadgeCount: (count) => badges.push(count),
     appTitle: 'Teams',
@@ -71,6 +77,115 @@ describe('ProfileUnreadAggregator', () => {
       tooltip: 'Teams',
     });
     assert.strictEqual(badges.at(-1), 0);
+  });
+
+  it('a redraw without flash preserves an active notification flash', async () => {
+    const agg = build();
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:one', flash: true, count: 5 });
+    await settle();
+    assert.strictEqual(applied.at(-1).flash, true);
+    // Presence/theme redraw: new icon, no flash key.
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:one-dot', count: 5 });
+    await settle();
+    assert.strictEqual(applied.at(-1).flash, true, 'the omitted flag must not stop the flash');
+    // An explicit clear still stops it.
+    agg.onTrayUpdate(senderEvent(1), { icon: null, flash: false, count: 0 });
+    await settle();
+    assert.strictEqual(applied.at(-1).flash, false);
+  });
+
+  it('an omitted flash on a bucket with no request yet stays undefined', async () => {
+    const agg = build();
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:one', count: 4 });
+    await settle();
+    assert.strictEqual(applied.at(-1).flash, undefined);
+  });
+
+  it('zero unread keeps the presence overlay: the icon comes from a zero-count render', async () => {
+    const agg = build({ presenceOverlay: true });
+    renderResult = () => Promise.resolve('data:dot');
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:one', flash: true, count: 5 });
+    agg.onTrayUpdate(senderEvent(1), { icon: null, flash: false, count: 0 });
+    await settle();
+    assert.deepStrictEqual(
+      renders,
+      [5, 0],
+      'the single unread bucket is rendered for the selected profile too, and the dot needs a composite at count 0'
+    );
+    assert.deepStrictEqual(applied.at(-1), {
+      icon: 'data:dot',
+      flash: false,
+      tooltip: 'Teams',
+    });
+  });
+
+  it('zero unread without the overlay asks for no render at all', async () => {
+    const agg = build();
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:one', flash: false, count: 0 });
+    await settle();
+    assert.deepStrictEqual(renders, []);
+    assert.deepStrictEqual(applied.at(-1), {
+      icon: null,
+      flash: false,
+      tooltip: 'Teams',
+    });
+  });
+
+  it('with the overlay on, a single unread bucket is rendered for the selected profile, not reused from its cache', async () => {
+    // p-a is the unread profile, p-b the selected one: the render bridge
+    // targets the selection, and the cached composite carries p-a's dot.
+    const agg = build({
+      presenceOverlay: true,
+      resolve: () => 'p-a',
+      names: { 'p-a': 'Work' },
+    });
+    renderResult = (count) => Promise.resolve(`data:selected-${count}`);
+    agg.onTrayUpdate(senderEvent(1), {
+      icon: 'data:dot-a',
+      flash: true,
+      count: 3,
+    });
+    await settle();
+    assert.deepStrictEqual(
+      renders,
+      [3],
+      'the cached composite is not reused while the dot is drawn'
+    );
+    assert.deepStrictEqual(applied.at(-1), {
+      icon: 'data:selected-3',
+      flash: true,
+      tooltip: 'Teams (3)',
+    });
+  });
+
+  it('refresh() re-renders for the newly selected profile: a switch changes neither count nor status', async () => {
+    const resolve = (e) => ({ 1: 'p-a', 2: 'p-b' })[e.sender.id];
+    const agg = build({
+      resolve,
+      presenceOverlay: true,
+      names: { 'p-a': 'A', 'p-b': 'B' },
+    });
+    let selected = 'p-a';
+    renderResult = (count) => Promise.resolve(`data:${selected}-${count}`);
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:a', flash: false, count: 4 });
+    await settle();
+    assert.strictEqual(applied.at(-1).icon, 'data:p-a-4');
+
+    const badgesBefore = badges.length;
+    selected = 'p-b'; // the switch itself; every count and status is unchanged
+    agg.refresh();
+    await settle();
+    assert.strictEqual(
+      applied.at(-1).icon,
+      'data:p-b-4',
+      'the dot follows the selection'
+    );
+    assert.strictEqual(applied.at(-1).tooltip, 'Teams (4)');
+    assert.strictEqual(
+      badges.length,
+      badgesBefore,
+      'a switch does not touch the dock badge'
+    );
   });
 
   it('two unread profiles: badge = sum, aggregate icon rendered, tooltip lists both', async () => {
@@ -143,6 +258,37 @@ describe('ProfileUnreadAggregator', () => {
       flash: true,
       tooltip: 'Teams (2)',
     });
+  });
+
+  it('removing the only flashing profile stops the window flash when nobody else requested attention', async () => {
+    const resolve = (e) => ({ 1: 'p-a', 2: 'p-b' })[e.sender.id];
+    const agg = build({ resolve, names: { 'p-a': 'Work', 'p-b': 'Client' } });
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:a', flash: true, count: 2 });
+    // p-b only ever reported a count: no flash request of its own, so once p-a
+    // is gone `#flash()` answers undefined — "leave the window alone" — and the
+    // flash p-a started would never stop.
+    agg.onBadgeCount(senderEvent(2), 1);
+    await settle();
+    agg.removeProfile('p-a');
+    await settle();
+    assert.strictEqual(badges.at(-1), 1);
+    assert.strictEqual(
+      applied.at(-1).flash,
+      false,
+      'removal has to stop the flash explicitly'
+    );
+  });
+
+  it("removing a profile leaves another profile's attention request alone", async () => {
+    const resolve = (e) => ({ 1: 'p-a', 2: 'p-b' })[e.sender.id];
+    const agg = build({ resolve, names: { 'p-a': 'Work', 'p-b': 'Client' } });
+    // Both asked, so the surviving request still wins over the removal.
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:a', flash: true, count: 2 });
+    agg.onTrayUpdate(senderEvent(2), { icon: 'data:b', flash: true, count: 3 });
+    await settle();
+    agg.removeProfile('p-b');
+    await settle();
+    assert.strictEqual(applied.at(-1).flash, true);
   });
 
   it('falls back on render failure: highest-count bucket icon, then last badged icon — never the bare base', async () => {
@@ -221,6 +367,8 @@ describe('ProfileUnreadAggregator', () => {
     assert.doesNotThrow(() =>
       agg.onTrayUpdate(senderEvent(1), { icon: 'i', flash: false, count: 1 })
     );
+    // The switch entry point is fire-and-forget too.
+    assert.doesNotThrow(() => agg.refresh());
     await settle();
   });
 

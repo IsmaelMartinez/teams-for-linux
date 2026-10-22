@@ -853,7 +853,7 @@
         "preventDeviceSwitching": false,
         "documentPictureInPicture": true
       },
-      "description": "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the Dock icon on macOS. macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications. documentPictureInPicture: replace Electron's non-functional Document Picture-in-Picture API so Teams can show its floating call controls (Call Monitor) in a small always-on-top window; defaults to true, set false to fall back to Electron's native (broken) API.",
+      "description": "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the app icon (the Dock on macOS, the tray icon elsewhere). macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications. documentPictureInPicture: replace Electron's non-functional Document Picture-in-Picture API so Teams can show its floating call controls (Call Monitor) in a small always-on-top window; defaults to true, set false to fall back to Electron's native (broken) API.",
       "applyMode": "restart",
       "fields": [
         {
@@ -947,7 +947,7 @@
           "path": "showStatusOnDockIcon",
           "type": "boolean",
           "default": false,
-          "description": "Overlay the user presence status on the Dock icon on macOS."
+          "description": "Overlay the user presence status on the app icon: the Dock on macOS, the tray icon on the platforms that have no Dock. While the dot is drawn the unread badge moves to the other corner."
         },
         {
           "path": "macPerformanceMode",

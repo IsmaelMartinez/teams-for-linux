@@ -224,6 +224,25 @@ Direct CSS files remain supported through `appearance.cssLocation` and its legac
 | `useMutationTitleLogic` | `boolean` | `true` | Deprecated, use `tray.useMutationTitleLogic` |
 | `disableBadgeCount` | `boolean` | `false` | Disable the badge counter on the taskbar/dock icon |
 
+#### Presence status on the tray icon
+
+`media.showStatusOnDockIcon` overlays the user's Teams status on the app icon:
+on macOS that is the Dock, and on the platforms that have no Dock it is the tray
+icon, in the bottom-right corner the way the Windows client shows it. Green is
+available, red busy, dark red with a white bar do not disturb, yellow away or be
+right back. While the dot is drawn the unread badge moves to the bottom-left so
+the two never overlap; with the setting off, the badge keeps its usual corner,
+and until a status has been read the icon stays as it was, with no dot at all.
+
+The status comes from the same monitor the MQTT and D-Bus integrations use, which
+reads it off the Teams UI, so the two are enabled independently: with only
+`media.showStatusOnDockIcon` set, the monitor runs and the icon follows it, and
+nothing is published anywhere.
+
+This is best effort. Teams exposes no presence API the app can use, and Teams can
+change its UI without notice, so until the monitor is updated the dot can go
+missing or show the wrong status.
+
 ### Notification System
 
 | Option | Type | Default | Description |

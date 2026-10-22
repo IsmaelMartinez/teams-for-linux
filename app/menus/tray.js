@@ -3,6 +3,11 @@ const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
 class ApplicationTray {
+  // The unread state the window was last asked for attention with; see
+  // #requestAttention. Empty is not a key any state can produce (every key
+  // starts with true| or false|).
+  #attentionKey = "";
+
   constructor(window, appMenu, iconPath, config) {
     this.window = window;
     this.iconPath = iconPath;
@@ -59,7 +64,7 @@ class ApplicationTray {
       image = this.getIconImage(this.iconPath);
     }
     this.tray.setImage(image);
-    this.window.flashFrame(flash);
+    this.#requestAttention(flash, tooltip);
     this.tray.setToolTip(tooltip);
   }
 
@@ -100,12 +105,29 @@ class ApplicationTray {
       const image = this.getIconImage(effectiveIconPath);
 
       this.tray.setImage(image);
-      this.window.flashFrame(flash);
 
       const baseTitle = this.config.appTitle;
       const tooltip = count > 0 ? `${baseTitle} (${count})` : baseTitle;
+      this.#requestAttention(flash, tooltip);
       this.tray.setToolTip(tooltip);
     }
+  }
+
+  // The window is asked for attention only when the unread state it shows
+  // changes, and the tooltip identifies that state (the count, or the aggregate
+  // total with the profiles behind it) on both the direct and the aggregated
+  // path. A presence status redraw re-sends the same state with a different
+  // icon, and re-requesting attention there would flash the window on every
+  // Teams status change.
+  #requestAttention(flash, tooltip) {
+    // A redraw omits `flash` because it is not a notification event. Calling
+    // flashFrame() with no value would clear a flash that is still running, so
+    // an omitted flag means "leave the window's flash state alone".
+    if (typeof flash !== "boolean") return;
+    const key = `${flash}|${tooltip}`;
+    if (key === this.#attentionKey) return;
+    this.#attentionKey = key;
+    this.window.flashFrame(flash);
   }
 
   setBaseIconPath(iconPath) {
