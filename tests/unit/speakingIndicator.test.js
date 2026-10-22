@@ -6,24 +6,52 @@ const assert = require('node:assert');
 const speakingIndicatorPath = require.resolve('../../app/browser/tools/speakingIndicator');
 const activityHubPath = require.resolve('../../app/browser/tools/activityHub');
 
-function makeStatsReport(audioLevel) {
-	const entries = [
-		{ type: 'media-source', kind: 'audio', audioLevel },
-	];
+// Each stat names its track, as Chromium's trackIdentifier does. No levels
+// means no media-source stat, as when the sender has no track.
+function makeTrackStatsReport(audioLevel, trackIds) {
+	return makeTrackLevelsReport(trackIds.map(trackId => [trackId, audioLevel]));
+}
+
+// [[trackId, audioLevel], ...] in report order.
+function makeTrackLevelsReport(levelsByTrack) {
+	const entries = levelsByTrack.map(([trackIdentifier, audioLevel]) => ({ type: 'media-source', kind: 'audio', audioLevel, trackIdentifier }));
 	return { forEach: (fn) => entries.forEach(entry => fn(entry)) };
+}
+
+function makeStatsReport(...audioLevels) {
+	const entries = audioLevels.map(audioLevel => ({ type: 'media-source', kind: 'audio', audioLevel, trackIdentifier: 'mic' }));
+	return { forEach: (fn) => entries.forEach(entry => fn(entry)) };
+}
+
+// A healthy, unmuted outgoing audio m-line; tests change one field at a time.
+function makeAudioTransceiver(trackId = 'mic') {
+	const sender = {
+		track: { id: trackId, kind: 'audio', enabled: true, muted: false, readyState: 'live' },
+		encodings: [{ active: true }],
+		getParameters() { return { encodings: this.encodings }; },
+	};
+	return {
+		direction: 'sendrecv',
+		currentDirection: 'sendrecv',
+		sender,
+		receiver: { track: { kind: 'audio' } },
+	};
 }
 
 let createdPeerConnections = [];
 let getStatsFn = async () => makeStatsReport(0);
-let audioTrackEnabled = true;
+let audioTransceiver = makeAudioTransceiver();
+let transceivers = [audioTransceiver];
 
 function setupGlobals() {
 	createdPeerConnections = [];
-	audioTrackEnabled = true;
+	audioTransceiver = makeAudioTransceiver();
+	transceivers = [audioTransceiver];
 	const originalRTC = function RTCPeerConnection() {
 		this.connectionState = 'connected';
 		this.getStats = (...args) => getStatsFn.call(this, ...args);
-		this.getSenders = () => [{ track: { kind: 'audio', get enabled() { return audioTrackEnabled; } } }];
+		this.getTransceivers = () => transceivers;
+		this.getSenders = () => transceivers.map(t => t.sender);
 		createdPeerConnections.push(this);
 	};
 	originalRTC.prototype = {};
@@ -61,6 +89,27 @@ function openPeerConnection() {
 	return new globalThis.RTCPeerConnection();
 }
 
+// Runs one MQTT-only session where levelsForPoll(n) gives the audio level(s)
+// of poll n, and returns each microphone state emitted with the poll count.
+async function recordMicStates(levelsForPoll, { waitMs = 1200, connectionState } = {}) {
+	setupGlobals();
+	let polls = 0;
+	getStatsFn = async () => makeStatsReport(...[levelsForPoll(polls++)].flat());
+
+	const { instance } = loadSpeakingIndicator();
+	const emitted = [];
+	instance.init({ mqtt: { enabled: true } }, {
+		send: (channel, state) => {
+			if (channel === 'microphone-state-changed') emitted.push({ state, polls });
+		},
+	});
+
+	const pc = openPeerConnection();
+	if (connectionState) pc.connectionState = connectionState;
+	await new Promise(r => setTimeout(r, waitMs));
+	return emitted;
+}
+
 function closePeerConnections() {
 	for (const pc of createdPeerConnections) {
 		pc.connectionState = 'closed';
@@ -74,7 +123,25 @@ function cleanup() {
 	delete globalThis.RTCPeerConnection;
 	delete globalThis.document;
 	getStatsFn = async () => makeStatsReport(0);
-	audioTrackEnabled = true;
+	audioTransceiver = makeAudioTransceiver();
+	transceivers = [audioTransceiver];
+}
+
+const wait = (ms) => new Promise(r => setTimeout(r, ms));
+
+// Starts MQTT-mode monitoring on one connection and returns the IPC spy.
+function startMonitoring() {
+	const { instance } = loadSpeakingIndicator();
+	const ipcRenderer = { send: mock.fn() };
+	instance.init({ mqtt: { enabled: true } }, ipcRenderer);
+	openPeerConnection();
+	return ipcRenderer;
+}
+
+function micStates(ipcRenderer) {
+	return ipcRenderer.send.mock.calls
+		.filter(c => c.arguments[0] === 'microphone-state-changed')
+		.map(c => c.arguments[1]);
 }
 
 describe('SpeakingIndicator', () => {
@@ -320,9 +387,8 @@ describe('SpeakingIndicator', () => {
 
 	it('emits muted when audio sender track is disabled, regardless of audioLevel (#2465)', async () => {
 		setupGlobals();
-		// audioLevel reads zero (would have read as muted under the old logic),
-		// but the second signal (track.enabled = false) is the authoritative one.
-		audioTrackEnabled = false;
+		// A disabled track counts as muted even before any audio was seen.
+		audioTransceiver.sender.track.enabled = false;
 		getStatsFn = async () => makeStatsReport(0);
 
 		const { instance } = loadSpeakingIndicator();
@@ -340,29 +406,257 @@ describe('SpeakingIndicator', () => {
 		);
 	});
 
-	it('does not emit muted when track is enabled and audioLevel reads zero (#2465 false-positive guard)', async () => {
+	const ZERO_AFTER_FIRST_POLL = poll => (poll === 0 ? 0.005 : 0);
+
+	it('emits muted when audioLevel drops to zero after audio was seen, with the track still enabled (#3099)', async () => {
+		// Teams zeroes the level on mute but leaves the track enabled.
+		const states = (await recordMicStates(poll => (poll < 2 ? 0.005 : 0))).map(e => e.state);
+		assert.deepStrictEqual(states, ['silent', 'muted']);
+	});
+
+	it('does not emit muted when single zero ticks interleave with a quiet noise floor (#2465 hysteresis)', async () => {
+		const states = (await recordMicStates(poll => (poll % 2 === 0 ? 0.005 : 0))).map(e => e.state);
+		assert.ok(!states.includes('muted'), `got: ${states.join(',')}`);
+	});
+
+	it('enters muted on the third consecutive zero poll, not the second (#2465 hysteresis boundary)', async () => {
+		// Poll 1 is audio, polls 2 and 3 are zeros (still silent), poll 4 is the third zero.
+		const emitted = await recordMicStates(ZERO_AFTER_FIRST_POLL);
+		assert.deepStrictEqual(emitted.slice(0, 2), [
+			{ state: 'silent', polls: 1 },
+			{ state: 'muted', polls: 4 },
+		]);
+	});
+
+	it('counts one reading per poll when a connection reports several audio sources', async () => {
+		const emitted = await recordMicStates(poll => Array(3).fill(ZERO_AFTER_FIRST_POLL(poll)));
+		assert.deepStrictEqual(emitted.slice(0, 2), [
+			{ state: 'silent', polls: 1 },
+			{ state: 'muted', polls: 4 },
+		]);
+	});
+
+	it('does not emit muted while any audio source is live', async () => {
+		const states = (await recordMicStates(() => [0, 0.005])).map(e => e.state);
+		assert.ok(!states.includes('muted'), `got: ${states.join(',')}`);
+	});
+
+	it('emits muted when joining a connected call already muted, with no audio ever seen', async () => {
+		const states = (await recordMicStates(() => 0)).map(e => e.state);
+		assert.ok(states.includes('muted'), `got: ${states.join(',')}`);
+	});
+
+	it('does not emit muted for zero audioLevel before the connection is up (pre-join guard)', async () => {
+		const states = (await recordMicStates(() => 0, { connectionState: 'connecting' })).map(e => e.state);
+		assert.ok(!states.includes('muted'), `got: ${states.join(',')}`);
+		assert.ok(states.includes('silent'), `got: ${states.join(',')}`);
+	});
+
+	// Each sender-side signal is enough on its own, at once and even while
+	// audio flows, without waiting for the audio-level hysteresis.
+	const muteSignals = [
+		['track.muted is true', () => { audioTransceiver.sender.track.muted = true; }],
+		["track.readyState is 'ended'", () => { audioTransceiver.sender.track.readyState = 'ended'; }],
+		['every encoding is inactive', () => { audioTransceiver.sender.encodings = [{ active: false }]; }],
+		["currentDirection is 'recvonly'", () => { audioTransceiver.currentDirection = 'recvonly'; }],
+		["currentDirection is 'inactive'", () => { audioTransceiver.currentDirection = 'inactive'; }],
+	];
+	for (const [signal, apply] of muteSignals) {
+		it(`emits muted when ${signal} (#3099)`, async () => {
+			setupGlobals();
+			apply();
+			getStatsFn = async () => makeStatsReport(0.05);
+
+			const ipcRenderer = startMonitoring();
+			await wait(300);
+
+			assert.deepStrictEqual(micStates(ipcRenderer), ['muted']);
+		});
+	}
+
+	it('emits speaking while every sender signal is healthy and negotiation is pending (#3099)', async () => {
 		setupGlobals();
-		// Quiet mic: audioLevel reads zero but track is still enabled. Must
-		// report silent, not muted (this was the #2465 regression).
-		audioTrackEnabled = true;
+		audioTransceiver.currentDirection = null;
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const ipcRenderer = startMonitoring();
+		await wait(300);
+
+		assert.deepStrictEqual(micStates(ipcRenderer), ['speaking']);
+	});
+
+	it('does not emit muted for a direction change that is not negotiated yet (#3099)', async () => {
+		setupGlobals();
+		// direction is only what the next offer asks for; audio still goes out.
+		audioTransceiver.direction = 'recvonly';
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const ipcRenderer = startMonitoring();
+		await wait(300);
+
+		assert.deepStrictEqual(micStates(ipcRenderer), ['speaking']);
+	});
+
+	// An idle transceiver that kept its track also reports a media-source; the
+	// live microphone must win whichever order either list puts them in.
+	for (const transceiverOrder of ['idle first', 'live first']) {
+		for (const statOrder of ['idle first', 'live first']) {
+			it(`judges the live microphone over an idle sender (transceivers ${transceiverOrder}, stats ${statOrder}) (#3099)`, async () => {
+				setupGlobals();
+				const idle = makeAudioTransceiver('old-mic');
+				idle.direction = 'inactive';
+				idle.currentDirection = 'inactive';
+				transceivers = transceiverOrder === 'idle first' ? [idle, audioTransceiver] : [audioTransceiver, idle];
+				const trackIds = statOrder === 'idle first' ? ['old-mic', 'mic'] : ['mic', 'old-mic'];
+				getStatsFn = async () => makeTrackStatsReport(0.05, trackIds);
+
+				const ipcRenderer = startMonitoring();
+				await wait(300);
+
+				assert.deepStrictEqual(micStates(ipcRenderer), ['speaking']);
+			});
+		}
+	}
+
+	for (const statOrder of ['idle first', 'live first']) {
+		it(`emits muted when the live mic is zero while an idle sender still reports audio (stats ${statOrder}) (#3099)`, async () => {
+			setupGlobals();
+			const idle = makeAudioTransceiver('old-mic');
+			idle.direction = 'inactive';
+			idle.currentDirection = 'inactive';
+			transceivers = [idle, audioTransceiver];
+			const levels = [['old-mic', 0.05], ['mic', 0]];
+			getStatsFn = async () => makeTrackLevelsReport(statOrder === 'idle first' ? levels : levels.reverse());
+
+			const ipcRenderer = startMonitoring();
+			await wait(900);
+
+			assert.deepStrictEqual(micStates(ipcRenderer), ['silent', 'muted']);
+		});
+	}
+
+	it('applies the pre-join guard again when a replacement connection takes over (#3099)', async () => {
+		setupGlobals();
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const ipcRenderer = startMonitoring();
+		await wait(300);
+
+		// The established peer closes and a still-connecting one replaces it
+		// before the next poll, with no call-disconnected in between.
 		getStatsFn = async () => makeStatsReport(0);
+		closePeerConnections();
+		openPeerConnection().connectionState = 'connecting';
+		await wait(900);
 
-		const { instance } = loadSpeakingIndicator();
-		const ipcRenderer = { send: mock.fn() };
-		instance.init({ mqtt: { enabled: true } }, ipcRenderer);
+		assert.ok(!micStates(ipcRenderer).includes('muted'), `got: ${micStates(ipcRenderer).join(',')}`);
+	});
 
-		openPeerConnection();
-		await new Promise(r => setTimeout(r, 600));
+	it('judges the sending transceiver when an idle one kept the same track (#3099)', async () => {
+		setupGlobals();
+		const idle = makeAudioTransceiver('mic');
+		idle.direction = 'inactive';
+		idle.currentDirection = 'inactive';
+		transceivers = [idle, audioTransceiver];
+		getStatsFn = async () => makeStatsReport(0.05);
 
-		const micCalls = ipcRenderer.send.mock.calls.filter(c => c.arguments[0] === 'microphone-state-changed');
-		const states = micCalls.map(c => c.arguments[1]);
-		assert.ok(
-			!states.includes('muted'),
-			`should not emit muted while audioLevel is zero but track is enabled, got: ${states.join(',')}`
-		);
-		assert.ok(
-			states.includes('silent'),
-			`should emit silent in this case, got: ${states.join(',')}`
-		);
+		const ipcRenderer = startMonitoring();
+		await wait(300);
+
+		assert.deepStrictEqual(micStates(ipcRenderer), ['speaking']);
+	});
+
+	for (const statOrder of ['stale first', 'live first']) {
+		it(`judges a live replacement sender over a stale source (${statOrder}) (#3099)`, async () => {
+			setupGlobals();
+			getStatsFn = async () => makeStatsReport(0.05);
+
+			const ipcRenderer = startMonitoring();
+			await wait(300);
+
+			// The remembered sender lost its track and a new sender took over,
+			// while the report still lists the old track's source.
+			audioTransceiver.sender.track = null;
+			transceivers = [audioTransceiver, makeAudioTransceiver('mic-2')];
+			const trackIds = statOrder === 'stale first' ? ['mic', 'mic-2'] : ['mic-2', 'mic'];
+			getStatsFn = async () => makeTrackStatsReport(0.05, trackIds);
+			await wait(300);
+
+			assert.deepStrictEqual(micStates(ipcRenderer), ['speaking']);
+		});
+	}
+
+	it('emits muted when a report taken before the detach still names the old track (#3099)', async () => {
+		setupGlobals();
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const ipcRenderer = startMonitoring();
+		await wait(300);
+
+		// The first report after the detach is stale, then the stat is gone.
+		audioTransceiver.sender.track = null;
+		let stale = true;
+		getStatsFn = async () => {
+			const report = stale ? makeStatsReport(0.05) : makeStatsReport();
+			stale = false;
+			return report;
+		};
+		await wait(450);
+
+		assert.deepStrictEqual(micStates(ipcRenderer), ['speaking', 'muted']);
+	});
+
+	it('emits muted when the audio track is detached and its stat disappears, then off on close (#3099)', async () => {
+		setupGlobals();
+		getStatsFn = async () => makeStatsReport(0.05);
+
+		const ipcRenderer = startMonitoring();
+		await wait(300);
+
+		// replaceTrack(null): the sender keeps its m-line but no media-source
+		// stat is reported any more.
+		audioTransceiver.sender.track = null;
+		getStatsFn = async () => makeStatsReport();
+		await wait(300);
+
+		closePeerConnections();
+		await wait(300);
+
+		assert.deepStrictEqual(micStates(ipcRenderer), ['speaking', 'muted', 'off']);
+	});
+
+	it('does not report muted for a connection that never carried audio (#3099)', async () => {
+		setupGlobals();
+		audioTransceiver.sender.track = null;
+		audioTransceiver.direction = 'recvonly';
+		getStatsFn = async () => makeStatsReport();
+
+		const ipcRenderer = startMonitoring();
+		await wait(300);
+
+		assert.deepStrictEqual(micStates(ipcRenderer), []);
+	});
+
+	it('logs mute signals once per change, not on every poll (#3099)', async () => {
+		setupGlobals();
+		getStatsFn = async () => makeStatsReport(0);
+		const debug = mock.method(console, 'debug', () => {});
+		const signalLines = () => debug.mock.calls
+			.map(c => String(c.arguments[0]))
+			.filter(line => line.startsWith('[SPEAKING_INDICATOR] Mute signals'));
+
+		try {
+			startMonitoring();
+			await wait(500);
+			assert.strictEqual(signalLines().length, 1, 'steady signals should log once');
+
+			audioTransceiver.sender.track.muted = true;
+			await wait(300);
+			const lines = signalLines();
+			assert.strictEqual(lines.length, 2, 'a changed signal should log one more line');
+			assert.match(lines[1], /"muted":true/);
+		} finally {
+			debug.mock.restore();
+		}
 	});
 });
