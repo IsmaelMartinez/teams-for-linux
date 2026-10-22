@@ -6,7 +6,7 @@ id: 031-ozone-platform-x11-default
 
 ## Status
 
-✅ Accepted (2026-09-05)
+🔄 Superseded by [ADR-033](033-native-wayland-default.md) (2026-10-22) for deb, rpm and AppImage. Still the decision of record for snap.
 
 ## Context
 

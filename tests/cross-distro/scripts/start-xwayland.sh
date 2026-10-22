@@ -1,6 +1,6 @@
 #!/bin/bash
 # Start XWayland environment: Sway (headless, XWayland enabled) + wayvnc + noVNC
-# The app runs as an X11 client through XWayland (no ozone flags)
+# The app runs as an X11 client through XWayland (--ozone-platform=x11 forced here)
 set -e
 
 WIDTH=$(echo "$SCREEN_RESOLUTION" | cut -dx -f1)
@@ -50,15 +50,16 @@ echo "  VNC:   localhost:${VNC_PORT}"
 echo "============================================="
 
 if [[ -n "$APP_CMD" ]]; then
+    XWAYLAND_APP_CMD="${APP_CMD} --ozone-platform=x11"
     APP_LOG="/tmp/app.log"
     if [[ "${AUTO_LAUNCH}" == "true" ]]; then
         echo "[XWayland] Auto-launching app (X11 client via XWayland, logs: tail -f ${APP_LOG})..."
-        bash -c "$APP_CMD > $APP_LOG 2>&1" &
+        bash -c "$XWAYLAND_APP_CMD > $APP_LOG 2>&1" &
     else
         echo "[XWayland] Launch app (runs as X11 client via XWayland):"
-        echo "      $APP_CMD"
+        echo "      $XWAYLAND_APP_CMD"
         echo ""
-        echo "  Do NOT add --ozone-platform=wayland (app should use XWayland)."
+        echo "  Keep --ozone-platform=x11 (the package ships no flag; without it the app picks native Wayland)."
         echo "  Or launch from the terminal inside the VNC session."
     fi
 fi

@@ -92,9 +92,13 @@ APP_FLAGS="--logConfig.transports.console.level=debug" docker compose up --build
 With `--no-launch`, start the app from the terminal inside VNC:
 
 ```bash
-# X11 / XWayland
+# X11 (no flag needed on an X11 session)
 /home/tester/app-local/teams-for-linux.AppImage --appimage-extract-and-run \
     --no-sandbox --disable-gpu --disable-dev-shm-usage
+
+# XWayland (the AppImage ships no ozone flag, so force X11 on the Wayland session)
+/home/tester/app-local/teams-for-linux.AppImage --appimage-extract-and-run \
+    --no-sandbox --disable-gpu --disable-dev-shm-usage --ozone-platform=x11
 
 # Wayland (native)
 /home/tester/app-local/teams-for-linux.AppImage --appimage-extract-and-run \
@@ -155,7 +159,7 @@ The entrypoint handles these automatically:
 | Shared memory | `--disable-dev-shm-usage`, `shm_size: 2gb` |
 | No namespaces | `--no-sandbox` |
 | Wayland detection | `XDG_SESSION_TYPE` set per display server |
-| Ozone override | AppImage ships `--ozone-platform=x11`; Wayland script overrides to `=wayland` |
+| Ozone override | AppImage ships no flag; the Wayland script passes `--ozone-platform=wayland` and the XWayland script `--ozone-platform=x11` |
 
 **X11** -- high confidence, mirrors CI exactly (`xvfb-run` + Electron).
 **XWayland** -- high confidence, app sees X11 through Sway's XWayland bridge.
