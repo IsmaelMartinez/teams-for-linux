@@ -28,6 +28,10 @@
 * **deps:** bump follow-redirects from 1.16.0 to 1.16.1 in /docs-site ([#3123](https://github.com/IsmaelMartinez/teams-for-linux/issues/3123)) ([00897f2](https://github.com/IsmaelMartinez/teams-for-linux/commit/00897f21775194215939c66287eaa3ef76c4a862))
 * **deps:** bump launch-editor from 2.14.1 to 2.14.2 in /docs-site ([#3124](https://github.com/IsmaelMartinez/teams-for-linux/issues/3124)) ([ab894a8](https://github.com/IsmaelMartinez/teams-for-linux/commit/ab894a81cdb6d1cbc8b2f42cc14060a0b79d41b1))
 
+### Thanks
+
+Big thanks to @10ax, @app/dependabot, @gj241, @jpenberthy, @RobWaterhouse95 for contributing to this release.
+
 ## [2.27.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.26.0...v2.27.0) (2026-10-19)
 
 
