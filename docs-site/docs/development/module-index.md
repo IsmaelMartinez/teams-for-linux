@@ -50,6 +50,8 @@ User-facing features and integrations.
 | **Client Certificate PIN** | `app/clientCertificate/` | Linux smartcard/NSS client-certificate PIN dialog built on the shared secure prompt ([#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639)) | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/clientCertificate/README.md) |
 | **Profiles Manager** | `app/profilesManager/` | Multi-account profile storage, switching, and lifecycle management | [ADR-020](./adr/020-multi-account-profile-switcher.md) |
 | **Profile Dialogs** | `app/profileDialogs/` | Add-profile, manage-profiles, and switch-profile UI dialogs | [ADR-020](./adr/020-multi-account-profile-switcher.md) |
+| **Profile Unread** | `app/profileUnread/` | Aggregates unread across profiles into one tray badge, dock count and tooltip | [ADR-020](./adr/020-multi-account-profile-switcher.md), [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/profileUnread/README.md) |
+| **Profile Notifications** | `app/profileNotifications/` | Per-profile `disableNotifications` and `muted`, enforced in each profile's renderer | [ADR-020](./adr/020-multi-account-profile-switcher.md), [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/profileNotifications/README.md) |
 | **Join Meeting Dialog** | `app/joinMeetingDialog/` | Join Meeting dialog for deep-link navigation handling | — |
 
 ## System Integration Modules

@@ -157,6 +157,9 @@ const allowedChannels = new Set([
   // `ProfilesManager.update(id, { pinned })`; main enforces the max-5 cap
   // (the Ctrl+Alt+1…5 shortcut slots) and rejects past it.
   'manage-profile-pin',
+  // Per-profile notification/sound toggles (Phase 2). Forwards to
+  // `ProfilesManager.update(id, { disableNotifications, muted })`.
+  'manage-profile-notifications',
   'manage-profile-remove',
   'manage-profile-close',
 
@@ -176,6 +179,13 @@ const allowedChannels = new Set([
   // badges (ADR-020 Phase 2). Own channel so badge ticks never re-read the
   // settings store the full state push needs.
   'profile-switcher-unread',
+
+  // Per-profile notification flags (ADR-020 Phase 2). A Teams renderer pulls
+  // its own profile's { disableNotifications, muted } (resolved from the
+  // sender); main pushes `profile-notification-flags` (send direction,
+  // listed for completeness) when that profile is updated.
+  'profile-get-notification-flags',
+  'profile-notification-flags',
 
   // Aggregate tray badge (ADR-020 Phase 2). The renderer's reply to main's
   // render-aggregate-badge request: the summed unread count composited onto

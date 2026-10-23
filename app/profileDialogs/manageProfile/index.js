@@ -27,6 +27,13 @@ function ensureIpcHandlers() {
     if (!activeHandlers) return;
     return activeHandlers.onPin(payload);
   });
+  // Per-profile notification and sound toggles (ADR-020 Phase 2). Same
+  // request/response shape as pin. Payload: the profile `id` plus
+  // `disableNotifications` and/or `muted`.
+  ipcMain.handle("manage-profile-notifications", async (_event, payload) => {
+    if (!activeHandlers) return;
+    return activeHandlers.onNotifications(payload);
+  });
   // Remove request from the renderer; main shows the destructive confirmation
   // before forwarding to ProfilesManager.
   ipcMain.on("manage-profile-remove", (_event, id) => {
@@ -73,6 +80,7 @@ class ManageProfileDialog {
     activeHandlers = {
       onRename: this.#handleRename,
       onPin: this.#handlePin,
+      onNotifications: this.#handleNotifications,
       onRemove: this.#handleRemove,
       onClose: this.#handleClose,
     };
@@ -153,6 +161,28 @@ class ManageProfileDialog {
         typeof error?.message === "string" && error.message
           ? error.message
           : "Failed to update pin.";
+      return { ok: false, error: raw.replace(/^\[ProfilesManager\]\s*/, "") };
+    }
+  };
+
+  #handleNotifications = ({ id, disableNotifications, muted } = {}) => {
+    const patch = {};
+    if (typeof disableNotifications === "boolean") {
+      patch.disableNotifications = disableNotifications;
+    }
+    if (typeof muted === "boolean") patch.muted = muted;
+    if (Object.keys(patch).length === 0) {
+      return { ok: false, error: "Nothing to update." };
+    }
+    try {
+      this.#profilesManager.update(id, patch);
+      return { ok: true };
+    } catch (error) {
+      // Returned, not thrown, for the same reason as #handlePin.
+      const raw =
+        typeof error?.message === "string" && error.message
+          ? error.message
+          : "Failed to update notifications.";
       return { ok: false, error: raw.replace(/^\[ProfilesManager\]\s*/, "") };
     }
   };

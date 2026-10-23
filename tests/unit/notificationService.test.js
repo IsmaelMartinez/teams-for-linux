@@ -93,7 +93,12 @@ function responseWith(bytes, options = {}) {
 }
 
 function makeService(fetch, options = {}) {
-	const { config = {}, windowMissing = false, windowDestroyed = false } = options;
+	const {
+		config = {},
+		windowMissing = false,
+		windowDestroyed = false,
+		soundPlayer = null,
+	} = options;
 	const window = {
 		webContents: {
 			getURL: () => 'https://teams.microsoft.com/',
@@ -110,7 +115,7 @@ function makeService(fetch, options = {}) {
 	};
 	const NotificationService = require(servicePath);
 	const service = new NotificationService(
-		null,
+		soundPlayer,
 		{ appPath: '/app', defaultNotificationUrgency: 'normal', ...config },
 		mainWindow,
 		() => 1,
@@ -418,5 +423,38 @@ describe('NotificationService keeps notifications alive', () => {
 
 		assert.strictEqual(refs[0].deref(), undefined);
 		assert.ok(refs.slice(1).every((ref) => ref.deref()), 'a newer notification was collected');
+	});
+});
+
+describe('NotificationService muted profiles (ADR-020 Phase 2)', () => {
+	let originalConsoleDebug;
+	let played;
+	const soundPlayer = { play: async (file) => played.push(file) };
+
+	beforeEach(() => {
+		installElectronMock();
+		played = [];
+		originalConsoleDebug = console.debug;
+		console.debug = () => {};
+	});
+
+	afterEach(() => {
+		console.debug = originalConsoleDebug;
+		cleanupElectronMock();
+	});
+
+	it('plays the sound and leaves the OS toast audible by default', async () => {
+		makeService(async () => {}, { soundPlayer });
+		await show({ type: 'new-message' }, makeSender());
+		assert.strictEqual(played.length, 1);
+		assert.strictEqual(notifications[0].options.silent, false);
+	});
+
+	it('a silent toast from a muted profile plays no sound and silences the OS toast', async () => {
+		makeService(async () => {}, { soundPlayer });
+		await show({ type: 'new-message', silent: true }, makeSender());
+		assert.deepStrictEqual(played, []);
+		assert.strictEqual(notifications[0].options.silent, true);
+		assert.strictEqual(notifications[0].shown, true);
 	});
 });

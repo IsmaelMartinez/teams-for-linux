@@ -97,8 +97,8 @@ In Phase 1, only four fields live on each `Profile` record in `settingsStore`; e
 
 | Field | Type | Purpose |
 |-------|------|---------|
-| `disableNotifications` | boolean | Silence this profile's notification badges and OS toasts (Phase 2 plumbing) |
-| `muted` | boolean | Suppress audio cues from this profile (notification sounds, incoming-call ring) |
+| `disableNotifications` | boolean | Silence this profile's OS toasts. Its unread still counts toward the tray badge and the switcher pill: the switch means "don't interrupt me", not "hide that anything happened" |
+| `muted` | boolean | Suppress this profile's notification sounds. The incoming-call ring is Teams' own page audio and is not covered yet |
 | `pinned` | boolean | Assigns a `Ctrl+Alt+N` keyboard shortcut; up to 5 pinned profiles |
 | `url` | string, optional | Per-profile URL override for GovCloud (`https://gov.teams.microsoft.us/`) or dev endpoints; falls back to the global `url` config |
 
