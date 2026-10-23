@@ -1338,3 +1338,59 @@ See [Microsoft Teams Keyboard Shortcuts](https://support.microsoft.com/en-us/off
 - **Linux/Windows**: Works better but may have issues with layout changes during runtime
 
 See [Electron Accelerators](https://www.electronjs.org/docs/latest/api/accelerator) for available key combinations.
+
+## Experimental phone-passkey backend
+
+Phone mode uses an external helper for QR sign-in on Linux. It requires BlueZ,
+a powered Bluetooth adapter, a nearby phone with an existing accepted passkey,
+and network access for the caBLE tunnel.
+
+Real-phone QR sign-in succeeded on commit `1cd08841` using the unpacked Linux
+x86_64 build on Arch, helper v0.1.0 and iOS 27.2. Earlier testing also used a
+custom Arch package. Automated adapter checks run against the unpacked build.
+Debian, RPM and AppImage phone sign-in have not been tested. They require an accessible helper executable and
+host BlueZ access. Snap and Flatpak phone mode is unsupported: the current Snap
+has no `bluez` plug and the Flathub manifest does not grant `org.bluez`. Successful
+package builds do not establish phone-authentication support.
+
+![Phone sign-in QR dialog](/img/phone-qr-preview.png)
+
+Download `phone-passkey-helper-0.1.0-source.tar.gz` and `SHA256SUMS` from the
+[helper v0.1.0 release](https://github.com/Excellence308/phone-passkey-helper/releases/tag/v0.1.0). The archive includes locked dependency sources.
+Install the native build requirements in the [helper README](https://github.com/Excellence308/phone-passkey-helper/blob/v0.1.0/README.md), then
+verify and build the archive:
+
+```bash
+sha256sum -c SHA256SUMS --ignore-missing
+tar -xzf phone-passkey-helper-0.1.0-source.tar.gz
+cd phone-passkey-helper-0.1.0
+python3 scripts/verify-inputs.py
+cargo build --release --locked --offline
+```
+
+Keep `public_suffix_list.dat` next to the executable. Set its absolute path in
+`config.json`, then restart Teams:
+
+```json
+{
+  "auth": {
+    "webauthn": {
+      "enabled": true,
+      "backend": "phone",
+      "helperPath": "/absolute/path/to/phone-passkey-helper",
+      "extraOrigins": []
+    }
+  }
+}
+```
+
+:::warning Experimental
+Phone mode supports interactive assertions in the primary window and its login
+frames. Passkey enrolment, extension inputs/outputs, multi-account profiles and
+detached windows are unsupported. For a federated identity provider, add its
+exact HTTPS origin to `extraOrigins`.
+:::
+
+Hardware remains the default backend. Phone mode uses the existing login-frame
+relay and skips hardware PIN/touch prompts. See
+[ADR 033](./development/adr/033-phone-passkey-backend-prototype.md) for the design.
