@@ -44,7 +44,7 @@ no auth-path rerouting.
 |------|------|
 | `switcher.html` | Pill + dropdown markup, strict CSP, external assets only |
 | `switcher.css` | Pill/dropdown styling; system font, neutral gray + per-profile `avatarColor`, dark mode via `prefers-color-scheme` |
-| `switcher.js` | Renderer logic: paint pill, build dropdown, switch/add/manage, open/close, subscribe to state pushes |
+| `switcher.js` | Renderer logic: paint pill, build dropdown, switch/add/manage, open/close, subscribe to state and unread pushes (dot on the pill for unread in another profile, count badge per row) |
 | `preload.js` | `contextBridge` `profileSwitcherApi` (contextIsolation + sandbox) |
 
 ## IPC
@@ -56,6 +56,7 @@ no auth-path rerouting.
 | `profile-switcher-open-manage` | renderer→main | open the existing Manage-profiles dialog (handled by `Menus`) |
 | `profile-switcher-set-expanded` | renderer→main | grow the view to full-window while the dropdown is open (handled by `ProfileViewManager`) |
 | `profile-switcher-state` | main→renderer | push `{ profiles, activeId }` on any add/update/switch/remove |
+| `profile-switcher-unread` | main→renderer | push `{ unreadByProfileId }` when a profile's unread count changes; replayed when the pill loads |
 
 All channels are allowlisted in
 [`app/security/ipcValidator.js`](../security/ipcValidator.js). Everything is

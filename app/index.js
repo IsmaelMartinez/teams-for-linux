@@ -940,10 +940,15 @@ function createUnreadAggregator(viewManager) {
     applyTray: (update) => mainAppWindow.getTray()?.applyAggregate(update),
     applyBadgeCount,
     appTitle: config.appTitle,
+    onUnreadChanged: (unread) => viewManager.updateSwitcherUnread(unread),
   });
 
   // No surface is left to report a zero after removal or a view dying on
   // its own — holding the last count would inflate the badge all session.
+  // PVM's own "add" handler registers first and teaches the sender map the
+  // new owner (Profile 0 bootstrapping mid-session); then carry over any
+  // count the root window reported before it was attributable.
+  profilesManager.on("add", () => aggregator.reattribute());
   profilesManager.on("remove", ({ removedId }) =>
     aggregator.removeProfile(removedId)
   );

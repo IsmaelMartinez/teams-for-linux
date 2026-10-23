@@ -615,6 +615,57 @@ describe('ProfileViewManager keeps profile views attached (#3057)', () => {
 
 // #3068: Electron only mirrors the root webContents (Profile 0) onto the
 // window title, so the active profile view's title has to be pushed instead.
+describe('ProfileViewManager switcher unread push (ADR-020 Phase 2)', () => {
+  function recordSends(wc) {
+    const sent = [];
+    wc.send = (channel, payload) => sent.push({ channel, payload });
+    return sent;
+  }
+
+  it('pushes per-profile unread to the pill on its own channel', () => {
+    const { pvm } = build([LEGACY, PROFILE_A]);
+    const chrome = createdViews.at(-1);
+    const sent = recordSends(chrome.webContents);
+    pvm.updateSwitcherUnread({ 'profile-a': 4 });
+    assert.deepStrictEqual(sent, [
+      {
+        channel: 'profile-switcher-unread',
+        payload: { unreadByProfileId: { 'profile-a': 4 } },
+      },
+    ]);
+  });
+
+  it('replays the last snapshot alongside the state push on every pill load', () => {
+    const { pvm } = build([LEGACY, PROFILE_A]);
+    const chrome = createdViews.at(-1);
+    pvm.updateSwitcherUnread({ 'profile-a': 2 });
+    const sent = recordSends(chrome.webContents);
+    chrome.webContents.emit('did-finish-load');
+    chrome.webContents.emit('did-finish-load'); // a reload must not lose the dots
+    assert.deepStrictEqual(
+      sent.map((m) => m.channel),
+      [
+        'profile-switcher-state',
+        'profile-switcher-unread',
+        'profile-switcher-state',
+        'profile-switcher-unread',
+      ]
+    );
+    assert.deepStrictEqual(sent[3].payload, {
+      unreadByProfileId: { 'profile-a': 2 },
+    });
+  });
+
+  it('skips the push once the pill is destroyed', () => {
+    const { pvm } = build([LEGACY, PROFILE_A]);
+    const chrome = createdViews.at(-1);
+    const sent = recordSends(chrome.webContents);
+    chrome.webContents._destroyed = true;
+    pvm.updateSwitcherUnread({ 'profile-a': 1 });
+    assert.deepStrictEqual(sent, []);
+  });
+});
+
 describe('ProfileViewManager window title follows the active profile (#3068)', () => {
   it('sets the title from the active view, ignores background profiles, hands back to Profile 0', () => {
     const titles = [];

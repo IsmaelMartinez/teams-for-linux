@@ -170,6 +170,10 @@ const allowedChannels = new Set([
   'profile-switcher-open-manage',
   'profile-switcher-set-expanded',
   'profile-switcher-state',
+  // main → renderer: per-profile unread counts for the pill's dot and row
+  // badges (ADR-020 Phase 2). Own channel so badge ticks never re-read the
+  // settings store the full state push needs.
+  'profile-switcher-unread',
 
   // Aggregate tray badge (ADR-020 Phase 2). The renderer's reply to main's
   // render-aggregate-badge request: the summed unread count composited onto

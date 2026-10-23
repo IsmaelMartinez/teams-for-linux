@@ -111,6 +111,8 @@ class ProfileViewManager {
   #setExpandedHandler = null;
   // Fired only when a view dies outside removal (removal has its own event).
   #viewGoneListeners = new Set();
+  // Last per-profile unread snapshot, replayed when the pill (re)loads.
+  #switcherUnread = {};
 
   /**
    * @param {Electron.BrowserWindow} window  Main app window
@@ -832,7 +834,12 @@ class ProfileViewManager {
     // Push the initial profile state once the renderer is ready. The renderer
     // also pulls state itself on load (via profile-list / profile-get-active),
     // so this is belt-and-suspenders against push/load ordering.
-    view.webContents.once("did-finish-load", () => this.#pushSwitcherState());
+    // Every load, not just the first: unread is push-only (the pill never
+    // pulls it), so a reloaded pill would otherwise lose its dots.
+    view.webContents.on("did-finish-load", () => {
+      this.#pushSwitcherState();
+      this.#pushSwitcherUnread();
+    });
   }
 
   #applyChromeBounds() {
@@ -864,6 +871,26 @@ class ProfileViewManager {
     } catch {
       // View may be mid-teardown; ignore.
     }
+  }
+
+  /**
+   * Push per-profile unread counts to the pill on its own channel — the full
+   * state push re-reads the settings store, which must stay off the
+   * per-badge-tick path.
+   * @param {Record<string, number>} unread
+   */
+  updateSwitcherUnread(unread) {
+    this.#switcherUnread = unread ?? {};
+    this.#pushSwitcherUnread();
+  }
+
+  #pushSwitcherUnread() {
+    if (!this.#chromeView || this.#chromeView.webContents.isDestroyed()) {
+      return;
+    }
+    this.#chromeView.webContents.send("profile-switcher-unread", {
+      unreadByProfileId: this.#switcherUnread,
+    });
   }
 
   #pushSwitcherState() {

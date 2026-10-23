@@ -23,6 +23,9 @@ profile on screen.
   targets — so with the overlay on no icon is reused from a bucket's own
   cache, and a profile switch re-renders (`refresh()`) even though neither a
   count nor a status changed: both are deduped by the renderer.
+- **Switcher pill** = `unreadByProfile()` pushed through `onUnreadChanged`
+  whenever a count changes (never per tick); `ProfileViewManager` forwards it
+  on `profile-switcher-unread` for the pill's dot and per-row badges.
 - Buckets are attributed via `SenderProfileMap`, and **only a profile's
   primary surface may write them** (the root window or a profile view —
   never popups/webview guests, whose own window titles scrape to 0 and
