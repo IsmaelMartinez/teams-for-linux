@@ -72,7 +72,9 @@ class ProfileUnreadAggregator {
   reattribute() {
     try {
       let changed = false;
-      for (const key of [...this.#buckets.keys()]) {
+      // Moving deletes the current key and adds a profile key mid-iteration;
+      // Map iteration tolerates both, and added keys fail the wc: check.
+      for (const key of this.#buckets.keys()) {
         if (!key.startsWith("wc:")) continue;
         const id = Number(key.slice(3));
         if (!Number.isInteger(id)) continue;
