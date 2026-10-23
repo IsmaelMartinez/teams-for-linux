@@ -56,6 +56,11 @@ function renderPill() {
 }
 
 function renderList() {
+  // Pushes rebuild the list while the dropdown is open; put keyboard focus
+  // back on the same profile's row or Enter stops working mid-navigation.
+  const focusedId = listEl.contains(document.activeElement)
+    ? document.activeElement.dataset.profileId
+    : null;
   listEl.textContent = "";
   let nextSlot = 0;
   for (const profile of profiles) {
@@ -64,6 +69,7 @@ function renderList() {
     row.type = "button";
     row.className =
       "profile-row" + (profile.id === activeId ? " active" : "");
+    row.dataset.profileId = profile.id;
 
     const avatar = document.createElement("span");
     avatar.className = "avatar";
@@ -98,6 +104,11 @@ function renderList() {
     row.addEventListener("click", () => selectProfile(profile.id));
     li.append(row);
     listEl.append(li);
+  }
+  if (focusedId) {
+    listEl
+      .querySelector(`[data-profile-id="${CSS.escape(focusedId)}"]`)
+      ?.focus();
   }
 }
 

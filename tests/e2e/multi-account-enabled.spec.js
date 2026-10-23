@@ -278,6 +278,38 @@ test('unread in a background profile lights the pill dot and its row badge', asy
       { name: 'Profile B', badge: null },
     ]);
 
+    // Open the dropdown, focus a row, then let an unread push rebuild the
+    // list: keyboard focus must stay on that profile's row.
+    const inPill = (expr) =>
+      ctx.electronApp.evaluate(async ({ BrowserWindow }, expr) => {
+        const win = BrowserWindow.getAllWindows().find(
+          (w) => w.contentView.children.length === 3
+        );
+        return win.contentView.children.at(-1).webContents.executeJavaScript(expr);
+      }, expr);
+    expect(
+      await inPill(`(async () => {
+        document.getElementById('pill').click();
+        for (let i = 0; i < 100 && document.getElementById('dropdown').hidden; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        }
+        document.querySelector('li:last-child .profile-row').focus();
+        return document.activeElement.querySelector('.name')?.textContent ?? null;
+      })()`)
+    ).toBe('Profile B');
+    expect(await setBackgroundBadge(ctx.electronApp, 7)).toEqual({ ok: true });
+    await expect
+      .poll(() =>
+        inPill(`document.querySelector('li:first-child .unread-badge')?.textContent ?? null`)
+      )
+      .toBe('7');
+    expect(
+      await inPill(`document.activeElement.classList.contains('profile-row')
+        ? document.activeElement.querySelector('.name').textContent
+        : null`)
+    ).toBe('Profile B');
+    await inPill(`document.getElementById('scrim').click()`);
+
     // Reading the background profile clears both.
     expect(await setBackgroundBadge(ctx.electronApp, 0)).toEqual({ ok: true });
     await expect
