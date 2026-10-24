@@ -1,14 +1,14 @@
 ---
-id: 033-native-wayland-default
+id: 034-native-wayland-default
 ---
 
-# ADR 033: Native Wayland by Default on deb, rpm and AppImage
+# ADR 034: Native Wayland by Default on deb, rpm and integrated AppImage
 
 ## Status
 
 🚧 Proposed (2026-10-22)
 
-Supersedes [ADR-031](031-ozone-platform-x11-default.md) for the deb, rpm and AppImage targets. ADR-031 stays in force for snap.
+Supersedes [ADR-031](031-ozone-platform-x11-default.md) for the deb, rpm and AppImage targets. ADR-031 stays in force for snap. "AppImage" here means an integrated AppImage, one registered by AppImageLauncher or appimaged, whose launcher is the embedded `.desktop` entry; an AppImage run directly goes through `AppRun`, which never carried the flag, so it has been native Wayland on a Wayland session all along.
 
 ## Context
 
@@ -22,9 +22,9 @@ ADR-031 kept `--ozone-platform=x11` as the shipped default and listed four condi
 
 - Links do not raise the browser. Chromium hands the launched browser an `XDG_ACTIVATION_TOKEN` only when it runs on the Wayland backend; under XWayland it can only set `DESKTOP_STARTUP_ID`, which Wayland-native browsers (Firefox, Chromium, GNOME Web) ignore. KWin and Mutter then treat the browser's raise as focus stealing and leave it behind Teams. Verified on KDE Plasma 6.7.5: the same 2.26.0 rpm raises Firefox when launched with `--ozone-platform=wayland` and does not when launched as packaged.
 - Fractional scaling is blurry under XWayland ([#1787](https://github.com/IsmaelMartinez/teams-for-linux/issues/1787)); native Wayland renders at the real scale.
-- Whole-screen sharing is black under XWayland because the X11 capturer only sees X11 windows ([#3066](https://github.com/IsmaelMartinez/teams-for-linux/issues/3066)); native Wayland goes through the PipeWire portal, which `#configureWayland` already enables.
+- Whole-screen sharing is black under XWayland because the X11 capturer only sees X11 windows; native Wayland goes through the PipeWire portal, which `#configureWayland` already enables. ([#3066](https://github.com/IsmaelMartinez/teams-for-linux/issues/3066) is this defect on the snap, which keeps x11 and is not fixed here.)
 
-Each of these has a troubleshooting entry telling the user to edit their `.desktop` file, an edit that a package update silently reverts unless they also know to copy the file to `~/.local/share/applications`.
+The first two have troubleshooting entries telling the user to edit their `.desktop` file, an edit that a package update silently reverts unless they also know to copy the file to `~/.local/share/applications`.
 
 **Field data.** ADR-031 recorded that the Flathub package, with no flag, had run native Wayland across roughly a million installs without a comparable flood of Wayland-specific reports. The tar.gz build has done the same. The one open native-Wayland window report, [#2959](https://github.com/IsmaelMartinez/teams-for-linux/issues/2959) (Flatpak on GNOME, window shrinks during a call on focus loss, 2.18.1), is the same shape as the regression that closed #2601 and has not been retested on Electron 44. It is the honest risk in this decision and the reason the status is Proposed rather than Accepted.
 
@@ -32,9 +32,9 @@ Each of these has a troubleshooting entry telling the user to edit their `.deskt
 
 Remove `executableArgs` from the shared `linux` block in `package.json`, so the deb, rpm and AppImage `.desktop` entries carry no `--ozone-platform` flag and Chromium selects the backend per session: native Wayland on a Wayland session, X11 on an X11 session. Keep `--ozone-platform=x11` in the `snap` block unchanged.
 
-`app/startup/commandLine.js` is untouched. Its `#configureWayland` already treats an unflagged Wayland session as native Wayland, which is the branch Flatpak and tar.gz users have exercised since v2.7.4. Users who need XWayland pass `--ozone-platform=x11`, and the `wayland.xwaylandOptimizations` opt-in keeps working for them because it keys on that explicit flag.
+`app/startup/commandLine.js` is untouched. Its `#configureWayland` already treats an unflagged Wayland session as native Wayland, which is the branch Flatpak and tar.gz users have exercised since v2.7.4. Users who need XWayland pass `--ozone-platform=x11`, and the `wayland.xwaylandOptimizations` opt-in keeps working for them because it keys on that explicit flag. The flip side: a deb, rpm or integrated AppImage user who enabled `xwaylandOptimizations` against the packaged default loses it silently on upgrade, since `isXWayland` (`commandLine.js:198`) no longer sees a flag. The troubleshooting page tells them to add `--ozone-platform=x11` to keep it.
 
-The cross-distro matrix (ADR-016) is updated to test the shipped behaviour rather than a forced one. The Wayland scenario launches the AppImage with no flag, so it exercises Chromium's own backend selection; the XWayland scenario passes `--ozone-platform=x11` itself, and is launched through `swaymsg exec` so it inherits `DISPLAY` (launched directly it had no X server, Chromium exited with "Missing X server or $DISPLAY", and the smoke check still passed on log size alone; the launcher also now exports `SWAYSOCK`, without which every `swaymsg` call in that script was a silent no-op). `smoke-check.sh` now also requires that the app mapped a window with the expected shell, `xdg_shell` or `xwayland`, and treats "The platform failed to initialize" as a hard failure.
+The cross-distro matrix (ADR-016) is updated to test the shipped behaviour rather than a forced one, with one caveat: it launches the AppImage with `--appimage-extract-and-run`, which goes through `AppRun` and never reads the embedded `.desktop`, so its Wayland rows show that Chromium's own backend selection works under Sway on the three distros, not that this change works; that evidence comes from the deb, rpm and integrated-AppImage reports on the PR. The Wayland scenario launches with no flag; the XWayland scenario passes `--ozone-platform=x11` itself, and is launched through `swaymsg exec` so it inherits `DISPLAY` (launched directly it had no X server, Chromium exited with "Missing X server or $DISPLAY", and the smoke check still passed on log size alone; the launcher also now exports `SWAYSOCK`, without which every `swaymsg` call in that script was a silent no-op). `smoke-check.sh` now also requires that the app mapped a window with the expected shell, `xdg_shell` or `xwayland`, and treats "The platform failed to initialize" as a hard failure.
 
 Acceptance of this ADR is tied to the PR that carries it: the nine-configuration smoke matrix on the PR's AppImage, and at least one multi-monitor report each from GNOME and KDE on the PR build, maximise then focus another monitor, with no shrink. If GNOME still shrinks on Electron 44, the fallback is not to revert this ADR but to narrow it: keep the flag off and document GNOME multi-monitor as the one known case for a `.desktop` override, since Flatpak users on GNOME are already in that position.
 

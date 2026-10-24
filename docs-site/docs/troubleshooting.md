@@ -502,7 +502,9 @@ Replace `<your-chrome-version>` with the Chrome version Teams for Linux reports.
 ### Wayland / Display Issues
 
 :::info Default Behavior
-Since v2.28.0 the deb, rpm and AppImage packages ship no `--ozone-platform` flag, so Chromium picks the backend per session: native Wayland on a Wayland session, X11 otherwise. The snap still launches with `--ozone-platform=x11` (see [ADR-033](development/adr/033-native-wayland-default.md)). To force a backend, pass `--ozone-platform=x11` or `--ozone-platform=wayland` on the command line or in your `.desktop` file.
+Since v2.29.0 the deb, rpm and AppImage packages ship no `--ozone-platform` flag, so Chromium picks the backend per session: native Wayland on a Wayland session, X11 otherwise. The snap still launches with `--ozone-platform=x11` (see [ADR-034](development/adr/034-native-wayland-default.md)). To force a backend, pass `--ozone-platform=x11` or `--ozone-platform=wayland` on the command line or in your `.desktop` file.
+
+If you had `wayland.xwaylandOptimizations` enabled on an earlier release, it only applies when the app runs under XWayland, which it no longer does by default: add `--ozone-platform=x11` to your `Exec=` line to keep it.
 :::
 
 #### Issue: Blank or black window on Wayland
@@ -526,7 +528,7 @@ Since v2.28.0 the deb, rpm and AppImage packages ship no `--ozone-platform` flag
 **Solutions/Workarounds:**
 
 1. **Force X11 mode** with `--ozone-platform=x11` to avoid Wayland window management regressions.
-2. If this still happens on v2.28.0 or later, please report it with your desktop, compositor and monitor layout: the native Wayland default depends on these reports.
+2. If this still happens on v2.29.0 or later, please report it with your desktop, compositor and monitor layout: the native Wayland default depends on these reports.
 
 **Related GitHub Issues:** [#2094](https://github.com/IsmaelMartinez/teams-for-linux/issues/2094)
 
@@ -539,7 +541,7 @@ Since v2.28.0 the deb, rpm and AppImage packages ship no `--ozone-platform` flag
 
 **Solutions/Workarounds:**
 
-1. **Check you are not forcing X11.** Since v2.28.0 the deb, rpm and AppImage run native Wayland on a Wayland session unless a `.desktop` edit or command line still passes `--ozone-platform=x11`. The snap always runs under XWayland.
+1. **Check you are not forcing X11.** Since v2.29.0 the deb, rpm and AppImage run native Wayland on a Wayland session unless a `.desktop` edit or command line still passes `--ozone-platform=x11`. The snap always runs under XWayland.
 2. **Override to native Wayland mode** where it is still forced:
     ```bash
     teams-for-linux --ozone-platform=wayland
@@ -591,7 +593,7 @@ Since v2.28.0 the deb, rpm and AppImage packages ship no `--ozone-platform` flag
 
 #### Issue: Sharing the whole screen shows black under XWayland, sharing a window works
 
-**Description:** The snap launches with `--ozone-platform=x11`, so on a Wayland session it runs under XWayland and screen capture goes through the X11 capturer, which only sees X11 windows. Sharing a single window works, but sharing the whole screen shows a black feed. The same applies to any package launched with `--ozone-platform=x11` by hand. Since v2.28.0 the deb, rpm and AppImage run as native Wayland by default, like Flatpak and tar.gz, and are not affected.
+**Description:** The snap launches with `--ozone-platform=x11`, so on a Wayland session it runs under XWayland and screen capture goes through the X11 capturer, which only sees X11 windows. Sharing a single window works, but sharing the whole screen shows a black feed. The same applies to any package launched with `--ozone-platform=x11` by hand. Since v2.29.0 the deb, rpm and AppImage run as native Wayland by default, like Flatpak and tar.gz, and are not affected.
 
 **Solutions/Workarounds:**
 
