@@ -67,6 +67,7 @@ test.describe('Screen sharing picker', () => {
     await expect.poll(() => selectedSources(page)).toEqual([
       {
         id: SCREEN_SOURCE_ID,
+        name: 'Primary display',
         screen: { width: 1920, height: 1080, name: '1080p' },
       },
     ]);
@@ -83,6 +84,7 @@ test.describe('Screen sharing picker', () => {
     await expect.poll(() => selectedSources(page)).toEqual([
       {
         id: WINDOW_SOURCE_ID,
+        name: 'Test window',
         screen: { width: 1920, height: 1080, name: '1080p' },
       },
     ]);
