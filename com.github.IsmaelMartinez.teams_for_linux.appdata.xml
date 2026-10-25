@@ -14,6 +14,23 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.28.0" date="2026-10-25">
+      <description>
+        <ul>
+          <li>multi-account: unread indicators on the switcher pill (#3130)</li>
+          <li>tray: overlay the presence status on the tray icon (#3102)</li>
+          <li>media: restore audio-level mute detection (#3125)</li>
+          <li>notifications: keep electron notifications alive so clicks from the list still work (#3126)</li>
+          <li>notifications: use options.title for web and custom paths (#2789)</li>
+          <li>screen-sharing: use the full resolution when screen sharing (#2935) (3f95932), closes #2933</li>
+          <li>multiple-instances: link a community KDE tray tool for separate instances (#3020)</li>
+          <li>flatpak: fix the smoke build's app module and use Flathub's builder (#3118)</li>
+          <li>deps-dev: bump follow-redirects from 1.16.0 to 1.16.1 (#3122)</li>
+          <li>deps: bump follow-redirects from 1.16.0 to 1.16.1 in /docs-site (#3123)</li>
+          <li>deps: bump launch-editor from 2.14.1 to 2.14.2 in /docs-site (#3124)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.27.0" date="2026-10-19">
       <description>
         <ul>
