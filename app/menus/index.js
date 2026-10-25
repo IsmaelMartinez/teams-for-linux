@@ -30,6 +30,7 @@ const {
   writeMigratedConfig,
   MIGRATED_FILE,
 } = require("../config/migrateFile");
+const { writeStoredOption } = require("../config/renames");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
@@ -328,7 +329,7 @@ class Menus {
         return;
       }
       this.configGroup.startupConfig.appIcon = selectedPath;
-      this.configGroup.legacyConfigStore.set("appIcon", selectedPath);
+      writeStoredOption(this.configGroup.legacyConfigStore, "appIcon", selectedPath);
       this.tray?.setBaseIconPath(selectedPath);
       this.#updateWindowIcon(selectedPath);
       this.updateMenu();
@@ -337,7 +338,7 @@ class Menus {
 
   resetAppIcon() {
     this.configGroup.startupConfig.appIcon = "";
-    this.configGroup.legacyConfigStore.set("appIcon", "");
+    writeStoredOption(this.configGroup.legacyConfigStore, "appIcon", "");
     const iconChooser = new TrayIconChooser(this.configGroup.startupConfig);
     const iconPath = iconChooser.getFile();
     this.tray?.setBaseIconPath(iconPath);
@@ -611,7 +612,7 @@ class Menus {
   toggleDisableNotifications() {
     this.configGroup.startupConfig.disableNotifications =
       !this.configGroup.startupConfig.disableNotifications;
-    this.configGroup.legacyConfigStore.set(
+    writeStoredOption(this.configGroup.legacyConfigStore,
       "disableNotifications",
       this.configGroup.startupConfig.disableNotifications
     );
@@ -621,7 +622,7 @@ class Menus {
   toggleDisableNotificationSound() {
     this.configGroup.startupConfig.disableNotificationSound =
       !this.configGroup.startupConfig.disableNotificationSound;
-    this.configGroup.legacyConfigStore.set(
+    writeStoredOption(this.configGroup.legacyConfigStore,
       "disableNotificationSound",
       this.configGroup.startupConfig.disableNotificationSound
     );
@@ -631,7 +632,7 @@ class Menus {
   toggleDisableNotificationSoundIfNotAvailable() {
     this.configGroup.startupConfig.disableNotificationSoundIfNotAvailable =
       !this.configGroup.startupConfig.disableNotificationSoundIfNotAvailable;
-    this.configGroup.legacyConfigStore.set(
+    writeStoredOption(this.configGroup.legacyConfigStore,
       "disableNotificationSoundIfNotAvailable",
       this.configGroup.startupConfig.disableNotificationSoundIfNotAvailable
     );
@@ -641,7 +642,7 @@ class Menus {
   toggleDisableNotificationWindowFlash() {
     this.configGroup.startupConfig.disableNotificationWindowFlash =
       !this.configGroup.startupConfig.disableNotificationWindowFlash;
-    this.configGroup.legacyConfigStore.set(
+    writeStoredOption(this.configGroup.legacyConfigStore,
       "disableNotificationWindowFlash",
       this.configGroup.startupConfig.disableNotificationWindowFlash
     );
@@ -651,7 +652,7 @@ class Menus {
   toggleDisableBadgeCount() {
     this.configGroup.startupConfig.disableBadgeCount =
       !this.configGroup.startupConfig.disableBadgeCount;
-    this.configGroup.legacyConfigStore.set(
+    writeStoredOption(this.configGroup.legacyConfigStore,
       "disableBadgeCount",
       this.configGroup.startupConfig.disableBadgeCount
     );
@@ -660,7 +661,7 @@ class Menus {
 
   setNotificationUrgency(value) {
     this.configGroup.startupConfig.defaultNotificationUrgency = value;
-    this.configGroup.legacyConfigStore.set("defaultNotificationUrgency", value);
+    writeStoredOption(this.configGroup.legacyConfigStore, "defaultNotificationUrgency", value);
     this.updateMenu();
   }
 

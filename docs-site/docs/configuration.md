@@ -60,7 +60,9 @@ Create a `config.json` file with your desired settings:
   "window": {
     "closeOnCross": true
   },
-  "disableNotifications": false,
+  "notifications": {
+    "enabled": true
+  },
   "appearance": {
     "cssName": "compactDark"
   }
@@ -100,7 +102,9 @@ Options are moving from flat top-level names to nested namespaces, following the
 convention in [ADR-025](development/adr/025-config-option-naming-convention.md).
 Both spellings work: pick the nested name for new configuration, and the tables
 below mark each old name as deprecated and point at its replacement. Where you
-set both, the nested name wins.
+set both, the nested name wins. Menu toggles that save a setting, such as the
+notification switches and the app icon, write the nested name and remove the old
+one.
 
 The old names keep working until **2.30.0**, and using one logs a single
 aggregated warning at startup naming every option to move.
@@ -222,7 +226,8 @@ Direct CSS files remain supported through `appearance.cssLocation` and its legac
 | `appIconType` | `string` | `"default"` | Deprecated, use `tray.iconType` |
 | `tray.useMutationTitleLogic` | `boolean` | `true` | Use MutationObserver to update counter from title |
 | `useMutationTitleLogic` | `boolean` | `true` | Deprecated, use `tray.useMutationTitleLogic` |
-| `disableBadgeCount` | `boolean` | `false` | Disable the badge counter on the taskbar/dock icon |
+| `notifications.badgeCountEnabled` | `boolean` | `true` | Show the badge counter on the taskbar/dock icon |
+| `disableBadgeCount` | `boolean` | `false` | Deprecated, use `notifications.badgeCountEnabled` (inverted: `true` here is `false` there) |
 
 #### Presence status on the tray icon
 
@@ -247,15 +252,21 @@ missing or show the wrong status.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `disableNotifications` | `boolean` | `false` | Disable all notifications |
-| `disableNotificationSound` | `boolean` | `false` | Disable chat/meeting start notification sound |
-| `disableNotificationSoundIfNotAvailable` | `boolean` | `false` | Disables notification sound unless status is Available |
-| `disableNotificationWindowFlash` | `boolean` | `false` | Disable window flashing when there is a notification |
-| `notificationMethod` | `string` | `"web"` | Notification method. Choices: `web`, `electron`, `custom` |
-| `customNotification` | `object` | `{ toastDuration: 5000 }` | Configuration for custom in-app toast notifications (used when `notificationMethod` is `custom`) |
-| `defaultNotificationUrgency` | `string` | `"normal"` | Default urgency for new notifications. Choices: `low`, `normal`, `critical` |
+| `notifications.enabled` | `boolean` | `true` | Show notifications; set `false` to disable all notifications |
+| `disableNotifications` | `boolean` | `false` | Deprecated, use `notifications.enabled` (inverted: `true` here is `false` there) |
+| `notifications.sound.enabled` | `boolean` | `true` | Play the chat/meeting start notification sound |
+| `disableNotificationSound` | `boolean` | `false` | Deprecated, use `notifications.sound.enabled` (inverted) |
+| `notifications.sound.onlyWhenAvailable` | `boolean` | `false` | Play the notification sound only while status is Available |
+| `disableNotificationSoundIfNotAvailable` | `boolean` | `false` | Deprecated, use `notifications.sound.onlyWhenAvailable` |
+| `notifications.windowFlash` | `boolean` | `true` | Flash the window when there is a notification |
+| `disableNotificationWindowFlash` | `boolean` | `false` | Deprecated, use `notifications.windowFlash` (inverted) |
+| `notifications.method` | `string` | `"web"` | Notification method. Choices: `web`, `electron`, `custom` |
+| `notificationMethod` | `string` | `"web"` | Deprecated, use `notifications.method` |
+| `customNotification` | `object` | `{ toastDuration: 5000 }` | Configuration for custom in-app toast notifications (used when `notifications.method` is `custom`) |
+| `notifications.urgency` | `string` | `"normal"` | Default urgency for new notifications. Choices: `low`, `normal`, `critical` |
+| `defaultNotificationUrgency` | `string` | `"normal"` | Deprecated, use `notifications.urgency` |
 | `notifications.timeoutType` | `string` | `"default"` | How long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification `timeoutType`. May not be honoured by every notification daemon. |
-| `notifications.electron.clickAction` | `string` | `"show"` | What clicking a notification does to the main window (`notificationMethod: "electron"` only). Choices: `show` (reveal the window, current behaviour), `restore` (also un-minimise and focus, which helps on GNOME where a plain show does not raise the window) or `none` (do nothing). On Linux whether focus is honoured depends on the window manager. |
+| `notifications.electron.clickAction` | `string` | `"show"` | What clicking a notification does to the main window (`notifications.method: "electron"` only). Choices: `show` (reveal the window, current behaviour), `restore` (also un-minimise and focus, which helps on GNOME where a plain show does not raise the window) or `none` (do nothing). On Linux whether focus is honoured depends on the window manager. |
 
 ### Incoming Call Handling
 
@@ -284,10 +295,14 @@ missing or show the wrong status.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `awayOnSystemIdle` | `boolean` | `false` | Sets user status as away when system goes idle |
-| `appIdleTimeout` | `number` | `300` | Duration in seconds before app considers system as idle |
-| `appIdleTimeoutCheckInterval` | `number` | `10` | Poll interval in seconds to check if idle timeout is reached |
-| `appActiveCheckInterval` | `number` | `2` | Poll interval in seconds to check if system is active from being idle |
+| `idleDetection.setAwayOnIdle` | `boolean` | `false` | Sets user status as away when system goes idle |
+| `awayOnSystemIdle` | `boolean` | `false` | Deprecated, use `idleDetection.setAwayOnIdle` |
+| `idleDetection.timeout` | `number` | `300` | Duration in seconds before app considers system as idle |
+| `appIdleTimeout` | `number` | `300` | Deprecated, use `idleDetection.timeout` |
+| `idleDetection.checkInterval.detectIdle` | `number` | `10` | Poll interval in seconds while active, to check if the idle timeout is reached |
+| `appIdleTimeoutCheckInterval` | `number` | `10` | Deprecated, use `idleDetection.checkInterval.detectIdle` |
+| `idleDetection.checkInterval.detectActive` | `number` | `2` | Poll interval in seconds while idle, to check if the system is active again |
+| `appActiveCheckInterval` | `number` | `2` | Deprecated, use `idleDetection.checkInterval.detectActive` |
 
 #### Force Idle State (Wayland/Hyprland Workaround)
 
@@ -324,14 +339,13 @@ rm /tmp/teams-for-linux-idle-state-$USER
 
 The state file is automatically cleaned up when the app exits.
 
-:::note Requires `awayOnSystemIdle`
+:::note Requires `idleDetection.setAwayOnIdle`
 The state file only controls what the app *believes* the system idle state is. Presence is
-still only changed when `awayOnSystemIdle` is `true`, so set both:
+still only changed when `idleDetection.setAwayOnIdle` is `true`, so set both:
 
 ```json
 {
-  "awayOnSystemIdle": true,
-  "idleDetection": { "forceState": true }
+  "idleDetection": { "setAwayOnIdle": true, "forceState": true }
 }
 ```
 :::
@@ -370,10 +384,10 @@ Enable it with `systemctl --user enable --now teams-idle-watcher.service`.
 
 Three things are worth knowing before you rely on this:
 
-**The daemon's timeout is the idle delay, not `appIdleTimeout`.** When the state file says
+**The daemon's timeout is the idle delay, not `idleDetection.timeout`.** When the state file says
 `inactive` the app reports idle straight away and never consults `powerMonitor`, so
-`appIdleTimeout` has no effect on this path. Set the delay you want in the `timeout` line above.
-`appIdleTimeout` still applies when the state file is absent and detection falls back to
+`idleDetection.timeout` has no effect on this path. Set the delay you want in the `timeout` line above.
+`idleDetection.timeout` still applies when the state file is absent and detection falls back to
 `powerMonitor`.
 
 **The app deletes the state file when it exits.** `swayidle` only writes on a transition, so after
@@ -392,15 +406,19 @@ Content other than `active` or `inactive` is logged as a warning and ignored, fa
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `authServerWhitelist` | `string` | `"*"` | Set auth-server-whitelist value |
-| `customCACertsFingerprints` | `array` | `[]` | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate |
+| `auth.serverWhitelist` | `string` | `"*"` | Set auth-server-whitelist value |
+| `authServerWhitelist` | `string` | `"*"` | Deprecated, use `auth.serverWhitelist` |
+| `auth.customCACertificateFingerprints` | `array` | `[]` | Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate |
+| `customCACertsFingerprints` | `array` | `[]` | Deprecated, use `auth.customCACertificateFingerprints` |
 
 #### Basic Authentication
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `ssoBasicAuthUser` | `string` | `""` | User to use for SSO basic auth |
-| `ssoBasicAuthPasswordCommand` | `string` | `""` | Command to execute to retrieve password for SSO basic auth |
+| `auth.basic.user` | `string` | `""` | User to use for SSO basic auth |
+| `ssoBasicAuthUser` | `string` | `""` | Deprecated, use `auth.basic.user` |
+| `auth.basic.passwordCommand` | `string` | `""` | Command to execute to retrieve password for SSO basic auth |
+| `ssoBasicAuthPasswordCommand` | `string` | `""` | Deprecated, use `auth.basic.passwordCommand` |
 
 #### Web Login Password Pre-fill
 
@@ -431,7 +449,7 @@ Set `auth.webLogin.passwordCommand` to a command that prints your password (firs
 
 With the example above, the app fills the email and clicks Next, fills the password and clicks Sign in, then on the MFA "Verify your identity" page clicks the **Text** (SMS) option — leaving you only to enter the texted code. Drop `auth.webLogin.autoSubmit`/`auth.webLogin.verifyMethod` if you prefer to click through the steps yourself.
 
-This is separate from **Basic Authentication** above: `ssoBasicAuthPasswordCommand` feeds the native HTTP Basic/NTLM dialog, whereas `auth.webLogin.passwordCommand` fills the browser login form. The password is passed only to the login page (never logged or persisted) and only on the configured login hosts. If your sign-in page is a company-branded `login.microsoftonline.com` page (a logo/background on the standard Microsoft page), the defaults already cover it; only add `auth.webLogin.extraHosts` if the password page is served from a different hostname.
+This is separate from **Basic Authentication** above: `auth.basic.passwordCommand` feeds the native HTTP Basic/NTLM dialog, whereas `auth.webLogin.passwordCommand` fills the browser login form. The password is passed only to the login page (never logged or persisted) and only on the configured login hosts. If your sign-in page is a company-branded `login.microsoftonline.com` page (a logo/background on the standard Microsoft page), the defaults already cover it; only add `auth.webLogin.extraHosts` if the password page is served from a different hostname.
 
 #### InTune SSO
 
@@ -505,8 +523,10 @@ Entries are exact `https` origins: scheme, host and, where the identity provider
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `clientCertPath` | `string` | `""` | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format) |
-| `clientCertPassword` | `string` | `""` | Custom Client Certs password for corporate authentication |
+| `auth.clientCertificate.path` | `string` | `""` | Custom Client Certs for corporate authentication (certificate must be in pkcs12 format) |
+| `clientCertPath` | `string` | `""` | Deprecated, use `auth.clientCertificate.path` |
+| `auth.clientCertificate.password` | `string` | `""` | Custom Client Certs password for corporate authentication |
+| `clientCertPassword` | `string` | `""` | Deprecated, use `auth.clientCertificate.password` |
 
 #### Smartcard / Client Certificate PIN (Linux)
 
@@ -583,7 +603,8 @@ Opt-in configuration for the single-window multi-tenant account switcher:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `proxyServer` | `string` | `null` | Proxy Server with format address:port |
+| `network.proxyServer` | `string` | `null` | Proxy Server with format address:port |
+| `proxyServer` | `string` | `null` | Deprecated, use `network.proxyServer` |
 | `network.webRTCIPHandlingPolicy` | `string` | `null` | Controls which network interfaces WebRTC uses for ICE candidate gathering. Choices: `default`, `default_public_and_private_interfaces`, `default_public_interface_only`, `disable_non_proxied_udp` |
 | `network.disableQuic` | `boolean` | `true` | Append Chromium's `--disable-quic` switch at startup. Defaults to `true` to work around issue [#2518](https://github.com/IsmaelMartinez/teams-for-linux/issues/2518) (concurrent SharePoint downloads abort with `ERR_QUIC_PROTOCOL_ERROR` on the shared QUIC session). Set to `false` to re-enable QUIC if a future Chromium release fixes the underlying transport bug. |
 
@@ -997,7 +1018,9 @@ When enabled, this flag:
     "cssName": "compactDark",
     "followSystemTheme": true
   },
-  "disableNotifications": true
+  "notifications": {
+    "enabled": false
+  }
 }
 ```
 
@@ -1008,11 +1031,15 @@ When enabled, this flag:
     "intune": {
       "enabled": true,
       "user": "user@company.com"
+    },
+    "clientCertificate": {
+      "path": "/path/to/cert.p12",
+      "password": "password"
     }
   },
-  "clientCertPath": "/path/to/cert.p12",
-  "clientCertPassword": "password",
-  "proxyServer": "proxy.company.com:8080"
+  "network": {
+    "proxyServer": "proxy.company.com:8080"
+  }
 }
 ```
 
@@ -1047,7 +1074,9 @@ When enabled, this flag:
 #### Custom Notifications Setup
 ```json
 {
-  "notificationMethod": "custom",
+  "notifications": {
+    "method": "custom"
+  },
   "customNotification": {
     "toastDuration": 5000
   }
@@ -1088,7 +1117,9 @@ Create `/etc/teams-for-linux/config.json` to set organization-wide defaults:
   "window": {
     "closeOnCross": false
   },
-  "disableNotifications": false,
+  "notifications": {
+    "enabled": true
+  },
   "screenSharing": {
     "thumbnail": {
       "enabled": true
@@ -1102,7 +1133,9 @@ Create `/etc/teams-for-linux/config.json` to set organization-wide defaults:
       "enabled": true
     }
   },
-  "proxyServer": "proxy.company.com:8080"
+  "network": {
+    "proxyServer": "proxy.company.com:8080"
+  }
 }
 ```
 

@@ -50,6 +50,7 @@ module.exports = {
           "A numeric value in seconds as poll interval to check if the system is active from being idle",
         type: "number",
         applyMode: "restart",
+        deprecated: "use idleDetection.checkInterval.detectActive instead",
       },
       screenSharing: {
         default: {
@@ -125,6 +126,7 @@ module.exports = {
           "A numeric value in seconds as duration before app considers the system as idle",
         type: "number",
         applyMode: "restart",
+        deprecated: "use idleDetection.timeout instead",
       },
       appIdleTimeoutCheckInterval: {
         default: 10,
@@ -132,6 +134,7 @@ module.exports = {
           "A numeric value in seconds as poll interval to check if the appIdleTimeout is reached",
         type: "number",
         applyMode: "restart",
+        deprecated: "use idleDetection.checkInterval.detectIdle instead",
       },
       appTitle: {
         default: "Microsoft Teams",
@@ -152,21 +155,45 @@ module.exports = {
         describe: "Set auth-server-whitelist value",
         type: "string",
         applyMode: "restart",
+        deprecated: "use auth.serverWhitelist instead",
       },
       awayOnSystemIdle: {
         default: false,
         describe: "Sets the user status as away when system goes idle",
         type: "boolean",
         applyMode: "restart",
+        deprecated: "use idleDetection.setAwayOnIdle instead",
       },
       idleDetection: {
         default: {
           forceState: false,
           stateFile: "/tmp/teams-for-linux-idle-state-$USER",
+          setAwayOnIdle: false,
+          timeout: 300,
+          checkInterval: {
+            detectIdle: 10,
+            detectActive: 2,
+          },
         },
-        describe: "Idle detection configuration. forceState: enables state file-based idle control (workaround for Wayland/Hyprland). stateFile: path to state file with $USER expansion support.",
+        describe: "Idle detection configuration. forceState: enables state file-based idle control (workaround for Wayland/Hyprland). stateFile: path to state file with $USER expansion support. setAwayOnIdle, timeout and checkInterval replace the deprecated awayOnSystemIdle, appIdleTimeout, appIdleTimeoutCheckInterval and appActiveCheckInterval options.",
         type: "object",
         fields: {
+          "setAwayOnIdle": {
+            type: "boolean",
+            describe: "Sets the user status as away when system goes idle",
+          },
+          "timeout": {
+            type: "number",
+            describe: "A numeric value in seconds as duration before app considers the system as idle",
+          },
+          "checkInterval.detectIdle": {
+            type: "number",
+            describe: "Poll interval in seconds while active, watching for the system to go idle (when idleDetection.timeout is reached)",
+          },
+          "checkInterval.detectActive": {
+            type: "number",
+            describe: "Poll interval in seconds while idle, watching for the system to become active again",
+          },
           "forceState": {
             type: "boolean",
             describe:
@@ -208,6 +235,7 @@ module.exports = {
           "Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate",
         type: "array",
         applyMode: "restart",
+        deprecated: "use auth.customCACertificateFingerprints instead",
       },
       customCSSName: {
         default: "",
@@ -331,6 +359,7 @@ module.exports = {
           "Custom Client Certs for corporate authentication (certificate must be in pkcs12 format)",
         type: "string",
         applyMode: "restart",
+        deprecated: "use auth.clientCertificate.path instead",
       },
       clientCertPassword: {
         default: "",
@@ -338,6 +367,7 @@ module.exports = {
           "Custom Client Certs password for corporate authentication (certificate must be in pkcs12 format)",
         type: "string",
         applyMode: "restart",
+        deprecated: "use auth.clientCertificate.password instead",
       },
       closeAppOnCross: {
         default: false,
@@ -352,6 +382,7 @@ module.exports = {
         type: "string",
         choices: ["low", "normal", "critical"],
         applyMode: "live",
+        deprecated: "use notifications.urgency instead",
       },
       defaultURLHandler: {
         default: "",
@@ -414,12 +445,14 @@ module.exports = {
         describe: "A flag to disable all notifications",
         type: "boolean",
         applyMode: "live",
+        deprecated: "use notifications.enabled instead",
       },
       disableNotificationSound: {
         default: false,
         describe: "Disable chat/meeting start notification sound",
         type: "boolean",
         applyMode: "live",
+        deprecated: "use notifications.sound.enabled instead",
       },
       disableNotificationSoundIfNotAvailable: {
         default: false,
@@ -427,6 +460,7 @@ module.exports = {
           "Disables notification sound unless status is Available (e.g. while in a call, busy, etc.)",
         type: "boolean",
         applyMode: "live",
+        deprecated: "use notifications.sound.onlyWhenAvailable instead",
       },
       disableNotificationWindowFlash: {
         default: false,
@@ -434,6 +468,7 @@ module.exports = {
           "A flag indicates whether to disable window flashing when there is a notification",
         type: "boolean",
         applyMode: "live",
+        deprecated: "use notifications.windowFlash instead",
       },
       notifications: {
         default: {
@@ -441,9 +476,20 @@ module.exports = {
           electron: {
             clickAction: "show",
           },
+          // Inverted renames (ADR-025): each default is the negation of its
+          // flat disable* default, so an untouched config behaves the same.
+          enabled: true,
+          sound: {
+            enabled: true,
+            onlyWhenAvailable: false,
+          },
+          windowFlash: true,
+          badgeCountEnabled: true,
+          method: "web",
+          urgency: "normal",
         },
         describe:
-          "Notification behaviour. timeoutType: how long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification timeoutType. May not be honoured by every notification daemon. electron.clickAction: what clicking a notification does when notificationMethod is `electron`. Choices: `show` (reveal the window and let Teams open the conversation the notification came from, the default), `restore` (also un-minimise and focus, which helps on GNOME where a plain show does not raise the window) or `none` (do nothing, and do not open the conversation either).",
+          "Notification behaviour. timeoutType: how long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification timeoutType. May not be honoured by every notification daemon. electron.clickAction: what clicking a notification does when notificationMethod is `electron`. Choices: `show` (reveal the window and let Teams open the conversation the notification came from, the default), `restore` (also un-minimise and focus, which helps on GNOME where a plain show does not raise the window) or `none` (do nothing, and do not open the conversation either). enabled, sound, windowFlash, badgeCountEnabled, method and urgency replace the deprecated disableNotifications, disableNotificationSound, disableNotificationSoundIfNotAvailable, disableNotificationWindowFlash, disableBadgeCount, notificationMethod and defaultNotificationUrgency options; the disable* booleans other than disableNotificationSoundIfNotAvailable are inverted, so `disableNotifications: true` becomes `enabled: false`.",
         type: "object",
         fields: {
           "timeoutType": {
@@ -458,6 +504,36 @@ module.exports = {
               "What clicking an Electron notification does (notificationMethod `electron` only): `show` reveals the window and lets Teams open the sending conversation (default), `restore` also un-minimises and focuses it (helps on GNOME), `none` does nothing at all.",
             choices: ["show", "restore", "none"],
           },
+          "enabled": {
+            type: "boolean",
+            describe: "Show notifications; set false to disable all notifications",
+          },
+          "sound.enabled": {
+            type: "boolean",
+            describe: "Play the chat/meeting start notification sound",
+          },
+          "sound.onlyWhenAvailable": {
+            type: "boolean",
+            describe: "Play the notification sound only while status is Available (not while in a call, busy, etc.)",
+          },
+          "windowFlash": {
+            type: "boolean",
+            describe: "Flash the window when there is a notification",
+          },
+          "badgeCountEnabled": {
+            type: "boolean",
+            describe: "Show the badge counter on the taskbar/dock icon",
+          },
+          "method": {
+            type: "string",
+            describe: "Notification method to be used by the application (web/electron/custom)",
+            choices: ["web", "electron", "custom"],
+          },
+          "urgency": {
+            type: "string",
+            describe: "Default urgency for new notifications (low/normal/critical)",
+            choices: ["low", "normal", "critical"],
+          },
         },
         applyMode: "restart",
       },
@@ -467,6 +543,7 @@ module.exports = {
           "A flag indicates whether to disable the badge counter on the taskbar/dock icon",
         type: "boolean",
         applyMode: "live",
+        deprecated: "use notifications.badgeCountEnabled instead",
       },
       disableGlobalShortcuts: {
         default: [],
@@ -608,6 +685,7 @@ module.exports = {
         type: "string",
         choices: ["web", "electron", "custom"],
         applyMode: "restart",
+        deprecated: "use notifications.method instead",
       },
       customNotification: {
         default: {
@@ -645,11 +723,13 @@ module.exports = {
         describe: "Proxy Server with format address:port",
         type: "string",
         applyMode: "restart",
+        deprecated: "use network.proxyServer instead",
       },
       network: {
 	default: {
 		webRTCIPHandlingPolicy: null,
 		disableQuic: true,
+		proxyServer: null,
 	},
       	describe:
 	  "Network configuration. " +
@@ -660,7 +740,8 @@ module.exports = {
     	  "Disabled by default (opt-in). " +
     	  "disableQuic: Append Chromium's --disable-quic switch at startup. Defaults to true to work around issue #2518 " +
     	  "(concurrent SharePoint downloads abort with ERR_QUIC_PROTOCOL_ERROR on the shared QUIC session). Set to false " +
-    	  "to re-enable QUIC if a future Chromium release fixes the underlying transport bug.",
+    	  "to re-enable QUIC if a future Chromium release fixes the underlying transport bug. " +
+    	  "proxyServer: proxy server with format address:port, replacing the deprecated proxyServer option.",
 	type: "object",
         fields: {
           "webRTCIPHandlingPolicy": {
@@ -679,6 +760,10 @@ module.exports = {
             describe:
               "Append Chromium's --disable-quic switch at startup to work around QUIC protocol errors (issue #2518).",
           },
+          "proxyServer": {
+            type: "string",
+            describe: "Proxy Server with format address:port",
+          },
         },
         applyMode: "restart",
       },
@@ -695,12 +780,14 @@ module.exports = {
         describe: "User to use for SSO basic auth.",
         type: "string",
         applyMode: "restart",
+        deprecated: "use auth.basic.user instead",
       },
       ssoBasicAuthPasswordCommand: {
         default: "",
         describe: "Command to execute to retrieve password for SSO basic auth.",
         type: "string",
         applyMode: "restart",
+        deprecated: "use auth.basic.passwordCommand instead",
       },
       trayIconEnabled: {
         default: true,
@@ -1037,7 +1124,15 @@ module.exports = {
             pinDialog: {
               enabled: false,
             },
+            path: "",
+            password: "",
           },
+          serverWhitelist: "*",
+          basic: {
+            user: "",
+            passwordCommand: "",
+          },
+          customCACertificateFingerprints: [],
           webLogin: {
             user: "",
             passwordCommand: "",
@@ -1050,7 +1145,7 @@ module.exports = {
             days: 400
           }
         },
-        describe: "Authentication configuration. auth.webauthn.enabled turns on hardware security key support on Linux (requires fido2-tools). auth.webauthn.debug enables verbose diagnostic logs, intended for beta testers only. auth.webauthn.extraOrigins adds exact https sign-in origins allowed to use hardware keys, for federated tenants whose FIDO2 prompt is served off the Microsoft login hosts. auth.reauthRecovery.enabled opts into the in-app re-authentication recovery feature and is off by default; while off, renderer auth-failure signals are ignored and Teams' own stale 'sign in again' banner is left untouched (you re-authenticate by relaunching, as before this feature existed). When on, a reliable MSAL InteractionRequired signal automatically clears stale auth state and reloads to force a fresh interactive login, and clicking the stale 'sign in again' banner is intercepted to recover in-app instead of opening the login popup externally. Uncaught Teams worker 'UPR' errors are noisy and fire on healthy sessions, so they never trigger an automatic reload on their own; they only help recognise a genuinely broken session for the banner interception. Interception only happens when the session has emitted a trusted auth-failure signal within the last hour, so login popups from healthy flows (initial sign-in, consent and step-up prompts, adding an account) are never diverted. During an active call, recovery is never run silently (it would end the call): the user is asked whether to sign in now, after the call, or not at all. auth.clientCertificate.pinDialog.enabled (Linux only) shows a PIN dialog for smartcard / PKCS#11 client certificates and is off by default. auth.webLogin.* pre-fills the Microsoft/federated web sign-in page so you don't retype credentials each launch: auth.webLogin.user pre-fills the email/account field, auth.webLogin.passwordCommand runs a shell command (e.g. 'pass show teams') and pre-fills its first stdout line into the password field (the app stores no secret), auth.webLogin.autoSubmit clicks through the steps, auth.webLogin.verifyMethod clicks the matching option on the MFA 'Verify your identity' page (e.g. 'Text'), and auth.webLogin.extraHosts adds login hosts beyond the Microsoft defaults. All off/empty by default. Distinct from ssoBasicAuth*, which drive the native HTTP Basic/NTLM dialog, not the web form.",
+        describe: "Authentication configuration. auth.webauthn.enabled turns on hardware security key support on Linux (requires fido2-tools). auth.webauthn.debug enables verbose diagnostic logs, intended for beta testers only. auth.webauthn.extraOrigins adds exact https sign-in origins allowed to use hardware keys, for federated tenants whose FIDO2 prompt is served off the Microsoft login hosts. auth.reauthRecovery.enabled opts into the in-app re-authentication recovery feature and is off by default; while off, renderer auth-failure signals are ignored and Teams' own stale 'sign in again' banner is left untouched (you re-authenticate by relaunching, as before this feature existed). When on, a reliable MSAL InteractionRequired signal automatically clears stale auth state and reloads to force a fresh interactive login, and clicking the stale 'sign in again' banner is intercepted to recover in-app instead of opening the login popup externally. Uncaught Teams worker 'UPR' errors are noisy and fire on healthy sessions, so they never trigger an automatic reload on their own; they only help recognise a genuinely broken session for the banner interception. Interception only happens when the session has emitted a trusted auth-failure signal within the last hour, so login popups from healthy flows (initial sign-in, consent and step-up prompts, adding an account) are never diverted. During an active call, recovery is never run silently (it would end the call): the user is asked whether to sign in now, after the call, or not at all. auth.clientCertificate.pinDialog.enabled (Linux only) shows a PIN dialog for smartcard / PKCS#11 client certificates and is off by default. auth.webLogin.* pre-fills the Microsoft/federated web sign-in page so you don't retype credentials each launch: auth.webLogin.user pre-fills the email/account field, auth.webLogin.passwordCommand runs a shell command (e.g. 'pass show teams') and pre-fills its first stdout line into the password field (the app stores no secret), auth.webLogin.autoSubmit clicks through the steps, auth.webLogin.verifyMethod clicks the matching option on the MFA 'Verify your identity' page (e.g. 'Text'), and auth.webLogin.extraHosts adds login hosts beyond the Microsoft defaults. All off/empty by default. Distinct from auth.basic.*, which drive the native HTTP Basic/NTLM dialog, not the web form. auth.serverWhitelist, auth.basic.user, auth.basic.passwordCommand, auth.clientCertificate.path, auth.clientCertificate.password and auth.customCACertificateFingerprints replace the deprecated authServerWhitelist, ssoBasicAuthUser, ssoBasicAuthPasswordCommand, clientCertPath, clientCertPassword and customCACertsFingerprints options.",
         type: "object",
         fields: {
           "intune.enabled": {
@@ -1085,6 +1180,30 @@ module.exports = {
             type: "boolean",
             describe:
               "Show a PIN dialog for smartcard / PKCS#11 client certificates on Linux (issue #2639); off by default. Has no effect on macOS or Windows, which provide native PIN prompts.",
+          },
+          "clientCertificate.path": {
+            type: "string",
+            describe: "Custom Client Certs for corporate authentication (certificate must be in pkcs12 format)",
+          },
+          "clientCertificate.password": {
+            type: "string",
+            describe: "Custom Client Certs password for corporate authentication (certificate must be in pkcs12 format)",
+          },
+          "serverWhitelist": {
+            type: "string",
+            describe: "Set auth-server-whitelist value",
+          },
+          "basic.user": {
+            type: "string",
+            describe: "User to use for SSO basic auth.",
+          },
+          "basic.passwordCommand": {
+            type: "string",
+            describe: "Command to execute to retrieve password for SSO basic auth.",
+          },
+          "customCACertificateFingerprints": {
+            type: "array",
+            describe: "Array of custom CA Certs Fingerprints to allow SSL unrecognized signer or self signed certificate",
           },
           "webLogin.user": {
             type: "string",

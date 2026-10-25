@@ -130,7 +130,9 @@ Each profile can have its own `config.json` file in its respective user data dir
   "tray": {
     "iconType": "dark"
   },
-  "disableNotificationSound": false,
+  "notifications": {
+    "sound": { "enabled": true }
+  },
   "appearance": {
     "cssName": "compactDark"
   },
@@ -149,7 +151,9 @@ Each profile can have its own `config.json` file in its respective user data dir
   "tray": {
     "iconType": "light"
   },
-  "disableNotificationSound": true,
+  "notifications": {
+    "sound": { "enabled": false }
+  },
   "appearance": {
     "cssName": "compactLight"
   },
