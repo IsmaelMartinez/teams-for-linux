@@ -1,5 +1,38 @@
 # Changelog
 
+## [2.28.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.27.0...v2.28.0) (2026-10-25)
+
+
+### Features
+
+* **multi-account:** unread indicators on the switcher pill ([#3130](https://github.com/IsmaelMartinez/teams-for-linux/issues/3130)) ([7adf613](https://github.com/IsmaelMartinez/teams-for-linux/commit/7adf613d054095f5a250336029952a70b3dae12a))
+* **tray:** overlay the presence status on the tray icon ([#3102](https://github.com/IsmaelMartinez/teams-for-linux/issues/3102)) ([4affa8b](https://github.com/IsmaelMartinez/teams-for-linux/commit/4affa8bc779a39145dda29b7888f94b7428cf00c))
+
+
+### Bug Fixes
+
+* **media:** restore audio-level mute detection ([#3125](https://github.com/IsmaelMartinez/teams-for-linux/issues/3125)) ([8aeab7c](https://github.com/IsmaelMartinez/teams-for-linux/commit/8aeab7c55ae39d6974603cf7e0cd498c2407c3e7))
+* **notifications:** keep electron notifications alive so clicks from the list still work ([#3126](https://github.com/IsmaelMartinez/teams-for-linux/issues/3126)) ([d41c13e](https://github.com/IsmaelMartinez/teams-for-linux/commit/d41c13efc18a88b4c20f3b19edf06e0b9814ed6b))
+* **notifications:** use options.title for web and custom paths ([#2789](https://github.com/IsmaelMartinez/teams-for-linux/issues/2789)) ([e9b873d](https://github.com/IsmaelMartinez/teams-for-linux/commit/e9b873dcaf6ca52cd8efbc12c5b182a008e286ab))
+* **screen-sharing:** use the full resolution when screen sharing ([#2935](https://github.com/IsmaelMartinez/teams-for-linux/issues/2935)) ([3f95932](https://github.com/IsmaelMartinez/teams-for-linux/commit/3f959320c1c010ce2adc993a5491523c812d37b6)), closes [#2933](https://github.com/IsmaelMartinez/teams-for-linux/issues/2933)
+
+
+### Documentation
+
+* **multiple-instances:** link a community KDE tray tool for separate instances ([#3020](https://github.com/IsmaelMartinez/teams-for-linux/issues/3020)) ([d8cc871](https://github.com/IsmaelMartinez/teams-for-linux/commit/d8cc87177cfc41ee162cfc1a8922f7fed53d208d))
+
+
+### CI/CD
+
+* **flatpak:** fix the smoke build's app module and use Flathub's builder ([#3118](https://github.com/IsmaelMartinez/teams-for-linux/issues/3118)) ([39ac73b](https://github.com/IsmaelMartinez/teams-for-linux/commit/39ac73bb0e8f113fabc8b30aed980fc12ca1166f))
+
+
+### Maintenance
+
+* **deps-dev:** bump follow-redirects from 1.16.0 to 1.16.1 ([#3122](https://github.com/IsmaelMartinez/teams-for-linux/issues/3122)) ([989086e](https://github.com/IsmaelMartinez/teams-for-linux/commit/989086e008d8a54c36cd79259a72944a9699fb60))
+* **deps:** bump follow-redirects from 1.16.0 to 1.16.1 in /docs-site ([#3123](https://github.com/IsmaelMartinez/teams-for-linux/issues/3123)) ([00897f2](https://github.com/IsmaelMartinez/teams-for-linux/commit/00897f21775194215939c66287eaa3ef76c4a862))
+* **deps:** bump launch-editor from 2.14.1 to 2.14.2 in /docs-site ([#3124](https://github.com/IsmaelMartinez/teams-for-linux/issues/3124)) ([ab894a8](https://github.com/IsmaelMartinez/teams-for-linux/commit/ab894a81cdb6d1cbc8b2f42cc14060a0b79d41b1))
+
 ## [2.27.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.26.0...v2.27.0) (2026-10-19)
 
 
