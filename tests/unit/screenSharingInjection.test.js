@@ -23,9 +23,10 @@ describe('screen-sharing script injection target (#2979)', () => {
 		);
 		assert.ok(fn, 'injectScreenSharingLogic must take a target webContents');
 		const [, param, body] = fn;
+		// The script may carry a config prefix (resolution settings), so allow `${script}` inside a template.
 		assert.match(
 			body,
-			new RegExp(`${param}\\.executeJavaScript\\(script\\)`),
+			new RegExp(`${param}\\.executeJavaScript\\(`),
 			'the script must run on the given webContents',
 		);
 		assert.doesNotMatch(

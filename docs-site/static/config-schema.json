@@ -1,8 +1,32 @@
 {
   "$generatedBy": "scripts/generateConfigDocs.js",
   "source": "app/config/options.js",
-  "optionCount": 84,
+  "optionCount": 85,
   "options": [
+    {
+      "name": "dbusControl",
+      "type": "object",
+      "default": {
+        "enabled": false,
+        "busName": ""
+      },
+      "description": "Opt-in Linux user session D-Bus control and observed Teams state. Requires restart.",
+      "applyMode": "restart",
+      "fields": [
+        {
+          "path": "enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable the Linux D-Bus service and its local status monitors."
+        },
+        {
+          "path": "busName",
+          "type": "string",
+          "default": "",
+          "description": "Well-known D-Bus service name for this instance. Empty uses FLATPAK_ID or com.github.IsmaelMartinez.teams_for_linux. Use distinct names for separately launched profiles; invalid names disable the service."
+        }
+      ]
+    },
     {
       "name": "appActiveCheckInterval",
       "type": "number",
@@ -17,6 +41,10 @@
         "thumbnail": {
           "enabled": true,
           "alwaysOnTop": true
+        },
+        "resolution": {
+          "enabled": false,
+          "mode": "remove"
         },
         "lockInhibitionMethod": "Electron"
       },
@@ -34,6 +62,32 @@
           "type": "boolean",
           "default": true,
           "description": "Keep the screen sharing thumbnail window always on top."
+        },
+        {
+          "path": "resolution.enabled",
+          "type": "boolean",
+          "default": false,
+          "description": "Enable screen sharing resolution control. When false, Teams' resolution constraints are left unchanged."
+        },
+        {
+          "path": "resolution.mode",
+          "type": "string",
+          "default": "remove",
+          "description": "Resolution mode: remove disables Teams' screen sharing limits so capture can use its native resolution; override requests the configured width and height as a ceiling.",
+          "choices": [
+            "remove",
+            "override"
+          ]
+        },
+        {
+          "path": "resolution.width",
+          "type": "number",
+          "description": "Target screen sharing width when mode is override; used with height as the maximum requested resolution."
+        },
+        {
+          "path": "resolution.height",
+          "type": "number",
+          "description": "Target screen sharing height when mode is override; used with width as the maximum requested resolution."
         },
         {
           "path": "lockInhibitionMethod",
@@ -81,7 +135,7 @@
       "name": "appTitle",
       "type": "string",
       "default": "Microsoft Teams",
-      "description": "A text to be suffixed with page title",
+      "description": "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip",
       "applyMode": "restart",
       "deprecated": "use app.title instead"
     },
@@ -166,7 +220,7 @@
       "name": "customCSSName",
       "type": "string",
       "default": "",
-      "description": "custom CSS name for the packaged available css files. Currently those are: \"compactDark\", \"compactLight\", \"tweaks\", \"condensedDark\" and \"condensedLight\"",
+      "description": "Packaged CSS theme name (compactDark, compactLight, tweaks, condensedDark, condensedLight), or custom:<id> for a discovered user theme. An empty name uses customCSSLocation when configured.",
       "applyMode": "restart",
       "deprecated": "use appearance.cssName instead"
     },
@@ -796,9 +850,10 @@
         },
         "showStatusOnDockIcon": false,
         "macPerformanceMode": true,
-        "preventDeviceSwitching": false
+        "preventDeviceSwitching": false,
+        "documentPictureInPicture": true
       },
-      "description": "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the Dock icon on macOS. macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications.",
+      "description": "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the app icon (the Dock on macOS, the tray icon elsewhere). macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications. documentPictureInPicture: replace Electron's non-functional Document Picture-in-Picture API so Teams can show its floating call controls (Call Monitor) in a small always-on-top window; defaults to true, set false to fall back to Electron's native (broken) API.",
       "applyMode": "restart",
       "fields": [
         {
@@ -892,7 +947,7 @@
           "path": "showStatusOnDockIcon",
           "type": "boolean",
           "default": false,
-          "description": "Overlay the user presence status on the Dock icon on macOS."
+          "description": "Overlay the user presence status on the app icon: the Dock on macOS, the tray icon on the platforms that have no Dock. While the dot is drawn the unread badge moves to the other corner."
         },
         {
           "path": "macPerformanceMode",
@@ -1389,7 +1444,7 @@
           "path": "cssName",
           "type": "string",
           "default": "",
-          "description": "custom CSS name for the packaged available css files. Currently those are: \"compactDark\", \"compactLight\", \"tweaks\", \"condensedDark\" and \"condensedLight\""
+          "description": "Packaged CSS theme name (compactDark, compactLight, tweaks, condensedDark, condensedLight), or custom:<id> for a discovered user theme. An empty name uses appearance.cssLocation when configured."
         },
         {
           "path": "cssLocation",
@@ -1458,7 +1513,7 @@
           "path": "title",
           "type": "string",
           "default": "Microsoft Teams",
-          "description": "A text to be suffixed with page title"
+          "description": "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip"
         },
         {
           "path": "url",

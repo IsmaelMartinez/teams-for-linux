@@ -63,6 +63,10 @@ The picker is a modal overlay over the main Teams window. Issue #2524.
 - **Thumbnails:** requested at 640x360 (vs the legacy 320x180) so tiles and the detail preview are readable without further upscaling. Tile thumbnails render with `object-fit: contain` so ultrawide screens stay fully visible.
 - **Colour scheme:** the picker follows `prefers-color-scheme` (light is the base palette in `:root`, dark overrides land under `@media (prefers-color-scheme: dark)`), matching the convention used by `joinMeetingDialog` and the profile dialogs. Tile overlays (number badge, name gradient, preview stamp) keep light text because they sit on top of a dark scrim over the thumbnail in both schemes.
 
+## Configuration
+
+**screenSharing.resolution** - Controls screen sharing resolution handling. When enabled (`resolution.enabled: true`), applies one of two modes: `remove` disables Teams' screen sharing resolution limits, allowing capture to use its native resolution; `override` requests configured `width` and `height` parameters as a ceiling for the share. Disabled by default to preserve Teams' default resolution constraints.
+
 ## Platform Notes
 
 **Wayland:** Requires source IDs in `screen:x:y` or `window:x:y` format from desktopCapturer. MediaStream UUIDs will fail.

@@ -32,7 +32,7 @@ With the flag on, a **Profiles** menu appears in the application menu:
 On first launch after enabling the flag, your existing session is migrated into a default **"My account"** profile, so you stay logged in with no re-authentication.
 
 :::note
-This feature is under active development. Switch via the **bottom-left avatar pill**, the **Profiles** menu, or — after pinning a profile in **Manage profiles…** — the `Ctrl+Alt+1…5` keyboard shortcuts (up to 5 pinned profiles, slotted in list order; active while the app is focused; Linux/Windows). The switcher is mutually exclusive with Intune SSO (`auth.intune.enabled`) — see [Configuration](configuration.md#multi-account-profile-switcher-experimental). For the full design and roadmap, see [ADR-020](development/adr/020-multi-account-profile-switcher).
+This feature is under active development. The tray badge and dock count aggregate across profiles (total unread, tooltip lists the top profiles), and a red dot on the switcher pill marks unread in another profile, with per-profile counts in its dropdown. Switch via the **bottom-left avatar pill**, the **Profiles** menu, or — after pinning a profile in **Manage profiles…** — the `Ctrl+Alt+1…5` keyboard shortcuts (up to 5 pinned profiles, slotted in list order; active while the app is focused; Linux/Windows). The switcher is mutually exclusive with Intune SSO (`auth.intune.enabled`) — see [Configuration](configuration.md#multi-account-profile-switcher-experimental). For the full design and roadmap, see [ADR-020](development/adr/020-multi-account-profile-switcher).
 :::
 
 ## Separate Isolated Instances (Command Line)
@@ -72,6 +72,16 @@ Set a custom tray and window icon for each profile:
 ```
 
 This changes the visual icon used in the title bar and system tray/dock, making it easy to distinguish between different profiles.
+
+### `--appTitle`
+
+Label each profile's window and tray tooltip:
+
+```bash
+--appTitle="Teams - Work"
+```
+
+Any value other than the default replaces "Microsoft Teams" at the end of the window title (for example `Chat | Teams - Work`), so taskbars and Alt+Tab show which profile a window belongs to. In `config.json` the same setting is `app.title`.
 
 ### `--class`
 
@@ -284,6 +294,10 @@ $HOME/.config/
 - **Verify config location**: Ensure `config.json` is in the correct profile directory
 - **JSON syntax**: Validate JSON syntax using `jq` or online validators
 - **File permissions**: Ensure config files are readable by the application
+
+## Community Tools
+
+- [teams-for-linux-multiclient](https://github.com/JamesStuder/teams-for-linux-multiclient) (KDE Plasma 6): runs one isolated instance per tenant using the `--class` and `--user-data-dir` options above, and replaces the per-instance tray icons with a single icon that shows the combined unread count and a submenu per instance. Not maintained by this project.
 
 ## Related Documentation
 

@@ -425,7 +425,7 @@ The media topic names after the prefix (`in-call`, `incoming-call`, `incoming-ca
 
 All topics except `incoming-call/caller` use retained messages so subscribers receive the last known state immediately on connect. The `connected` topic uses LWT: if the app crashes or loses network, the broker publishes `"false"` automatically.
 
-The microphone topic activates whenever `mqtt.enabled` is true (no separate toggle). States are derived from WebRTC `RTCPeerConnection.getStats()`: `speaking` means audio is being transmitted, `silent` means the mic is open but quiet, `muted` means Teams has zeroed the audio signal, and `off` means no active call.
+The microphone topic activates whenever `mqtt.enabled` is true (no separate toggle). States are derived from WebRTC `RTCPeerConnection.getStats()`: `speaking` means audio is being transmitted, `silent` means the mic is open but quiet, `muted` means the outgoing audio sender stopped sending (its track is disabled, muted, ended or detached, its encoding is paused, or its negotiated direction no longer sends) or Teams has zeroed the audio signal, and `off` means no active call. When the sender shows none of these, a zeroed signal is taken as muted, so a microphone with built-in noise reduction that outputs silence while you are quiet also reports `muted` after about half a second.
 
 The camera topic monitors video sender `track.enabled` in the same RTCPeerConnection poll loop used for microphone detection, filtering out screen-sharing tracks via `displaySurface`.
 

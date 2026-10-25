@@ -101,7 +101,12 @@ globalThis.electronAPI = {
   sendScreenSharingStopped: () => ipcRenderer.send("screen-sharing-stopped"),
   stopSharing: () => ipcRenderer.send("stop-screen-sharing-from-thumbnail"),
   sendSelectSource: () => ipcRenderer.send("select-source"),
-  onSelectSource: (callback) => ipcRenderer.once("select-source", callback),
+  // Listener helpers return nothing and drop Electron's event: both the
+  // return value of ipcRenderer.on/once and event.sender are the raw
+  // ipcRenderer, which this non-isolated page must never see (GHSA-3vg9-cwq9-p773).
+  onSelectSource: (callback) => {
+    ipcRenderer.once("select-source", (_event, ...args) => callback(...args));
+  },
   send: (channel, ...args) => {
     return ipcRenderer.send(channel, ...args);
   },
@@ -144,7 +149,7 @@ globalThis.electronAPI = {
       console.error('Invalid callback for theme changed');
       return;
     }
-    return ipcRenderer.on("system-theme-changed", callback);
+    ipcRenderer.on("system-theme-changed", (_event, ...args) => callback(...args));
   },
 
   setUserStatus: (data) => {
@@ -175,7 +180,7 @@ globalThis.electronAPI = {
       console.error('Invalid callback for navigation state changed');
       return;
     }
-    return ipcRenderer.on("navigation-state-changed", callback);
+    ipcRenderer.on("navigation-state-changed", (_event, ...args) => callback(...args));
   },
 
   graphApi: {
@@ -371,12 +376,14 @@ function createCustomNotification(title, options) {
     // Default to "web" if config not loaded yet
     const method = notificationConfig?.notificationMethod || "web";
 
+    // options.title already prefers the sender over the page title (see
+    // above); web and custom need it too, or they show the open chat (#2768).
     if (method === "custom") {
-      return createCustomNotification(title, options);
+      return createCustomNotification(options.title, options);
     }
 
     if (method === "web") {
-      const notification = createWebNotification(classicNotification, title, options);
+      const notification = createWebNotification(classicNotification, options.title, options);
       return notification || { onclick: null, onclose: null, onerror: null };
     }
 
@@ -435,7 +442,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "framelessTweaks", path: "./tools/frameless" },
       { name: "customStickers", path: "./tools/customStickers" },
       { name: "dockIconRenderer", path: "./tools/dockIconRenderer" },
-      { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching" }
+      { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching" },
+      { name: "documentPictureInPicture", path: "./tools/documentPictureInPicture" }
     ];
 
     // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)
