@@ -102,14 +102,20 @@ Both spellings work: pick the nested name for new configuration, and the tables
 below mark each old name as deprecated and point at its replacement. Where you
 set both, the nested name wins.
 
-The old names keep working until **2.30.0**, and using one logs a single
-aggregated warning at startup naming every option to move.
+The old names keep working until **2.32.0**. Using one, in `config.json`, as a
+command-line flag or as an environment variable, shows a single Configuration
+Warning once at startup naming every option to move and where you set it. Tick
+"Don't show this again" to dismiss it; it comes back only if the list changes.
+**Settings > Show Updated Config…** writes a copy of your config with the new
+names.
 
 :::note
-During this transition the nested names are read from `config.json` only.
-Command-line flags and environment variables keep using the flat name, so
-`--partition nopersist` still works and `--app.partition nopersist` is silently
-ignored. The examples below use whichever spelling actually applies.
+Both spellings also work on the command line and in the environment. Nested
+names use dots on the command line (`--app.partition nopersist`) and double
+underscores in environment variables (`APP__PARTITION=nopersist`). Between
+sources the usual order applies: a command-line flag beats an environment
+variable, which beats `config.json`, whichever spelling each uses; within one
+source the nested name wins.
 :::
 
 ### Application Core

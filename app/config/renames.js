@@ -1,12 +1,17 @@
 // Flat-to-nested option renames from ADR-025, applied during the deprecation
-// window. Pure data module, no Electron imports, mirroring validator.js and
-// borrowing its isPlainObject rather than keeping a fourth copy of it.
+// window. No Electron imports, mirroring validator.js and borrowing its
+// isPlainObject rather than keeping a fourth copy of it.
 //
 // Both names work while a rename is in its window. The FLAT name stays the one
 // every module reads, so no feature code is swept; a nested value is projected
 // onto the flat key only when the user actually supplied it. The flat
 // declarations, this table and the projection are deleted together at the end
-// of the window (2.30.0, see issue #2842).
+// of the window (2.32.0, see issue #2842).
+//
+// "Supplied" covers the config file, command-line flags and environment
+// variables alike (see readUserSources). Between sources the yargs order
+// holds, command line over environment over config file; within one source
+// the nested name beats the flat one.
 //
 // `inverted` marks a rename that flips a boolean's polarity, for example
 // `disableNotifications: true` becoming `notifications.enabled: false`. A plain
@@ -18,6 +23,8 @@
 // while `shortcuts.global: "Control+Shift+M"` would arrive as a bare string,
 // which fails the Array.isArray check in app/globalShortcuts/index.js and makes
 // a for..of over disableGlobalShortcuts iterate characters or throw.
+const yargs = require("yargs");
+const configOptions = require("./options");
 const { isPlainObject } = require("./validator");
 
 /** @type {{flat: string, nested: string, inverted?: boolean, type?: string}[]} */
@@ -134,95 +141,111 @@ function coerce(value, inverted, type) {
   return value;
 }
 
+// Precedence between sources, highest first. Matches yargs itself, which lets a
+// command-line flag beat an environment variable and both beat the config file.
+const SOURCE_ORDER = ["cli", "env", "file"];
+
+/**
+ * What the user supplied, split by where it came from.
+ *
+ * The resolved config cannot answer "did the user set this?", because a
+ * declared default looks the same as a supplied value there. So each source is
+ * read on its own: the config file as given, and the command line and the
+ * environment through two extra yargs passes that declare types but no
+ * defaults, so a key is present only when the user wrote it. Letting yargs do
+ * the parsing keeps its spellings (`--disable-gpu`, `--no-disableGpu`,
+ * `DISABLE_GPU`, `PERFORMANCE__DISABLE_GPU`) without copying its rules here.
+ *
+ * Both spellings of every rename are declared with the flat option's type, so
+ * `--window.frame=false` or `WINDOW__FRAME=false` reaches the projection as the
+ * boolean `false` rather than a truthy string, and an array leaf arrives as an
+ * array, exactly as yargs treats the flat name.
+ *
+ * @param {Record<string, unknown>} configFile the merged system and user
+ *   config file contents.
+ * @param {string[]} argv the arguments yargs parses (process.argv.slice(1)).
+ * @param {typeof RENAMES} renames override for tests.
+ * @returns {{cli: object, env: object, file: object}}
+ */
+function readUserSources(configFile, argv, renames = RENAMES) {
+  const types = {};
+  for (const { flat, nested } of renames) {
+    const type = configOptions[flat]?.type;
+    types[flat] = { type };
+    types[nested] = { type };
+  }
+  // help and version off, so a `--help` meant for the main parse cannot print
+  // or exit from here.
+  const parser = () => yargs().options(types).help(false).version(false);
+
+  return {
+    cli: parser().parse(Array.isArray(argv) ? argv : []),
+    env: parser().env(true).parse([]),
+    file: isPlainObject(configFile) ? configFile : {},
+  };
+}
+
+// The nested value that should reach the flat key, or undefined to leave the
+// flat key as yargs resolved it. Walks the sources from highest precedence and
+// stops at the first one naming either spelling: a nested name there wins, and
+// a flat name there means yargs already put the right value on the flat key.
+function suppliedNestedValue(sources, flat, nested) {
+  for (const name of SOURCE_ORDER) {
+    const source = sources?.[name];
+    const value = readPath(source, nested);
+    if (value !== undefined) return value;
+    if (readPath(source, flat) !== undefined) return undefined;
+  }
+  return undefined;
+}
+
 /**
  * Projects nested values onto their flat counterparts, in place.
  *
- * Presence is decided against the raw config file rather than the resolved
- * config. Asking the resolved config whether a leaf is `undefined` would only
- * work by accident: it relies on yargs replacing object options wholesale
- * instead of deep merging their defaults. Once that is fixed (gate A in
- * issue #2842) every unset leaf would resolve to its declared default, stop
- * being undefined, and be projected over the value the user actually set.
+ * Presence is decided against the raw sources rather than the resolved config.
+ * Asking the resolved config whether a leaf is `undefined` stopped working once
+ * mergeDefaults.js restored object defaults (gate A in issue #2842): every
+ * unset leaf resolves to its declared default and would be projected over the
+ * value the user actually set.
  *
  * @param {Record<string, unknown>} config the parsed yargs config, mutated.
- * @param {Record<string, unknown>} configFile the merged system and user
- *   config file contents; a nested path present here was set by the user.
+ * @param {{cli?: object, env?: object, file?: object}} sources what the user
+ *   supplied, per source; see readUserSources.
  * @param {typeof RENAMES} renames override for tests.
  */
-function applyRenamedOptions(config, configFile, renames = RENAMES) {
+function applyRenamedOptions(config, sources, renames = RENAMES) {
   if (!config || typeof config !== "object") return;
 
   for (const { flat, nested, inverted, type } of renames) {
-    const value = readPath(configFile, nested);
+    const value = suppliedNestedValue(sources, flat, nested);
     if (value === undefined) continue;
-
-    // The new name wins when both are supplied; it is the canonical one.
     config[flat] = coerce(value, inverted, type);
   }
 }
 
 /**
- * Every `--flag` token yargs accepts for a flat option name.
- *
- * yargs' camel-case expansion means `--disableGpu` and `--disable-gpu` are the
- * same option, and boolean negation adds `--no-` in front of both. A probe over
- * all 84 declared options confirmed this decamelisation matches the alias yargs
- * generates for each of them.
- *
- * The `[A-Z]` class has no quantifier and cannot backtrack, so matching is
- * linear in the length of the name.
- *
- * @param {string} flat the flat option name.
- * @returns {string[]} the accepted tokens, without any `=value` suffix.
- */
-function argvSpellings(flat) {
-  const kebab = flat.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
-  const names = kebab === flat ? [flat] : [flat, kebab];
-  return names.flatMap((name) => [`--${name}`, `--no-${name}`]);
-}
-
-/**
- * Whether the user supplied an option, under either spelling and by whichever
- * route that spelling actually works.
+ * Whether the user supplied an option, under either spelling and from any
+ * source.
  *
  * Only needed where behaviour turns on an option being *set* rather than on its
  * value, which today is `disableGpu` alone: app/startup/commandLine.js
  * force-disables the GPU on Wayland unless the user has said otherwise, so
- * someone opting back in through the new `performance.disableGpu` name has to
- * count as having spoken. Reading the resolved config cannot answer this, since
- * a declared default is indistinguishable from a user-supplied value there.
+ * someone opting back in through `performance.disableGpu`, on the command line
+ * or in the environment as much as in the file, has to count as having spoken.
+ * The sources are the ones applyRenamedOptions projects from, so the two can
+ * never disagree about what the user said.
  *
- * The scopes differ on purpose and match applyRenamedOptions. In the config file
- * both names work, so both count. On the command line only the flat name works,
- * in any of the spellings yargs accepts for it (see argvSpellings), because the
- * projection above never looks at argv; counting `--performance.disableGpu`
- * there would report the user as having spoken while their value stayed
- * unprojected, leaving the Wayland branch to respect a default it mistook for a
- * choice.
- *
- * @param {Record<string, unknown>} configFile the merged system and user config
- *   file contents.
- * @param {string[]} argv process.argv, for the command line form of the flat
- *   name.
+ * @param {{cli?: object, env?: object, file?: object}} sources see
+ *   readUserSources.
  * @param {string} flat the flat option name.
  * @returns {boolean}
  */
-function isOptionSetByUser(configFile, argv, flat) {
+function isOptionSetByUser(sources, flat) {
   const rename = RENAMES.find((entry) => entry.flat === flat);
-  const fileNames = rename ? [flat, rename.nested] : [flat];
+  const names = rename ? [flat, rename.nested] : [flat];
 
-  if (fileNames.some((name) => readPath(configFile, name) !== undefined)) {
-    return true;
-  }
-
-  // Match the whole token, not a prefix: `--disableGpuFoo` is a different
-  // option to yargs and leaves `disableGpu` at its default, so counting it
-  // would report a choice the user never made. Splitting on the first `=`
-  // covers `--disableGpu=false`; `--disableGpu false` is already two tokens.
-  const spellings = argvSpellings(flat);
-  return (
-    Array.isArray(argv) &&
-    argv.some((arg) => spellings.includes(arg.split("=")[0]))
+  return SOURCE_ORDER.some((source) =>
+    names.some((name) => readPath(sources?.[source], name) !== undefined)
   );
 }
 
@@ -287,6 +310,7 @@ function toNestedConfigFile(configFile, renames = RENAMES) {
 module.exports = {
   RENAMES,
   readPath,
+  readUserSources,
   applyRenamedOptions,
   isOptionSetByUser,
   toNestedConfigFile,

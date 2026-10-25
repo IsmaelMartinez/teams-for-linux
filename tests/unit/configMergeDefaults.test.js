@@ -115,7 +115,7 @@ describe('config mergeDefaults - mergeConfigFiles', () => {
 	function resolveHandler(system, user) {
 		const configFile = mergeConfigFiles(system, user);
 		const config = { defaultURLHandler: configFile.defaultURLHandler ?? '' };
-		applyRenamedOptions(config, configFile);
+		applyRenamedOptions(config, { file: configFile });
 		return config.defaultURLHandler;
 	}
 

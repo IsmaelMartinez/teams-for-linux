@@ -6,6 +6,7 @@ const {
 	RENAMES,
 	applyRenamedOptions,
 	isOptionSetByUser,
+	readUserSources,
 	toNestedConfigFile,
 } = require('../../app/config/renames');
 const options = require('../../app/config/options');
@@ -58,13 +59,13 @@ describe('applyRenamedOptions - precedence', () => {
 
 	it('leaves the flat value alone when the config file has no nested key', () => {
 		const config = { globalShortcuts: ['Ctrl+1'], shortcuts: { global: [] } };
-		applyRenamedOptions(config, { globalShortcuts: ['Ctrl+1'] }, table);
+		applyRenamedOptions(config, { file: { globalShortcuts: ['Ctrl+1'] } }, table);
 		assert.deepStrictEqual(config.globalShortcuts, ['Ctrl+1']);
 	});
 
 	it('projects the nested value onto the flat key when the user supplied it', () => {
 		const config = { globalShortcuts: [] };
-		applyRenamedOptions(config, { shortcuts: { global: ['Ctrl+2'] } }, table);
+		applyRenamedOptions(config, { file: { shortcuts: { global: ['Ctrl+2'] } } }, table);
 		assert.deepStrictEqual(config.globalShortcuts, ['Ctrl+2']);
 	});
 
@@ -72,7 +73,7 @@ describe('applyRenamedOptions - precedence', () => {
 		const config = { globalShortcuts: ['old'] };
 		applyRenamedOptions(
 			config,
-			{ globalShortcuts: ['old'], shortcuts: { global: ['new'] } },
+			{ file: { globalShortcuts: ['old'], shortcuts: { global: ['new'] } } },
 			table
 		);
 		assert.deepStrictEqual(config.globalShortcuts, ['new']);
@@ -80,18 +81,17 @@ describe('applyRenamedOptions - precedence', () => {
 
 	it('keeps the flat value for a sibling leaf the user did not set', () => {
 		const config = { globalShortcuts: ['Ctrl+1'], clearStorageData: true };
-		applyRenamedOptions(config, { shortcuts: { global: ['Ctrl+2'] } }, table);
+		applyRenamedOptions(config, { file: { shortcuts: { global: ['Ctrl+2'] } } }, table);
 		assert.deepStrictEqual(config.globalShortcuts, ['Ctrl+2']);
 		assert.strictEqual(config.clearStorageData, true);
 	});
 
-	// Presence must come from the config file, not from the resolved config.
-	// Reading the resolved config would only work while yargs replaces object
-	// options wholesale; once defaults deep merge (gate A in #2842) every unset
-	// leaf would resolve to its default and overwrite what the user set.
+	// Presence must come from the raw sources, not from the resolved config.
+	// Since defaults deep merge (gate A in #2842) every unset leaf resolves to
+	// its default there and would overwrite what the user set.
 	it('ignores a nested default present only in the resolved config', () => {
 		const config = { globalShortcuts: ['Ctrl+1'], shortcuts: { global: [] } };
-		applyRenamedOptions(config, { globalShortcuts: ['Ctrl+1'] }, table);
+		applyRenamedOptions(config, { file: { globalShortcuts: ['Ctrl+1'] } }, table);
 		assert.deepStrictEqual(config.globalShortcuts, ['Ctrl+1']);
 	});
 
@@ -100,7 +100,7 @@ describe('applyRenamedOptions - precedence', () => {
 			{ flat: 'disableNotifications', nested: 'notifications.enabled', inverted: true },
 		];
 		const config = { disableNotifications: false };
-		applyRenamedOptions(config, { notifications: { enabled: false } }, inverted);
+		applyRenamedOptions(config, { file: { notifications: { enabled: false } } }, inverted);
 		assert.strictEqual(config.disableNotifications, true);
 	});
 
@@ -110,14 +110,14 @@ describe('applyRenamedOptions - precedence', () => {
 	it('wraps a scalar into an array for array-typed renames', () => {
 		const arrayTable = [{ flat: 'globalShortcuts', nested: 'shortcuts.global', type: 'array' }];
 		const config = { globalShortcuts: [] };
-		applyRenamedOptions(config, { shortcuts: { global: 'Control+Shift+M' } }, arrayTable);
+		applyRenamedOptions(config, { file: { shortcuts: { global: 'Control+Shift+M' } } }, arrayTable);
 		assert.deepStrictEqual(config.globalShortcuts, ['Control+Shift+M']);
 	});
 
 	it('leaves an array untouched for array-typed renames', () => {
 		const arrayTable = [{ flat: 'globalShortcuts', nested: 'shortcuts.global', type: 'array' }];
 		const config = { globalShortcuts: [] };
-		applyRenamedOptions(config, { shortcuts: { global: ['A', 'B'] } }, arrayTable);
+		applyRenamedOptions(config, { file: { shortcuts: { global: ['A', 'B'] } } }, arrayTable);
 		assert.deepStrictEqual(config.globalShortcuts, ['A', 'B']);
 	});
 
@@ -131,15 +131,132 @@ describe('applyRenamedOptions - precedence', () => {
 
 	it('projects falsy nested values rather than skipping them', () => {
 		const config = { clearStorageData: true };
-		applyRenamedOptions(config, { storage: { clearData: false } }, table);
+		applyRenamedOptions(config, { file: { storage: { clearData: false } } }, table);
 		assert.strictEqual(config.clearStorageData, false);
 	});
 
 	it('tolerates a missing config file and a bad config', () => {
 		const config = { globalShortcuts: ['Ctrl+1'] };
 		applyRenamedOptions(config, undefined, table);
+		applyRenamedOptions(config, { file: undefined }, table);
 		assert.deepStrictEqual(config.globalShortcuts, ['Ctrl+1']);
 		assert.doesNotThrow(() => applyRenamedOptions(null, {}, table));
+	});
+});
+
+// Between sources the yargs order holds (command line over environment over
+// config file); within one source the nested name beats the flat one. The flat
+// value on `config` is what yargs resolved, so "flat wins" means "left alone".
+describe('applyRenamedOptions - precedence across sources', () => {
+	const table = [{ flat: 'partition', nested: 'app.partition' }];
+	const project = (sources) => {
+		const config = { partition: 'yargs-flat' };
+		applyRenamedOptions(config, sources, table);
+		return config.partition;
+	};
+
+	it('projects a nested name given only on the command line', () => {
+		assert.strictEqual(project({ cli: { app: { partition: 'cli' } } }), 'cli');
+	});
+
+	it('projects a nested name given only in the environment', () => {
+		assert.strictEqual(project({ env: { app: { partition: 'env' } } }), 'env');
+	});
+
+	it('lets a command-line flat name beat a nested name in the config file', () => {
+		const sources = { cli: { partition: 'cli' }, file: { app: { partition: 'file' } } };
+		assert.strictEqual(project(sources), 'yargs-flat');
+	});
+
+	it('lets an environment flat name beat a nested name in the config file', () => {
+		const sources = { env: { partition: 'env' }, file: { app: { partition: 'file' } } };
+		assert.strictEqual(project(sources), 'yargs-flat');
+	});
+
+	it('lets a command-line flat name beat a nested name in the environment', () => {
+		const sources = { cli: { partition: 'cli' }, env: { app: { partition: 'env' } } };
+		assert.strictEqual(project(sources), 'yargs-flat');
+	});
+
+	it('lets a command-line nested name beat a flat name in the config file', () => {
+		const sources = { cli: { app: { partition: 'cli' } }, file: { partition: 'file' } };
+		assert.strictEqual(project(sources), 'cli');
+	});
+
+	it('lets a command-line nested name beat an environment nested name', () => {
+		const sources = { cli: { app: { partition: 'cli' } }, env: { app: { partition: 'env' } } };
+		assert.strictEqual(project(sources), 'cli');
+	});
+
+	it('lets the nested name win when both are on the command line', () => {
+		const sources = { cli: { partition: 'flat', app: { partition: 'nested' } } };
+		assert.strictEqual(project(sources), 'nested');
+	});
+});
+
+// readUserSources runs real yargs passes, so these pin the spellings and the
+// coercion against yargs itself rather than against a copy of its rules.
+describe('readUserSources', () => {
+	function withEnv(vars, fn) {
+		const saved = {};
+		for (const key of Object.keys(vars)) {
+			saved[key] = process.env[key];
+			process.env[key] = vars[key];
+		}
+		try {
+			return fn();
+		} finally {
+			for (const key of Object.keys(vars)) {
+				if (saved[key] === undefined) delete process.env[key];
+				else process.env[key] = saved[key];
+			}
+		}
+	}
+
+	it('reads nested names from the command line, typed like the flat option', () => {
+		const { cli } = readUserSources({}, [
+			'--app.partition=cli',
+			'--window.frame=false',
+			'--platform.spellCheckerLanguages=en-GB',
+		]);
+		assert.strictEqual(cli.app.partition, 'cli');
+		assert.strictEqual(cli.window.frame, false);
+		assert.deepStrictEqual(cli.platform.spellCheckerLanguages, ['en-GB']);
+	});
+
+	it('reads nested names from double-underscore environment variables', () => {
+		const { env } = withEnv(
+			{ APP__PARTITION: 'env', WINDOW__FRAME: 'false', PERFORMANCE__DISABLE_GPU: 'true' },
+			() => readUserSources({}, [])
+		);
+		assert.strictEqual(env.app.partition, 'env');
+		assert.strictEqual(env.window.frame, false);
+		assert.strictEqual(env.performance.disableGpu, true);
+	});
+
+	// No defaults are declared, so an untouched option is absent rather than
+	// present at its default; presence is the whole point of these passes.
+	it('leaves options the user did not set absent', () => {
+		const { cli } = readUserSources({}, ['--webDebug']);
+		assert.strictEqual(cli.webDebug, true);
+		assert.strictEqual(cli.frame, undefined);
+		assert.strictEqual(cli.window, undefined);
+	});
+
+	it('does not print or exit on --help or --version', () => {
+		assert.doesNotThrow(() => readUserSources({}, ['--help', '--version']));
+	});
+
+	it('keeps the config file as given and tolerates a missing one', () => {
+		const file = { appTitle: 'T' };
+		assert.strictEqual(readUserSources(file, []).file, file);
+		assert.deepStrictEqual(readUserSources(undefined, undefined).file, {});
+	});
+
+	it('feeds applyRenamedOptions end to end from a command-line nested name', () => {
+		const config = { partition: 'persist:teams-4-linux' };
+		applyRenamedOptions(config, readUserSources({}, ['--app.partition=nopersist']));
+		assert.strictEqual(config.partition, 'nopersist');
 	});
 });
 
@@ -220,7 +337,7 @@ describe('toNestedConfigFile', () => {
 		// rebuild every flat value on its own. Seeding this from `original`
 		// would pass even for a migration that did nothing at all.
 		const resolved = {};
-		applyRenamedOptions(resolved, migrated, table);
+		applyRenamedOptions(resolved, { file: migrated }, table);
 
 		assert.deepStrictEqual(resolved, original);
 	});
@@ -323,21 +440,25 @@ describe('config renames - gate A boundary', () => {
 });
 
 describe('isOptionSetByUser', () => {
+	// Through readUserSources, as app/config/index.js calls it, so the argv
+	// spellings below are judged by yargs itself.
+	const isSet = (file, argv, flat) => isOptionSetByUser(readUserSources(file, argv), flat);
+
 	it('sees the flat name in the config file', () => {
-		assert.strictEqual(isOptionSetByUser({ disableGpu: false }, [], 'disableGpu'), true);
+		assert.strictEqual(isSet({ disableGpu: false }, [], 'disableGpu'), true);
 	});
 
 	it('sees the nested name in the config file', () => {
 		assert.strictEqual(
-			isOptionSetByUser({ performance: { disableGpu: false } }, [], 'disableGpu'),
+			isSet({ performance: { disableGpu: false } }, [], 'disableGpu'),
 			true
 		);
 	});
 
 	it('sees the flat name on the command line', () => {
-		assert.strictEqual(isOptionSetByUser({}, ['--disableGpu'], 'disableGpu'), true);
-		assert.strictEqual(isOptionSetByUser({}, ['--disableGpu=false'], 'disableGpu'), true);
-		assert.strictEqual(isOptionSetByUser({}, ['--disableGpu', 'false'], 'disableGpu'), true);
+		assert.strictEqual(isSet({}, ['--disableGpu'], 'disableGpu'), true);
+		assert.strictEqual(isSet({}, ['--disableGpu=false'], 'disableGpu'), true);
+		assert.strictEqual(isSet({}, ['--disableGpu', 'false'], 'disableGpu'), true);
 	});
 
 	// Every spelling below was confirmed against yargs to set `disableGpu`:
@@ -350,34 +471,44 @@ describe('isOptionSetByUser', () => {
 			'--disable-gpu=false',
 			'--no-disable-gpu',
 		]) {
-			assert.strictEqual(isOptionSetByUser({}, [arg], 'disableGpu'), true, arg);
+			assert.strictEqual(isSet({}, [arg], 'disableGpu'), true, arg);
 		}
 	});
 
 	// A prefix match would count this, but yargs treats it as its own unknown
 	// option and leaves disableGpu at the default, so nothing was ever set.
 	it('ignores a longer option that merely starts with the flat name', () => {
-		assert.strictEqual(isOptionSetByUser({}, ['--disableGpuFoo'], 'disableGpu'), false);
+		assert.strictEqual(isSet({}, ['--disableGpuFoo'], 'disableGpu'), false);
 		assert.strictEqual(
-			isOptionSetByUser({}, ['--disableGpuFoo=true'], 'disableGpu'),
+			isSet({}, ['--disableGpuFoo=true'], 'disableGpu'),
 			false
 		);
 	});
 
-	// applyRenamedOptions never reads argv, so a nested name on the command line
-	// does not reach the flat key modules read. Counting it as "set" would tell
-	// the Wayland branch to respect a value that was never projected.
-	it('ignores a nested name on the command line, matching the projection', () => {
+	// applyRenamedOptions projects a nested name from the command line, so the
+	// Wayland branch must count it as the user having spoken.
+	it('sees a nested name on the command line, matching the projection', () => {
 		assert.strictEqual(
-			isOptionSetByUser({}, ['--performance.disableGpu=true'], 'disableGpu'),
-			false
+			isSet({}, ['--performance.disableGpu=false'], 'disableGpu'),
+			true
 		);
+	});
+
+	it('sees the flat and nested names in the environment', () => {
+		for (const name of ['DISABLE_GPU', 'PERFORMANCE__DISABLE_GPU']) {
+			process.env[name] = 'false';
+			try {
+				assert.strictEqual(isSet({}, [], 'disableGpu'), true, name);
+			} finally {
+				delete process.env[name];
+			}
+		}
 	});
 
 	it('is false when the user said nothing', () => {
-		assert.strictEqual(isOptionSetByUser({}, [], 'disableGpu'), false);
+		assert.strictEqual(isSet({}, [], 'disableGpu'), false);
 		assert.strictEqual(
-			isOptionSetByUser({ performance: {} }, ['--webDebug'], 'disableGpu'),
+			isSet({ performance: {} }, ['--webDebug'], 'disableGpu'),
 			false
 		);
 	});
@@ -386,18 +517,19 @@ describe('isOptionSetByUser', () => {
 	// point for disableGpu, where `false` means "keep the GPU on".
 	it('counts a falsy value as set', () => {
 		assert.strictEqual(
-			isOptionSetByUser({ performance: { disableGpu: false } }, [], 'disableGpu'),
+			isSet({ performance: { disableGpu: false } }, [], 'disableGpu'),
 			true
 		);
 	});
 
 	it('checks only the flat name for an option with no rename', () => {
-		assert.strictEqual(isOptionSetByUser({ mqtt: { enabled: true } }, [], 'mqtt'), true);
-		assert.strictEqual(isOptionSetByUser({}, [], 'mqtt'), false);
+		assert.strictEqual(isSet({ mqtt: { enabled: true } }, [], 'mqtt'), true);
+		assert.strictEqual(isSet({}, [], 'mqtt'), false);
 	});
 
-	it('tolerates a missing config file and a missing argv', () => {
-		assert.doesNotThrow(() => isOptionSetByUser(undefined, undefined, 'disableGpu'));
-		assert.strictEqual(isOptionSetByUser(undefined, undefined, 'disableGpu'), false);
+	it('tolerates a missing config file, a missing argv and missing sources', () => {
+		assert.doesNotThrow(() => isSet(undefined, undefined, 'disableGpu'));
+		assert.strictEqual(isSet(undefined, undefined, 'disableGpu'), false);
+		assert.strictEqual(isOptionSetByUser(undefined, 'disableGpu'), false);
 	});
 });
