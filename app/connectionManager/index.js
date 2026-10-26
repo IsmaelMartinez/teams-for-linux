@@ -258,7 +258,7 @@ function assignOnDidFailLoadEventHandler(cm) {
         _ConnectionManager_needsReload.set(cm, true);
         cm.debouncedRefresh();
       } else if (description === "ERR_FAILED" && !_ConnectionManager_clearedServiceWorkers.get(cm)) {
-        clearServiceWorkersAndRetry(cm);
+        void clearServiceWorkersAndRetry(cm);
       }
     } else {
       // Sub-frame failures are expected in restricted networks (e.g. Teams
