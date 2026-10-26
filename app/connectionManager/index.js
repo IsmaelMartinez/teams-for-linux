@@ -15,6 +15,10 @@ let _ConnectionManager_boundDidFailLoad = new WeakMap();
 // working from its local cache when the network drops, and a suspend/resume
 // no longer replaces a healthy page with a blank one (#2611).
 let _ConnectionManager_needsReload = new WeakMap();
+// Set once service workers have been cleared after an ERR_FAILED, so a failure
+// that has some other cause cannot clear them on every retry. Not reset by
+// start(): one clear per run is enough to replace a broken worker.
+let _ConnectionManager_clearedServiceWorkers = new WeakMap();
 
 class ConnectionManager {
   get window() {
@@ -253,6 +257,8 @@ function assignOnDidFailLoadEventHandler(cm) {
         console.debug(`Network error detected: ${description}, scheduling debounced refresh...`);
         _ConnectionManager_needsReload.set(cm, true);
         cm.debouncedRefresh();
+      } else if (description === "ERR_FAILED" && !_ConnectionManager_clearedServiceWorkers.get(cm)) {
+        clearServiceWorkersAndRetry(cm);
       }
     } else {
       // Sub-frame failures are expected in restricted networks (e.g. Teams
@@ -261,6 +267,25 @@ function assignOnDidFailLoadEventHandler(cm) {
       console.debug(`[CONNECTION] Sub-frame failed to load: ${description} (code: ${code})`);
     }
   };
+}
+
+// A service worker saved by an earlier Teams session intercepts every
+// navigation, so when it breaks, each load and reload fails with the generic
+// ERR_FAILED and retrying only hands the request back to the same worker.
+// Unregistering the workers once lets the next load reach the network, and
+// Teams registers a fresh worker after it loads. Cookies, IndexedDB and local storage are kept, so the
+// user stays signed in.
+async function clearServiceWorkersAndRetry(cm) {
+  _ConnectionManager_clearedServiceWorkers.set(cm, true);
+  console.warn("[CONNECTION] Main frame failed with ERR_FAILED; clearing service workers and retrying");
+  try {
+    await cm.window.webContents.session.clearStorageData({ storages: ["serviceworkers"] });
+  } catch (err) {
+    console.error(`[CONNECTION] Failed to clear service workers: ${err.message}`);
+    return;
+  }
+  _ConnectionManager_needsReload.set(cm, true);
+  cm.debouncedRefresh();
 }
 
 function sleep(timeout) {

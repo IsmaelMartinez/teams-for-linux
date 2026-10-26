@@ -347,6 +347,31 @@ in `ERR_CONNECTION_CLOSED` for the main frame.
 
 ---
 
+#### Issue: Teams never loads and the log repeats `ERR_FAILED (-2)`
+
+**Description:** The window never shows Teams, even though the network works and other
+browsers can open `https://teams.cloud.microsoft/`. The log repeats lines such as
+`[CONNECTION] Main frame failed to load: ERR_FAILED (code: -2)` every second or so. Starting
+with a fresh profile loads Teams normally.
+
+**Potential Causes:**
+*   A service worker that an earlier Teams session saved in the profile is broken. It
+    intercepts every page load and fails it, so reloading only hands the request back to the
+    same worker.
+
+**Solutions/Workarounds:**
+
+1.  **Update the app.** Current versions clear the saved service workers once after this
+    failure and retry, which keeps you signed in.
+
+2.  **On older versions**, quit Teams for Linux and delete only the
+    `Partitions/teams-4-linux/Service Worker` directory inside the profile:
+    `~/.config/teams-for-linux/` (Linux), `~/Library/Application Support/teams-for-linux/`
+    (macOS), or `%APPDATA%\teams-for-linux\` (Windows). Cookies and local storage are kept,
+    so you stay signed in. Deleting `Cache` alone does not help.
+
+---
+
 #### Issue: Third-Party SSO Login Fails (e.g. Symantec VIP)
 
 **Description:** Users with third-party SSO providers like Symantec VIP see a broken or blank login page. Console logs may show `EvalError` or Content Security Policy violations referencing `strict-dynamic` or `nonce-` directives.
