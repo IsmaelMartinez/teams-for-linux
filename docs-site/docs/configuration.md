@@ -107,7 +107,9 @@ command-line flag or as an environment variable, shows a single Configuration
 Warning once at startup naming every option to move and where you set it. Tick
 "Don't show this again" to dismiss it; it comes back only if the list changes.
 **Settings > Show Updated Config…** writes a copy of your config with the new
-names.
+names. The Chromium switches `--disable-gpu`, `--proxy-server` and
+`--auth-server-whitelist` stay supported permanently and never raise this
+warning.
 
 :::note
 Both spellings also work on the command line and in the environment. Nested

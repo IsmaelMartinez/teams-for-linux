@@ -112,6 +112,75 @@ const RENAMES = [
   { flat: "watchConfigFile", nested: "development.watchConfigFile" },
 ];
 
+// Chromium command-line switches that yargs also camel-cases onto one of our
+// options: `--disable-gpu` lands on disableGpu, and so on. Keyed by switch,
+// valued by the flat option each sets today. Our docs tell users to pass
+// `--disable-gpu`, and Chromium reads all three itself, so these spellings are
+// PERMANENT: they never raise the deprecation warning, and they must keep
+// driving the same behaviour after the flat names go. When the flat names are
+// removed in 2.32.0, map these to the nested names (performance.disableGpu,
+// network.proxyServer, auth.serverWhitelist) instead; chromiumSwitchTarget
+// already resolves them through RENAMES where an entry exists. The camelCase
+// (`--disableGpu`), `--no-` and environment spellings are ours and still warn.
+const CHROMIUM_SWITCH_ALIASES = {
+  "disable-gpu": "disableGpu",
+  "proxy-server": "proxyServer",
+  "auth-server-whitelist": "authServerWhitelist",
+};
+
+// The option a Chromium switch alias drives: the nested name once its rename
+// exists, otherwise the flat one.
+function chromiumSwitchTarget(switchName) {
+  if (!Object.hasOwn(CHROMIUM_SWITCH_ALIASES, switchName)) return undefined;
+  const flat = CHROMIUM_SWITCH_ALIASES[switchName];
+  return RENAMES.find((entry) => entry.flat === flat)?.nested ?? flat;
+}
+
+// Whether yargs would take `next` as the value of a `--switch next` pair. A
+// boolean only takes a literal true or false; anything else takes the next
+// token unless it looks like another flag.
+function takesNextToken(flat, next) {
+  if (next === undefined) return false;
+  if (configOptions[flat]?.type === "boolean") {
+    return next === "true" || next === "false";
+  }
+  return !next.startsWith("-");
+}
+
+/**
+ * argv with every Chromium switch alias removed, so a parse of the rest shows
+ * what the user set through our own spellings alone.
+ *
+ * Matches the whole token, never a prefix or a pattern: `--disable-gpu` and
+ * `--disable-gpu=<v>`, plus the two-token `--proxy-server <v>` that yargs also
+ * accepts. `--disable-gpu-compositing` is a different switch and stays. Stops
+ * at `--`, after which yargs reads nothing as an option.
+ *
+ * @param {string[]} argv the arguments yargs parses.
+ * @returns {string[]}
+ */
+function withoutChromiumSwitchAliases(argv) {
+  if (!Array.isArray(argv)) return [];
+  const rest = [];
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === "--") {
+      rest.push(...argv.slice(i));
+      break;
+    }
+    const eq = arg.indexOf("=");
+    const name = (eq === -1 ? arg : arg.slice(0, eq)).slice(2);
+    if (!arg.startsWith("--") || !Object.hasOwn(CHROMIUM_SWITCH_ALIASES, name)) {
+      rest.push(arg);
+      continue;
+    }
+    if (eq === -1 && takesNextToken(CHROMIUM_SWITCH_ALIASES[name], argv[i + 1])) {
+      i++;
+    }
+  }
+  return rest;
+}
+
 // Reads a dotted path, tolerating a missing intermediate object.
 function readPath(source, path) {
   let node = source;
@@ -168,20 +237,42 @@ const SOURCE_ORDER = ["cli", "env", "file"];
  * @returns {{cli: object, env: object, file: object}}
  */
 function readUserSources(configFile, argv, renames = RENAMES) {
+  return {
+    cli: userParser(renames).parse(Array.isArray(argv) ? argv : []),
+    env: userParser(renames).env(true).parse([]),
+    file: isPlainObject(configFile) ? configFile : {},
+  };
+}
+
+// A yargs parser that declares the types of both spellings of every rename
+// but no defaults; see readUserSources. help and version off, so a `--help`
+// meant for the main parse cannot print or exit from here.
+function userParser(renames) {
   const types = {};
   for (const { flat, nested } of renames) {
     const type = configOptions[flat]?.type;
     types[flat] = { type };
     types[nested] = { type };
   }
-  // help and version off, so a `--help` meant for the main parse cannot print
-  // or exit from here.
-  const parser = () => yargs().options(types).help(false).version(false);
+  return yargs().options(types).help(false).version(false);
+}
 
+/**
+ * The sources to judge deprecation against: as readUserSources, except that
+ * the command line is read without the Chromium switch aliases, so an option
+ * given only as `--disable-gpu` is not reported while `--disableGpu` still is.
+ * The projection and isOptionSetByUser keep the full command line, so the
+ * value still lands and `--disable-gpu` still counts as an explicit choice.
+ *
+ * @param {{cli?: object, env?: object, file?: object}} sources from
+ *   readUserSources.
+ * @param {string[]} argv the same arguments readUserSources parsed.
+ * @param {typeof RENAMES} renames override for tests.
+ */
+function deprecationSources(sources, argv, renames = RENAMES) {
   return {
-    cli: parser().parse(Array.isArray(argv) ? argv : []),
-    env: parser().env(true).parse([]),
-    file: isPlainObject(configFile) ? configFile : {},
+    ...sources,
+    cli: userParser(renames).parse(withoutChromiumSwitchAliases(argv)),
   };
 }
 
@@ -309,6 +400,10 @@ function toNestedConfigFile(configFile, renames = RENAMES) {
 
 module.exports = {
   RENAMES,
+  CHROMIUM_SWITCH_ALIASES,
+  chromiumSwitchTarget,
+  withoutChromiumSwitchAliases,
+  deprecationSources,
   readPath,
   readUserSources,
   applyRenamedOptions,

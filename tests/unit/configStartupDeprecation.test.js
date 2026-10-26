@@ -176,3 +176,39 @@ describe('precedence across sources at startup', () => {
 		assert.strictEqual(config.partition, 'cli');
 	});
 });
+
+// Chromium reads these switches itself and our docs tell users to pass
+// --disable-gpu, so they stay supported for good and never warn.
+describe('Chromium switch aliases at startup', () => {
+	const gpuLine = (config) => deprecationWarnings(config).filter((w) => /- disableGpu /.test(w));
+
+	it('does not warn for --disable-gpu, and the value still lands and counts as explicit', () => {
+		for (const args of [['--disable-gpu'], ['--disable-gpu=true'], ['--disable-gpu', 'true']]) {
+			const config = load({ args });
+			assert.deepStrictEqual(gpuLine(config), [], args.join(' '));
+			assert.strictEqual(config.disableGpu, true);
+			assert.strictEqual(config.disableGpuExplicitlySet, true);
+		}
+	});
+
+	it('still warns for our own spellings', () => {
+		const [cli] = deprecationWarnings(load({ args: ['--disableGpu'] }));
+		assert.match(cli, /^ {2}- disableGpu \(command line\)/m);
+		const [env] = deprecationWarnings(load({ env: { DISABLE_GPU: 'true' } }));
+		assert.match(env, /^ {2}- disableGpu \(environment variable\)/m);
+	});
+
+	it('warns once for the camelCase spelling when both are passed', () => {
+		const warnings = deprecationWarnings(load({ args: ['--disable-gpu', '--disableGpu'] }));
+		assert.strictEqual(warnings.length, 1);
+		assert.strictEqual(warnings[0].match(/- disableGpu \(command line\)/g).length, 1);
+	});
+
+	it('passes --proxy-server and --auth-server-whitelist values through', () => {
+		const config = load({
+			args: ['--proxy-server', 'localhost:3128', '--auth-server-whitelist=*.example.invalid'],
+		});
+		assert.strictEqual(config.proxyServer, 'localhost:3128');
+		assert.strictEqual(config.authServerWhitelist, '*.example.invalid');
+	});
+});

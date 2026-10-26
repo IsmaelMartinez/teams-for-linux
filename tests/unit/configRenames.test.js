@@ -4,11 +4,16 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert');
 const {
 	RENAMES,
+	CHROMIUM_SWITCH_ALIASES,
+	chromiumSwitchTarget,
+	deprecationSources,
+	withoutChromiumSwitchAliases,
 	applyRenamedOptions,
 	isOptionSetByUser,
 	readUserSources,
 	toNestedConfigFile,
 } = require('../../app/config/renames');
+const { buildDeprecationWarning } = require('../../app/config/deprecation');
 const options = require('../../app/config/options');
 
 // Reads a dotted path against the options schema, walking `fields` maps.
@@ -531,5 +536,98 @@ describe('isOptionSetByUser', () => {
 		assert.doesNotThrow(() => isSet(undefined, undefined, 'disableGpu'));
 		assert.strictEqual(isSet(undefined, undefined, 'disableGpu'), false);
 		assert.strictEqual(isOptionSetByUser(undefined, 'disableGpu'), false);
+	});
+});
+
+describe('Chromium switch aliases', () => {
+	const NESTED = {
+		disableGpu: 'performance.disableGpu',
+		proxyServer: 'network.proxyServer',
+		authServerWhitelist: 'auth.serverWhitelist',
+	};
+
+	it('maps each switch to an option the schema declares', () => {
+		for (const flat of Object.values(CHROMIUM_SWITCH_ALIASES)) {
+			assert.ok(options[flat], flat);
+		}
+	});
+
+	// Survives the 2.32.0 removal: once a rename exists, the switch drives the
+	// nested name.
+	it('resolves to the nested name through RENAMES where a rename exists', () => {
+		for (const [name, flat] of Object.entries(CHROMIUM_SWITCH_ALIASES)) {
+			const renamed = RENAMES.some((entry) => entry.flat === flat);
+			assert.strictEqual(chromiumSwitchTarget(name), renamed ? NESTED[flat] : flat, name);
+		}
+		assert.strictEqual(chromiumSwitchTarget('disable-gpu'), 'performance.disableGpu');
+		assert.strictEqual(chromiumSwitchTarget('constructor'), undefined);
+	});
+
+	it('strips only whole alias tokens, with their value', () => {
+		assert.deepStrictEqual(
+			withoutChromiumSwitchAliases([
+				'--disable-gpu',
+				'--disable-gpu=false',
+				'--disable-gpu',
+				'true',
+				'--proxy-server',
+				'localhost:3128',
+				'--proxy-server=localhost:3128',
+				'--auth-server-whitelist',
+				'*.example.invalid',
+				'--disable-gpu-compositing',
+				'--disableGpu',
+				'--no-disable-gpu',
+			]),
+			['--disable-gpu-compositing', '--disableGpu', '--no-disable-gpu']
+		);
+	});
+
+	it('leaves a following flag or a non-boolean word alone', () => {
+		assert.deepStrictEqual(withoutChromiumSwitchAliases(['--proxy-server', '--webDebug']), ['--webDebug']);
+		assert.deepStrictEqual(withoutChromiumSwitchAliases(['--disable-gpu', 'extra']), ['extra']);
+	});
+
+	it('stops at the -- terminator', () => {
+		assert.deepStrictEqual(withoutChromiumSwitchAliases(['--', '--disable-gpu']), ['--', '--disable-gpu']);
+		assert.deepStrictEqual(withoutChromiumSwitchAliases(undefined), []);
+	});
+
+	// Declares all three deprecated, since proxyServer and authServerWhitelist
+	// only become so with the last rename batch.
+	const warn = (args, env = {}) => {
+		const deprecated = { disableGpu: 'd', proxyServer: 'p', authServerWhitelist: 'a' };
+		const saved = {};
+		for (const [key, value] of Object.entries(env)) {
+			saved[key] = process.env[key];
+			process.env[key] = value;
+		}
+		try {
+			return buildDeprecationWarning(deprecated, deprecationSources(readUserSources({}, args), args));
+		} finally {
+			for (const key of Object.keys(env)) {
+				if (saved[key] === undefined) delete process.env[key];
+				else process.env[key] = saved[key];
+			}
+		}
+	};
+
+	it('does not report an option given only through its Chromium switch', () => {
+		assert.strictEqual(warn(['--disable-gpu']), null);
+		assert.strictEqual(warn(['--proxy-server', 'localhost:3128']), null);
+		assert.strictEqual(warn(['--auth-server-whitelist=*.example.invalid']), null);
+	});
+
+	it('still reports our own spellings, once each', () => {
+		assert.match(warn(['--proxyServer=localhost:3128']), /^ {2}- proxyServer \(command line\)/m);
+		assert.match(warn([], { PROXY_SERVER: 'localhost:3128' }), /^ {2}- proxyServer \(environment variable\)/m);
+		const both = warn(['--proxy-server=a:1', '--proxyServer=b:2']);
+		assert.strictEqual(both.match(/- proxyServer /g).length, 1);
+	});
+
+	it('keeps the full command line for the projection and the explicit check', () => {
+		const sources = readUserSources({}, ['--disable-gpu']);
+		assert.strictEqual(isOptionSetByUser(sources, 'disableGpu'), true);
+		assert.strictEqual(deprecationSources(sources, ['--disable-gpu']).cli.disableGpu, undefined);
 	});
 });

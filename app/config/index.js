@@ -11,6 +11,7 @@ const {
 } = require("./deprecation");
 const {
   applyRenamedOptions,
+  deprecationSources,
   isOptionSetByUser,
   readUserSources,
 } = require("./renames");
@@ -159,10 +160,8 @@ function argv(configPath, appVersion) {
   // file). The presence oracle for the projection, the GPU check and the
   // deprecation warning alike; see app/config/renames.js for why the resolved
   // config cannot be it.
-  const sources = readUserSources(
-    configObject.configFile,
-    process.argv.slice(1)
-  );
+  const userArgv = process.argv.slice(1);
+  const sources = readUserSources(configObject.configFile, userArgv);
 
   // ADR-025: project any nested value the user supplied onto the flat key that
   // modules still read. Must run before anything consumes the config.
@@ -190,7 +189,13 @@ function argv(configPath, appVersion) {
   // Runs after logger.init so the warning reaches the log file too, for the
   // users who have file logging on; everyone else meets it in the startup
   // modal. Pass yargs instance to access getDeprecatedOptions() in v18
-  checkUsedDeprecatedValues(yargsInstance, sources, config);
+  // Chromium switch aliases such as --disable-gpu are permanent and not
+  // reported; see CHROMIUM_SWITCH_ALIASES in app/config/renames.js.
+  checkUsedDeprecatedValues(
+    yargsInstance,
+    deprecationSources(sources, userArgv),
+    config
+  );
 
   // Warn-only schema validation of the merged (system + user) config file
   // contents (issue #2597). Runs after logger.init so warnings reach the log.
