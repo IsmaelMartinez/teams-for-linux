@@ -306,10 +306,21 @@ describe('config renames - gate A boundary', () => {
 		}
 	});
 
+	// Leaves born nested (ADR-025 rule zero) in a namespace that also holds
+	// renames. Each has no flat name, so there is nothing to project and the
+	// feature code reading it directly is the intended design. Add to this list
+	// only for such a leaf, and say why.
+	const NESTED_FROM_BIRTH = [
+		'window.hideTitleBar', // Linux-only title bar option, never had a flat name
+	];
+
 	it('every rename target namespace holds only renamed leaves', () => {
 		// The converse check, so a namespace cannot quietly gain an unrelated
 		// leaf that feature code reads directly while the window is open.
-		const renamedLeaves = new Set(RENAMES.map((r) => r.nested));
+		const renamedLeaves = new Set([
+			...RENAMES.map((r) => r.nested),
+			...NESTED_FROM_BIRTH,
+		]);
 		for (const { nested } of RENAMES) {
 			const namespace = nested.split('.')[0];
 			for (const field of Object.keys(options[namespace].fields ?? {})) {
