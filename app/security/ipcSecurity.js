@@ -17,7 +17,7 @@
  * prints MaxListenersExceededWarning at the eleventh.
  */
 
-const { validateIpcChannel } = require("./ipcValidator");
+const { validateIpcChannel, isSenderAllowed } = require("./ipcValidator");
 
 /**
  * Install the allowlist check on an ipcMain-like emitter.
@@ -31,7 +31,6 @@ const { validateIpcChannel } = require("./ipcValidator");
 function installIpcSecurity(ipcMain, logger = console) {
   const originalHandle = ipcMain.handle.bind(ipcMain);
   const originalOn = ipcMain.on.bind(ipcMain);
-  const originalOnce = ipcMain.once.bind(ipcMain);
   const originalRemoveListener = ipcMain.removeListener.bind(ipcMain);
   const originalRemoveAllListeners = ipcMain.removeAllListeners.bind(ipcMain);
 
@@ -84,15 +83,21 @@ function installIpcSecurity(ipcMain, logger = console) {
     if (index !== -1) registered.splice(index, 1);
   }
 
-  function isAllowed(channel, args, kind) {
-    if (validateIpcChannel(channel, args.length > 0 ? args[0] : null)) return true;
-    logger.error(`[IPC Security] Rejected ${kind} for channel: ${channel}`);
-    return false;
+  function isAllowed(channel, event, args, kind) {
+    if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
+      logger.error(`[IPC Security] Rejected ${kind} for channel: ${channel}`);
+      return false;
+    }
+    if (!isSenderAllowed(channel, event)) {
+      logger.error(`[IPC Security] Rejected ${kind} from an untrusted sender for channel: ${channel}`);
+      return false;
+    }
+    return true;
   }
 
   ipcMain.handle = (channel, handler) => {
     return originalHandle(channel, (event, ...args) => {
-      if (!isAllowed(channel, args, "handle request")) {
+      if (!isAllowed(channel, event, args, "handle request")) {
         return Promise.reject(new Error(`Unauthorized IPC channel: ${channel}`));
       }
       return handler(event, ...args);
@@ -101,21 +106,24 @@ function installIpcSecurity(ipcMain, logger = console) {
 
   ipcMain.on = (channel, handler) => {
     const entry = remember(channel, handler, (event, ...args) => {
-      if (!isAllowed(channel, args, "event")) return;
+      if (!isAllowed(channel, event, args, "event")) return;
       return handler(event, ...args);
     });
     return originalOn(channel, entry.wrapper);
   };
 
+  // Registered with the original `on` and removed by hand on the first allowed
+  // event. The emitter's own `once` registers through the wrapped `on` above,
+  // which stores a second wrapper that removeListener(channel, handler) can
+  // never find, so a once() removed before it fired stayed registered.
   ipcMain.once = (channel, handler) => {
     const entry = remember(channel, handler, (event, ...args) => {
-      // The emitter has already dropped this wrapper by the time it runs, so
-      // drop our record of it too rather than leave a stale entry behind.
+      if (!isAllowed(channel, event, args, "event")) return;
+      originalRemoveListener(channel, entry.wrapper);
       forgetEntry(channel, handler, entry);
-      if (!isAllowed(channel, args, "event")) return;
       return handler(event, ...args);
     });
-    return originalOnce(channel, entry.wrapper);
+    return originalOn(channel, entry.wrapper);
   };
 
   ipcMain.removeListener = (channel, handler) => {

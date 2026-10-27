@@ -366,7 +366,17 @@ class Menus {
     if (themeIcon.installed(opts)) {
       themeIcon.remove(opts);
     } else {
-      this.#installThemeIcon(nativeImage.createFromPath(this.configGroup.startupConfig.appIcon));
+      const image = nativeImage.createFromPath(this.configGroup.startupConfig.appIcon);
+      if (image.isEmpty()) {
+        dialog.showMessageBoxSync(this.window, {
+          type: "error",
+          title: "App Icon",
+          message: "The chosen icon could not be read as an image.",
+          detail: "Choose it again under App Icon, then tick this box.",
+        });
+      } else {
+        this.#installThemeIcon(image);
+      }
     }
     this.updateMenu();
   }
@@ -397,7 +407,7 @@ class Menus {
   }
 
   #updateWindowIcon(iconPath) {
-    this.window.setIcon(nativeImage.createFromPath(iconPath));
+    this.window.setIcon(TrayIconChooser.windowImage(iconPath));
     if (!app.dock) return;
     // The tray asset is 16px on macOS but the dock needs >=128px, so the
     // default is resolved separately here, exactly as startup does it.
@@ -547,6 +557,43 @@ class Menus {
     await this.#openPath("config folder", this.configGroup.configPath);
   }
 
+  async openThemesFolder() {
+    const directory = path.join(this.configGroup.configPath, "themes");
+    try {
+      fs.mkdirSync(directory, { recursive: true });
+      const error = await shell.openPath(directory);
+      if (error) throw new Error("Could not open themes folder");
+    } catch {
+      console.warn("[Themes] Could not open themes folder");
+      dialog.showErrorBox("Themes", "Could not open the themes folder.");
+    }
+  }
+
+  async selectTheme(selection) {
+    try {
+      const changed = this.configGroup.setThemeSelection(selection);
+      this.updateMenu();
+      // An enabled config watcher already relaunches after this write.
+      if (!changed || this.configGroup.isWatchingConfigFile) return;
+      const { response } = await dialog.showMessageBox(this.window, {
+        type: "info",
+        title: "Theme saved",
+        message: "Restart Teams for Linux to apply the selected theme.",
+        buttons: ["Restart now", "Later"],
+        defaultId: 0,
+        cancelId: 1,
+      });
+      if (response === 0) {
+        app.relaunch();
+        app.exit(0);
+      }
+    } catch {
+      this.updateMenu();
+      console.warn("[Themes] Could not save theme selection");
+      dialog.showErrorBox("Themes", "Could not save the theme selection. Check that config.json is valid and writable.");
+    }
+  }
+
   // shell.openPath resolves to an empty string on success and to the reason as
   // a string on failure — it does not reject — so the result has to be checked.
   async #openPath(what, target) {
@@ -688,10 +735,12 @@ class Menus {
     this.window.webContents.executeJavaScript(script, true);
   }
 
-  joinMeeting() {
+  async joinMeeting() {
     let clipboardText = '';
     try {
-      clipboardText = clipboard.readText();
+      // Electron 44 moved the clipboard module onto the W3C Clipboard API, so
+      // readText() resolves rather than returns.
+      clipboardText = await clipboard.readText();
     } catch (error) {
       console.error('Error reading clipboard:', error);
     }

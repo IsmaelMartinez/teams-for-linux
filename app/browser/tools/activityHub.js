@@ -8,6 +8,16 @@ const supportedEvents = new Set([
   "call-disconnected",
   "meeting-started"
 ]);
+// crossClientScenarioName values Teams gives the toast for a ringing call.
+// Any other toast with isIncomingCall set (the dismissal carries null) means
+// the ringing has ended. A call from a phone number is "incoming_pstn_call"
+// (#3019); the two call-queue names are taken from the Teams client.
+const incomingCallScenarios = new Set([
+  "incoming_call",
+  "incoming_pstn_call",
+  "incoming_call_queue_call",
+  "conference_incoming_call_queue_call"
+]);
 
 class ActivityHub {
 
@@ -46,6 +56,22 @@ class ActivityHub {
    */
   getMeetingStartId(entityOptions) {
     return getMeetingStartId(entityOptions);
+  }
+
+  /**
+   * Exposed for unit tests: whether a toast's crossClientScenarioName is
+   * one Teams uses for a call that is ringing.
+   */
+  isIncomingCallScenario(scenarioName) {
+    return isIncomingCallScenario(scenarioName);
+  }
+
+  /**
+   * Exposed for unit tests: the caller details published over MQTT for an
+   * incoming-call toast's entityOptions.
+   */
+  getIncomingCallDetails(entityOptions) {
+    return getIncomingCallDetails(entityOptions);
   }
 
   start() {
@@ -226,18 +252,67 @@ function handleCallEventEntityCommand(entityCommand) {
     onMeetingStarted(meetingStartId);
   }
   if (entityCommand.entityOptions?.isIncomingCall) {
-    if ("incoming_call" === entityCommand.entityOptions?.crossClientScenarioName) {
+    if (isIncomingCallScenario(entityCommand.entityOptions?.crossClientScenarioName)) {
       // Gets triggered by incoming call.
       onIncomingCallCreated({
         caller: entityCommand.entityOptions.title,
         image: entityCommand.entityOptions.mainImage?.src,
-        text: entityCommand.entityOptions.text
+        text: entityCommand.entityOptions.text,
+        details: getIncomingCallDetails(entityCommand.entityOptions)
       });
     } else {
       // Gets triggered when incoming call toast gets dismissed regardless of accepting or declining the call
       onIncomingCallEnded();
     }
   }
+}
+
+function isIncomingCallScenario(scenarioName) {
+  return incomingCallScenarios.has(scenarioName);
+}
+
+function isPhoneNumber(value) {
+  return typeof value === "string" && /^\+?\d[\d\s().-]*$/.test(value.trim());
+}
+
+/**
+ * Caller details for MQTT, from an incoming-call toast's entityOptions, as
+ * seen on phone and call-queue calls (#3019). For a caller with a phone
+ * number, title is the number as Teams formats it and text is their name when
+ * Teams can match one, or the number again when it cannot; for any other
+ * caller, title is taken to be their name. A call-queue toast names the queue
+ * in headerSubtitle. In conference mode a call-queue toast is sent twice while
+ * ringing, the first before the name and queue are known, so this is worked
+ * out afresh for every toast rather than once per call. Fields without a value
+ * are left out, and the caller's picture never goes in.
+ */
+function getIncomingCallDetails(entityOptions) {
+  if (!entityOptions) {
+    return {};
+  }
+  const { title, text, crossClientScenarioName: scenario } = entityOptions;
+  const details = {};
+  if (scenario) {
+    details.scenario = scenario;
+  }
+  if (isPhoneNumber(title)) {
+    details.number = title.trim();
+    if (text && !isPhoneNumber(text)) {
+      details.name = text;
+    }
+  } else if (title) {
+    details.name = title;
+  }
+  if (scenario?.includes("call_queue") && entityOptions.headerSubtitle) {
+    details.queue = entityOptions.headerSubtitle;
+  }
+  if (entityOptions.trustworthy) {
+    details.contact = entityOptions.trustworthy.trustReason === "CONTACT";
+  }
+  if (entityOptions.callId) {
+    details.callId = entityOptions.callId;
+  }
+  return details;
 }
 
 /**

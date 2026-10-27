@@ -161,23 +161,21 @@ test('pinning caps at 5 and maps Ctrl+Alt accelerators onto pinned profiles', as
   }
 });
 
-// Phase 1c.2: switching to a profile view must fill the content area and keep
-// the switcher pill topmost (the #raiseChrome re-assert after addChildView).
-test('switching to a profile view fills the window and keeps the pill topmost', async () => {
+// Two profiles through the real ProfilesManager → ProfileViewManager event
+// path, switched to the second (mirrors the Add dialog, which adds then
+// switches). Leaves the window as [A (hidden), B (active), pill].
+async function startWithTwoProfiles(prefix) {
   const ctx = await startApp({
-    prefix: 'teams-e2e-switch-',
+    prefix,
     config: { multiAccount: { enabled: true } },
     allowEval: true,
   });
-
+  // Callers enter their try/finally only after this returns, so a setup
+  // failure must clean up here or the app and its temp dir leak.
   try {
     const mainWindow = findMainTeamsWindow(ctx.electronApp);
     expect(mainWindow).toBeTruthy();
     await waitForLoginRedirect(mainWindow);
-
-    // Create two profiles and switch to the second (mirrors the Add dialog,
-    // which adds then switches). These go through the real ProfilesManager →
-    // ProfileViewManager event path.
     const a = await invokeHandler(ctx.electronApp, 'profile-add', [
       { name: 'Profile A' },
     ]);
@@ -190,11 +188,25 @@ test('switching to a profile view fills the window and keeps the pill topmost', 
       b.result.id,
     ]);
     expect(switched).toHaveProperty('result');
+    return { ctx, a, b };
+  } catch (error) {
+    await closeAndCleanup(ctx);
+    throw error;
+  }
+}
 
+// Phase 1c.2: switching to a profile view must fill the content area and keep
+// the switcher pill topmost (the #raiseChrome re-assert after addChildView).
+test('switching to a profile view fills the window and keeps the pill topmost', async () => {
+  const { ctx } = await startWithTwoProfiles('teams-e2e-switch-');
+
+  try {
     const view = await getContentViewChildBounds(ctx.electronApp);
     expect(view).not.toHaveProperty('error');
-    // Two children: the active profile view + the pill on top.
-    expect(view.count).toBe(2);
+    // Both profile views stay attached (#3057) with the pill on top; only
+    // the active one, raised just below the pill, is visible.
+    expect(view.count).toBe(3);
+    expect(view.visible).toEqual([false, true, true]);
 
     // The pill is the LAST (topmost) child, still in the bottom-left corner.
     const pill = view.bounds[view.count - 1];
@@ -207,11 +219,102 @@ test('switching to a profile view fills the window and keeps the pill topmost', 
     );
 
     // The active profile view fills the whole content area (no inset).
-    const profileView = view.bounds[0];
+    const profileView = view.bounds[view.count - 2];
     expect(profileView.x).toBe(0);
     expect(profileView.y).toBe(0);
     expect(profileView.width).toBe(view.contentWidth);
     expect(profileView.height).toBe(view.contentHeight);
+  } finally {
+    await closeAndCleanup(ctx);
+  }
+});
+
+// Phase 2: unread in a background profile reaches the switcher pill through
+// the real pipeline — set-badge-count from that profile's view → aggregator →
+// ProfileViewManager → profile-switcher-unread → pill DOM.
+function setBackgroundBadge(electronApp, count) {
+  return electronApp.evaluate(async ({ BrowserWindow, ipcMain }, count) => {
+    const win = BrowserWindow.getAllWindows().find(
+      (w) => w.contentView.children.length === 3
+    );
+    const background = win?.contentView.children.find((c) => !c.getVisible());
+    const handler = ipcMain._invokeHandlers?.get?.('set-badge-count');
+    if (!background || !handler) return { error: 'missing view or handler' };
+    await handler({ sender: background.webContents }, count);
+    return { ok: true };
+  }, count);
+}
+
+function readPill(electronApp) {
+  return electronApp.evaluate(async ({ BrowserWindow }) => {
+    const win = BrowserWindow.getAllWindows().find(
+      (w) => w.contentView.children.length === 3
+    );
+    const pill = win.contentView.children.at(-1);
+    return pill.webContents.executeJavaScript(`(() => {
+      renderList();
+      return {
+        dotHidden: document.getElementById('pill-unread').hidden,
+        badges: [...document.querySelectorAll('.profile-row')].map((row) => ({
+          name: row.querySelector('.name').textContent,
+          badge: row.querySelector('.unread-badge')?.textContent ?? null,
+        })),
+      };
+    })()`);
+  });
+}
+
+test('unread in a background profile lights the pill dot and its row badge', async () => {
+  const { ctx, a } = await startWithTwoProfiles('teams-e2e-unread-');
+
+  try {
+    expect(await setBackgroundBadge(ctx.electronApp, 3)).toEqual({ ok: true });
+    await expect
+      .poll(async () => (await readPill(ctx.electronApp)).dotHidden)
+      .toBe(false);
+    const lit = await readPill(ctx.electronApp);
+    expect(lit.badges).toEqual([
+      { name: a.result.name, badge: '3' },
+      { name: 'Profile B', badge: null },
+    ]);
+
+    // Open the dropdown, focus a row, then let an unread push rebuild the
+    // list: keyboard focus must stay on that profile's row.
+    const inPill = (expr) =>
+      ctx.electronApp.evaluate(async ({ BrowserWindow }, expr) => {
+        const win = BrowserWindow.getAllWindows().find(
+          (w) => w.contentView.children.length === 3
+        );
+        return win.contentView.children.at(-1).webContents.executeJavaScript(expr);
+      }, expr);
+    expect(
+      await inPill(`(async () => {
+        document.getElementById('pill').click();
+        for (let i = 0; i < 100 && document.getElementById('dropdown').hidden; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        }
+        document.querySelector('li:last-child .profile-row').focus();
+        return document.activeElement.querySelector('.name')?.textContent ?? null;
+      })()`)
+    ).toBe('Profile B');
+    expect(await setBackgroundBadge(ctx.electronApp, 7)).toEqual({ ok: true });
+    await expect
+      .poll(() =>
+        inPill(`document.querySelector('li:first-child .unread-badge')?.textContent ?? null`)
+      )
+      .toBe('7');
+    expect(
+      await inPill(`document.activeElement.classList.contains('profile-row')
+        ? document.activeElement.querySelector('.name').textContent
+        : null`)
+    ).toBe('Profile B');
+    await inPill(`document.getElementById('scrim').click()`);
+
+    // Reading the background profile clears both.
+    expect(await setBackgroundBadge(ctx.electronApp, 0)).toEqual({ ok: true });
+    await expect
+      .poll(async () => (await readPill(ctx.electronApp)).dotHidden)
+      .toBe(true);
   } finally {
     await closeAndCleanup(ctx);
   }

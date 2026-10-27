@@ -173,6 +173,7 @@ export async function getContentViewChildBounds(electronApp) {
       contentWidth,
       contentHeight,
       bounds: children.map((c) => c.getBounds()),
+      visible: children.map((c) => c.getVisible()),
       urls: children.map((c) => {
         try {
           return c.webContents ? c.webContents.getURL() : null;

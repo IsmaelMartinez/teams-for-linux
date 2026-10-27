@@ -28,6 +28,22 @@
 const defaults = require("./defaults");
 
 module.exports = {
+      dbusControl: {
+        default: { enabled: false, busName: "" },
+        describe: "Opt-in Linux user session D-Bus control and observed Teams state. Requires restart.",
+        type: "object",
+        fields: {
+          enabled: {
+            type: "boolean",
+            describe: "Enable the Linux D-Bus service and its local status monitors.",
+          },
+          busName: {
+            type: "string",
+            describe: "Well-known D-Bus service name for this instance. Empty uses FLATPAK_ID or com.github.IsmaelMartinez.teams_for_linux. Use distinct names for separately launched profiles; invalid names disable the service.",
+          },
+        },
+        applyMode: "restart",
+      },
       appActiveCheckInterval: {
         default: 2,
         describe:
@@ -40,6 +56,10 @@ module.exports = {
           thumbnail: {
             enabled: true,
             alwaysOnTop: true,
+          },
+          resolution: {
+            enabled: false,
+            mode: "remove",
           },
           lockInhibitionMethod: "Electron",
         },
@@ -55,6 +75,25 @@ module.exports = {
           "thumbnail.alwaysOnTop": {
             type: "boolean",
             describe: "Keep the screen sharing thumbnail window always on top.",
+          },
+          "resolution.enabled": {
+            type: "boolean",
+            describe:
+              "Enable screen sharing resolution control. When false, Teams' resolution constraints are left unchanged.",
+          },
+          "resolution.mode": {
+            type: "string",
+            describe:
+              "Resolution mode: remove disables Teams' screen sharing limits so capture can use its native resolution; override requests the configured width and height as a ceiling.",
+            choices: ["remove", "override"],
+          },
+          "resolution.width": {
+            type: "number",
+            describe: "Target screen sharing width when mode is override; used with height as the maximum requested resolution.",
+          },
+          "resolution.height": {
+            type: "number",
+            describe: "Target screen sharing height when mode is override; used with width as the maximum requested resolution.",
           },
           "lockInhibitionMethod": {
             type: "string",
@@ -96,7 +135,7 @@ module.exports = {
       },
       appTitle: {
         default: "Microsoft Teams",
-        describe: "A text to be suffixed with page title",
+        describe: "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip",
         type: "string",
         applyMode: "restart",
         deprecated: "use app.title instead",
@@ -173,7 +212,7 @@ module.exports = {
       customCSSName: {
         default: "",
         describe:
-          'custom CSS name for the packaged available css files. Currently those are: "compactDark", "compactLight", "tweaks", "condensedDark" and "condensedLight" ',
+          'Packaged CSS theme name (compactDark, compactLight, tweaks, condensedDark, condensedLight), or custom:<id> for a discovered user theme. An empty name uses customCSSLocation when configured.',
         type: "string",
         applyMode: "restart",
         deprecated: "use appearance.cssName instead",
@@ -736,9 +775,10 @@ module.exports = {
           showStatusOnDockIcon: false,
           macPerformanceMode: true,
           preventDeviceSwitching: false,
+          documentPictureInPicture: true,
         },
         describe:
-          "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the Dock icon on macOS. macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications.",
+          "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the app icon (the Dock on macOS, the tray icon elsewhere). macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications. documentPictureInPicture: replace Electron's non-functional Document Picture-in-Picture API so Teams can show its floating call controls (Call Monitor) in a small always-on-top window; defaults to true, set false to fall back to Electron's native (broken) API.",
         type: "object",
         fields: {
           "microphone.disableAutogain": {
@@ -817,16 +857,16 @@ module.exports = {
           "showStatusOnDockIcon": {
             type: "boolean",
             describe:
-              "Overlay the user presence status on the Dock icon on macOS.",
+              "Overlay the user presence status on the app icon: the Dock on macOS, the tray icon on the platforms that have no Dock. While the dot is drawn the unread badge moves to the other corner.",
           },
           "macPerformanceMode": {
             type: "boolean",
             describe:
               "On macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; set false to opt out without disabling the GPU entirely.",
           },
-          // preventDeviceSwitching is documented in the option's `describe`
-          // above; see the note in the download.fields block on why it isn't a
-          // per-leaf entry.
+          // preventDeviceSwitching and documentPictureInPicture are documented
+          // in the option's `describe` above; see the note in the
+          // download.fields block on why they aren't per-leaf entries.
         },
         applyMode: "restart",
       },
@@ -854,6 +894,9 @@ module.exports = {
             microphone: "microphone",
             microphoneControl: "microphone/control",
             screenSharing: "screen-sharing",
+          },
+          incomingCallCaller: {
+            enabled: false,
           },
           meetingStartDetection: {
             enabled: false,
@@ -917,6 +960,11 @@ module.exports = {
           "homeAssistant.deviceName": {
             type: "string",
             describe: "Device name shown in Home Assistant.",
+          },
+          "incomingCallCaller.enabled": {
+            type: "boolean",
+            describe:
+              "Publish the ringing call's caller (name, number, call queue) as JSON to the incoming-call/caller topic. Off by default because it sends callers' personal details to the broker.",
           },
           "meetingStartDetection.enabled": {
             type: "boolean",
@@ -1242,7 +1290,7 @@ module.exports = {
         fields: {
           "cssName": {
             type: "string",
-            describe: "custom CSS name for the packaged available css files. Currently those are: \"compactDark\", \"compactLight\", \"tweaks\", \"condensedDark\" and \"condensedLight\" ",
+            describe: "Packaged CSS theme name (compactDark, compactLight, tweaks, condensedDark, condensedLight), or custom:<id> for a discovered user theme. An empty name uses appearance.cssLocation when configured.",
           },
           "cssLocation": {
             type: "string",
@@ -1300,7 +1348,7 @@ module.exports = {
         fields: {
           "title": {
             type: "string",
-            describe: "A text to be suffixed with page title",
+            describe: "Replaces 'Microsoft Teams' in the window title (when changed from the default) and is used as the tray tooltip",
           },
           "url": {
             type: "string",

@@ -98,7 +98,15 @@ function refresh() {
     console.warn("[ThemeIcon] could not touch the icon theme directory", { message: error.message });
   }
   try {
-    bus ??= require("@homebridge/dbus-native").sessionBus();
+    if (!bus) {
+      // A failed connect arrives as an async error event, which this catch
+      // never sees; without the listener it would take the app down.
+      bus = require("@homebridge/dbus-native").sessionBus();
+      bus.connection.on("error", (error) => {
+        console.warn("[ThemeIcon] session bus connection failed", { message: error.message });
+        bus = null;
+      });
+    }
     bus.sendSignal("/KIconLoader", "org.kde.KIconLoader", "iconChanged", "i", [0]);
   } catch (error) {
     console.warn("[ThemeIcon] could not send the icon change signal", { message: error.message });
@@ -111,20 +119,27 @@ function installed(opts) {
 
 // Every size goes to a temp name first and is renamed over the real file only
 // once all of them are written, so a failed replacement leaves the previous
-// icon set whole.
+// icon set whole. A size that already holds a file this app did not write is
+// skipped, so hand-placed icons are never overwritten or later removed.
 function install(image, opts) {
   if (!supported()) return false;
   const name = iconName(opts);
+  const owned = new Set(readManifest()[name]);
   const { width, height } = image.getSize();
   const pending = [];
   try {
     for (const size of SIZES) {
       const file = iconFile(size, name);
+      if (!owned.has(file) && fs.existsSync(file)) continue;
       const temp = `${file}.tmp-${process.pid}`;
       fs.mkdirSync(path.dirname(file), { recursive: true });
       const resized = image.resize(width >= height ? { width: size } : { height: size });
       fs.writeFileSync(temp, resized.toPNG());
       pending.push({ temp, file });
+    }
+    if (pending.length === 0) {
+      console.warn("[ThemeIcon] every size already holds an icon this app did not write, leaving them alone");
+      return false;
     }
     for (const { temp, file } of pending) fs.renameSync(temp, file);
     writeManifest({ ...readManifest(), [name]: pending.map((p) => p.file) });

@@ -5,6 +5,7 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { EventEmitter } = require('node:events');
 
 const dbusPath = require.resolve('@homebridge/dbus-native');
 const modulePath = require.resolve('../../app/menus/themeIcon');
@@ -12,11 +13,13 @@ const modulePath = require.resolve('../../app/menus/themeIcon');
 describe('themeIcon', { skip: process.platform !== 'linux' }, () => {
   let tmp;
   let signals;
+  let buses;
   const env = { ...process.env };
 
   beforeEach(() => {
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'theme-icon-'));
     signals = [];
+    buses = [];
     process.env.XDG_DATA_HOME = tmp;
     process.env.XDG_DATA_DIRS = path.join(tmp, 'none');
     delete process.env.SNAP;
@@ -26,7 +29,13 @@ describe('themeIcon', { skip: process.platform !== 'linux' }, () => {
       id: dbusPath,
       filename: dbusPath,
       loaded: true,
-      exports: { sessionBus: () => ({ sendSignal: (...args) => signals.push(args) }) },
+      exports: {
+        sessionBus: () => {
+          const bus = { connection: new EventEmitter(), sendSignal: (...args) => signals.push(args) };
+          buses.push(bus);
+          return bus;
+        },
+      },
     };
     delete require.cache[modulePath];
   });
@@ -80,6 +89,33 @@ describe('themeIcon', { skip: process.platform !== 'linux' }, () => {
     themeIcon.remove();
     assert.ok(fs.existsSync(iconPath(1024)));
     assert.ok(!fs.existsSync(iconPath(64)));
+  });
+
+  it('never overwrites a hand-placed icon at one of its sizes', () => {
+    const themeIcon = require(modulePath);
+    fs.mkdirSync(path.dirname(iconPath(48)), { recursive: true });
+    fs.writeFileSync(iconPath(48), 'hand placed');
+
+    assert.strictEqual(themeIcon.install(fakeImage(64, 64, 'first')), true);
+    assert.strictEqual(themeIcon.install(fakeImage(64, 64, 'second')), true);
+    assert.strictEqual(fs.readFileSync(iconPath(48), 'utf8'), 'hand placed');
+    assert.strictEqual(readIcon(64).tag, 'second');
+    assert.strictEqual(manifest()['teams-for-linux'].length, 9);
+
+    themeIcon.remove();
+    assert.strictEqual(fs.readFileSync(iconPath(48), 'utf8'), 'hand placed');
+    assert.ok(!fs.existsSync(iconPath(64)));
+  });
+
+  it('survives a failed session bus connection and reconnects on the next change', () => {
+    const themeIcon = require(modulePath);
+    themeIcon.install(fakeImage(64, 64));
+    assert.strictEqual(buses.length, 1);
+    assert.doesNotThrow(() => buses[0].connection.emit('error', new Error('connect ENOENT')));
+
+    themeIcon.remove();
+    assert.strictEqual(buses.length, 2);
+    assert.strictEqual(signals.length, 2);
   });
 
   it('keeps the previous icon set whole when a replacement fails partway', () => {

@@ -59,6 +59,23 @@ When the app feels slow or heavy, seven configuration options are the first-line
 
 2.  **If you cannot update yet**, either create the missing locale file with `touch ~/.config/user-dirs.locale`, connect the interface your XDG directories need with `sudo snap connect teams-for-linux:removable-media`, or roll back with `sudo snap revert teams-for-linux`.
 
+#### Issue: Kernel log flood or kauditd suppression from AppArmor netlink denials
+
+**Description:** System logs show millions of AppArmor audit denials (`apparmor="DENIED" operation="recvmsg" class="net" family="netlink" protocol=15 comm="ThreadPoolForeg"`), and kernel logs (`dmesg` or `journalctl -k`) report thousands of callbacks suppressed by `kauditd_printk_skb` ([#3096](https://github.com/IsmaelMartinez/teams-for-linux/issues/3096)).
+
+**Potential Causes:**
+* Chromium/Electron's background device discovery thread (`ThreadPoolForegroundWorker`) polls a kernel `NETLINK_KOBJECT_UEVENT` socket (`protocol=15`) to monitor device hotplugging (e.g. webcams, USB audio headsets).
+* On modern Linux distributions (such as Ubuntu 24.04+ and 26.04+) with AppArmor 4.x, strict netlink socket mediation blocks this socket unless the snap has the `hardware-observe` interface connected. When denied, Chromium's event polling loop can rapidly spin on `recvmsg()`, generating hundreds of thousands of audit denial events per second.
+
+**Solutions/Workarounds:**
+
+1.  **Connect the `hardware-observe` interface:**
+    ```bash
+    sudo snap connect teams-for-linux:hardware-observe
+    ```
+
+2.  **Restart the application.** Once connected, the netlink socket read succeeds without AppArmor denials and the log flood stops completely.
+
 #### Issue: No History after Electron version update
 
 **Description:** When updating the Electron version, the channel history may sometimes disappear. This issue is typically related to a change in the user agent.
@@ -131,15 +148,20 @@ When the app feels slow or heavy, seven configuration options are the first-line
 
 **Solutions/Workarounds:**
 
-1.  **Clear Fontconfig Cache:**
+1.  **Clear Fontconfig Cache:** quit the app, run the commands below, then start it again.
     ```bash
-    sudo rm /var/cache/fontconfig/*
+    rm -rf ~/snap/teams-for-linux/common/.cache/fontconfig
     rm ~/.cache/fontconfig/*
+    sudo rm /var/cache/fontconfig/*
     fc-cache -r
     ```
-    This issue is related to the fontconfig cache. The above commands will clear it.
+    The first line only applies to the snap, which keeps its own fontconfig cache under `~/snap/teams-for-linux/common/.cache`.
 
-**Related GitHub Issues:** [Issue #357](https://github.com/IsmaelMartinez/teams-for-linux/issues/357)
+    :::note
+    Versions with the build-time launcher patch (#3092) isolate the fontconfig cache automatically. The manual commands above serve as a workaround for older versions or prior to package update.
+    :::
+
+**Related GitHub Issues:** [Issue #357](https://github.com/IsmaelMartinez/teams-for-linux/issues/357), [#1105](https://github.com/IsmaelMartinez/teams-for-linux/issues/1105), [#1328](https://github.com/IsmaelMartinez/teams-for-linux/issues/1328), [#3092](https://github.com/IsmaelMartinez/teams-for-linux/issues/3092)
 
 ---
 
@@ -337,11 +359,27 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 
 **Related GitHub Issues:** [Issue #2326](https://github.com/IsmaelMartinez/teams-for-linux/issues/2326)
 
+#### Issue: Sign-in stuck on "Face, fingerprint, PIN or security key"
+
+**Description:** Microsoft's sign-in page stops on "Face, fingerprint, PIN or security key" and offers no other method until it times out, which can take up to ten minutes. This affects accounts with a passkey registered, including people who have no security key to hand or normally sign in with a password and Microsoft Authenticator.
+
+**Cause:** Electron on Linux has no WebAuthn user interface (tracked upstream in [electron/electron#24573](https://github.com/electron/electron/issues/24573)). When Teams for Linux does not handle the request itself, Electron waits silently for the page's own timeout, with no dialog and no way to cancel. Microsoft's sign-in page has been seen asking for ten minutes. Phone and QR passkeys do not work either, because Electron never starts that flow on Linux.
+
+**Solutions/Workarounds:**
+
+1. Wait for the timeout, then choose another sign-in method.
+
+2. To skip the wait, install `fido2-tools` and enable `auth.webauthn.enabled` as described in the next entry, then restart. Teams for Linux now answers the request itself: either its PIN dialog or its "Waiting for your security key" prompt appears, and you click Cancel, or the request fails at once because no key is connected. Either way Microsoft stops waiting and shows either its other sign-in methods or a "We couldn't sign you in" page, whose "Sign in another way" link leads to them (password plus Microsoft Authenticator, for example). The Flathub build bundles `fido2-tools`; the snap does not yet ([PR #3085](https://github.com/IsmaelMartinez/teams-for-linux/pull/3085)). On the snap, enabling the setting still ends the wait when the sign-in page is the top-level page, but not when it is embedded in a frame, so the first option may still be needed.
+
+If you start Teams for Linux with `--user-data-dir`, put `config.json` in that directory, not in `~/.config/teams-for-linux`.
+
+**Related GitHub Issues:** [Issue #2624](https://github.com/IsmaelMartinez/teams-for-linux/issues/2624), [Issue #3037](https://github.com/IsmaelMartinez/teams-for-linux/issues/3037), [Issue #2944](https://github.com/IsmaelMartinez/teams-for-linux/issues/2944).
+
 #### Issue: Security Key (FIDO2 / WebAuthn) sign-in fails on Linux
 
 **Description:** When signing in to Teams with a hardware security key (YubiKey, SoloKeys, Nitrokey, Feitian, etc.) on Linux, the login page spins indefinitely, shows an error, or no PIN dialog appears. macOS and Windows are unaffected.
 
-**Cause:** Electron and Chromium on Linux do not ship a native FIDO2 authenticator backend (tracked upstream in [electron/electron#24573](https://github.com/electron/electron/issues/24573)). Teams for Linux ships an opt-in beta that routes `navigator.credentials` through the `fido2-tools` command-line suite, which talks to the security key over `/dev/hidraw*`.
+**Cause:** Electron and Chromium on Linux do not ship a native FIDO2 authenticator backend (tracked upstream in [electron/electron#24573](https://github.com/electron/electron/issues/24573); as of Electron 44 there is still no PIN entry, no phone flow and no cancel prompt on Linux). Teams for Linux ships an opt-in beta that routes `navigator.credentials` through the `fido2-tools` command-line suite, which talks to the security key over `/dev/hidraw*`.
 
 **Solutions/Workarounds:**
 
@@ -549,6 +587,16 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
 2. **Alternatively**, launch with `--disable-gpu` on the command line, or add it to the `Exec=` line of a custom copy of the `.desktop` entry under `~/.local/share/applications/teams-for-linux.desktop`.
 
 **Related GitHub Issues:** [#2459](https://github.com/IsmaelMartinez/teams-for-linux/issues/2459)
+
+#### Issue: Sharing the whole screen shows black under XWayland, sharing a window works
+
+**Description:** The deb, rpm, AppImage and snap packages launch with `--ozone-platform=x11`, so on a Wayland session they run under XWayland and screen capture goes through the X11 capturer, which only sees X11 windows. Sharing a single window works, but sharing the whole screen shows a black feed. Flatpak and tar.gz builds run as native Wayland and are not affected by this.
+
+**Solutions/Workarounds:**
+
+1. **Share a window** instead of the whole screen.
+
+**Related GitHub Issues:** [#3066](https://github.com/IsmaelMartinez/teams-for-linux/issues/3066)
 
 :::note Important
 The `performance.electronCLIFlags` config option (`config.json`) **cannot** override `--ozone-platform` because the flag must be set before the Electron process starts, and config is loaded after. Use command-line arguments or `.desktop` file edits instead.

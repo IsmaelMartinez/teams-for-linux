@@ -246,6 +246,23 @@ describe('CustomStickers handleImportStickerUrl', () => {
     assert.deepStrictEqual(Uint8Array.from(written), Uint8Array.from(PNG_BYTES));
   });
 
+  it('rejects a body that does not match its declared image type', async () => {
+    const script = Buffer.from('require("child_process").exec("id")');
+    stubFetch({ body: script });
+    const result = await module.handleImportStickerUrl('https://example.com/payload.png');
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /not a valid image\/png/);
+    const planted = fs.readdirSync(stickerFolder).filter((f) => f.startsWith('payload-'));
+    assert.deepStrictEqual(planted, []);
+  });
+
+  it('rejects a real PNG served as another image type', async () => {
+    stubFetch({ contentType: 'image/gif' });
+    const result = await module.handleImportStickerUrl('https://example.com/mislabelled.gif');
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /not a valid image\/gif/);
+  });
+
   it('respects the urlImport.enabled flag', async () => {
     const disabled = new CustomStickers(makeApp(tmpRoot), {
       customStickers: {

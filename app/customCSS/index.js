@@ -1,8 +1,7 @@
 const fs = require("node:fs");
-const path = require("node:path");
+const { resolveTheme } = require("./themes");
 
-exports.onDidFinishLoad = function onDidFinishLoad(content, config) {
-  const customCssLocation = getCustomCssLocation(config);
+exports.onDidFinishLoad = function onDidFinishLoad(content, config, customCssLocation = resolveTheme(config)) {
   if (customCssLocation) {
     applyCustomCSSToContent(content, customCssLocation);
   }
@@ -12,21 +11,11 @@ exports.onDidFinishLoad = function onDidFinishLoad(content, config) {
   content.insertCSS(".zoetrope { animation-iteration-count: 1 !important; }");
 };
 
-exports.onDidFrameFinishLoad = function onDidFrameFinishLoad(webFrame, config) {
-  const customCssLocation = getCustomCssLocation(config);
+exports.onDidFrameFinishLoad = function onDidFrameFinishLoad(webFrame, config, customCssLocation = resolveTheme(config)) {
   if (customCssLocation) {
     applyCustomCSSToFrame(webFrame, customCssLocation);
   }
 };
-
-function getCustomCssLocation(config) {
-  if (config.customCSSName) {
-    return path.join(__dirname, "assets", "css", config.customCSSName + ".css");
-  } else if (config.customCSSLocation) {
-    return config.customCSSLocation;
-  }
-  return null;
-}
 
 function applyCustomCSSToContent(content, cssLocation) {
   fs.readFile(cssLocation, "utf-8", (error, data) => {

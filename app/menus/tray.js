@@ -3,6 +3,11 @@ const os = require("node:os");
 const isMac = os.platform() === "darwin";
 
 class ApplicationTray {
+  // The unread state the window was last asked for attention with; see
+  // #requestAttention. Empty is not a key any state can produce (every key
+  // starts with true| or false|).
+  #attentionKey = "";
+
   constructor(window, appMenu, iconPath, config) {
     this.window = window;
     this.iconPath = iconPath;
@@ -20,10 +25,47 @@ class ApplicationTray {
     ipcMain.on("tray-update", this.#handleTrayUpdate.bind(this));
   }
 
-  #handleTrayUpdate(_event, data) {
+  #handleTrayUpdate(event, data) {
+    // With multi-account on, updates arrive from every profile view and
+    // applying them directly is last-write-wins — the aggregator decides.
+    if (this.aggregator) {
+      this.aggregator.onTrayUpdate(event, data);
+      return;
+    }
+    // Stash per sender for the aggregator to replay on attach — renderers
+    // dedupe and never re-send an unchanged count. Flag-gated: with
+    // multi-account off nothing ever drains it.
+    if (this.config.multiAccount?.enabled) {
+      this.lastDirectUpdates ??= new Map();
+      this.lastDirectUpdates.set(event?.sender?.id, data);
+    }
     // Handle both old format { icon, flash } and new format { icon, flash, count }
     const { icon, flash, count } = data;
     this.updateTrayImage(icon, flash, count);
+  }
+
+  setAggregator(aggregator) {
+    this.aggregator = aggregator;
+    if (this.lastDirectUpdates) {
+      const replays = this.lastDirectUpdates;
+      this.lastDirectUpdates = null;
+      for (const [senderId, data] of replays) {
+        aggregator.onTrayUpdate({ sender: { id: senderId } }, data);
+      }
+    }
+  }
+
+  applyAggregate({ icon, flash, tooltip }) {
+    if (!this.tray || this.tray.isDestroyed()) return;
+    // createFromDataURL yields an EMPTY image (not a throw) for a malformed
+    // payload, which would blank the tray.
+    let image = this.getIconImage(icon || this.iconPath);
+    if (image.isEmpty()) {
+      image = this.getIconImage(this.iconPath);
+    }
+    this.tray.setImage(image);
+    this.#requestAttention(flash, tooltip);
+    this.tray.setToolTip(tooltip);
   }
 
   getIconImage(iconPath) {
@@ -63,12 +105,29 @@ class ApplicationTray {
       const image = this.getIconImage(effectiveIconPath);
 
       this.tray.setImage(image);
-      this.window.flashFrame(flash);
 
       const baseTitle = this.config.appTitle;
       const tooltip = count > 0 ? `${baseTitle} (${count})` : baseTitle;
+      this.#requestAttention(flash, tooltip);
       this.tray.setToolTip(tooltip);
     }
+  }
+
+  // The window is asked for attention only when the unread state it shows
+  // changes, and the tooltip identifies that state (the count, or the aggregate
+  // total with the profiles behind it) on both the direct and the aggregated
+  // path. A presence status redraw re-sends the same state with a different
+  // icon, and re-requesting attention there would flash the window on every
+  // Teams status change.
+  #requestAttention(flash, tooltip) {
+    // A redraw omits `flash` because it is not a notification event. Calling
+    // flashFrame() with no value would clear a flash that is still running, so
+    // an omitted flag means "leave the window's flash state alone".
+    if (typeof flash !== "boolean") return;
+    const key = `${flash}|${tooltip}`;
+    if (key === this.#attentionKey) return;
+    this.#attentionKey = key;
+    this.window.flashFrame(flash);
   }
 
   setBaseIconPath(iconPath) {

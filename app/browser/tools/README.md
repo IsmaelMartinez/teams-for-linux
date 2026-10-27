@@ -121,6 +121,12 @@ Fixes camera video stretching when moving Teams between monitors with different 
 #### [wakeLock.js](wakeLock.js)
 Prevents system sleep during meetings and active calls.
 
+#### [documentPictureInPicture.js](documentPictureInPicture.js)
+Replaces `window.documentPictureInPicture` so the Teams web Call Monitor ([MC1462921](https://mc.merill.net/message/MC1462921)) can show its floating call controls. Electron exposes the API, but the window from `requestWindow()` is closed about a millisecond after it resolves and is never drawn. The replacement opens a same-origin `about:blank` popup under a frame name the main process picks at random each launch and passes in through the config, so cross-origin frames inside Teams cannot open the window themselves. The main process ([../../mainAppWindow/documentPictureInPicture.js](../../mainAppWindow/documentPictureInPicture.js)) allows it as an always-on-top window capped at 800×600. All other `about:blank` popups stay denied. Teams renders its compact meeting view into the popup's document, with the event handlers running in the main window, so the call itself never leaves the main window. Returning to the meeting, closing the popup or pressing its share button moves the view back to the main window, and sharing then runs as usual. The tool logs `[DOCUMENT_PIP]` lines when Teams requests a window or registers the `enterpictureinpicture` media session action. These lines contain no meeting or user data.
+
+**Configuration**: `media.documentPictureInPicture` (default `true`; set `false` to fall back to Electron's native, broken API)
+**Limitations**: user activation from a click in the popup does not reach the main window, as it does with native PiP, so gesture-gated APIs called from popup buttons (clipboard writes, fullscreen) may be refused. Chrome opens PiP automatically on tab switch through the `enterpictureinpicture` media session action, and Electron has no equivalent trigger. Wayland compositors may not honour always-on-top.
+
 ### UI & Display
 
 #### [theme.js](theme.js)
