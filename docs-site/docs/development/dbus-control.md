@@ -49,7 +49,7 @@ busctl --user monitor "$BUS"
 
 A headset, foot pedal or busy light can be wired to Teams through a small user service that sits between the device and this API, so device-specific code stays outside the application. A bridge built this way should account for the following behaviour.
 
-Teams for Linux owns the bus name only while it runs. Watch `NameOwnerChanged` for the service name and call `GetState` whenever it gains an owner, since signals sent before the bridge connected or while the app was restarting are not replayed.
+Teams for Linux owns the bus name only while it runs. Watch `NameOwnerChanged` for the service name and call `GetState` whenever it gains an owner, since signals sent before the bridge connected or while the app was restarting are not replayed. When it loses its owner, treat the cached state as gone and return the device to idle (not ringing, on-hook), since an app that quits or crashes mid-call sends no final state.
 
 When a call is answered, `incomingCall` can become false a moment before `inCall` becomes true, because the end of the ringing notification and the call connecting are reported separately. A bridge that keeps a line open while a call is active, such as a headset base that drops its off-hook state within about a second, should assert that state on the button press before calling `AcceptAudio`, keep it until `inCall` arrives, and clear it if the call returns false or `inCall` does not follow within a few seconds.
 
