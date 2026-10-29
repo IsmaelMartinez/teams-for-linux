@@ -45,6 +45,18 @@ busctl --user call "$BUS" "$OBJ_PATH" "$IFACE" Unmute b false
 busctl --user monitor "$BUS"
 ```
 
+## Writing a device bridge
+
+A headset, foot pedal or busy light can be wired to Teams through a small user service that sits between the device and this API, so device-specific code stays outside the application. A bridge built this way should account for the following behaviour.
+
+Teams for Linux owns the bus name only while it runs. Watch `NameOwnerChanged` for the service name and call `GetState` whenever it gains an owner, since signals sent before the bridge connected or while the app was restarting are not replayed.
+
+When a call is answered, `incomingCall` can become false a moment before `inCall` becomes true, because the end of the ringing notification and the call connecting are reported separately. A bridge that keeps a line open while a call is active, such as a headset base that drops its off-hook state, should hold that state for a few seconds after `AcceptAudio` returns true until `inCall` arrives.
+
+`microphoneControlState` is `muted`, `unmuted` or `off` (no active call), and `unknown` until the first observation. It is derived from the outgoing audio, so a microphone with built-in noise reduction that sends silence while you are quiet can read `muted` after about half a second; the [MQTT microphone topic](../mqtt-integration.md#published-topics) uses the same detection. Test this with your device before driving a mute LED from `MicrophoneControlChanged` alone. `Mute` and `Unmute` toggle only from a known `muted` or `unmuted` state, so they return false outside a call unless `force` is true, while `ToggleMute` sends the shortcut regardless of state.
+
+A community example for EPOS/Sennheiser DECT bases is discussed in [issue #3151](https://github.com/IsmaelMartinez/teams-for-linux/issues/3151).
+
 ## Separate application instances
 
 For profiles launched in separate processes with different `--user-data-dir` directories, set a distinct `dbusControl.busName` in each directory's `config.json`, then restart those instances. For example:
