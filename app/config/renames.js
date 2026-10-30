@@ -373,23 +373,26 @@ function applyRenamedOptions(config, sources, renames = RENAMES) {
  * source.
  *
  * Only needed where behaviour turns on an option being *set* rather than on its
- * value, which today is `disableGpu` alone: app/startup/commandLine.js
- * force-disables the GPU on Wayland unless the user has said otherwise, so
- * someone opting back in through `performance.disableGpu`, on the command line
- * or in the environment as much as in the file, has to count as having spoken.
- * The sources are the ones applyRenamedOptions projects from, so the two can
- * never disagree about what the user said.
+ * value: app/startup/commandLine.js force-disables the GPU on Wayland unless
+ * the user has said otherwise, so someone opting back in through
+ * `performance.disableGpu`, on the command line or in the environment as much
+ * as in the file, has to count as having spoken; and the menu toggles that
+ * app/index.js re-reads from config.json must not override a value given on
+ * the command line or in the environment. The sources are the ones
+ * applyRenamedOptions projects from, so the two can never disagree about what
+ * the user said.
  *
  * @param {{cli?: object, env?: object, file?: object}} sources see
  *   readUserSources.
  * @param {string} flat the flat option name.
+ * @param {string[]} sourceNames which sources to check, default all three.
  * @returns {boolean}
  */
-function isOptionSetByUser(sources, flat) {
+function isOptionSetByUser(sources, flat, sourceNames = SOURCE_ORDER) {
   const rename = RENAMES.find((entry) => entry.flat === flat);
   const names = rename ? [flat, rename.nested] : [flat];
 
-  return SOURCE_ORDER.some((source) =>
+  return sourceNames.some((source) =>
     names.some((name) => readPath(sources?.[source], name) !== undefined)
   );
 }

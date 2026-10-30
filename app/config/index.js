@@ -184,6 +184,13 @@ function argv(configPath, appVersion) {
   // default overwrite the choice of a user who opted back into the GPU.
   config.disableGpuExplicitlySet = isOptionSetByUser(sources, "disableGpu");
 
+  // loadMenuToggleSettings in app/index.js re-reads the menu toggles from
+  // config.json at app-ready; it skips these so the command line and the
+  // environment keep beating the file. Names only, never values.
+  config.optionsSetOutsideConfigFile = Object.keys(configOptions).filter((flat) =>
+    isOptionSetByUser(sources, flat, ["cli", "env"])
+  );
+
   logger.init(config.logConfig);
 
   // Runs after logger.init so the warning reaches the log file too, for the

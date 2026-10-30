@@ -138,6 +138,20 @@ describe('nested names from flags and environment variables reach the flat key',
 		assert.deepStrictEqual(config.spellCheckerLanguages, ['en-GB']);
 	});
 
+	// app/index.js re-reads the menu toggles from config.json at app-ready and
+	// skips these names, so the command line and environment keep winning.
+	it('records options set on the command line or in the environment, not the file', () => {
+		const config = load({
+			file: { notifications: { enabled: true }, appIcon: '/file.png' },
+			args: ['--notifications.enabled=false'],
+			env: { DEFAULT_NOTIFICATION_URGENCY: 'critical' },
+		});
+		assert.strictEqual(config.disableNotifications, true);
+		assert.ok(config.optionsSetOutsideConfigFile.includes('disableNotifications'));
+		assert.ok(config.optionsSetOutsideConfigFile.includes('defaultNotificationUrgency'));
+		assert.ok(!config.optionsSetOutsideConfigFile.includes('appIcon'));
+	});
+
 	it('counts a nested disableGpu from the command line as explicitly set', () => {
 		const config = load({ args: ['--performance.disableGpu=false'] });
 		assert.strictEqual(config.disableGpu, false);
