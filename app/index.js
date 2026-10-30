@@ -643,6 +643,8 @@ function loadMenuToggleSettings() {
   // spelling; readStoredOption lets the nested one win, as the loader does.
   const { readStoredOption } = require("./config/renames");
   for (const setting of menuToggleSettings) {
+    // A value from the command line or environment beats config.json.
+    if (config.optionsSetOutsideConfigFile?.includes(setting)) continue;
     const value = readStoredOption(appConfig.legacyConfigStore, setting);
     if (value !== undefined) config[setting] = value;
   }
