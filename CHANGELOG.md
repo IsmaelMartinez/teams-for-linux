@@ -1,5 +1,42 @@
 # Changelog
 
+## [2.29.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.28.0...v2.29.0) (2026-10-30)
+
+
+### Features
+
+* **config:** move the last 18 flat options into notifications, idleDetection, network and auth ([#3142](https://github.com/IsmaelMartinez/teams-for-linux/issues/3142)) ([659b81a](https://github.com/IsmaelMartinez/teams-for-linux/commit/659b81aecb5bf22d4c7a1d4a77be6a5364893465)), closes [#3140](https://github.com/IsmaelMartinez/teams-for-linux/issues/3140) [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842)
+* **config:** show deprecated options once at startup and honour nested names from CLI and env ([#3143](https://github.com/IsmaelMartinez/teams-for-linux/issues/3143)) ([f9f7402](https://github.com/IsmaelMartinez/teams-for-linux/commit/f9f7402b3abff0361f457e924e62c8159a981df7))
+* **screen-sharing:** double-click a picker tile to start sharing ([#3036](https://github.com/IsmaelMartinez/teams-for-linux/issues/3036)) ([c68db5f](https://github.com/IsmaelMartinez/teams-for-linux/commit/c68db5f74533be23604d036838ae7a040a2d8ecf))
+
+
+### Bug Fixes
+
+* **connection:** don't reload when Teams redirects the initial load ([#3154](https://github.com/IsmaelMartinez/teams-for-linux/issues/3154)) ([d988e1b](https://github.com/IsmaelMartinez/teams-for-linux/commit/d988e1b32d9971bb21fedfc9d4fcc55c39896565)), closes [#3152](https://github.com/IsmaelMartinez/teams-for-linux/issues/3152)
+
+
+### Documentation
+
+* **dbus:** explain how to write a device bridge on the control API ([#3153](https://github.com/IsmaelMartinez/teams-for-linux/issues/3153)) ([60cd169](https://github.com/IsmaelMartinez/teams-for-linux/commit/60cd169e31cf48728e75d0032ef0e6654a29190b))
+
+
+### Maintenance
+
+* **deps-dev:** bump electron from 44.9.0 to 44.9.1 ([#3137](https://github.com/IsmaelMartinez/teams-for-linux/issues/3137)) ([4b0e5fc](https://github.com/IsmaelMartinez/teams-for-linux/commit/4b0e5fc895c99e6f2fd96209979b3127947adcb6))
+* **deps-dev:** bump undici from 6.29.0 to 6.29.1 ([#3135](https://github.com/IsmaelMartinez/teams-for-linux/issues/3135)) ([f250e78](https://github.com/IsmaelMartinez/teams-for-linux/commit/f250e786940e22e1807c856cec59690a4755d78f))
+* **deps:** bump body-parser from 1.20.6 to 1.20.9 in /docs-site ([#3139](https://github.com/IsmaelMartinez/teams-for-linux/issues/3139)) ([1908d0b](https://github.com/IsmaelMartinez/teams-for-linux/commit/1908d0b981a853df5ebfadd58c5f7aec8edd2ae5))
+* **deps:** bump dompurify from 3.4.16 to 3.4.17 in /docs-site ([#3132](https://github.com/IsmaelMartinez/teams-for-linux/issues/3132)) ([e49bdcf](https://github.com/IsmaelMartinez/teams-for-linux/commit/e49bdcf1ad1bcfa366414b81b99e4c3387fcd158))
+* **deps:** bump fast-uri from 3.1.8 to 3.1.9 ([#3131](https://github.com/IsmaelMartinez/teams-for-linux/issues/3131)) ([7524a5e](https://github.com/IsmaelMartinez/teams-for-linux/commit/7524a5e904b27b53713dceafaaedb014b3e87dfe))
+* **deps:** bump fast-uri from 3.1.8 to 3.1.9 in /docs-site ([#3136](https://github.com/IsmaelMartinez/teams-for-linux/issues/3136)) ([4c8a7f8](https://github.com/IsmaelMartinez/teams-for-linux/commit/4c8a7f8ffc001f41beb7aadcd8528909c6f82d13))
+* **deps:** bump ip-address from 10.7.2 to 10.7.5 ([#3134](https://github.com/IsmaelMartinez/teams-for-linux/issues/3134)) ([c935e45](https://github.com/IsmaelMartinez/teams-for-linux/commit/c935e45f519710d106f122c9aa9544355868bd3a))
+* **deps:** bump postcss-selector-parser in /docs-site ([#3147](https://github.com/IsmaelMartinez/teams-for-linux/issues/3147)) ([8a5a300](https://github.com/IsmaelMartinez/teams-for-linux/commit/8a5a300d84452af5e78b2c32e9140e1c0d47cbe1))
+* **deps:** bump the minor-and-patch group with 2 updates ([#3146](https://github.com/IsmaelMartinez/teams-for-linux/issues/3146)) ([8cee421](https://github.com/IsmaelMartinez/teams-for-linux/commit/8cee421b3106210bc8182961e3f868f9e4c09f7b))
+* **deps:** bump undici from 7.30.0 to 7.30.1 in /docs-site ([#3138](https://github.com/IsmaelMartinez/teams-for-linux/issues/3138)) ([761fd62](https://github.com/IsmaelMartinez/teams-for-linux/commit/761fd62247338c5ff1f9173afdcb15002e597927))
+
+### Thanks
+
+Big thanks to @antimatter84, @app/dependabot for contributing to this release.
+
 ## [2.28.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.27.0...v2.28.0) (2026-10-25)
 
 
