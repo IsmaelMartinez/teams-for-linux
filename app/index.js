@@ -639,10 +639,12 @@ function loadMenuToggleSettings() {
     'appIcon'
   ];
 
+  // The store is the user's config.json, so it may hold either ADR-025
+  // spelling; readStoredOption lets the nested one win, as the loader does.
+  const { readStoredOption } = require("./config/renames");
   for (const setting of menuToggleSettings) {
-    if (appConfig.legacyConfigStore.has(setting)) {
-      config[setting] = appConfig.legacyConfigStore.get(setting);
-    }
+    const value = readStoredOption(appConfig.legacyConfigStore, setting);
+    if (value !== undefined) config[setting] = value;
   }
 }
 

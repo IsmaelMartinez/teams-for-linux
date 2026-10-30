@@ -14,6 +14,7 @@ const login = require("../login");
 const customCSS = require("../customCSS");
 const Menus = require("../menus");
 const { SpellCheckProvider } = require("../spellCheckProvider");
+const { writeStoredOption } = require("../config/renames");
 const { execFile } = require("node:child_process");
 const TrayIconChooser = require("../browser/tools/trayIconChooser");
 require("../appConfiguration");
@@ -886,7 +887,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
 };
 
 function onSpellCheckerLanguageChanged(languages) {
-  appConfig.legacyConfigStore.set("spellCheckerLanguages", languages);
+  writeStoredOption(appConfig.legacyConfigStore, "spellCheckerLanguages", languages);
 }
 
 let allowFurtherRequests = true;
