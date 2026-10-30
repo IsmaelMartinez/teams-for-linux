@@ -163,6 +163,15 @@ describe('themeIcon', { skip: process.platform !== 'linux' }, () => {
     assert.strictEqual(require(modulePath).iconName({ windowClass: null }), 'teams-for-linux');
   });
 
+  it('matches the whole window class, not a launcher whose class only starts with it', () => {
+    writeDesktop('extra.desktop', 'Exec=/opt/teams-for-linux/teams-for-linux --class teams-work-extra\nIcon=teams-extra\nStartupWMClass=teams-work-extra\n');
+    writeDesktop('work.desktop', 'Exec=/opt/teams-for-linux/teams-for-linux --class teams-work\nIcon=teams-work\nStartupWMClass=teams-work\n');
+    const { iconName } = require(modulePath);
+    assert.strictEqual(iconName({ windowClass: 'teams-work' }), 'teams-work');
+    assert.strictEqual(iconName({ windowClass: 'teams-work-extra' }), 'teams-extra');
+    assert.strictEqual(iconName({ windowClass: 'teams' }), 'teams-for-linux');
+  });
+
   it('falls back to the default name when the desktop file icon is not a plain name', () => {
     for (const icon of ['../../escape', '/usr/share/pixmaps/x.png', 'a b']) {
       writeDesktop('teams-for-linux.desktop', `Icon=${icon}\n`);

@@ -58,7 +58,7 @@ function iconName({ windowClass } = {}) {
   const files = readDesktopFiles();
   const exe = process.env.APPIMAGE || process.execPath;
   const match =
-    (windowClass && files.find((f) => f.text.includes(`StartupWMClass=${windowClass}`))) ||
+    (windowClass && files.find((f) => f.text.split('\n').some((l) => l.trim() === `StartupWMClass=${windowClass}`))) ||
     files.find((f) => f.name === `${DEFAULT_NAME}.desktop`) ||
     files.find((f) => f.text.includes(exe));
   const icon = match && /^Icon=(.+)$/m.exec(match.text)?.[1].trim();
