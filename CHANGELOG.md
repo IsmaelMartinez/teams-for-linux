@@ -33,6 +33,10 @@
 * **deps:** bump the minor-and-patch group with 2 updates ([#3146](https://github.com/IsmaelMartinez/teams-for-linux/issues/3146)) ([8cee421](https://github.com/IsmaelMartinez/teams-for-linux/commit/8cee421b3106210bc8182961e3f868f9e4c09f7b))
 * **deps:** bump undici from 7.30.0 to 7.30.1 in /docs-site ([#3138](https://github.com/IsmaelMartinez/teams-for-linux/issues/3138)) ([761fd62](https://github.com/IsmaelMartinez/teams-for-linux/commit/761fd62247338c5ff1f9173afdcb15002e597927))
 
+### Thanks
+
+Big thanks to @antimatter84, @app/dependabot for contributing to this release.
+
 ## [2.28.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.27.0...v2.28.0) (2026-10-25)
 
 
