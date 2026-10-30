@@ -113,6 +113,27 @@ describe('ConnectionManager initial page load timing', () => {
 		assert.strictEqual(reloadCount(), 1, 'the failed load should schedule one debounced reload');
 	});
 
+	it('does not retry when Teams redirects the initial load (ERR_ABORTED)', async () => {
+		// The msteams:// launcher page redirects in the page; retrying would reload
+		// over it and drop the deep link (#3152).
+		const loadError = Object.assign(new Error("ERR_ABORTED (-3) loading 'https://teams.microsoft.com/l/call/0/0'"), { code: 'ERR_ABORTED', errno: -3 });
+		let setUrl;
+		let reloadCount;
+		({ manager, setUrl, reloadCount } = managerWithFakeWindow({ loadMs: 1000, loadError }));
+		await manager.load(false);
+
+		assert.deepStrictEqual(errors, []);
+		assert.deepStrictEqual(infos, [
+			'[CONNECTION] Loading initial URL...',
+			'[CONNECTION] Teams redirected the initial load after 1.0s',
+		]);
+
+		setUrl('https://teams.microsoft.com/v2/');
+		mock.timers.tick(1000);
+		await new Promise((r) => setImmediate(r));
+		assert.strictEqual(reloadCount(), 0, 'a redirected load must not schedule a reload');
+	});
+
 	it('reports how long the connectivity check waited before giving up', async () => {
 		({ manager } = managerWithFakeWindow({ loadMs: 0 }));
 		manager.isOnline = async () => {
