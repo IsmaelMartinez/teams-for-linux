@@ -8,9 +8,12 @@ const {
 	chromiumSwitchTarget,
 	deprecationSources,
 	withoutChromiumSwitchAliases,
+	readPath,
 	applyRenamedOptions,
 	isOptionSetByUser,
 	readUserSources,
+	readStoredOption,
+	writeStoredOption,
 	toNestedConfigFile,
 } = require('../../app/config/renames');
 const { buildDeprecationWarning } = require('../../app/config/deprecation');
@@ -399,48 +402,81 @@ describe('toNestedConfigFile - inverted booleans', () => {
 	});
 });
 
-// Gate A in issue #2842. yargs replaces an object option wholesale instead of
-// deep merging it, so a config file that sets one leaf of a namespace drops the
-// declared defaults of every sibling. For a brand new namespace that is
-// harmless, because nothing reads it during the deprecation window. For a
-// namespace that already ships leaves the app reads, it is a silent regression:
-// moving proxyServer into `network` resolves network.disableQuic to undefined
-// and re-enables QUIC (#2518), and moving any auth option in turn disables
-// auth.keepMsalCacheEncryptionCookie, which is what keeps users signed in
-// across restarts.
-//
-// Delete this suite when gate A lands and object options deep merge.
-describe('config renames - gate A boundary', () => {
-	const ALREADY_SHIPPED_LEAVES = [
-		'network',
-		'auth',
-		'idleDetection',
-		'notifications',
-	];
+// Every rename must default to the same behaviour under either name, so a
+// config that sets neither resolves alike once modules read the nested leaf.
+// The inverted ones are the trap: `disableNotifications: false` must pair with
+// `notifications.enabled: true`, not a copied `false`.
+describe('config renames - default parity', () => {
+	it('every nested default matches its flat default, negated where inverted', () => {
+		for (const { flat, nested, inverted } of RENAMES) {
+			const [namespace, ...rest] = nested.split('.');
+			const nestedDefault = readPath(options[namespace].default, rest.join('.'));
+			const expected = inverted ? !options[flat].default : options[flat].default;
+			assert.deepStrictEqual(nestedDefault, expected, `${flat} -> ${nested}`);
+		}
+	});
+});
 
-	it('no rename targets a namespace that already ships leaves', () => {
-		for (const { flat, nested } of RENAMES) {
-			const namespace = nested.split('.')[0];
-			assert.ok(
-				!ALREADY_SHIPPED_LEAVES.includes(namespace),
-				`${flat} -> ${nested} needs gate A first; see issue #2842`
-			);
+// A stand-in for electron-store, which resolves dotted keys as nested paths.
+function fakeStore(data) {
+	const parentOf = (key) => {
+		const parts = key.split('.');
+		const leaf = parts.pop();
+		let node = data;
+		for (const part of parts) node = node[part] ??= {};
+		return { node, leaf };
+	};
+	return {
+		data,
+		has: (key) => readPath(data, key) !== undefined,
+		get: (key) => readPath(data, key),
+		set: (key, value) => {
+			const { node, leaf } = parentOf(key);
+			node[leaf] = value;
+		},
+		delete: (key) => {
+			const { node, leaf } = parentOf(key);
+			delete node[leaf];
+		},
+	};
+}
+
+// Menu toggles persist to the user's config.json through electron-store, and
+// app/index.js re-applies them after the loader has projected the nested
+// names. Both sides have to agree on which spelling wins.
+describe('readStoredOption and writeStoredOption', () => {
+	it('reads the nested spelling over the flat one, back in flat polarity', () => {
+		const store = fakeStore({ disableNotifications: false, notifications: { enabled: false } });
+		assert.strictEqual(readStoredOption(store, 'disableNotifications'), true);
+	});
+
+	it('falls back to the flat spelling, then to undefined', () => {
+		assert.strictEqual(readStoredOption(fakeStore({ disableBadgeCount: true }), 'disableBadgeCount'), true);
+		assert.strictEqual(readStoredOption(fakeStore({}), 'disableBadgeCount'), undefined);
+	});
+
+	it('writes a toggle under the nested name, negated, and drops the flat key', () => {
+		const store = fakeStore({ disableNotifications: false, notifications: { enabled: true, timeoutType: 'never' } });
+		writeStoredOption(store, 'disableNotifications', true);
+		assert.deepStrictEqual(store.data, { notifications: { enabled: false, timeoutType: 'never' } });
+	});
+
+	it('round-trips a toggle so the next start reads what the menu wrote', () => {
+		for (const [flat, value] of [['disableNotificationSound', true], ['defaultNotificationUrgency', 'critical'], ['appIcon', '/x.png']]) {
+			const store = fakeStore({});
+			writeStoredOption(store, flat, value);
+			assert.strictEqual(readStoredOption(store, flat), value, flat);
+			// The loader reads the same file, so its projection agrees too.
+			const config = {};
+			applyRenamedOptions(config, { file: store.data });
+			assert.strictEqual(config[flat], value, flat);
 		}
 	});
 
-	it('every rename target namespace holds only renamed leaves', () => {
-		// The converse check, so a namespace cannot quietly gain an unrelated
-		// leaf that feature code reads directly while the window is open.
-		const renamedLeaves = new Set(RENAMES.map((r) => r.nested));
-		for (const { nested } of RENAMES) {
-			const namespace = nested.split('.')[0];
-			for (const field of Object.keys(options[namespace].fields ?? {})) {
-				assert.ok(
-					renamedLeaves.has(`${namespace}.${field}`),
-					`${namespace}.${field} is not a rename target, so ${namespace} is no longer safe`
-				);
-			}
-		}
+	it('writes an option outside the table under its own name', () => {
+		const store = fakeStore({});
+		writeStoredOption(store, 'notARenamedOption', 1);
+		assert.deepStrictEqual(store.data, { notARenamedOption: 1 });
 	});
 });
 

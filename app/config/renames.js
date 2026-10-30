@@ -40,10 +40,7 @@ const RENAMES = [
 
   // Batch 2 (2.21.0). Every remaining rename whose target namespace is
   // brand new, taken in one pass because they share the batch 1 mechanics
-  // exactly. The 18 renames that land in the already-shipped network, auth,
-  // idleDetection and notifications namespaces are not here yet: they were
-  // held on gate A in issue #2842 (yargs replacing an object option
-  // wholesale), which mergeDefaults.js now fixes (#3011).
+  // exactly.
   //
   // customBackground
   { flat: "isCustomBackgroundEnabled", nested: "customBackground.enabled" },
@@ -110,6 +107,63 @@ const RENAMES = [
   // development
   { flat: "webDebug", nested: "development.webDebug" },
   { flat: "watchConfigFile", nested: "development.watchConfigFile" },
+
+  // Batch 3 (2.29.0). The renames into the namespaces that already shipped
+  // unrelated leaves. They waited on gate A in issue #2842 (yargs replacing an
+  // object option wholesale, so moving one leaf in dropped its siblings'
+  // defaults), which mergeDefaults.js fixed in #3011.
+  //
+  // notifications
+  {
+    flat: "disableNotifications",
+    nested: "notifications.enabled",
+    inverted: true,
+  },
+  {
+    flat: "disableNotificationSound",
+    nested: "notifications.sound.enabled",
+    inverted: true,
+  },
+  {
+    flat: "disableNotificationSoundIfNotAvailable",
+    nested: "notifications.sound.onlyWhenAvailable",
+  },
+  {
+    flat: "disableNotificationWindowFlash",
+    nested: "notifications.windowFlash",
+    inverted: true,
+  },
+  {
+    flat: "disableBadgeCount",
+    nested: "notifications.badgeCountEnabled",
+    inverted: true,
+  },
+  { flat: "notificationMethod", nested: "notifications.method" },
+  { flat: "defaultNotificationUrgency", nested: "notifications.urgency" },
+  // idleDetection
+  { flat: "awayOnSystemIdle", nested: "idleDetection.setAwayOnIdle" },
+  { flat: "appIdleTimeout", nested: "idleDetection.timeout" },
+  {
+    flat: "appIdleTimeoutCheckInterval",
+    nested: "idleDetection.checkInterval.detectIdle",
+  },
+  {
+    flat: "appActiveCheckInterval",
+    nested: "idleDetection.checkInterval.detectActive",
+  },
+  // auth
+  { flat: "authServerWhitelist", nested: "auth.serverWhitelist" },
+  { flat: "ssoBasicAuthUser", nested: "auth.basic.user" },
+  { flat: "ssoBasicAuthPasswordCommand", nested: "auth.basic.passwordCommand" },
+  { flat: "clientCertPath", nested: "auth.clientCertificate.path" },
+  { flat: "clientCertPassword", nested: "auth.clientCertificate.password" },
+  {
+    flat: "customCACertsFingerprints",
+    nested: "auth.customCACertificateFingerprints",
+    type: "array",
+  },
+  // network
+  { flat: "proxyServer", nested: "network.proxyServer" },
 ];
 
 // Chromium command-line switches that yargs also camel-cases onto one of our
@@ -341,6 +395,48 @@ function isOptionSetByUser(sources, flat) {
 }
 
 /**
+ * Reads an option, in flat terms, from the electron-store that menu toggles
+ * persist to. That store is the user's own config.json, so it can hold either
+ * spelling; the nested one wins, matching applyRenamedOptions, and is coerced
+ * back to the flat polarity (negation is symmetric).
+ *
+ * @param {{has: Function, get: Function}} store an electron-store, which
+ *   resolves dotted keys as nested paths.
+ * @param {string} flat the flat option name modules read.
+ * @param {typeof RENAMES} renames override for tests.
+ * @returns {unknown} the stored value, or undefined when neither is stored.
+ */
+function readStoredOption(store, flat, renames = RENAMES) {
+  const rename = renames.find((entry) => entry.flat === flat);
+  if (rename && store.has(rename.nested)) {
+    return coerce(store.get(rename.nested), rename.inverted, rename.type);
+  }
+  return store.has(flat) ? store.get(flat) : undefined;
+}
+
+/**
+ * Persists a flat-named value set from a menu under its nested name and drops
+ * the flat key. Writing the flat key instead would lose to a nested value
+ * already in config.json on the next start, so the toggle would silently
+ * revert, and it would also add a deprecated key the user never wrote.
+ *
+ * @param {{has: Function, set: Function, delete: Function}} store an
+ *   electron-store over the user's config.json.
+ * @param {string} flat the flat option name modules read.
+ * @param {unknown} value the value in flat terms.
+ * @param {typeof RENAMES} renames override for tests.
+ */
+function writeStoredOption(store, flat, value, renames = RENAMES) {
+  const rename = renames.find((entry) => entry.flat === flat);
+  if (!rename) {
+    store.set(flat, value);
+    return;
+  }
+  store.set(rename.nested, coerce(value, rename.inverted, rename.type));
+  if (store.has(flat)) store.delete(flat);
+}
+
+/**
  * Rewrites a config file's flat keys onto their nested targets, the inverse of
  * applyRenamedOptions. Never mutates the input.
  *
@@ -408,5 +504,7 @@ module.exports = {
   readUserSources,
   applyRenamedOptions,
   isOptionSetByUser,
+  readStoredOption,
+  writeStoredOption,
   toNestedConfigFile,
 };

@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { deepMerge, applyObjectDefaults, mergeConfigFiles } = require('../../app/config/mergeDefaults');
-const { applyRenamedOptions } = require('../../app/config/renames');
+const { applyRenamedOptions, readPath } = require('../../app/config/renames');
 const options = require('../../app/config/options');
 
 describe('config mergeDefaults - deepMerge', () => {
@@ -159,6 +159,16 @@ describe('config loader - object defaults', () => {
 	const loaderPath = require.resolve('../../app/config');
 	let configDir;
 	let argv;
+	const extraDirs = [];
+
+	// Each call gets its own directory: the loader require()s config.json, so a
+	// reused path would hand back the cached contents of an earlier case.
+	function load(contents) {
+		const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tfl-config-'));
+		extraDirs.push(dir);
+		fs.writeFileSync(path.join(dir, 'config.json'), JSON.stringify(contents));
+		return argv(dir, '0.0.0');
+	}
 
 	before(() => {
 		require.cache[electronPath] = {
@@ -182,7 +192,73 @@ describe('config loader - object defaults', () => {
 		delete require.cache[electronPath];
 		delete require.cache[loggerPath];
 		delete require.cache[loaderPath];
-		fs.rmSync(configDir, { recursive: true, force: true });
+		for (const dir of [configDir, ...extraDirs]) fs.rmSync(dir, { recursive: true, force: true });
+	});
+
+	// ADR-025 batch 3 moves options into namespaces that already ship leaves the
+	// app reads. Setting one renamed leaf must project onto the flat key and
+	// leave every sibling at its declared default (gate A in #2842).
+	const cases = [
+		{
+			file: { network: { proxyServer: 'proxy:8080' } },
+			flat: ['proxyServer', 'proxy:8080'],
+			sibling: ['network.disableQuic', true],
+		},
+		{
+			file: { auth: { clientCertificate: { path: '/c.p12' } } },
+			flat: ['clientCertPath', '/c.p12'],
+			sibling: ['auth.keepMsalCacheEncryptionCookie.enabled', true],
+		},
+		{
+			file: { auth: { clientCertificate: { path: '/c.p12' } } },
+			flat: ['clientCertPath', '/c.p12'],
+			sibling: ['auth.clientCertificate.pinDialog.enabled', false],
+		},
+		{
+			file: { auth: { customCACertificateFingerprints: 'sha256/x' } },
+			flat: ['customCACertsFingerprints', ['sha256/x']],
+			sibling: ['auth.keepMsalCacheEncryptionCookie.days', 400],
+		},
+		{
+			file: { notifications: { enabled: false } },
+			flat: ['disableNotifications', true],
+			sibling: ['notifications.electron.clickAction', 'show'],
+		},
+		{
+			file: { notifications: { sound: { enabled: false } } },
+			flat: ['disableNotificationSound', true],
+			sibling: ['notifications.timeoutType', 'default'],
+		},
+		{
+			file: { idleDetection: { setAwayOnIdle: true } },
+			flat: ['awayOnSystemIdle', true],
+			sibling: ['idleDetection.stateFile', options.idleDetection.default.stateFile],
+		},
+		{
+			file: { idleDetection: { checkInterval: { detectActive: 5 } } },
+			flat: ['appActiveCheckInterval', 5],
+			sibling: ['idleDetection.forceState', false],
+		},
+	];
+
+	for (const { file, flat: [flatName, flatValue], sibling: [siblingPath, siblingValue] } of cases) {
+		it(`${JSON.stringify(file)} sets ${flatName} and keeps ${siblingPath}`, () => {
+			const config = load(file);
+			assert.deepStrictEqual(config[flatName], flatValue);
+			assert.deepStrictEqual(readPath(config, siblingPath), siblingValue);
+		});
+	}
+
+	// An untouched config must behave as before the rename: the inverted
+	// defaults are the ones a naive copy would get wrong.
+	it('resolves the flat notification defaults unchanged from an unrelated config', () => {
+		const config = load({ network: { disableQuic: false } });
+		assert.strictEqual(config.disableNotifications, false);
+		assert.strictEqual(config.disableNotificationSound, false);
+		assert.strictEqual(config.disableNotificationWindowFlash, false);
+		assert.strictEqual(config.disableBadgeCount, false);
+		assert.strictEqual(config.notifications.enabled, true);
+		assert.strictEqual(config.proxyServer, null);
 	});
 
 	it('keeps network.disableQuic when config.json sets only another network leaf', () => {

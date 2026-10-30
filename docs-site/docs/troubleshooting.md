@@ -10,13 +10,13 @@ For configuration options, see [Configuration](configuration.md). For developmen
 
 - **Cache Issues**: Clear cache directories (see [Cache Management](configuration.md#cache-management))
 - **Login Problems**: Clear stored data and cache
-- **Notification Issues**: Check `notificationMethod` in config
+- **Notification Issues**: Check `notifications.method` in config
 - **Audio/Video**: Verify device selection in Teams settings
 - **Installation**: Use clean install and clear previous data
 
 ## Performance Tuning
 
-When the app feels slow or heavy, seven configuration options are the first-line knobs to check. `performance.disableGpu` turns off GPU compositing and hardware acceleration, which helps on broken graphics drivers and hurts otherwise. `cacheManagement.maxCacheSizeMB` (default 600) and `cacheManagement.cacheCheckIntervalMs` (default one hour) govern automatic cache cleanup, while `performance.electronCLIFlags` passes arbitrary Chromium flags for tuning memory, GPU, or rendering behaviour. `appIdleTimeout` and `appIdleTimeoutCheckInterval` control how often idle state is polled, and `wayland.xwaylandOptimizations` affects GPU behaviour under XWayland. See [Configuration](configuration.md) for details on each option.
+When the app feels slow or heavy, seven configuration options are the first-line knobs to check. `performance.disableGpu` turns off GPU compositing and hardware acceleration, which helps on broken graphics drivers and hurts otherwise. `cacheManagement.maxCacheSizeMB` (default 600) and `cacheManagement.cacheCheckIntervalMs` (default one hour) govern automatic cache cleanup, while `performance.electronCLIFlags` passes arbitrary Chromium flags for tuning memory, GPU, or rendering behaviour. `idleDetection.timeout` and `idleDetection.checkInterval.detectIdle` control how often idle state is polled, and `wayland.xwaylandOptimizations` affects GPU behaviour under XWayland. See [Configuration](configuration.md) for details on each option.
 
 ---
 
@@ -470,7 +470,7 @@ Replace `<your-chrome-version>` with the Chrome version Teams for Linux reports.
 
 **Solutions/Workarounds:**
 
-1.  **Check Configuration:** Please refer to the `notificationMethod`, and other notification settings, in the [Configuration Documentation](configuration.md) for more information.
+1.  **Check Configuration:** Please refer to the `notifications.method`, and other notification settings, in the [Configuration Documentation](configuration.md) for more information.
 
 ---
 
@@ -488,8 +488,7 @@ Replace `<your-chrome-version>` with the Chrome version Teams for Linux reports.
 
     ```json
     {
-      "notificationMethod": "electron",
-      "notifications": { "timeoutType": "never" }
+      "notifications": { "method": "electron", "timeoutType": "never" }
     }
     ```
 
