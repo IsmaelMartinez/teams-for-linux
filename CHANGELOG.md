@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.29.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.29.0...v2.29.1) (2026-10-31)
+
+
+### Maintenance
+
+* **deps-dev:** bump qs from 6.16.0 to 6.17.1 ([#3156](https://github.com/IsmaelMartinez/teams-for-linux/issues/3156)) ([987516b](https://github.com/IsmaelMartinez/teams-for-linux/commit/987516b74852e2cf6dc8efbdc595d0fdc99c84f0))
+* **deps:** bump electron-store from 11.0.2 to 12.0.0 ([#3115](https://github.com/IsmaelMartinez/teams-for-linux/issues/3115)) ([90330af](https://github.com/IsmaelMartinez/teams-for-linux/commit/90330af890687ced4ccd89b385d15d34dde05273))
+* **deps:** bump qs from 6.16.0 to 6.17.1 in /docs-site ([#3157](https://github.com/IsmaelMartinez/teams-for-linux/issues/3157)) ([a763e38](https://github.com/IsmaelMartinez/teams-for-linux/commit/a763e38cb4f6701d57d1b6755979ef86b0289283))
+
+### Thanks
+
+Big thanks to @app/dependabot for contributing to this release.
+
 ## [2.29.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.28.0...v2.29.0) (2026-10-30)
 
 
