@@ -73,7 +73,7 @@
     "xml2js": "^0.6.2"
   },
   "overrides": {
-    "follow-redirects": "^1.16.1"
+    "follow-redirects": "^1.16.2"
   },
   "build": {
     "appId": "teams-for-linux",
