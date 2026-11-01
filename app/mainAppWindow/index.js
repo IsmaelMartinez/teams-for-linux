@@ -23,6 +23,7 @@ const ssoPasswordPrefill = require("../ssoPasswordPrefill");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
 const deepLinkRouter = require("./deepLinkRouter");
 const { DeferredDeepLink } = require("./deferredDeepLink");
+const { stripWebPrefix } = require("./protocolLink");
 const os = require("node:os");
 const path = require("node:path");
 const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
@@ -1162,7 +1163,9 @@ function processArgs(args) {
   // Modern Teams protocol format: msteams://teams.microsoft.com/l/...
   const v2msTeams = new RegExp(config.msTeamsProtocols.v2);
   console.debug("processArgs:", args);
-  for (const arg of args) {
+  for (const rawArg of args) {
+    // The launcher may use `web+msteams:` in place of `msteams:`.
+    const arg = stripWebPrefix(rawArg);
     console.debug(
       `testing RegExp processArgs ${new RegExp(config.meetupJoinRegEx).test(
         arg
