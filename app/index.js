@@ -32,6 +32,7 @@ const PartitionsManager = require("./partitions/manager");
 const ProfilesManager = require("./profilesManager");
 const ProfileViewManager = require("./mainAppWindow/profileViewManager");
 const { PIP_FRAME_NAME } = require("./mainAppWindow/documentPictureInPicture");
+const { PROTOCOL_SCHEMES } = require("./mainAppWindow/protocolLink");
 const TeamsControlService = require("./control/teamsControlService");
 const TeamsStateService = require("./control/teamsStateService");
 const IdleMonitor = require("./idle/monitor");
@@ -228,9 +229,10 @@ if (isMac) {
   requestMediaAccess();
 }
 
-const protocolClient = "msteams";
-if (!app.isDefaultProtocolClient(protocolClient, process.execPath)) {
-  app.setAsDefaultProtocolClient(protocolClient, process.execPath);
+for (const protocolClient of PROTOCOL_SCHEMES) {
+  if (!app.isDefaultProtocolClient(protocolClient, process.execPath)) {
+    app.setAsDefaultProtocolClient(protocolClient, process.execPath);
+  }
 }
 
 if (gotTheLock) {
