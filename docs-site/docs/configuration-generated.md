@@ -13,7 +13,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 | `dbusControl` | `object` | `{"enabled":false,"busName":""}` | Opt-in Linux user session D-Bus control and observed Teams state. Requires restart. | `restart` |
 | `appActiveCheckInterval` | `number` | `2` | A numeric value in seconds as poll interval to check if the system is active from being idle **Deprecated:** use idleDetection.checkInterval.detectActive instead | `restart` |
 | `screenSharing` | `object` | `{"thumbnail":{"enabled":true,"alwaysOnTop":true},"resolution":{"enabled":false,"mode":"remove"},"lockInhibitionMethod":"Electron"}` | Screen sharing configuration. thumbnail: controls the preview window shown during active sharing. lockInhibitionMethod: screen lock inhibition method (Electron/WakeLockSentinel). | `restart` |
-| `appIcon` | `string` | `""` | Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu **Deprecated:** use tray.icon instead | `live` |
+| `appIcon` | `string` | `""` | Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu, which on Linux can also copy it into the user icon theme (~/.local/share/icons) so the taskbar and launcher follow; those files outlive the package and are not written under Snap or Flatpak **Deprecated:** use tray.icon instead | `live` |
 | `appIconType` | `string` | `"default"` | Type of tray icon to be used **Deprecated:** use tray.iconType instead | `restart` |
 | `appIdleTimeout` | `number` | `300` | A numeric value in seconds as duration before app considers the system as idle **Deprecated:** use idleDetection.timeout instead | `restart` |
 | `appIdleTimeoutCheckInterval` | `number` | `10` | A numeric value in seconds as poll interval to check if the appIdleTimeout is reached **Deprecated:** use idleDetection.checkInterval.detectIdle instead | `restart` |
@@ -372,7 +372,7 @@ Object options group several related settings. The tables below list each nested
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `tray.enabled` | `boolean` | `true` | Enable tray icon |
-| `tray.icon` | `string` | `""` | Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu |
+| `tray.icon` | `string` | `""` | Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu, which on Linux can also copy it into the user icon theme (~/.local/share/icons) so the taskbar and launcher follow; those files outlive the package and are not written under Snap or Flatpak |
 | `tray.iconType` | `string` | `"default"` | Type of tray icon to be used |
 | `tray.useMutationTitleLogic` | `boolean` | `true` | Use MutationObserver to update counter from title |
 
