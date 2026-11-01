@@ -11,6 +11,7 @@ const windowStateKeeper = require("electron-window-state");
 const { StreamSelector } = require("../screenSharing");
 const TrayIconChooser = require("../browser/tools/trayIconChooser");
 const IncomingCallToast = require("../incomingCallToast");
+const CallStateTracker = require("./callStateTracker");
 const {
   collectPartitionsToClear,
   clearStorageForPartitions,
@@ -25,7 +26,8 @@ class BrowserWindowManager {
     this.iconChooser = properties.iconChooser;
     // Optional: only the startup clear reads it.
     this.profilesManager = properties.profilesManager ?? null;
-    this.isOnCall = false;
+    // One entry per renderer in a call (ADR-032). `isOnCall` is derived from it.
+    this.callState = new CallStateTracker();
     this.blockerId = null;
     this.window = null;
     this.incomingCallCommandProcess = null;
@@ -40,6 +42,10 @@ class BrowserWindowManager {
    */
   get screenLockInhibitionMethod() {
     return this.config?.screenSharing?.lockInhibitionMethod ?? "Electron";
+  }
+
+  get isOnCall() {
+    return this.callState.anyActive;
   }
 
   async createWindow() {
@@ -124,13 +130,7 @@ class BrowserWindowManager {
   assignEventHandlers() {
     // Handle screen sharing source selection from user
     ipcMain.on("select-source", this.assignSelectSourceHandler());
-    if (this.screenLockInhibitionMethod === "WakeLockSentinel") {
-      // Wake Lock auto-releases when document.visibilityState becomes 'hidden',
-      // which happens on both minimise and tray-hide. Re-acquire on both events.
-      const reAcquireWakeLock = this.enableWakeLockOnWindowRestore.bind(this);
-      this.window.on("restore", reAcquireWakeLock);
-      this.window.on("show", reAcquireWakeLock);
-    }
+    this.attachWakeLockRestore(this.window);
     // Handle incoming call notification created
     ipcMain.handle(
       "incoming-call-created",
@@ -167,8 +167,10 @@ class BrowserWindowManager {
     return false;
   }
 
-  disableScreenLockWakeLockSentinel() {
-    this.window.webContents.send("enable-wakelock");
+  disableScreenLockWakeLockSentinel(webContents = this.window?.webContents) {
+    // The sentinel lives in the document that holds the call, so the request
+    // goes to the reporting renderer rather than always to the main window.
+    this.sendToRenderer(webContents, "enable-wakelock");
     console.debug(
       `Power save is disabled using ${this.screenLockInhibitionMethod} API.`
     );
@@ -187,18 +189,65 @@ class BrowserWindowManager {
     return false;
   }
 
-  enableScreenLockWakeLockSentinel() {
-    this.window.webContents.send("disable-wakelock");
+  enableScreenLockWakeLockSentinel(webContents = this.window?.webContents) {
+    this.sendToRenderer(webContents, "disable-wakelock");
     console.debug(
       `Power save is restored using ${this.screenLockInhibitionMethod} API`
     );
     return true;
   }
 
-  enableWakeLockOnWindowRestore() {
-    if (this.isOnCall) {
-      this.window.webContents.send("enable-wakelock");
+  /**
+   * Wake Lock auto-releases when document.visibilityState becomes 'hidden',
+   * which happens on both minimise and tray-hide. Re-acquire on both events,
+   * but only for a window whose own document holds a call: the secondary
+   * window (ADR-032) attaches this too, and must not request a lock for a
+   * call running in the other window.
+   */
+  attachWakeLockRestore(browserWindow) {
+    if (this.screenLockInhibitionMethod !== "WakeLockSentinel" || !browserWindow) return;
+    const reAcquireWakeLock = () => this.reacquireWakeLock(browserWindow.webContents);
+    browserWindow.on("restore", reAcquireWakeLock);
+    browserWindow.on("show", reAcquireWakeLock);
+  }
+
+  reacquireWakeLock(webContents) {
+    if (this.callState.has(webContents)) {
+      this.sendToRenderer(webContents, "enable-wakelock");
     }
+  }
+
+  enableWakeLockOnWindowRestore() {
+    this.reacquireWakeLock(this.window?.webContents);
+  }
+
+  sendToRenderer(webContents, channel) {
+    if (!webContents || typeof webContents.send !== "function") return;
+    try {
+      if (typeof webContents.isDestroyed === "function" && webContents.isDestroyed()) return;
+      webContents.send(channel);
+    } catch (error) {
+      console.warn("[CallState] Failed to message renderer", { channel, message: error.message });
+    }
+  }
+
+  /**
+   * Forget a call the renderer never reported as ended (a reload resets the
+   * renderer's own state) and release the inhibition it was holding, if any.
+   */
+  clearCall(webContents) {
+    const { wasActive, last } = this.callState.disconnect(webContents);
+    if (!wasActive) return false;
+    this.releaseScreenLock(webContents, last);
+    return true;
+  }
+
+  releaseScreenLock(webContents, last) {
+    if (this.screenLockInhibitionMethod === "Electron") {
+      // One blocker for the whole app: keep it while any window is in a call.
+      return last ? this.enableScreenLockElectron() : false;
+    }
+    return this.enableScreenLockWakeLockSentinel(webContents);
   }
 
   /**
@@ -277,12 +326,22 @@ class BrowserWindowManager {
     }
   }
 
+  callSender(event) {
+    return event?.sender ?? this.window?.webContents ?? null;
+  }
+
   assignOnCallConnectedHandler() {
     return async (event) => {
-      this.isOnCall = true;
+      const sender = this.callSender(event);
+      this.callState.connect(sender, (gone) => {
+        // The renderer went away mid-call (window closed): nothing will report
+        // the disconnect, so release what it held and tell the listeners.
+        this.releaseScreenLock(gone, !this.callState.anyActive);
+        app.emit('teams-call-disconnected', gone);
+      });
       const result = this.screenLockInhibitionMethod === "Electron"
         ? this.disableScreenLockElectron()
-        : this.disableScreenLockWakeLockSentinel();
+        : this.disableScreenLockWakeLockSentinel(sender);
 
       app.emit('teams-call-connected', event?.sender ?? null);
       return result;
@@ -291,10 +350,9 @@ class BrowserWindowManager {
 
   assignOnCallDisconnectedHandler() {
     return async (event) => {
-      this.isOnCall = false;
-      const result = this.screenLockInhibitionMethod === "Electron"
-        ? this.enableScreenLockElectron()
-        : this.enableScreenLockWakeLockSentinel();
+      const sender = this.callSender(event);
+      const { last } = this.callState.disconnect(sender);
+      const result = this.releaseScreenLock(sender, last);
 
       app.emit('teams-call-disconnected', event?.sender ?? null);
       return result;
