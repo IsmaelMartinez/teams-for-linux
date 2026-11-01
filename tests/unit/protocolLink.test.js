@@ -31,9 +31,13 @@ const config = {
 const LAUNCHER_QUERY =
   "launchAgent=join_launcher&type=meet&directDl=true&msLaunch=true&enableMobilePage=true&suppressPrompt=true&fqdn=teams.microsoft.com";
 
-// resolveLaunchUrl logs every argument at debug level.
+const CONSOLE_METHODS = ["debug", "log", "info", "warn", "error"];
+const consoleMocks = [];
+
 test.before(() => {
-  test.mock.method(console, "debug", () => {});
+  for (const method of CONSOLE_METHODS) {
+    consoleMocks.push(test.mock.method(console, method, () => {}));
+  }
 });
 
 // [web+ link, expected URL, description]
@@ -113,6 +117,28 @@ test("resolveLaunchUrl returns null when no argument is a Teams link", () => {
 test("resolveLaunchUrl opens the first Teams link when there are several", () => {
   const args = ["web+msteams:/meet/first", "msteams:/meet/second"];
   assert.strictEqual(resolveLaunchUrl(args, config), `${config.url}/meet/first`);
+});
+
+// The launch link carries the meeting or the recipient, and the shared log
+// sanitizer only strips the query string, not identifiers in the path.
+test("resolveLaunchUrl does not log the launch arguments", () => {
+  for (const mock of consoleMocks) {
+    mock.mock.resetCalls();
+  }
+  const secrets = ["9512345678901", "meeting_secret", "someone@example.com"];
+  const args = [
+    "web+msteams:/meet/9512345678901?p=pass",
+    "msteams://teams.live.com/l/meetup-join/19:meeting_secret/0",
+    "msteams:/l/chat/0/0?users=someone@example.com",
+    "https://teams.microsoft.com/l/meetup-join/19:meeting_secret/0",
+  ];
+  for (const arg of args) {
+    resolveLaunchUrl([arg], config);
+  }
+  const logged = JSON.stringify(consoleMocks.flatMap((mock) => mock.mock.calls.map((call) => call.arguments)));
+  for (const secret of secrets) {
+    assert.ok(!logged.includes(secret), `a log call contains ${secret}`);
+  }
 });
 
 test("processArgs hands launch arguments to resolveLaunchUrl", () => {

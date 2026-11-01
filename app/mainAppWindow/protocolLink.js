@@ -44,7 +44,6 @@ function resolveLaunchUrl(args, config) {
   // Modern Teams protocol format: msteams://teams.microsoft.com/l/...
   const v2msTeams = new RegExp(config.msTeamsProtocols.v2);
   const meetupJoin = new RegExp(config.meetupJoinRegEx);
-  console.debug("processArgs:", args);
   for (const rawArg of args) {
     // The launcher may use `web+msteams:` in place of `msteams:`.
     const arg = stripWebPrefix(rawArg);
