@@ -222,7 +222,7 @@ Unsetting the `XDG_CURRENT_DESKTOP` environment variable for the app restores th
    sudo sed -i 's|^Exec=|Exec=env -u XDG_CURRENT_DESKTOP |' /usr/local/share/applications/teams-for-linux.desktop
    ```
 
-Both locations sit ahead of `/usr/share/applications` in `XDG_DATA_DIRS`, so they shadow the packaged entry and are not touched by `apt upgrade`. The override keeps the default `--ozone-platform=x11` flag intact.
+Both locations sit ahead of `/usr/share/applications` in `XDG_DATA_DIRS`, so they shadow the packaged entry and are not touched by `apt upgrade`. The override keeps the rest of the `Exec=` line intact.
 
 **Note:** `XDG_CURRENT_DESKTOP` also drives the xdg desktop portals (screen sharing, file pickers) and GTK theming, so only unset it where you actually need the tray. The icon may also come up generic rather than the purple Teams logo (see #888).
 
@@ -501,7 +501,9 @@ Replace `<your-chrome-version>` with the Chrome version Teams for Linux reports.
 ### Wayland / Display Issues
 
 :::info Default Behavior
-Teams for Linux currently launches with --ozone-platform=x11 by default on all Linux packaging formats. If you are on a Wayland session and want native Wayland, override on the command line or in your .desktop file with --ozone-platform=wayland.
+Since v2.29.0 the deb, rpm and AppImage packages ship no `--ozone-platform` flag, so Chromium picks the backend per session: native Wayland on a Wayland session, X11 otherwise. The snap still launches with `--ozone-platform=x11` (see [ADR-034](development/adr/034-native-wayland-default.md)). To force a backend, pass `--ozone-platform=x11` or `--ozone-platform=wayland` on the command line or in your `.desktop` file.
+
+If you had `wayland.xwaylandOptimizations` enabled on an earlier release, it only applies when the app runs under XWayland, which it no longer does by default: add `--ozone-platform=x11` to your `Exec=` line to keep it.
 :::
 
 #### Issue: Blank or black window on Wayland
@@ -514,7 +516,7 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
     ```bash
     teams-for-linux --ozone-platform=x11
     ```
-2. **Confirm the default sticks:** `--ozone-platform=x11` is the shipped default. If you have previously edited your `.desktop` file, ensure the `Exec=` line still includes `--ozone-platform=x11`.
+2. **Edit your `.desktop` file** to make the override permanent by adding `--ozone-platform=x11` to the `Exec=` line. Copy it to `~/.local/share/applications/` first so a package update does not overwrite it.
 
 **Related GitHub Issues:** [#1604](https://github.com/IsmaelMartinez/teams-for-linux/issues/1604), [#1494](https://github.com/IsmaelMartinez/teams-for-linux/issues/1494), [#519](https://github.com/IsmaelMartinez/teams-for-linux/issues/519), [#504](https://github.com/IsmaelMartinez/teams-for-linux/issues/504)
 
@@ -525,6 +527,7 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
 **Solutions/Workarounds:**
 
 1. **Force X11 mode** with `--ozone-platform=x11` to avoid Wayland window management regressions.
+2. If this still happens on v2.29.0 or later, please report it with your desktop, compositor and monitor layout: the native Wayland default depends on these reports.
 
 **Related GitHub Issues:** [#2094](https://github.com/IsmaelMartinez/teams-for-linux/issues/2094)
 
@@ -537,11 +540,11 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
 
 **Solutions/Workarounds:**
 
-1. **Override to native Wayland mode** (if you don't experience other Wayland bugs):
+1. **Check you are not forcing X11.** Since v2.29.0 the deb, rpm and AppImage run native Wayland on a Wayland session unless a `.desktop` edit or command line still passes `--ozone-platform=x11`. The snap always runs under XWayland.
+2. **Override to native Wayland mode** where it is still forced:
     ```bash
     teams-for-linux --ozone-platform=wayland
     ```
-2. **Edit your `.desktop` file** to make the override permanent. Replace `--ozone-platform=x11` with `--ozone-platform=wayland` in the `Exec=` line.
 
 **Related GitHub Issues:** [#1787](https://github.com/IsmaelMartinez/teams-for-linux/issues/1787)
 
@@ -589,7 +592,7 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
 
 #### Issue: Sharing the whole screen shows black under XWayland, sharing a window works
 
-**Description:** The deb, rpm, AppImage and snap packages launch with `--ozone-platform=x11`, so on a Wayland session they run under XWayland and screen capture goes through the X11 capturer, which only sees X11 windows. Sharing a single window works, but sharing the whole screen shows a black feed. Flatpak and tar.gz builds run as native Wayland and are not affected by this.
+**Description:** The snap launches with `--ozone-platform=x11`, so on a Wayland session it runs under XWayland and screen capture goes through the X11 capturer, which only sees X11 windows. Sharing a single window works, but sharing the whole screen shows a black feed. The same applies to any package launched with `--ozone-platform=x11` by hand. Since v2.29.0 the deb, rpm and AppImage run as native Wayland by default, like Flatpak and tar.gz, and are not affected.
 
 **Solutions/Workarounds:**
 
