@@ -7,7 +7,7 @@ Manages the primary BrowserWindow that hosts the Teams web interface.
 - **[index.js](index.js)**: Entry point and window lifecycle management
 - **[browserWindowManager.js](browserWindowManager.js)**: Window creation, configuration, and event handling
 - **[deepLinkRouter.js](deepLinkRouter.js)**: In-page routing for Teams deep links
-- **[protocolLink.js](protocolLink.js)**: Protocol schemes the app registers and `web+msteams:` normalisation
+- **[protocolLink.js](protocolLink.js)**: Protocol schemes the app registers, `web+msteams:` normalisation and resolving launch arguments to the URL to open
 
 ## Responsibilities
 
@@ -17,7 +17,7 @@ Manages the primary BrowserWindow that hosts the Teams web interface.
 - Call event handling and screen sharing coordination
 - Deep link handling for `msteams:` and `web+msteams:` protocol links and HTTPS Teams links.
   Teams' launcher page picks between the two schemes server side, so the app registers both
-  and `processArgs` drops the `web+` prefix before matching.
+  and `resolveLaunchUrl` (behind `processArgs`) drops the `web+` prefix before matching.
 
 ## Deep Link Routing
 

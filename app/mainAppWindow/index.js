@@ -23,7 +23,7 @@ const ssoPasswordPrefill = require("../ssoPasswordPrefill");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
 const deepLinkRouter = require("./deepLinkRouter");
 const { DeferredDeepLink } = require("./deferredDeepLink");
-const { stripWebPrefix } = require("./protocolLink");
+const { resolveLaunchUrl } = require("./protocolLink");
 const os = require("node:os");
 const path = require("node:path");
 const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
@@ -1150,43 +1150,19 @@ function restoreWindow() {
 }
 
 /**
- * Processes command line arguments to extract Teams URLs and protocol handlers.
- * Handles both msteams:// protocol links and HTTPS URLs that match the Teams domain pattern.
- * This enables deep linking into Teams conversations, meetings, and channels.
+ * Processes command line arguments to extract Teams URLs and protocol handlers,
+ * and shows the window when one is found. The matching lives in
+ * `resolveLaunchUrl` so it can be tested without Electron.
  *
  * @param {string[]} args - Command line arguments to process
  * @returns {string|null} Processed URL to navigate to, or null if no valid URL found
  */
 function processArgs(args) {
-  // Legacy Teams protocol format: msteams:/l/meetup-join/...
-  const v1msTeams = new RegExp(config.msTeamsProtocols.v1);
-  // Modern Teams protocol format: msteams://teams.microsoft.com/l/...
-  const v2msTeams = new RegExp(config.msTeamsProtocols.v2);
-  console.debug("processArgs:", args);
-  for (const rawArg of args) {
-    // The launcher may use `web+msteams:` in place of `msteams:`.
-    const arg = stripWebPrefix(rawArg);
-    console.debug(
-      `testing RegExp processArgs ${new RegExp(config.meetupJoinRegEx).test(
-        arg
-      )}`
-    );
-    if (new RegExp(config.meetupJoinRegEx).test(arg)) {
-      console.debug("A url argument received with https protocol");
-      window.show();
-      return arg;
-    }
-    if (v1msTeams.test(arg)) {
-      console.debug("A url argument received with msteams v1 protocol");
-      window.show();
-      return config.url + arg.substring(8, arg.length);
-    }
-    if (v2msTeams.test(arg)) {
-      console.debug("A url argument received with msteams v2 protocol");
-      window.show();
-      return arg.replace("msteams", "https");
-    }
+  const url = resolveLaunchUrl(args, config);
+  if (url) {
+    window.show();
   }
+  return url;
 }
 
 // Microsoft telemetry / beacon hosts that are not required for Teams to
