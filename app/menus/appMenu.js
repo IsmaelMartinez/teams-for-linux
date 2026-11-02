@@ -1,6 +1,7 @@
 const { shell } = require("electron");
 const buildProfilesMenu = require("./profilesMenu");
 const buildThemesMenu = require("./themesMenu");
+const themeIcon = require("./themeIcon");
 
 exports = module.exports = (Menus) => ({
   label: "Teams for Linux",
@@ -156,6 +157,16 @@ function getAppIconMenu(Menus) {
       {
         label: "Choose App Icon…",
         click: () => Menus.chooseAppIcon(),
+      },
+      {
+        label: "Also use it for the taskbar and launcher",
+        type: "checkbox",
+        visible: themeIcon.supported(),
+        enabled: hasCustomIcon,
+        checked:
+          hasCustomIcon &&
+          themeIcon.installed({ windowClass: Menus.configGroup.startupConfig.class }),
+        click: () => Menus.toggleThemeIcon(),
       },
       {
         label: "Reset to default",
