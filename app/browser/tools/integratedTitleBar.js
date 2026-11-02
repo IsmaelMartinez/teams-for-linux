@@ -118,9 +118,9 @@ function isEnabled(config) {
 function parseRgb(value) {
   const match = /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,\s/]+([\d.]+%?))?\s*\)/.exec(value || "");
   if (!match) return null;
-  const alphaText = match[4];
+  const alphaText = match[4] ?? "";
   let alpha = 1;
-  if (alphaText !== undefined) {
+  if (alphaText) {
     alpha = alphaText.endsWith("%") ? Number.parseFloat(alphaText) / 100 : Number.parseFloat(alphaText);
   }
   return { r: Number(match[1]), g: Number(match[2]), b: Number(match[3]), a: alpha };
@@ -183,10 +183,12 @@ function findTopBar() {
 // Current Teams builds support Window Controls Overlay themselves: their title
 // bar pads its right edge by the controls' width. Padding again would leave a
 // gap of twice that width, so the fallback padding is only for builds that
-// do not.
+// do not. When the fallback padding sits on the Teams title bar itself, that
+// padding is ours, not Teams', so it does not count; otherwise the padding
+// would be added and removed on every check.
 function teamsReservesControls(area) {
   const teamsBar = document.querySelector(TEAMS_TITLE_BAR);
-  if (!teamsBar) return false;
+  if (!teamsBar || teamsBar.classList.contains(RESERVE_CLASS)) return false;
   const controlsWidth = window.innerWidth - (area.x + area.width);
   return Number.parseFloat(getComputedStyle(teamsBar).paddingRight) >= controlsWidth - 1;
 }
@@ -301,4 +303,4 @@ class IntegratedTitleBar {
 }
 
 module.exports = new IntegratedTitleBar();
-module.exports._internals = { isEnabled, parseRgb, toHex, isDark, schemeFallback, STYLE };
+module.exports._internals = { isEnabled, parseRgb, toHex, isDark, schemeFallback, teamsReservesControls, STYLE };

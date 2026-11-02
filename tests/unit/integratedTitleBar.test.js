@@ -108,6 +108,24 @@ describe('integratedTitleBar renderer helpers', () => {
 		assert.match(STYLE, /search-f6-navigation-region"\] \{\s*flex: 0 1 480px !important;\s*min-width: 0 !important;/);
 	});
 
+	it('does not take its own fallback padding for Teams reserving the controls', () => {
+		const { teamsReservesControls } = renderer._internals;
+		const saved = { document: globalThis.document, window: globalThis.window, getComputedStyle: globalThis.getComputedStyle };
+		let ours = false;
+		const bar = { classList: { contains: (name) => ours && name === 'tfl-wco-reserve' } };
+		globalThis.document = { querySelector: () => bar };
+		globalThis.window = { innerWidth: 800 };
+		globalThis.getComputedStyle = () => ({ paddingRight: '72px' });
+		try {
+			const area = { x: 0, width: 728 };
+			assert.strictEqual(teamsReservesControls(area), true, 'Teams padding counts');
+			ours = true;
+			assert.strictEqual(teamsReservesControls(area), false, 'our own padding does not');
+		} finally {
+			Object.assign(globalThis, saved);
+		}
+	});
+
 	it('does nothing when disabled', () => {
 		assert.doesNotThrow(() => renderer.init({ window: { titleBar: 'system' } }, {}));
 	});

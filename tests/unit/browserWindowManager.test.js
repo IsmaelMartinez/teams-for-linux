@@ -161,3 +161,48 @@ describe('BrowserWindowManager incoming call routing', () => {
 	});
 
 });
+
+describe('BrowserWindowManager integrated title bar overlay', () => {
+	const integrated = { frame: true, window: { titleBar: 'integrated' } };
+	const update = (height) => ({ height, color: '#1f1f1f', symbolColor: '#ffffff' });
+
+	function setup(config, profilesManager) {
+		const electron = require.cache[electronPath].exports;
+		const sessions = new Map();
+		electron.session.fromPartition = (partition) => {
+			if (!sessions.has(partition)) sessions.set(partition, { partition });
+			return sessions.get(partition);
+		};
+		const manager = new BrowserWindowManager({ config, profilesManager });
+		const applied = [];
+		manager.window = { isDestroyed: () => false, setTitleBarOverlay: (u) => applied.push(u.height) };
+		const sender = (id, partition) => ({ id, session: electron.session.fromPartition(partition), once() {} });
+		return { manager, applied, sender, handler: manager.assignTitleBarOverlayHandler() };
+	}
+
+	it('applies every report when multi-account is off', () => {
+		const { applied, sender, handler } = setup(integrated, null);
+		handler({ sender: sender(1, 'persist:teams-4-linux') }, update(48));
+		assert.deepStrictEqual(applied, [48]);
+	});
+
+	it('ignores reports from hidden accounts and applies the new account on switch', () => {
+		let active = { id: 'a', partition: 'persist:a' };
+		const profilesManager = { getActive: () => active, on() {} };
+		const { manager, applied, sender, handler } = setup({ ...integrated, multiAccount: { enabled: true } }, profilesManager);
+
+		handler({ sender: sender(1, 'persist:a') }, update(48));
+		handler({ sender: sender(2, 'persist:b') }, update(40));
+		assert.deepStrictEqual(applied, [48], 'the hidden account must not change the visible buttons');
+
+		active = { id: 'b', partition: 'persist:b' };
+		manager.applyActiveTitleBarOverlay();
+		assert.deepStrictEqual(applied, [48, 40]);
+	});
+
+	it('rejects malformed reports', () => {
+		const { applied, sender, handler } = setup(integrated, null);
+		handler({ sender: sender(1, 'persist:teams-4-linux') }, { height: 'x' });
+		assert.deepStrictEqual(applied, []);
+	});
+});

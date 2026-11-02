@@ -4,6 +4,7 @@ const {
   ipcMain,
   nativeTheme,
   powerSaveBlocker,
+  session,
 } = require("electron");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
@@ -25,6 +26,11 @@ const MIN_WINDOW_WIDTH = 400;
 const MIN_WINDOW_HEIGHT = 300;
 
 class BrowserWindowManager {
+  // Last overlay report from each renderer, by webContents id. With several
+  // accounts open, every profile view reports, so only the visible account's
+  // report is applied, and switching accounts applies the new one's.
+  #overlayReports = new Map();
+
   constructor(properties) {
     this.config = properties.config;
     this.iconChooser = properties.iconChooser;
@@ -154,21 +160,61 @@ class BrowserWindowManager {
     if (isIntegratedTitleBar(this.config)) {
       // Match the window controls to the Teams top bar's height and colour (integrated title bar)
       ipcMain.on("title-bar-overlay-update", this.assignTitleBarOverlayHandler());
+      this.profilesManager?.on?.("switch", () => this.applyActiveTitleBarOverlay());
     }
   }
 
   assignTitleBarOverlayHandler() {
-    return (_event, payload) => {
+    return (event, payload) => {
       const update = sanitizeOverlayUpdate(payload);
-      if (!update || !this.window || this.window.isDestroyed()) {
+      if (!update) {
         return;
       }
-      try {
-        this.window.setTitleBarOverlay(update);
-      } catch (err) {
-        console.warn("[TITLE_BAR] Could not update the window controls", { error: err.message });
+      const sender = event?.sender;
+      if (sender && typeof sender.id === "number") {
+        if (!this.#overlayReports.has(sender.id)) {
+          sender.once?.("destroyed", () => this.#overlayReports.delete(sender.id));
+        }
+        this.#overlayReports.set(sender.id, { update, session: sender.session });
+      }
+      if (!sender || this.isActiveTitleBarSession(sender.session)) {
+        this.setTitleBarOverlay(update);
       }
     };
+  }
+
+  // Without multi-account there is only the root window, so every report is
+  // the visible one. With it, a report counts only if it comes from the
+  // active profile's partition.
+  isActiveTitleBarSession(senderSession) {
+    if (!this.config.multiAccount?.enabled || !this.profilesManager) {
+      return true;
+    }
+    const active = this.profilesManager.getActive?.();
+    if (!active?.partition) {
+      return true;
+    }
+    return senderSession === session.fromPartition(active.partition);
+  }
+
+  applyActiveTitleBarOverlay() {
+    for (const { update, session: reportSession } of this.#overlayReports.values()) {
+      if (this.isActiveTitleBarSession(reportSession)) {
+        this.setTitleBarOverlay(update);
+        return;
+      }
+    }
+  }
+
+  setTitleBarOverlay(update) {
+    if (!this.window || this.window.isDestroyed()) {
+      return;
+    }
+    try {
+      this.window.setTitleBarOverlay(update);
+    } catch (err) {
+      console.warn("[TITLE_BAR] Could not update the window controls", { error: err.message });
+    }
   }
 
   assignSelectSourceHandler() {
