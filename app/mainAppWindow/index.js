@@ -26,6 +26,7 @@ const { DeferredDeepLink } = require("./deferredDeepLink");
 const os = require("node:os");
 const path = require("node:path");
 const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
+const { reloadIfSignedOut } = require("./signOutReload");
 const {
   isDocumentPictureInPictureRequest,
   documentPictureInPictureResponse,
@@ -1056,6 +1057,10 @@ function onDidFinishLoad() {
   const currentUrl = window.webContents.getURL();
   if (!currentUrl.startsWith("https://")) {
     console.debug(`[CONNECTION] Skipping script injection on non-Teams page: ${currentUrl.split("?")[0]}`);
+    return;
+  }
+
+  if (reloadIfSignedOut(window.webContents, config.url, config.chromeUserAgent)) {
     return;
   }
 

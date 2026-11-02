@@ -1,6 +1,7 @@
 const { WebContentsView, session, ipcMain } = require("electron");
 const path = require("node:path");
 const SenderProfileMap = require("./senderProfileMap");
+const { reloadIfSignedOut } = require("./signOutReload");
 
 const LEGACY_PARTITION = "persist:teams-4-linux";
 
@@ -536,9 +537,18 @@ class ProfileViewManager {
     // did-finish-load of its own webContents; profile views need the same,
     // or a share from a second profile runs with Teams' raw constraints
     // (audio kept, no preview relay) (#2979).
-    view.webContents.on("did-finish-load", () =>
-      this.#onViewDidFinishLoad(view.webContents)
-    );
+    view.webContents.on("did-finish-load", () => {
+      if (
+        reloadIfSignedOut(
+          view.webContents,
+          profile.url || this.#config.url,
+          this.#config.chromeUserAgent
+        )
+      ) {
+        return;
+      }
+      this.#onViewDidFinishLoad(view.webContents);
+    });
     // Only the active profile's title reaches the window (#3068).
     view.webContents.on("page-title-updated", (_event, title) => {
       if (this.#profilesManager.getActive()?.id === profileId) {
