@@ -26,6 +26,7 @@ const { DeferredDeepLink } = require("./deferredDeepLink");
 const os = require("node:os");
 const path = require("node:path");
 const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
+const { reloadIfSignedOut } = require("./signOutReload");
 const {
   isDocumentPictureInPictureRequest,
   documentPictureInPictureResponse,
@@ -1059,13 +1060,7 @@ function onDidFinishLoad() {
     return;
   }
 
-  // Signing out ends on Microsoft's "You signed out of your account" page,
-  // which offers no way back to sign-in, so the only way on was to relaunch
-  // the app. Load Teams again to bring up the sign-in page instead.
-  const { hostname, pathname } = new URL(currentUrl);
-  if (hostname === "login.microsoftonline.com" && /\/logout(session)?$/.test(pathname)) {
-    console.info("[CONNECTION] Signed out, loading Teams again");
-    window.loadURL(config.url, { userAgent: config.chromeUserAgent }).catch(() => {});
+  if (reloadIfSignedOut(window.webContents, config.url, config.chromeUserAgent)) {
     return;
   }
 

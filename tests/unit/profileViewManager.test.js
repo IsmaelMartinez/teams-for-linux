@@ -27,7 +27,13 @@ class FakeWebContents {
     this._on = {};
     this._destroyed = false;
   }
-  loadURL() {}
+  loadURL(...args) {
+    (this.loads ||= []).push(args);
+    return Promise.resolve();
+  }
+  getURL() {
+    return this.url || 'https://teams.cloud.microsoft/';
+  }
   async loadFile() {}
   on(event, cb) {
     (this._on[event] ||= []).push(cb);
@@ -516,6 +522,29 @@ describe('ProfileViewManager per-view load hook (#2979)', () => {
       viewA.webContents,
       viewB.webContents,
       viewA.webContents,
+    ]);
+  });
+
+  it('loads the profile URL again instead of the load hook when a view lands on the signed-out page', () => {
+    const loaded = [];
+    const pvm = new ProfileViewManager(
+      fakeWindow(),
+      fakeProfilesManager([LEGACY, PROFILE_A]),
+      { url: 'https://teams.cloud.microsoft', chromeUserAgent: 'UA' },
+      () => {},
+      () => {},
+      (webContents) => loaded.push(webContents)
+    );
+    pvm.initialize();
+    const [viewA] = createdViews;
+
+    viewA.webContents.url = 'https://login.microsoftonline.com/common/oauth2/v2.0/logout?x=1';
+    viewA.webContents.emit('did-finish-load');
+
+    assert.deepStrictEqual(loaded, []);
+    assert.deepStrictEqual(viewA.webContents.loads.at(-1), [
+      PROFILE_A.url || 'https://teams.cloud.microsoft',
+      { userAgent: 'UA' },
     ]);
   });
 });
