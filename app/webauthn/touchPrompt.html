@@ -21,6 +21,11 @@
       <button type="button" id="cancel-btn" autofocus>Cancel</button>
     </div>
     <script>
+      if (new URLSearchParams(location.search).get("view") === "insert") {
+        document.title = "Insert your security key";
+        document.querySelector("h3").textContent = "No security key found";
+        document.querySelector("output").textContent = "Insert your security key.";
+      }
       document.getElementById("cancel-btn").addEventListener("click", () => {
         globalThis.api.cancelTouch();
       });

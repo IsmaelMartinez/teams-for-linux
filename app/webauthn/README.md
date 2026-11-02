@@ -7,7 +7,7 @@ On Linux, Chromium's WebAuthn implementation lacks hardware support. This module
 - `helpers.js`: Shared encoding utilities (base64url, clientDataJSON, input sanitization).
 - `fido2Backend.js`: Spawns Yubico `fido2-tools` CLI processes for device discovery, credential creation, and assertion.
 - `pinDialog.js`: PIN prompt using standard Electron UI patterns (BrowserWindow + contextBridge + HTML form).
-- `touchPrompt.js`: "Waiting for your security key" prompt shown for the duration of the security-key call, with a Cancel that aborts it. Same BrowserWindow + contextBridge pattern as `pinDialog.js`.
+- `touchPrompt.js`: "Waiting for your security key" prompt shown for the duration of the security-key call, with a Cancel that aborts it. Same BrowserWindow + contextBridge pattern as `pinDialog.js`. The same window doubles as the "Insert your security key" prompt (`view: "insert"`) while `index.js` polls `fido2-token -L` once a second for a key, before the PIN is asked for.
 - `originAllowlist.js`: Builds the set of origins a ceremony may be served for, from the built-in Microsoft origins plus `auth.webauthn.extraOrigins`. Shared with the preload relay so both gates agree.
 - `index.js`: Sets up `ipcMain` handlers, origin validation, and PIN callback wiring.
 

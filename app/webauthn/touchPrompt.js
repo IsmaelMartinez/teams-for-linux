@@ -31,9 +31,11 @@ const log = require("./log");
  * @param {() => void} onCancel - Invoked once if the user cancels. The caller
  *   is expected to abort the in-flight security-key call; this module does not
  *   know how to stop it.
+ * @param {"touch"|"insert"} [view] - "insert" shows the same window as an
+ *   "insert your security key" prompt while the caller polls for a device.
  * @returns {{ dismiss: () => void }}
  */
-function showTouchPrompt(onCancel) {
+function showTouchPrompt(onCancel, view = "touch") {
   log.info("[WEBAUTHN:TOUCH] Showing touch prompt");
 
   const win = new BrowserWindow({
@@ -51,7 +53,7 @@ function showTouchPrompt(onCancel) {
     autoHideMenuBar: true,
     // Matches the heading: the prompt spans the whole call and does not claim
     // to know when the key's LED actually started blinking.
-    title: "Waiting for your security key",
+    title: view === "insert" ? "Insert your security key" : "Waiting for your security key",
     webPreferences: {
       preload: path.join(__dirname, "touchPromptPreload.js"),
       contextIsolation: true,
@@ -99,7 +101,7 @@ function showTouchPrompt(onCancel) {
     win.show();
     win.focus();
   });
-  win.loadFile(path.join(__dirname, "touchPrompt.html"));
+  win.loadFile(path.join(__dirname, "touchPrompt.html"), { query: { view } });
 
   return {
     dismiss() {

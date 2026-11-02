@@ -1280,6 +1280,121 @@ describe('WebAuthn subframe injection - skipped origin hint', () => {
 // frame's origin. Nothing asserted on that pairing, so the AND could quietly
 // become an OR. These tests drive the real IPC handler registered by
 // initialize() and pin the three topologies a federated tenant can hit.
+describe('WebAuthn missing key - wait for one before the PIN', () => {
+	const ORIGIN = 'https://login.microsoftonline.com';
+	const CANCELLED = 'Operation cancelled by user';
+	const handlers = new Map();
+	const prompts = [];
+	let devices = [];
+	let backendCalls = 0;
+	let pinCalls = 0;
+	let cancelInsertPrompt = false;
+
+	// Same private-copy trick as the IPC gate describe below, with a backend
+	// whose device list the test controls and a prompt stub that records views.
+	const webauthnMain = (() => {
+		const stubbed = {
+			[require.resolve('electron')]: {
+				BrowserWindow: { fromWebContents: () => null },
+				ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
+				webFrameMain: { fromId: () => null },
+			},
+			[require.resolve('../../app/webauthn/fido2Backend')]: {
+				CANCELLED_MESSAGE: CANCELLED,
+				isAvailable: async () => true,
+				discoverDevices: async () => devices,
+				getAssertion: async () => { backendCalls++; return {}; },
+			},
+			[require.resolve('../../app/webauthn/touchPrompt')]: {
+				showTouchPrompt: (onCancel, view = 'touch') => {
+					const prompt = { view, dismissed: false, dismiss: () => { prompt.dismissed = true; } };
+					prompts.push(prompt);
+					if (view === 'insert' && cancelInsertPrompt) onCancel();
+					return prompt;
+				},
+			},
+			[require.resolve('../../app/webauthn/pinDialog')]: {
+				requestPinPreCollect: async () => { pinCalls++; return '1234'; },
+				requestPinModal: async () => '1234',
+			},
+		};
+		const indexPath = require.resolve('../../app/webauthn');
+		const saved = new Map();
+		for (const modulePath of [...Object.keys(stubbed), indexPath]) {
+			saved.set(modulePath, require.cache[modulePath]);
+		}
+		for (const [modulePath, exports] of Object.entries(stubbed)) {
+			require.cache[modulePath] = { id: modulePath, filename: modulePath, loaded: true, exports };
+		}
+		delete require.cache[indexPath];
+		try {
+			return require('../../app/webauthn');
+		} finally {
+			for (const [modulePath, entry] of saved) {
+				if (entry) require.cache[modulePath] = entry;
+				else delete require.cache[modulePath];
+			}
+		}
+	})();
+
+	// A discoverable get, so the PIN would be collected first if nothing
+	// checked for the key.
+	const invokeGet = () => handlers.get('webauthn:get')(
+		{ senderFrame: { origin: ORIGIN }, sender: { getURL: () => ORIGIN } },
+		{ challenge: 'Y2hhbGxlbmdl', rpId: 'example.com', userVerification: 'required', allowCredentials: [] },
+	);
+
+	before(async () => {
+		await webauthnMain.initialize(null, { auth: { webauthn: { enabled: true } } });
+	});
+
+	it('shows no insert prompt when a key is already plugged in', async () => {
+		devices = ['/dev/hidraw0'];
+		prompts.length = 0;
+
+		const result = await invokeGet();
+
+		assert.strictEqual(result.success, true);
+		assert.deepStrictEqual(prompts.map((p) => p.view), ['touch']);
+	});
+
+	it('waits under an insert prompt and carries on once a key appears', async () => {
+		devices = [];
+		prompts.length = 0;
+		backendCalls = 0;
+		pinCalls = 0;
+		const pending = invokeGet();
+		await new Promise((resolve) => setImmediate(resolve));
+		assert.deepStrictEqual(prompts.map((p) => p.view), ['insert']);
+		assert.strictEqual(pinCalls, 0, 'the PIN must not be asked for before a key is there');
+
+		devices = ['/dev/hidraw0'];
+		const result = await pending;
+
+		assert.strictEqual(result.success, true);
+		assert.strictEqual(prompts[0].dismissed, true);
+		assert.strictEqual(pinCalls, 1);
+		assert.strictEqual(backendCalls, 1);
+	});
+
+	it('reports a cancel from the insert prompt as a cancel, not a failure', async () => {
+		devices = [];
+		prompts.length = 0;
+		backendCalls = 0;
+		cancelInsertPrompt = true;
+		try {
+			const result = await invokeGet();
+
+			assert.strictEqual(result.success, false);
+			assert.strictEqual(result.error, CANCELLED);
+			assert.strictEqual(prompts[0].dismissed, true);
+			assert.strictEqual(backendCalls, 0);
+		} finally {
+			cancelInsertPrompt = false;
+		}
+	});
+});
+
 describe('WebAuthn IPC gate - relayed ceremony origins', () => {
 	const CORPORATE_ORIGIN = 'https://sso.example.com';
 	const MICROSOFT_LOGIN_ORIGIN = 'https://login.microsoftonline.com';
@@ -1303,6 +1418,7 @@ describe('WebAuthn IPC gate - relayed ceremony origins', () => {
 			[require.resolve('../../app/webauthn/fido2Backend')]: {
 				CANCELLED_MESSAGE: 'Operation cancelled by user',
 				isAvailable: async () => true,
+				discoverDevices: async () => ['/dev/hidraw0'],
 				createCredential: async (options) => { backendCalls.push(options); return credentialResponse; },
 				getAssertion: async (options) => { backendCalls.push(options); return credentialResponse; },
 			},

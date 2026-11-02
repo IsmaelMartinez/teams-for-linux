@@ -23,8 +23,9 @@ class MockBrowserWindow extends EventEmitter {
 		this.destroyed = false;
 	}
 
-	loadFile(file) {
+	loadFile(file, options) {
 		this.loadedFile = file;
+		this.loadOptions = options;
 		// Electron emits this once the page is ready; the prompt shows itself here.
 		this.emit('ready-to-show');
 	}
@@ -93,6 +94,13 @@ describe('WebAuthn touch prompt - window', () => {
 		loadPrompt()(() => {});
 
 		assert.strictEqual(windows[0].options.title, 'Waiting for your security key');
+	});
+
+	it('becomes an insert-your-key prompt when asked for that view', () => {
+		loadPrompt()(() => {}, 'insert');
+
+		assert.strictEqual(windows[0].options.title, 'Insert your security key');
+		assert.deepStrictEqual(windows[0].loadOptions, { query: { view: 'insert' } });
 	});
 
 	it('loads its own page with an isolated, sandboxed preload', () => {
