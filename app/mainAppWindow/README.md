@@ -7,6 +7,7 @@ Manages the primary BrowserWindow that hosts the Teams web interface.
 - **[index.js](index.js)**: Entry point and window lifecycle management
 - **[browserWindowManager.js](browserWindowManager.js)**: Window creation, configuration, and event handling
 - **[deepLinkRouter.js](deepLinkRouter.js)**: In-page routing for Teams deep links
+- **[callStateTracker.js](callStateTracker.js)**: Per-window call state behind `browserWindowManager.callState`
 
 ## Responsibilities
 
@@ -35,3 +36,22 @@ lands in the chat being left, takes focus back from the highlighted message, bac
 off when the user points elsewhere, types into another field or navigates with
 the keyboard): the SPA opens the
 conversation but leaves focus wherever it was.
+
+## Call State
+
+The renderer reports `call-connected` / `call-disconnected` over IPC and
+`browserWindowManager` keeps one entry per reporting webContents in a
+`CallStateTracker` ([ADR-032](../../docs-site/docs/development/adr/032-secondary-window-for-calls.md)):
+a disconnect only clears the window it came from, and a renderer destroyed
+mid-call is dropped and announced as `teams-call-disconnected` so nothing stays
+stuck. Screen-lock inhibition follows the derived state: the single Electron
+`powerSaveBlocker` is held while any window is in a call, and in
+`WakeLockSentinel` mode the `enable-wakelock` / `disable-wakelock` messages go
+to the renderer that holds the call, with `attachWakeLockRestore(window)`
+re-acquiring the lock on `restore` / `show` only for a window whose own
+document is in a call. `index.js` asks the tracker rather than keeping a flag:
+the deep-link fallback reload is deferred while *this* window is in a call
+(`isMainCallActive`), while auth recovery, which clears the shared partition,
+waits on any call in any window (`isAnyCallActive`). A `did-navigate` clears
+the main window's own entry through `clearCall`, since a reload resets the
+renderer's state without reporting a disconnect.
