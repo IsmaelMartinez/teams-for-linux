@@ -605,6 +605,30 @@ The `performance.electronCLIFlags` config option (`config.json`) **cannot** over
 
 ### Other
 
+#### Issue: "We couldn't open your Teams app" when joining from a browser
+
+**Description:** Clicking "Join on the Teams app" on Teams' launcher page does nothing and the page ends with "We couldn't open your Teams app". The browser shows no "Open link with" prompt.
+
+**Potential Causes:**
+*   The launcher hands the meeting over with the `web+msteams:` scheme instead of `msteams:`. Teams decides this server side, so it can differ between accounts. The browser console reports `Prevented navigation to "web+msteams:..." due to an unknown protocol`.
+*   An installation from before `web+msteams:` support does not register that scheme, so the browser has nothing to launch.
+
+**Solutions/Workarounds:**
+
+1.  **Update to a release with `web+msteams:` support.** The package then registers `x-scheme-handler/web+msteams` next to `x-scheme-handler/msteams`.
+
+2.  **Register the scheme by hand on an older install:**
+
+    ```bash
+    xdg-mime default teams-for-linux.desktop 'x-scheme-handler/web+msteams'
+    ```
+
+    The app also has to understand the link, so this only helps on a release that includes the fix.
+
+3.  **Allow the link in Firefox.** When the prompt appears, choose "Always allow" so later launches do not depend on the page triggering it.
+
+**Related GitHub Issues:** [Issue #3161](https://github.com/IsmaelMartinez/teams-for-linux/issues/3161)
+
 #### Issue: Spellchecker Not Working
 
 **Description:** The bundled `node_spellchecker` only includes the `en_US` dictionary.
