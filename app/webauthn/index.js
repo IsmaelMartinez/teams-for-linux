@@ -17,6 +17,7 @@
  */
 
 const { BrowserWindow, ipcMain, webFrameMain } = require("electron");
+const { setTimeout: sleep } = require("node:timers/promises");
 const fido2Backend = require("./fido2Backend");
 const { requestPinPreCollect, requestPinModal } = require("./pinDialog");
 const { showTouchPrompt } = require("./touchPrompt");
@@ -144,6 +145,30 @@ async function handleWebauthnRequest(operation, event, options) {
       : options.userVerification === "required";
     const discoverableGet = operation === "get" && (options.allowCredentials?.length ?? 0) === 0;
 
+    // With no key plugged in, discovery used to fail the ceremony outright and
+    // the page showed its own generic error, after the PIN had already been
+    // asked for. Wait for the key under an "insert your security key" prompt
+    // instead, and only then ask for the PIN. One Cancel aborts either prompt.
+    const abortController = new AbortController();
+    // The injected login frame gives up on the request after 120s, so the
+    // wait stops well before that and leaves time for the PIN and the touch.
+    const insertDeadline = Date.now() + 60_000;
+    let insertPrompt = null;
+    try {
+      while ((await fido2Backend.discoverDevices()).length === 0) {
+        if (Date.now() >= insertDeadline) throw new Error(fido2Backend.NO_DEVICE_MESSAGE);
+        insertPrompt ??= showTouchPrompt(() => abortController.abort(), "insert");
+        await sleep(1000, undefined, { signal: abortController.signal });
+      }
+      // A Cancel that lands while discovery itself is running never reaches
+      // the sleep above, so check once more before asking for the PIN.
+      abortController.signal.throwIfAborted();
+    } catch (err) {
+      throw err.name === "AbortError" ? new Error(fido2Backend.CANCELLED_MESSAGE) : err;
+    } finally {
+      insertPrompt?.dismiss();
+    }
+
     let preCollectedPin = null;
     if (uvRequired || discoverableGet) {
       log.info("[WEBAUTHN] Collecting PIN upfront", { uvRequired, discoverableGet });
@@ -156,7 +181,6 @@ async function handleWebauthnRequest(operation, event, options) {
     // From here the fido2 tool blocks on the user-presence check with no
     // output of its own, so the prompt spans the whole call and is dismissed
     // in `finally` on success, failure, cancel, or the backend's 60s timeout.
-    const abortController = new AbortController();
     const prompt = showTouchPrompt(() => abortController.abort());
     const backendOptions = {
       ...options,

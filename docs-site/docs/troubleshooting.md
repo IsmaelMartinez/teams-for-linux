@@ -400,7 +400,7 @@ If you start Teams for Linux with `--user-data-dir`, put `config.json` in that d
     }
     ```
 
-3. Plug your key in **before** triggering sign-in. The v1 implementation uses the first connected FIDO2 device. If you see a "No FIDO2 hardware device found" error, the key was not detected.
+3. If no key is plugged in when sign-in starts, an "Insert your security key" prompt waits for one and sign-in continues on its own once it is detected. The v1 implementation uses the first connected FIDO2 device.
 
 4. Verify the key is visible to libfido2 from a terminal: `fido2-token -L`. If this says "permission denied" on `/dev/hidraw*`, your user is not in the correct group. libfido2 typically ships a udev rule; if it did not install or is missing, add your user to the group your distribution uses for HID access (often `plugdev` on Debian/Ubuntu, or install `libfido2-udev` if your package manager has it). Replug the key after fixing group membership.
 
