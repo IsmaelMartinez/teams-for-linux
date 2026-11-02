@@ -141,6 +141,7 @@ source the nested name wins.
 |--------|------|---------|-------------|
 | `window.frame` | `boolean` | `true` | Specify false to create a Frameless Window |
 | `frame` | `boolean` | `true` | Deprecated, use `window.frame` |
+| `window.titleBar` | `string` | `"system"` | Title bar style. Choices: `system`, `integrated`. `integrated` hides the desktop title bar and draws the minimise, maximise and close buttons over the Teams top bar, like the official Windows client. See [Integrated title bar](#integrated-title-bar) |
 | `window.menubar` | `string` | `"auto"` | Menu bar behaviour. Choices: `auto`, `visible`, `hidden` |
 | `menubar` | `string` | `"auto"` | Deprecated, use `window.menubar` |
 | `window.minimized` | `boolean` | `false` | Start the application minimized |
@@ -153,6 +154,20 @@ source the nested name wins.
 | `alwaysOnTop` | `boolean` | `true` | Deprecated, use `window.alwaysOnTop` |
 | `window.class` | `string` | `null` | Custom value for the WM_CLASS property |
 | `class` | `string` | `null` | Deprecated, use `window.class` |
+
+#### Integrated title bar
+
+Set `window.titleBar` to `"integrated"` for a title bar like the official Teams client on Windows. The app then uses client-side decorations: it hides the desktop's title bar and draws native minimise, maximise and close buttons at the right end of the Teams top bar. The buttons have no background of their own, so they sit directly on the Teams top bar. They take their height from the bar, and their glyphs switch between light and dark to follow the Teams theme. You move the window by dragging an empty part of the top bar. Double-clicking it maximises the window.
+
+```json
+{
+  "window": {
+    "titleBar": "integrated"
+  }
+}
+```
+
+The change takes effect after a restart. It applies on Linux (Wayland and X11) and Windows. On macOS, and when `window.frame` is `false`, it has no effect. On the Microsoft sign-in pages, which have no Teams top bar, a thin strip along the top of the window works as the drag handle, and the page scrollbar is hidden so it does not run up under the window buttons. Those pages still scroll with the mouse wheel, touchpad or keyboard.
 
 ### Theming & Appearance
 

@@ -91,7 +91,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 | `appearance` | `object` | `{"cssName":"","cssLocation":"","followSystemTheme":false}` | Custom CSS and theme configuration. Replaces the deprecated customCSSName, customCSSLocation and followSystemTheme options. | `restart` |
 | `platform` | `object` | `{"chromeUserAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<version> Safari/537.36","emulateWindowsChromium":false,"spellCheckerLanguages":[],"disableTimestampOnCopy":false}` | Platform emulation and OS integration configuration. Replaces the deprecated chromeUserAgent, emulateWinChromiumPlatform, spellCheckerLanguages and disableTimestampOnCopy options. | `restart` |
 | `app` | `object` | `{"title":"Microsoft Teams","url":"https://teams.cloud.microsoft","partition":"persist:teams-4-linux"}` | Core application identity and the Teams URL it loads. Replaces the deprecated appTitle, url and partition options. | `restart` |
-| `window` | `object` | `{"frame":true,"menubar":"auto","minimized":false,"closeOnCross":false,"minimizeOnClose":false,"alwaysOnTop":true,"class":null}` | Main window geometry, decoration and close behaviour. Replaces the deprecated frame, menubar, minimized, closeAppOnCross, minimizeOnClose, alwaysOnTop and class options. | `restart` |
+| `window` | `object` | `{"frame":true,"titleBar":"system","menubar":"auto","minimized":false,"closeOnCross":false,"minimizeOnClose":false,"alwaysOnTop":true,"class":null}` | Main window geometry, decoration and close behaviour. Replaces the deprecated frame, menubar, minimized, closeAppOnCross, minimizeOnClose, alwaysOnTop and class options. | `restart` |
 | `tray` | `object` | `{"enabled":true,"icon":"","iconType":"default","useMutationTitleLogic":true}` | Tray icon configuration. Replaces the deprecated trayIconEnabled, appIcon, appIconType and useMutationTitleLogic options. | `restart` |
 | `performance` | `object` | `{"disableGpu":false,"electronCLIFlags":[]}` | GPU and Chromium startup flag configuration. Replaces the deprecated disableGpu and electronCLIFlags options. | `restart` |
 | `development` | `object` | `{"webDebug":false,"watchConfigFile":false}` | Debugging and development aids. Replaces the deprecated webDebug and watchConfigFile options. | `restart` |
@@ -360,6 +360,7 @@ Object options group several related settings. The tables below list each nested
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `window.frame` | `boolean` | `true` | Specify false to create a Frameless Window. Default is true |
+| `window.titleBar` | `string` | `"system"` | Title bar style. "system" uses the desktop's title bar; "integrated" hides it and draws the window controls over the Teams top bar, like the official Windows client (Linux and Windows; ignored on macOS and when frame is false) |
 | `window.menubar` | `string` | `"auto"` | A value controls the menu bar behaviour |
 | `window.minimized` | `boolean` | `false` | Start the application minimized |
 | `window.closeOnCross` | `boolean` | `false` | Close the app when clicking the close (X) cross |

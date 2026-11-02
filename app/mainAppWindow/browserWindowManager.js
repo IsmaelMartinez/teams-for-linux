@@ -15,6 +15,11 @@ const {
   collectPartitionsToClear,
   clearStorageForPartitions,
 } = require("../utils/storagePartitions");
+const {
+  isIntegratedTitleBar,
+  titleBarWindowOptions,
+  sanitizeOverlayUpdate,
+} = require("./titleBar");
 
 const MIN_WINDOW_WIDTH = 400;
 const MIN_WINDOW_HEIGHT = 300;
@@ -106,6 +111,7 @@ class BrowserWindowManager {
       autoHideMenuBar: this.config.menubar === "auto",
       icon: this.iconChooser ? this.getIconImage(this.iconChooser.getFile()) : undefined,
       frame: this.config.frame,
+      ...titleBarWindowOptions(this.config, nativeTheme.shouldUseDarkColors),
 
       webPreferences: {
         partition: this.config.partition,
@@ -145,6 +151,24 @@ class BrowserWindowManager {
     ipcMain.handle("call-connected", this.assignOnCallConnectedHandler());
     // Notify when a call is disconnected
     ipcMain.handle("call-disconnected", this.assignOnCallDisconnectedHandler());
+    if (isIntegratedTitleBar(this.config)) {
+      // Match the window controls to the Teams top bar's height and colour (integrated title bar)
+      ipcMain.on("title-bar-overlay-update", this.assignTitleBarOverlayHandler());
+    }
+  }
+
+  assignTitleBarOverlayHandler() {
+    return (_event, payload) => {
+      const update = sanitizeOverlayUpdate(payload);
+      if (!update || !this.window || this.window.isDestroyed()) {
+        return;
+      }
+      try {
+        this.window.setTitleBarOverlay(update);
+      } catch (err) {
+        console.warn("[TITLE_BAR] Could not update the window controls", { error: err.message });
+      }
+    };
   }
 
   assignSelectSourceHandler() {

@@ -20,6 +20,8 @@ const allowedChannels = new Set([
   // Zoom and display controls
   'get-zoom-level',
   'save-zoom-level',
+  // Integrated title bar: renderer reports the Teams top bar's height and colour
+  'title-bar-overlay-update',
   
   // Screen sharing and desktop capture (sorted alphabetically)
   'cancel-desktop-media',
