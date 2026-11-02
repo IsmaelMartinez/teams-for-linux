@@ -1274,68 +1274,82 @@ describe('WebAuthn subframe injection - skipped origin hint', () => {
 	});
 });
 
-// ─── The combined origin gate on a relayed ceremony (issue #2931) ─────────────
+// ─── Driving the real IPC handler with stubbed modules ────────────────────────
 
-// handleWebauthnRequest() checks BOTH the IPC sender's origin and the inner
-// frame's origin. Nothing asserted on that pairing, so the AND could quietly
-// become an OR. These tests drive the real IPC handler registered by
-// initialize() and pin the three topologies a federated tenant can hit.
+/**
+ * Load a private copy of app/webauthn with electron and its sibling modules
+ * replaced by `stubbed` (module path to exports), so invoking a handler
+ * exercises the real code without a BrowserWindow or a fido2-tools spawn. The
+ * stubs go in and come straight back out: the copy binds them at require
+ * time, and the other describes in this file keep the real modules.
+ */
+function loadWebauthnWith(stubbed) {
+	const indexPath = require.resolve('../../app/webauthn');
+	const saved = new Map();
+	for (const modulePath of [...Object.keys(stubbed), indexPath]) {
+		saved.set(modulePath, require.cache[modulePath]);
+	}
+	for (const [modulePath, exports] of Object.entries(stubbed)) {
+		require.cache[modulePath] = { id: modulePath, filename: modulePath, loaded: true, exports };
+	}
+	delete require.cache[indexPath];
+	try {
+		return require('../../app/webauthn');
+	} finally {
+		for (const [modulePath, entry] of saved) {
+			if (entry) require.cache[modulePath] = entry;
+			else delete require.cache[modulePath];
+		}
+	}
+}
+
 describe('WebAuthn missing key - wait for one before the PIN', () => {
 	const ORIGIN = 'https://login.microsoftonline.com';
 	const CANCELLED = 'Operation cancelled by user';
+	const NO_DEVICE = 'No FIDO2 hardware device found';
 	const handlers = new Map();
 	const prompts = [];
 	let devices = [];
 	let backendCalls = 0;
 	let pinCalls = 0;
 	let cancelInsertPrompt = false;
+	let cancelDuringDiscovery = false;
 
-	// Same private-copy trick as the IPC gate describe below, with a backend
-	// whose device list the test controls and a prompt stub that records views.
-	const webauthnMain = (() => {
-		const stubbed = {
-			[require.resolve('electron')]: {
-				BrowserWindow: { fromWebContents: () => null },
-				ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
-				webFrameMain: { fromId: () => null },
+	const webauthnMain = loadWebauthnWith({
+		[require.resolve('electron')]: {
+			BrowserWindow: { fromWebContents: () => null },
+			ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
+			webFrameMain: { fromId: () => null },
+		},
+		[require.resolve('../../app/webauthn/fido2Backend')]: {
+			CANCELLED_MESSAGE: CANCELLED,
+			NO_DEVICE_MESSAGE: NO_DEVICE,
+			isAvailable: async () => true,
+			discoverDevices: async () => {
+				// A Cancel clicked while the discovery call itself is in flight,
+				// and the key turning up in that same call.
+				if (cancelDuringDiscovery && prompts.length > 0) {
+					cancelDuringDiscovery = false;
+					prompts.at(-1).cancel();
+					return ['/dev/hidraw0'];
+				}
+				return devices;
 			},
-			[require.resolve('../../app/webauthn/fido2Backend')]: {
-				CANCELLED_MESSAGE: CANCELLED,
-				isAvailable: async () => true,
-				discoverDevices: async () => devices,
-				getAssertion: async () => { backendCalls++; return {}; },
+			getAssertion: async () => { backendCalls++; return {}; },
+		},
+		[require.resolve('../../app/webauthn/touchPrompt')]: {
+			showTouchPrompt: (onCancel, view = 'touch') => {
+				const prompt = { view, cancel: onCancel, dismissed: false, dismiss: () => { prompt.dismissed = true; } };
+				prompts.push(prompt);
+				if (view === 'insert' && cancelInsertPrompt) onCancel();
+				return prompt;
 			},
-			[require.resolve('../../app/webauthn/touchPrompt')]: {
-				showTouchPrompt: (onCancel, view = 'touch') => {
-					const prompt = { view, dismissed: false, dismiss: () => { prompt.dismissed = true; } };
-					prompts.push(prompt);
-					if (view === 'insert' && cancelInsertPrompt) onCancel();
-					return prompt;
-				},
-			},
-			[require.resolve('../../app/webauthn/pinDialog')]: {
-				requestPinPreCollect: async () => { pinCalls++; return '1234'; },
-				requestPinModal: async () => '1234',
-			},
-		};
-		const indexPath = require.resolve('../../app/webauthn');
-		const saved = new Map();
-		for (const modulePath of [...Object.keys(stubbed), indexPath]) {
-			saved.set(modulePath, require.cache[modulePath]);
-		}
-		for (const [modulePath, exports] of Object.entries(stubbed)) {
-			require.cache[modulePath] = { id: modulePath, filename: modulePath, loaded: true, exports };
-		}
-		delete require.cache[indexPath];
-		try {
-			return require('../../app/webauthn');
-		} finally {
-			for (const [modulePath, entry] of saved) {
-				if (entry) require.cache[modulePath] = entry;
-				else delete require.cache[modulePath];
-			}
-		}
-	})();
+		},
+		[require.resolve('../../app/webauthn/pinDialog')]: {
+			requestPinPreCollect: async () => { pinCalls++; return '1234'; },
+			requestPinModal: async () => '1234',
+		},
+	});
 
 	// A discoverable get, so the PIN would be collected first if nothing
 	// checked for the key.
@@ -1393,8 +1407,48 @@ describe('WebAuthn missing key - wait for one before the PIN', () => {
 			cancelInsertPrompt = false;
 		}
 	});
+
+	it('does not ask for the PIN when the cancel lands while discovery is running', async () => {
+		devices = [];
+		prompts.length = 0;
+		pinCalls = 0;
+		cancelDuringDiscovery = true;
+
+		const result = await invokeGet();
+
+		assert.strictEqual(result.success, false);
+		assert.strictEqual(result.error, CANCELLED);
+		assert.strictEqual(pinCalls, 0);
+		assert.deepStrictEqual(prompts.map((p) => p.view), ['insert']);
+	});
+
+	it('gives up with the no-device error once the wait runs past its deadline', async (t) => {
+		devices = [];
+		prompts.length = 0;
+		pinCalls = 0;
+		t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+		try {
+			const pending = invokeGet();
+			await new Promise((resolve) => setImmediate(resolve));
+			t.mock.timers.tick(61_000);
+			const result = await pending;
+
+			assert.strictEqual(result.success, false);
+			assert.strictEqual(result.error, NO_DEVICE);
+			assert.strictEqual(pinCalls, 0);
+			assert.strictEqual(prompts[0].dismissed, true);
+		} finally {
+			t.mock.timers.reset();
+		}
+	});
 });
 
+// ─── The combined origin gate on a relayed ceremony (issue #2931) ─────────────
+
+// handleWebauthnRequest() checks BOTH the IPC sender's origin and the inner
+// frame's origin. Nothing asserted on that pairing, so the AND could quietly
+// become an OR. These tests drive the real IPC handler registered by
+// initialize() and pin the three topologies a federated tenant can hit.
 describe('WebAuthn IPC gate - relayed ceremony origins', () => {
 	const CORPORATE_ORIGIN = 'https://sso.example.com';
 	const MICROSOFT_LOGIN_ORIGIN = 'https://login.microsoftonline.com';
@@ -1403,53 +1457,27 @@ describe('WebAuthn IPC gate - relayed ceremony origins', () => {
 	const handlers = new Map();
 	const backendCalls = [];
 
-	// Load a private copy of app/webauthn with electron and the security-key
-	// backend stubbed, so invoking the handler exercises the gate without a
-	// BrowserWindow or a real fido2-tools spawn. The stubs go in and come
-	// straight back out: the copy binds them at require time, and the other
-	// describes in this file keep the real modules.
-	const webauthnMain = (() => {
-		const stubbed = {
-			[require.resolve('electron')]: {
-				BrowserWindow: { fromWebContents: () => null },
-				ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
-				webFrameMain: { fromId: () => null },
-			},
-			[require.resolve('../../app/webauthn/fido2Backend')]: {
-				CANCELLED_MESSAGE: 'Operation cancelled by user',
-				isAvailable: async () => true,
-				discoverDevices: async () => ['/dev/hidraw0'],
-				createCredential: async (options) => { backendCalls.push(options); return credentialResponse; },
-				getAssertion: async (options) => { backendCalls.push(options); return credentialResponse; },
-			},
-			[require.resolve('../../app/webauthn/touchPrompt')]: {
-				showTouchPrompt: () => ({ dismiss: () => {} }),
-			},
-			[require.resolve('../../app/webauthn/pinDialog')]: {
-				requestPinPreCollect: async () => '1234',
-				requestPinModal: async () => '1234',
-			},
-		};
-
-		const indexPath = require.resolve('../../app/webauthn');
-		const saved = new Map();
-		for (const modulePath of [...Object.keys(stubbed), indexPath]) {
-			saved.set(modulePath, require.cache[modulePath]);
-		}
-		for (const [modulePath, exports] of Object.entries(stubbed)) {
-			require.cache[modulePath] = { id: modulePath, filename: modulePath, loaded: true, exports };
-		}
-		delete require.cache[indexPath];
-
-		try {
-			return require('../../app/webauthn');
-		} finally {
-			for (const [modulePath, entry] of saved) {
-				if (entry) require.cache[modulePath] = entry;
-				else delete require.cache[modulePath];
-			}
-		}
-	})();
+	const webauthnMain = loadWebauthnWith({
+		[require.resolve('electron')]: {
+			BrowserWindow: { fromWebContents: () => null },
+			ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
+			webFrameMain: { fromId: () => null },
+		},
+		[require.resolve('../../app/webauthn/fido2Backend')]: {
+			CANCELLED_MESSAGE: 'Operation cancelled by user',
+			isAvailable: async () => true,
+			discoverDevices: async () => ['/dev/hidraw0'],
+			createCredential: async (options) => { backendCalls.push(options); return credentialResponse; },
+			getAssertion: async (options) => { backendCalls.push(options); return credentialResponse; },
+		},
+		[require.resolve('../../app/webauthn/touchPrompt')]: {
+			showTouchPrompt: () => ({ dismiss: () => {} }),
+		},
+		[require.resolve('../../app/webauthn/pinDialog')]: {
+			requestPinPreCollect: async () => '1234',
+			requestPinModal: async () => '1234',
+		},
+	});
 
 	// A get with a non-empty allowCredentials and no required user verification
 	// skips PIN collection, so the request reaches the gate and then the backend.

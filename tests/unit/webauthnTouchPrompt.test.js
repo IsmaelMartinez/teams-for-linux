@@ -21,7 +21,7 @@ class MockBrowserWindow extends EventEmitter {
 			id: MockBrowserWindow.nextId++,
 			scripts: [],
 			once(event, listener) { if (event === 'dom-ready') this.domReady = listener; },
-			executeJavaScript(code) { this.scripts.push(code); },
+			executeJavaScript(code) { this.scripts.push(code); return Promise.resolve(); },
 		};
 		this.loadedFile = null;
 		this.shown = false;

@@ -150,12 +150,19 @@ async function handleWebauthnRequest(operation, event, options) {
     // asked for. Wait for the key under an "insert your security key" prompt
     // instead, and only then ask for the PIN. One Cancel aborts either prompt.
     const abortController = new AbortController();
+    // The injected login frame gives up on the request after 120s, so the
+    // wait stops well before that and leaves time for the PIN and the touch.
+    const insertDeadline = Date.now() + 60_000;
     let insertPrompt = null;
     try {
       while ((await fido2Backend.discoverDevices()).length === 0) {
+        if (Date.now() >= insertDeadline) throw new Error(fido2Backend.NO_DEVICE_MESSAGE);
         insertPrompt ??= showTouchPrompt(() => abortController.abort(), "insert");
         await sleep(1000, undefined, { signal: abortController.signal });
       }
+      // A Cancel that lands while discovery itself is running never reaches
+      // the sleep above, so check once more before asking for the PIN.
+      abortController.signal.throwIfAborted();
     } catch (err) {
       throw err.name === "AbortError" ? new Error(fido2Backend.CANCELLED_MESSAGE) : err;
     } finally {

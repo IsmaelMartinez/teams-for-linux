@@ -111,7 +111,11 @@ function showTouchPrompt(onCancel, view = "touch") {
         document.title = "Insert your security key";
         document.querySelector("h3").textContent = "No security key found";
         document.querySelector("output").textContent = "Insert your security key.";
-      `);
+      `).catch((err) => {
+        // The window can be dismissed while the script is still pending.
+        if (win.isDestroyed()) return;
+        log.warn("[WEBAUTHN:TOUCH] Could not set the insert text", err.message);
+      });
     });
   }
   win.loadFile(path.join(__dirname, "touchPrompt.html"));
