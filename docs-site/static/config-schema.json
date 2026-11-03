@@ -1694,6 +1694,7 @@
       "type": "object",
       "default": {
         "frame": true,
+        "titleBar": "system",
         "menubar": "auto",
         "minimized": false,
         "closeOnCross": false,
@@ -1709,6 +1710,16 @@
           "type": "boolean",
           "default": true,
           "description": "Specify false to create a Frameless Window. Default is true"
+        },
+        {
+          "path": "titleBar",
+          "type": "string",
+          "default": "system",
+          "description": "Title bar style. \"system\" uses the desktop's title bar; \"integrated\" hides it and draws the window controls over the Teams top bar, like the official Windows client (Linux and Windows; ignored on macOS and when frame is false)",
+          "choices": [
+            "system",
+            "integrated"
+          ]
         },
         {
           "path": "menubar",

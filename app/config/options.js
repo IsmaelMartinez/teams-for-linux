@@ -1483,6 +1483,7 @@ module.exports = {
       window: {
         default: {
           frame: true,
+          titleBar: "system",
           menubar: "auto",
           minimized: false,
           closeOnCross: false,
@@ -1497,6 +1498,11 @@ module.exports = {
           "frame": {
             type: "boolean",
             describe: "Specify false to create a Frameless Window. Default is true",
+          },
+          "titleBar": {
+            type: "string",
+            choices: ["system", "integrated"],
+            describe: "Title bar style. \"system\" uses the desktop's title bar; \"integrated\" hides it and draws the window controls over the Teams top bar, like the official Windows client (Linux and Windows; ignored on macOS and when frame is false)",
           },
           "menubar": {
             type: "string",
