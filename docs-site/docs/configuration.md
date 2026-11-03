@@ -169,6 +169,8 @@ Set `window.titleBar` to `"integrated"` for a title bar like the official Teams 
 
 The change takes effect after a restart. It applies on Linux (Wayland and X11) and Windows. On macOS, and when `window.frame` is `false`, it has no effect. On the Microsoft sign-in pages, which have no Teams top bar, a thin strip along the top of the window works as the drag handle, and the page scrollbar is hidden so it does not run up under the window buttons. Those pages still scroll with the mouse wheel, touchpad or keyboard.
 
+There is no menu bar in this mode. Electron does not create one when the title bar is hidden, so `window.menubar` has no effect and pressing Alt does not show it. The menu's keyboard shortcuts still work (Ctrl+R to refresh, Ctrl+Q to quit, and so on), and the full menu stays available from the tray icon. With `tray.enabled` set to `false`, only the shortcuts remain.
+
 ### Theming & Appearance
 
 | Option | Type | Default | Description |
