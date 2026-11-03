@@ -74,6 +74,10 @@ async function updateMaximizeIcon() {
 	path.setAttribute('d', maximized ? ICONS.restore : ICONS.maximize);
 }
 
+function refreshMaximizeIcon() {
+	updateMaximizeIcon().catch((err) => console.debug('[FRAMELESS] Maximize state unavailable:', err));
+}
+
 function injectWindowControls() {
 	if (document.getElementById(CONTROLS_ID)) return;
 	const bar = findTopBar();
@@ -84,7 +88,7 @@ function injectWindowControls() {
 	container.appendChild(makeButton('maximize', 'Maximize'));
 	container.appendChild(makeButton('close', 'Close'));
 	bar.appendChild(container);
-	updateMaximizeIcon();
+	refreshMaximizeIcon();
 }
 
 function startWindowControls() {
@@ -148,7 +152,7 @@ function startWindowControls() {
 		scheduled = true;
 		setTimeout(() => { scheduled = false; injectWindowControls(); }, 250);
 	}).observe(document.body || document.documentElement, { childList: true, subtree: true });
-	window.addEventListener('resize', updateMaximizeIcon);
+	window.addEventListener('resize', refreshMaximizeIcon);
 	injectWindowControls();
 }
 
