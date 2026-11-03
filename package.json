@@ -98,6 +98,9 @@
         "to": "assets/sounds"
       }
     ],
+    "toolsets": {
+      "appimage": "1.0.3"
+    },
     "linux": {
       "category": "Chat;Network;Office",
       "packageCategory": "net",
