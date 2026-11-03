@@ -124,6 +124,14 @@ class BrowserWindowManager {
   assignEventHandlers() {
     // Handle screen sharing source selection from user
     ipcMain.on("select-source", this.assignSelectSourceHandler());
+    // Window controls drawn in the Teams top bar when running frameless
+    ipcMain.on("tfl-window-minimize", () => this.window?.minimize());
+    ipcMain.on("tfl-window-maximize", () => {
+      if (this.window?.isMaximized()) this.window.unmaximize();
+      else this.window?.maximize();
+    });
+    ipcMain.on("tfl-window-close", () => this.window?.close());
+    ipcMain.handle("tfl-window-is-maximized", () => this.window?.isMaximized() ?? false);
     if (this.screenLockInhibitionMethod === "WakeLockSentinel") {
       // Wake Lock auto-releases when document.visibilityState becomes 'hidden',
       // which happens on both minimise and tray-hide. Re-acquire on both events.

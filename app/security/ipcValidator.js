@@ -96,6 +96,12 @@ const allowedChannels = new Set([
   'get-navigation-state',
   'navigation-state-changed',
 
+  // Window controls drawn in the Teams top bar in frameless mode
+  'tfl-window-minimize',
+  'tfl-window-maximize',
+  'tfl-window-close',
+  'tfl-window-is-maximized',
+
   // Microsoft Graph API integration
   'graph-api-get-user-profile',
   'graph-api-get-calendar-events',

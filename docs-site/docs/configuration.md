@@ -139,7 +139,7 @@ source the nested name wins.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `window.frame` | `boolean` | `true` | Specify false to create a Frameless Window |
+| `window.frame` | `boolean` | `true` | Specify false to create a Frameless Window. The Teams top bar then acts as the title bar and gets minimize / maximize / close buttons |
 | `frame` | `boolean` | `true` | Deprecated, use `window.frame` |
 | `window.menubar` | `string` | `"auto"` | Menu bar behaviour. Choices: `auto`, `visible`, `hidden` |
 | `menubar` | `string` | `"auto"` | Deprecated, use `window.menubar` |
