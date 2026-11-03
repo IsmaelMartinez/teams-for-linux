@@ -124,14 +124,24 @@ class BrowserWindowManager {
   assignEventHandlers() {
     // Handle screen sharing source selection from user
     ipcMain.on("select-source", this.assignSelectSourceHandler());
-    // Window controls drawn in the Teams top bar when running frameless
-    ipcMain.on("tfl-window-minimize", () => this.window?.minimize());
-    ipcMain.on("tfl-window-maximize", () => {
-      if (this.window?.isMaximized()) this.window.unmaximize();
-      else this.window?.maximize();
+    // Minimize button drawn in the Teams top bar in frameless mode
+    ipcMain.on("tfl-window-minimize", (event) => {
+      if (this.isWindowControlSender(event)) this.window.minimize();
     });
-    ipcMain.on("tfl-window-close", () => this.window?.close());
-    ipcMain.handle("tfl-window-is-maximized", () => this.window?.isMaximized() ?? false);
+    // Maximize / restore button drawn in the Teams top bar in frameless mode
+    ipcMain.on("tfl-window-maximize", (event) => {
+      if (!this.isWindowControlSender(event)) return;
+      if (this.window.isMaximized()) this.window.unmaximize();
+      else this.window.maximize();
+    });
+    // Close button drawn in the Teams top bar in frameless mode
+    ipcMain.on("tfl-window-close", (event) => {
+      if (this.isWindowControlSender(event)) this.window.close();
+    });
+    // Maximized state, so the top bar can show the maximize or restore icon
+    ipcMain.handle("tfl-window-is-maximized", (event) =>
+      this.isWindowControlSender(event) && this.window.isMaximized()
+    );
     if (this.screenLockInhibitionMethod === "WakeLockSentinel") {
       // Wake Lock auto-releases when document.visibilityState becomes 'hidden',
       // which happens on both minimise and tray-hide. Re-acquire on both events.
@@ -153,6 +163,27 @@ class BrowserWindowManager {
     ipcMain.handle("call-connected", this.assignOnCallConnectedHandler());
     // Notify when a call is disconnected
     ipcMain.handle("call-disconnected", this.assignOnCallDisconnectedHandler());
+  }
+
+  /**
+   * Window controls may only be driven by the main frame of the Teams page in
+   * this window: the root webContents or a profile view attached to it. Popups,
+   * webview guests and subframes are refused, so an unrelated page opened in
+   * the app cannot minimize or close the main window.
+   * @param {Electron.IpcMainEvent|Electron.IpcMainInvokeEvent} event
+   * @returns {boolean}
+   */
+  isWindowControlSender(event) {
+    const sender = event?.sender;
+    if (!sender || !this.window || this.window.isDestroyed()) return false;
+    // senderFrame is a getter that throws once the frame is disposed
+    try {
+      if (!event.senderFrame || event.senderFrame.parent) return false;
+    } catch {
+      return false;
+    }
+    if (sender.id === this.window.webContents.id) return true;
+    return this.window.contentView.children.some((view) => view.webContents?.id === sender.id);
   }
 
   assignSelectSourceHandler() {

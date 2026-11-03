@@ -70,12 +70,12 @@ function makeButton(action, label) {
 async function updateMaximizeIcon() {
 	const path = document.querySelector('#' + CONTROLS_ID + ' .tfl-window-maximize path');
 	if (!path) return;
-	const maximized = await ipcRenderer.invoke('tfl-window-is-maximized');
-	path.setAttribute('d', maximized ? ICONS.restore : ICONS.maximize);
-}
-
-function refreshMaximizeIcon() {
-	updateMaximizeIcon().catch((err) => console.debug('[FRAMELESS] Maximize state unavailable:', err));
+	try {
+		const maximized = await ipcRenderer.invoke('tfl-window-is-maximized');
+		path.setAttribute('d', maximized ? ICONS.restore : ICONS.maximize);
+	} catch (err) {
+		console.debug('[FRAMELESS] Maximize state unavailable:', err);
+	}
 }
 
 function injectWindowControls() {
@@ -88,7 +88,7 @@ function injectWindowControls() {
 	container.appendChild(makeButton('maximize', 'Maximize'));
 	container.appendChild(makeButton('close', 'Close'));
 	bar.appendChild(container);
-	refreshMaximizeIcon();
+	void updateMaximizeIcon();
 }
 
 function startWindowControls() {
@@ -152,7 +152,7 @@ function startWindowControls() {
 		scheduled = true;
 		setTimeout(() => { scheduled = false; injectWindowControls(); }, 250);
 	}).observe(document.body || document.documentElement, { childList: true, subtree: true });
-	window.addEventListener('resize', refreshMaximizeIcon);
+	window.addEventListener('resize', () => void updateMaximizeIcon());
 	injectWindowControls();
 }
 
