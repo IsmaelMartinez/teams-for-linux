@@ -62,7 +62,7 @@ function fixture(options = {}) {
 	const calls = [];
 	const control = new EventEmitter();
 	control.getState = options.getState || (() => options.state ?? STATE);
-	Object.assign(control, Object.fromEntries(['acceptAudio', 'acceptVideo', 'declineCall', 'toggleMute', 'mute', 'unmute', 'toggleVideo', 'toggleHandRaise', 'leaveCall'].map((method) => [
+	Object.assign(control, Object.fromEntries(['acceptAudio', 'acceptVideo', 'declineCall', 'toggleMute', 'mute', 'unmute', 'toggleVideo', 'toggleHandRaise', 'leaveCall', 'setStatus'].map((method) => [
 		method,
 		(...args) => {
 			calls.push([method, ...args]);
@@ -101,6 +101,7 @@ describe('DBusControlService', () => {
 				DeclineCall: ['', 'b'],
 				ToggleMute: ['', 'b'], Mute: ['b', 'b'], Unmute: ['b', 'b'],
 				ToggleVideo: ['', 'b'], ToggleHandRaise: ['', 'b'], LeaveCall: ['', 'b'],
+				SetStatus: ['s', 'b'],
 				GetState: ['', 's'],
 			},
 			signals: {
@@ -191,11 +192,12 @@ describe('DBusControlService', () => {
 		assert.equal(implementation.AcceptVideo(), true);
 		assert.equal(implementation.DeclineCall(), true);
 		for (const method of ['ToggleMute', 'ToggleVideo', 'ToggleHandRaise', 'LeaveCall']) assert.equal(implementation[method](), true);
+		assert.equal(implementation.SetStatus('busy'), true);
 		assert.equal(implementation.Mute(true), true);
 		assert.equal(implementation.Unmute(false), true);
 		assert.deepEqual(calls, [
 			['acceptAudio'], ['acceptVideo'], ['declineCall'],
-			['toggleMute'], ['toggleVideo'], ['toggleHandRaise'], ['leaveCall'], ['mute', true], ['unmute', false],
+			['toggleMute'], ['toggleVideo'], ['toggleHandRaise'], ['leaveCall'], ['setStatus', 'busy'], ['mute', true], ['unmute', false],
 		]);
 	});
 
