@@ -45,9 +45,18 @@ describe('isPermissionAllowed', () => {
 		);
 	});
 
-	it('leaves opening external apps to any main frame, for federated sign-in', () => {
-		assert.strictEqual(allowed({ permission: 'openExternal', isMainFrame: true, topLevelUrl: 'https://idp.example/', requestingUrl: 'https://idp.example/' }), true);
-		assert.strictEqual(allowed({ permission: 'openExternal', isMainFrame: false, topLevelUrl: 'https://evil.example/', requestingUrl: 'https://evil.example/' }), false);
+	it('lets Teams open any external app, other main frames only mail and phone links', () => {
+		const teams = { permission: 'openExternal', isMainFrame: true, topLevelUrl: 'https://teams.microsoft.com/', requestingUrl: 'https://teams.microsoft.com/' };
+		assert.strictEqual(allowed({ ...teams, externalURL: 'msteams:/l/meetup-join/x' }), true);
+		assert.strictEqual(allowed({ ...teams, externalURL: 'sip:user@example.com' }), true);
+
+		const other = { permission: 'openExternal', isMainFrame: true, topLevelUrl: 'https://idp.example/', requestingUrl: 'https://idp.example/' };
+		assert.strictEqual(allowed({ ...other, externalURL: 'mailto:help@example.com' }), true);
+		assert.strictEqual(allowed({ ...other, externalURL: 'tel:+15551234' }), true);
+		assert.strictEqual(allowed({ ...other, externalURL: 'com-okta-authenticator:/x' }), false);
+		assert.strictEqual(allowed({ ...other, externalURL: 'ssh://host' }), false);
+		assert.strictEqual(allowed({ ...other }), false);
+		assert.strictEqual(allowed({ ...other, isMainFrame: false, externalURL: 'mailto:x@example.com' }), false);
 	});
 
 	it('allows the configured URL and profile URL origins outside the known hosts', () => {

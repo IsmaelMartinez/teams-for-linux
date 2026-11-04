@@ -13,8 +13,8 @@ const APP_ROOT = path.join(__dirname, "..");
 // frame inside a trusted page (Whiteboard, Loop, SharePoint embedded by Teams)
 // only inherits the permissions Chromium already gates per frame with
 // Permissions Policy; the rest (notifications, device APIs, file system) need
-// a trusted requester. Opening external apps is left to any main frame, as
-// before, since federated sign-in hands off to authenticator apps.
+// a trusted requester. Opening external apps follows the same rule, except
+// that any main frame may still open mail and phone links.
 
 const AUTH_LOGIN_HOSTS = [
   "login.microsoftonline.com",
@@ -32,6 +32,9 @@ const FRAME_POLICY_GATED = new Set([
   "clipboard-sanitized-write",
   "fullscreen",
 ]);
+
+// Schemes any main frame may hand to the system without a trusted requester.
+const OPEN_EXTERNAL_ANY_PAGE = new Set(["mailto:", "tel:"]);
 
 const MAX_LOGGED_DENIALS = 100;
 
@@ -79,15 +82,25 @@ function isTrustedUrl(url, trustedOrigins) {
   );
 }
 
+function schemeOf(url) {
+  try {
+    return new URL(url).protocol;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Pure decision used by both handlers.
- * @param {{ permission: string, isMainFrame?: boolean, topLevelUrl?: string, requestingUrl?: string }} request
+ * @param {{ permission: string, isMainFrame?: boolean, topLevelUrl?: string, requestingUrl?: string, externalURL?: string }} request
  * @param {Set<string>} trustedOrigins
  * @returns {boolean}
  */
-function isPermissionAllowed({ permission, isMainFrame, topLevelUrl, requestingUrl }, trustedOrigins) {
-  if (permission === "openExternal" && isMainFrame) return true;
+function isPermissionAllowed({ permission, isMainFrame, topLevelUrl, requestingUrl, externalURL }, trustedOrigins) {
   if (typeof requestingUrl === "string" && isTrustedUrl(requestingUrl, trustedOrigins)) return true;
+  if (permission === "openExternal") {
+    return Boolean(isMainFrame) && OPEN_EXTERNAL_ANY_PAGE.has(schemeOf(externalURL));
+  }
   return (
     FRAME_POLICY_GATED.has(permission) &&
     typeof topLevelUrl === "string" &&
@@ -118,7 +131,13 @@ function installPermissionHandlers(config, app, defaultSession, getProfileUrls =
 
   const decide = (webContents, permission, details, requestingUrl) => {
     const allowed = isPermissionAllowed(
-      { permission, isMainFrame: details?.isMainFrame, topLevelUrl: topLevelUrlOf(webContents), requestingUrl },
+      {
+        permission,
+        isMainFrame: details?.isMainFrame,
+        topLevelUrl: topLevelUrlOf(webContents),
+        requestingUrl,
+        externalURL: details?.externalURL,
+      },
       trustedOrigins(),
     );
     const key = `${permission}|${originOf(requestingUrl) ?? "unknown"}`;
