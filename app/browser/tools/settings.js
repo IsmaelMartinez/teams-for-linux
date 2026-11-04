@@ -1,3 +1,5 @@
+"use strict";
+
 const ReactHandler = require("./reactHandler");
 
 // ipcRenderer is used in init only and never stored: page script can patch

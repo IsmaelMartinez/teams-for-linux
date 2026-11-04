@@ -59,6 +59,16 @@ describe('preload does not hand ipcRenderer to page script', () => {
 		.filter((f) => f.endsWith('.js') && f !== 'preload.js')
 		.map((f) => join(browserDir, f));
 
+	// EventEmitter calls listeners with `this` = ipcRenderer, and V8's
+	// CallSite.getThis() returns that receiver for sloppy-mode frames.
+	it('every file that registers an ipcRenderer listener is strict mode', () => {
+		for (const file of [PRELOAD_PATH, ...files]) {
+			const text = readFileSync(file, 'utf8');
+			if (!/ipcRenderer\.(on|once)\(/.test(text)) continue;
+			assert.match(text, /^(\s*\/\/[^\n]*\n)*\s*["']use strict["'];/, `${file} registers an ipcRenderer listener but is not strict`);
+		}
+	});
+
 	it('no browser module stores ipcRenderer where page script can reach it', () => {
 		for (const file of files) {
 			const text = readFileSync(file, 'utf8');

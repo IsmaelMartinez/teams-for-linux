@@ -1,3 +1,5 @@
+"use strict";
+
 const activityHub = require("../tools/activityHub");
 const wakeLock = require("../tools/wakeLock");
 

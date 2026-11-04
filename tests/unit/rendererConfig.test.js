@@ -27,12 +27,21 @@ describe('toRendererConfig', () => {
 		}
 	});
 
+	it('removes the account and broker details next to them', () => {
+		const safe = toRendererConfig({ ...config(), ssoBasicAuthUser: 'b', clientCertPath: '/c.p12' });
+		assert.strictEqual(safe.mqtt.username, undefined);
+		assert.strictEqual(safe.mqtt.brokerUrl, undefined);
+		assert.strictEqual(safe.auth.clientCertificate.path, undefined);
+		assert.strictEqual(safe.auth.basic.user, undefined);
+		assert.strictEqual(safe.auth.webLogin.user, undefined);
+		assert.strictEqual(safe.ssoBasicAuthUser, undefined);
+		assert.strictEqual(safe.clientCertPath, undefined);
+	});
+
 	it('keeps everything else, including the PiP frame name the preload needs', () => {
 		const safe = toRendererConfig(config());
 		assert.strictEqual(safe.url, 'https://teams.cloud.microsoft');
 		assert.strictEqual(safe.mqtt.enabled, true);
-		assert.strictEqual(safe.mqtt.username, 'u');
-		assert.strictEqual(safe.auth.clientCertificate.path, '/c.p12');
 		assert.strictEqual(safe.documentPictureInPictureFrameName, 'teams-for-linux-document-pip-x');
 	});
 

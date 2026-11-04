@@ -1,3 +1,10 @@
+"use strict";
+// Strict mode is a security boundary here, not style: EventEmitter calls
+// listeners with `this` set to the raw ipcRenderer, and V8's stack-trace API
+// (CallSite.getThis) hands that receiver to page script running inside any
+// sloppy-mode frame. Every file that registers an ipcRenderer listener must be
+// strict (GHSA-58j7-22f8-6xqp; enforced by tests/unit/preloadIpcLeak.test.js).
+
 const { ipcRenderer } = require("electron");
 
 // #2677: Electron removed the non-standard `File.path` from dropped files, so
@@ -107,8 +114,9 @@ globalThis.electronAPI = {
   onSelectSource: (callback) => {
     ipcRenderer.once("select-source", (_event, ...args) => callback(...args));
   },
-  // The PiP frame name stays with the preload's own tool: page script holding
-  // it could open the always-on-top window itself (GHSA-58j7-22f8-6xqp).
+  // No page needs the PiP frame name, so it is not handed out. Defence in
+  // depth only: the name guards against cross-origin frames, which cannot
+  // reach electronAPI anyway (GHSA-58j7-22f8-6xqp).
   getConfig: async () => {
     const pageConfig = await ipcRenderer.invoke("get-config");
     delete pageConfig.documentPictureInPictureFrameName;

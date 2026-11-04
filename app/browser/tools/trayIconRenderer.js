@@ -1,3 +1,5 @@
+"use strict";
+
 const { nativeImage } = require("electron");
 const TrayIconChooser = require("./trayIconChooser");
 // wantsPresenceStatus is the shared predicate (presenceColors.js): the Dock

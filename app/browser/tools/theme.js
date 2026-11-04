@@ -1,3 +1,5 @@
+"use strict";
+
 const ReactHandler = require("./reactHandler");
 
 class ThemeManager {
