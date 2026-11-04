@@ -15,7 +15,7 @@ The uninstall steps depend on how you originally installed the application. If y
 sudo apt purge --autoremove teams-for-linux
 
 # Remove the repository source
-sudo rm /etc/apt/sources.list.d/teams-for-linux-packages.sources
+sudo rm /etc/apt/sources.list.d/teams-for-linux.sources
 
 # Remove the signing key
 sudo rm /etc/apt/keyrings/teams-for-linux.asc
