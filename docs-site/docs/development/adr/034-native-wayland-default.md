@@ -48,6 +48,8 @@ Links raise the browser, fractional scaling is sharp, and whole-screen sharing w
 
 Any native Wayland regression in a future Electron lands on deb, rpm and AppImage users at once instead of only on Flatpak and tar.gz. The rollback is a one-line restore of the `executableArgs` block, the same change in reverse, and release-please keeps it to a single patch release. GNOME multi-monitor users may need the `--ozone-platform=x11` override until the Chromium side settles; the troubleshooting entry for #2094 says so.
 
+**Known case: Enterprise Linux 8.** On RHEL 8, Rocky 8 and AlmaLinux 8 (GTK 3.22, GNOME 3.32, anything older than GNOME 3.38) the app segfaults on launch under native Wayland: Chromium's GTK layer creates its first widget before GDK has a display, and `gtk_css_static_style_get_default` in GTK 3.22 dereferences the NULL default settings. GTK 3.24 guards this. Verified on Rocky 8.10 with this PR's build; `--ozone-platform=x11` on the command line or `Exec=` line is the only thing that avoids it, since `electronCLIFlags`, `ELECTRON_OZONE_PLATFORM_HINT` and `GDK_BACKEND` all act too late. A static `Exec=` line cannot test the GTK version and the wrapper alternative below is rejected, so EL8 is not special-cased: the troubleshooting page carries the `.desktop` copy under `~/.local/share/applications`, and EL8 users on 2.26 or earlier should apply it before upgrading.
+
 ### Neutral
 
 The snap keeps the old default and the old troubleshooting advice. The two `executableArgs` blocks now differ on purpose, which the comment in ADR-031's Neutral section about moving them together no longer applies to.
