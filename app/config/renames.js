@@ -1,12 +1,17 @@
 // Flat-to-nested option renames from ADR-025, applied during the deprecation
-// window. Pure data module, no Electron imports, mirroring validator.js and
-// borrowing its isPlainObject rather than keeping a fourth copy of it.
+// window. No Electron imports, mirroring validator.js and borrowing its
+// isPlainObject rather than keeping a fourth copy of it.
 //
 // Both names work while a rename is in its window. The FLAT name stays the one
 // every module reads, so no feature code is swept; a nested value is projected
 // onto the flat key only when the user actually supplied it. The flat
 // declarations, this table and the projection are deleted together at the end
-// of the window (2.30.0, see issue #2842).
+// of the window (2.32.0, see issue #2842).
+//
+// "Supplied" covers the config file, command-line flags and environment
+// variables alike (see readUserSources). Between sources the yargs order
+// holds, command line over environment over config file; within one source
+// the nested name beats the flat one.
 //
 // `inverted` marks a rename that flips a boolean's polarity, for example
 // `disableNotifications: true` becoming `notifications.enabled: false`. A plain
@@ -18,6 +23,8 @@
 // while `shortcuts.global: "Control+Shift+M"` would arrive as a bare string,
 // which fails the Array.isArray check in app/globalShortcuts/index.js and makes
 // a for..of over disableGlobalShortcuts iterate characters or throw.
+const yargs = require("yargs");
+const configOptions = require("./options");
 const { isPlainObject } = require("./validator");
 
 /** @type {{flat: string, nested: string, inverted?: boolean, type?: string}[]} */
@@ -33,10 +40,7 @@ const RENAMES = [
 
   // Batch 2 (2.21.0). Every remaining rename whose target namespace is
   // brand new, taken in one pass because they share the batch 1 mechanics
-  // exactly. The 18 renames that land in the already-shipped network, auth,
-  // idleDetection and notifications namespaces are not here yet: they were
-  // held on gate A in issue #2842 (yargs replacing an object option
-  // wholesale), which mergeDefaults.js now fixes (#3011).
+  // exactly.
   //
   // customBackground
   { flat: "isCustomBackgroundEnabled", nested: "customBackground.enabled" },
@@ -103,7 +107,133 @@ const RENAMES = [
   // development
   { flat: "webDebug", nested: "development.webDebug" },
   { flat: "watchConfigFile", nested: "development.watchConfigFile" },
+
+  // Batch 3 (2.29.0). The renames into the namespaces that already shipped
+  // unrelated leaves. They waited on gate A in issue #2842 (yargs replacing an
+  // object option wholesale, so moving one leaf in dropped its siblings'
+  // defaults), which mergeDefaults.js fixed in #3011.
+  //
+  // notifications
+  {
+    flat: "disableNotifications",
+    nested: "notifications.enabled",
+    inverted: true,
+  },
+  {
+    flat: "disableNotificationSound",
+    nested: "notifications.sound.enabled",
+    inverted: true,
+  },
+  {
+    flat: "disableNotificationSoundIfNotAvailable",
+    nested: "notifications.sound.onlyWhenAvailable",
+  },
+  {
+    flat: "disableNotificationWindowFlash",
+    nested: "notifications.windowFlash",
+    inverted: true,
+  },
+  {
+    flat: "disableBadgeCount",
+    nested: "notifications.badgeCountEnabled",
+    inverted: true,
+  },
+  { flat: "notificationMethod", nested: "notifications.method" },
+  { flat: "defaultNotificationUrgency", nested: "notifications.urgency" },
+  // idleDetection
+  { flat: "awayOnSystemIdle", nested: "idleDetection.setAwayOnIdle" },
+  { flat: "appIdleTimeout", nested: "idleDetection.timeout" },
+  {
+    flat: "appIdleTimeoutCheckInterval",
+    nested: "idleDetection.checkInterval.detectIdle",
+  },
+  {
+    flat: "appActiveCheckInterval",
+    nested: "idleDetection.checkInterval.detectActive",
+  },
+  // auth
+  { flat: "authServerWhitelist", nested: "auth.serverWhitelist" },
+  { flat: "ssoBasicAuthUser", nested: "auth.basic.user" },
+  { flat: "ssoBasicAuthPasswordCommand", nested: "auth.basic.passwordCommand" },
+  { flat: "clientCertPath", nested: "auth.clientCertificate.path" },
+  { flat: "clientCertPassword", nested: "auth.clientCertificate.password" },
+  {
+    flat: "customCACertsFingerprints",
+    nested: "auth.customCACertificateFingerprints",
+    type: "array",
+  },
+  // network
+  { flat: "proxyServer", nested: "network.proxyServer" },
 ];
+
+// Chromium command-line switches that yargs also camel-cases onto one of our
+// options: `--disable-gpu` lands on disableGpu, and so on. Keyed by switch,
+// valued by the flat option each sets today. Our docs tell users to pass
+// `--disable-gpu`, and Chromium reads all three itself, so these spellings are
+// PERMANENT: they never raise the deprecation warning, and they must keep
+// driving the same behaviour after the flat names go. When the flat names are
+// removed in 2.32.0, map these to the nested names (performance.disableGpu,
+// network.proxyServer, auth.serverWhitelist) instead; chromiumSwitchTarget
+// already resolves them through RENAMES where an entry exists. The camelCase
+// (`--disableGpu`), `--no-` and environment spellings are ours and still warn.
+const CHROMIUM_SWITCH_ALIASES = {
+  "disable-gpu": "disableGpu",
+  "proxy-server": "proxyServer",
+  "auth-server-whitelist": "authServerWhitelist",
+};
+
+// The option a Chromium switch alias drives: the nested name once its rename
+// exists, otherwise the flat one.
+function chromiumSwitchTarget(switchName) {
+  if (!Object.hasOwn(CHROMIUM_SWITCH_ALIASES, switchName)) return undefined;
+  const flat = CHROMIUM_SWITCH_ALIASES[switchName];
+  return RENAMES.find((entry) => entry.flat === flat)?.nested ?? flat;
+}
+
+// Whether yargs would take `next` as the value of a `--switch next` pair. A
+// boolean only takes a literal true or false; anything else takes the next
+// token unless it looks like another flag.
+function takesNextToken(flat, next) {
+  if (next === undefined) return false;
+  if (configOptions[flat]?.type === "boolean") {
+    return next === "true" || next === "false";
+  }
+  return !next.startsWith("-");
+}
+
+/**
+ * argv with every Chromium switch alias removed, so a parse of the rest shows
+ * what the user set through our own spellings alone.
+ *
+ * Matches the whole token, never a prefix or a pattern: `--disable-gpu` and
+ * `--disable-gpu=<v>`, plus the two-token `--proxy-server <v>` that yargs also
+ * accepts. `--disable-gpu-compositing` is a different switch and stays. Stops
+ * at `--`, after which yargs reads nothing as an option.
+ *
+ * @param {string[]} argv the arguments yargs parses.
+ * @returns {string[]}
+ */
+function withoutChromiumSwitchAliases(argv) {
+  if (!Array.isArray(argv)) return [];
+  const rest = [];
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === "--") {
+      rest.push(...argv.slice(i));
+      break;
+    }
+    const eq = arg.indexOf("=");
+    const name = (eq === -1 ? arg : arg.slice(0, eq)).slice(2);
+    if (!arg.startsWith("--") || !Object.hasOwn(CHROMIUM_SWITCH_ALIASES, name)) {
+      rest.push(arg);
+      continue;
+    }
+    if (eq === -1 && takesNextToken(CHROMIUM_SWITCH_ALIASES[name], argv[i + 1])) {
+      i++;
+    }
+  }
+  return rest;
+}
 
 // Reads a dotted path, tolerating a missing intermediate object.
 function readPath(source, path) {
@@ -134,96 +264,179 @@ function coerce(value, inverted, type) {
   return value;
 }
 
+// Precedence between sources, highest first. Matches yargs itself, which lets a
+// command-line flag beat an environment variable and both beat the config file.
+const SOURCE_ORDER = ["cli", "env", "file"];
+
+/**
+ * What the user supplied, split by where it came from.
+ *
+ * The resolved config cannot answer "did the user set this?", because a
+ * declared default looks the same as a supplied value there. So each source is
+ * read on its own: the config file as given, and the command line and the
+ * environment through two extra yargs passes that declare types but no
+ * defaults, so a key is present only when the user wrote it. Letting yargs do
+ * the parsing keeps its spellings (`--disable-gpu`, `--no-disableGpu`,
+ * `DISABLE_GPU`, `PERFORMANCE__DISABLE_GPU`) without copying its rules here.
+ *
+ * Both spellings of every rename are declared with the flat option's type, so
+ * `--window.frame=false` or `WINDOW__FRAME=false` reaches the projection as the
+ * boolean `false` rather than a truthy string, and an array leaf arrives as an
+ * array, exactly as yargs treats the flat name.
+ *
+ * @param {Record<string, unknown>} configFile the merged system and user
+ *   config file contents.
+ * @param {string[]} argv the arguments yargs parses (process.argv.slice(1)).
+ * @param {typeof RENAMES} renames override for tests.
+ * @returns {{cli: object, env: object, file: object}}
+ */
+function readUserSources(configFile, argv, renames = RENAMES) {
+  return {
+    cli: userParser(renames).parse(Array.isArray(argv) ? argv : []),
+    env: userParser(renames).env(true).parse([]),
+    file: isPlainObject(configFile) ? configFile : {},
+  };
+}
+
+// A yargs parser that declares the types of both spellings of every rename
+// but no defaults; see readUserSources. help and version off, so a `--help`
+// meant for the main parse cannot print or exit from here.
+function userParser(renames) {
+  const types = {};
+  for (const { flat, nested } of renames) {
+    const type = configOptions[flat]?.type;
+    types[flat] = { type };
+    types[nested] = { type };
+  }
+  return yargs().options(types).help(false).version(false);
+}
+
+/**
+ * The sources to judge deprecation against: as readUserSources, except that
+ * the command line is read without the Chromium switch aliases, so an option
+ * given only as `--disable-gpu` is not reported while `--disableGpu` still is.
+ * The projection and isOptionSetByUser keep the full command line, so the
+ * value still lands and `--disable-gpu` still counts as an explicit choice.
+ *
+ * @param {{cli?: object, env?: object, file?: object}} sources from
+ *   readUserSources.
+ * @param {string[]} argv the same arguments readUserSources parsed.
+ * @param {typeof RENAMES} renames override for tests.
+ */
+function deprecationSources(sources, argv, renames = RENAMES) {
+  return {
+    ...sources,
+    cli: userParser(renames).parse(withoutChromiumSwitchAliases(argv)),
+  };
+}
+
+// The nested value that should reach the flat key, or undefined to leave the
+// flat key as yargs resolved it. Walks the sources from highest precedence and
+// stops at the first one naming either spelling: a nested name there wins, and
+// a flat name there means yargs already put the right value on the flat key.
+function suppliedNestedValue(sources, flat, nested) {
+  for (const name of SOURCE_ORDER) {
+    const source = sources?.[name];
+    const value = readPath(source, nested);
+    if (value !== undefined) return value;
+    if (readPath(source, flat) !== undefined) return undefined;
+  }
+  return undefined;
+}
+
 /**
  * Projects nested values onto their flat counterparts, in place.
  *
- * Presence is decided against the raw config file rather than the resolved
- * config. Asking the resolved config whether a leaf is `undefined` would only
- * work by accident: it relies on yargs replacing object options wholesale
- * instead of deep merging their defaults. Once that is fixed (gate A in
- * issue #2842) every unset leaf would resolve to its declared default, stop
- * being undefined, and be projected over the value the user actually set.
+ * Presence is decided against the raw sources rather than the resolved config.
+ * Asking the resolved config whether a leaf is `undefined` stopped working once
+ * mergeDefaults.js restored object defaults (gate A in issue #2842): every
+ * unset leaf resolves to its declared default and would be projected over the
+ * value the user actually set.
  *
  * @param {Record<string, unknown>} config the parsed yargs config, mutated.
- * @param {Record<string, unknown>} configFile the merged system and user
- *   config file contents; a nested path present here was set by the user.
+ * @param {{cli?: object, env?: object, file?: object}} sources what the user
+ *   supplied, per source; see readUserSources.
  * @param {typeof RENAMES} renames override for tests.
  */
-function applyRenamedOptions(config, configFile, renames = RENAMES) {
+function applyRenamedOptions(config, sources, renames = RENAMES) {
   if (!config || typeof config !== "object") return;
 
   for (const { flat, nested, inverted, type } of renames) {
-    const value = readPath(configFile, nested);
+    const value = suppliedNestedValue(sources, flat, nested);
     if (value === undefined) continue;
-
-    // The new name wins when both are supplied; it is the canonical one.
     config[flat] = coerce(value, inverted, type);
   }
 }
 
 /**
- * Every `--flag` token yargs accepts for a flat option name.
+ * Whether the user supplied an option, under either spelling and from any
+ * source.
  *
- * yargs' camel-case expansion means `--disableGpu` and `--disable-gpu` are the
- * same option, and boolean negation adds `--no-` in front of both. A probe over
- * all 84 declared options confirmed this decamelisation matches the alias yargs
- * generates for each of them.
+ * Only needed where behaviour turns on an option being *set* rather than on its
+ * value: app/startup/commandLine.js force-disables the GPU on Wayland unless
+ * the user has said otherwise, so someone opting back in through
+ * `performance.disableGpu`, on the command line or in the environment as much
+ * as in the file, has to count as having spoken; and the menu toggles that
+ * app/index.js re-reads from config.json must not override a value given on
+ * the command line or in the environment. The sources are the ones
+ * applyRenamedOptions projects from, so the two can never disagree about what
+ * the user said.
  *
- * The `[A-Z]` class has no quantifier and cannot backtrack, so matching is
- * linear in the length of the name.
- *
+ * @param {{cli?: object, env?: object, file?: object}} sources see
+ *   readUserSources.
  * @param {string} flat the flat option name.
- * @returns {string[]} the accepted tokens, without any `=value` suffix.
+ * @param {string[]} sourceNames which sources to check, default all three.
+ * @returns {boolean}
  */
-function argvSpellings(flat) {
-  const kebab = flat.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
-  const names = kebab === flat ? [flat] : [flat, kebab];
-  return names.flatMap((name) => [`--${name}`, `--no-${name}`]);
+function isOptionSetByUser(sources, flat, sourceNames = SOURCE_ORDER) {
+  const rename = RENAMES.find((entry) => entry.flat === flat);
+  const names = rename ? [flat, rename.nested] : [flat];
+
+  return sourceNames.some((source) =>
+    names.some((name) => readPath(sources?.[source], name) !== undefined)
+  );
 }
 
 /**
- * Whether the user supplied an option, under either spelling and by whichever
- * route that spelling actually works.
+ * Reads an option, in flat terms, from the electron-store that menu toggles
+ * persist to. That store is the user's own config.json, so it can hold either
+ * spelling; the nested one wins, matching applyRenamedOptions, and is coerced
+ * back to the flat polarity (negation is symmetric).
  *
- * Only needed where behaviour turns on an option being *set* rather than on its
- * value, which today is `disableGpu` alone: app/startup/commandLine.js
- * force-disables the GPU on Wayland unless the user has said otherwise, so
- * someone opting back in through the new `performance.disableGpu` name has to
- * count as having spoken. Reading the resolved config cannot answer this, since
- * a declared default is indistinguishable from a user-supplied value there.
- *
- * The scopes differ on purpose and match applyRenamedOptions. In the config file
- * both names work, so both count. On the command line only the flat name works,
- * in any of the spellings yargs accepts for it (see argvSpellings), because the
- * projection above never looks at argv; counting `--performance.disableGpu`
- * there would report the user as having spoken while their value stayed
- * unprojected, leaving the Wayland branch to respect a default it mistook for a
- * choice.
- *
- * @param {Record<string, unknown>} configFile the merged system and user config
- *   file contents.
- * @param {string[]} argv process.argv, for the command line form of the flat
- *   name.
- * @param {string} flat the flat option name.
- * @returns {boolean}
+ * @param {{has: Function, get: Function}} store an electron-store, which
+ *   resolves dotted keys as nested paths.
+ * @param {string} flat the flat option name modules read.
+ * @param {typeof RENAMES} renames override for tests.
+ * @returns {unknown} the stored value, or undefined when neither is stored.
  */
-function isOptionSetByUser(configFile, argv, flat) {
-  const rename = RENAMES.find((entry) => entry.flat === flat);
-  const fileNames = rename ? [flat, rename.nested] : [flat];
-
-  if (fileNames.some((name) => readPath(configFile, name) !== undefined)) {
-    return true;
+function readStoredOption(store, flat, renames = RENAMES) {
+  const rename = renames.find((entry) => entry.flat === flat);
+  if (rename && store.has(rename.nested)) {
+    return coerce(store.get(rename.nested), rename.inverted, rename.type);
   }
+  return store.has(flat) ? store.get(flat) : undefined;
+}
 
-  // Match the whole token, not a prefix: `--disableGpuFoo` is a different
-  // option to yargs and leaves `disableGpu` at its default, so counting it
-  // would report a choice the user never made. Splitting on the first `=`
-  // covers `--disableGpu=false`; `--disableGpu false` is already two tokens.
-  const spellings = argvSpellings(flat);
-  return (
-    Array.isArray(argv) &&
-    argv.some((arg) => spellings.includes(arg.split("=")[0]))
-  );
+/**
+ * Persists a flat-named value set from a menu under its nested name and drops
+ * the flat key. Writing the flat key instead would lose to a nested value
+ * already in config.json on the next start, so the toggle would silently
+ * revert, and it would also add a deprecated key the user never wrote.
+ *
+ * @param {{has: Function, set: Function, delete: Function}} store an
+ *   electron-store over the user's config.json.
+ * @param {string} flat the flat option name modules read.
+ * @param {unknown} value the value in flat terms.
+ * @param {typeof RENAMES} renames override for tests.
+ */
+function writeStoredOption(store, flat, value, renames = RENAMES) {
+  const rename = renames.find((entry) => entry.flat === flat);
+  if (!rename) {
+    store.set(flat, value);
+    return;
+  }
+  store.set(rename.nested, coerce(value, rename.inverted, rename.type));
+  if (store.has(flat)) store.delete(flat);
 }
 
 /**
@@ -286,8 +499,15 @@ function toNestedConfigFile(configFile, renames = RENAMES) {
 
 module.exports = {
   RENAMES,
+  CHROMIUM_SWITCH_ALIASES,
+  chromiumSwitchTarget,
+  withoutChromiumSwitchAliases,
+  deprecationSources,
   readPath,
+  readUserSources,
   applyRenamedOptions,
   isOptionSetByUser,
+  readStoredOption,
+  writeStoredOption,
   toNestedConfigFile,
 };

@@ -24,4 +24,9 @@ contextBridge.exposeInMainWorld("profileSwitcherApi", {
     ipcRenderer.on("profile-switcher-state", (_event, state) =>
       callback(state)
     ),
+  // Main pushes { unreadByProfileId } whenever a profile's unread changes.
+  onUnread: (callback) =>
+    ipcRenderer.on("profile-switcher-unread", (_event, payload) =>
+      callback(payload)
+    ),
 });

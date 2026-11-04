@@ -24,6 +24,9 @@ const execFileAsync = promisify(execFile);
  */
 const CANCELLED_MESSAGE = "NotAllowedError: security key operation cancelled";
 
+/** Rejection message when no security key is plugged in. */
+const NO_DEVICE_MESSAGE = "NotAllowedError: No FIDO2 hardware device found. Plug in your security key and try again.";
+
 /**
  * Reject a cancelled request before it does any further work.
  * @param {AbortSignal} [signal]
@@ -231,7 +234,7 @@ async function discoverDevices() {
 async function resolveDevice() {
   const devices = await discoverDevices();
   if (devices.length === 0) {
-    throw new Error("NotAllowedError: No FIDO2 hardware device found. Plug in your security key and try again.");
+    throw new Error(NO_DEVICE_MESSAGE);
   }
   return devices[0];
 }
@@ -702,7 +705,7 @@ function parseAssertionOutput(stdout, options, clientDataJSON, credentialId) {
   };
 }
 
-module.exports = { isAvailable, discoverDevices, createCredential, getAssertion, CANCELLED_MESSAGE };
+module.exports = { isAvailable, discoverDevices, createCredential, getAssertion, CANCELLED_MESSAGE, NO_DEVICE_MESSAGE };
 
 // Exposed so the cancellation path can be unit-tested against a real detached
 // child process. Not part of the module's contract — do not use from app code.

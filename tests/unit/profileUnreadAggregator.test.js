@@ -17,18 +17,22 @@ let applied;
 let badges;
 let renders;
 let renderResult;
+let unreadPushes;
 
 function build({
   resolve = () => null,
   names = {},
   primary = () => true,
   presenceOverlay = false,
+  onUnreadChanged = (unread) => unreadPushes.push(unread),
 } = {}) {
   applied = [];
   badges = [];
   renders = [];
+  unreadPushes = [];
   renderResult = () => Promise.resolve('data:agg');
   return new ProfileUnreadAggregator({
+    onUnreadChanged,
     resolveProfileId: resolve,
     isPrimarySender: primary,
     getProfileName: (id) => names[id] ?? null,
@@ -388,5 +392,79 @@ describe('ProfileUnreadAggregator', () => {
     await settle();
     assert.strictEqual(applied.at(-1).icon, 'data:new');
     assert.strictEqual(applied.filter((u) => u.icon === 'data:stale').length, 0);
+  });
+});
+
+describe('ProfileUnreadAggregator switcher unread snapshot', () => {
+  const byWc = { 1: 'p-a', 2: 'p-b' };
+  const resolve = (event) => byWc[event.sender.id] ?? null;
+
+  it('pushes the per-profile snapshot when a count changes, not on icon-only updates', () => {
+    const agg = build({ resolve });
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:a', flash: false, count: 3 });
+    agg.onTrayUpdate(senderEvent(2), { icon: 'data:b', flash: false, count: 1 });
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:a2', flash: true, count: 3 });
+    assert.deepStrictEqual(unreadPushes, [
+      { 'p-a': 3 },
+      { 'p-a': 3, 'p-b': 1 },
+    ]);
+  });
+
+  it('omits zero counts and pre-bootstrap senders from the snapshot', () => {
+    const agg = build({ resolve });
+    agg.onTrayUpdate(senderEvent(9), { icon: 'data:x', flash: false, count: 5 });
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:a', flash: false, count: 2 });
+    agg.onTrayUpdate(senderEvent(1), { icon: null, flash: false, count: 0 });
+    assert.deepStrictEqual(agg.unreadByProfile(), {});
+    assert.deepStrictEqual(unreadPushes.at(-1), {});
+  });
+
+  it('pushes on out-of-band badge changes and on profile removal', () => {
+    const agg = build({ resolve });
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:a', flash: false, count: 2 });
+    agg.onTrayUpdate(senderEvent(2), { icon: 'data:b', flash: false, count: 4 });
+    agg.onBadgeCount(senderEvent(1), 7);
+    assert.deepStrictEqual(unreadPushes.at(-1), { 'p-a': 7, 'p-b': 4 });
+    agg.onBadgeCount(senderEvent(1), 7); // unchanged → no push
+    const pushes = unreadPushes.length;
+    agg.removeProfile('p-b');
+    assert.strictEqual(unreadPushes.length, pushes + 1);
+    assert.deepStrictEqual(unreadPushes.at(-1), { 'p-a': 7 });
+  });
+
+  it('carries a pre-bootstrap count onto Profile 0 when it appears, with no further IPC', async () => {
+    let rootOwner = null;
+    const agg = build({ resolve: (e) => (e.sender.id === 1 ? rootOwner : null) });
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:r', flash: false, count: 5 });
+    assert.deepStrictEqual(agg.unreadByProfile(), {}); // not attributable yet
+    rootOwner = 'p-0'; // bootstrap taught the sender map the owner
+    agg.reattribute();
+    assert.deepStrictEqual(agg.unreadByProfile(), { 'p-0': 5 });
+    assert.deepStrictEqual(unreadPushes.at(-1), { 'p-0': 5 });
+    await settle();
+    assert.strictEqual(applied.at(-1).tooltip, 'Teams (5)'); // moved, not doubled
+  });
+
+  it('an icon-only update after attribution keeps the carried count', () => {
+    let rootOwner = null;
+    const agg = build({ resolve: (e) => (e.sender.id === 1 ? rootOwner : null) });
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:r', flash: false, count: 5 });
+    rootOwner = 'p-0';
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:r2', flash: true });
+    assert.deepStrictEqual(agg.unreadByProfile(), { 'p-0': 5 });
+    assert.deepStrictEqual(unreadPushes.at(-1), { 'p-0': 5 });
+  });
+
+  it('a throwing pill push never escapes, including from removeProfile', async () => {
+    const agg = build({
+      resolve,
+      onUnreadChanged: () => {
+        throw new Error('pill gone');
+      },
+    });
+    agg.onTrayUpdate(senderEvent(1), { icon: 'data:a', flash: false, count: 2 });
+    assert.doesNotThrow(() => agg.removeProfile('p-a'));
+    await settle();
+    assert.deepStrictEqual(badges.at(-1), 0);
   });
 });

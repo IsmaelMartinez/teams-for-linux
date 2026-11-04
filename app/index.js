@@ -32,6 +32,7 @@ const PartitionsManager = require("./partitions/manager");
 const ProfilesManager = require("./profilesManager");
 const ProfileViewManager = require("./mainAppWindow/profileViewManager");
 const { PIP_FRAME_NAME } = require("./mainAppWindow/documentPictureInPicture");
+const { PROTOCOL_SCHEMES } = require("./mainAppWindow/protocolLink");
 const TeamsControlService = require("./control/teamsControlService");
 const TeamsStateService = require("./control/teamsStateService");
 const IdleMonitor = require("./idle/monitor");
@@ -228,9 +229,10 @@ if (isMac) {
   requestMediaAccess();
 }
 
-const protocolClient = "msteams";
-if (!app.isDefaultProtocolClient(protocolClient, process.execPath)) {
-  app.setAsDefaultProtocolClient(protocolClient, process.execPath);
+for (const protocolClient of PROTOCOL_SCHEMES) {
+  if (!app.isDefaultProtocolClient(protocolClient, process.execPath)) {
+    app.setAsDefaultProtocolClient(protocolClient, process.execPath);
+  }
 }
 
 if (gotTheLock) {
@@ -639,10 +641,14 @@ function loadMenuToggleSettings() {
     'appIcon'
   ];
 
+  // The store is the user's config.json, so it may hold either ADR-025
+  // spelling; readStoredOption lets the nested one win, as the loader does.
+  const { readStoredOption } = require("./config/renames");
   for (const setting of menuToggleSettings) {
-    if (appConfig.legacyConfigStore.has(setting)) {
-      config[setting] = appConfig.legacyConfigStore.get(setting);
-    }
+    // A value from the command line or environment beats config.json.
+    if (config.optionsSetOutsideConfigFile?.includes(setting)) continue;
+    const value = readStoredOption(appConfig.legacyConfigStore, setting);
+    if (value !== undefined) config[setting] = value;
   }
 }
 
@@ -940,10 +946,15 @@ function createUnreadAggregator(viewManager) {
     applyTray: (update) => mainAppWindow.getTray()?.applyAggregate(update),
     applyBadgeCount,
     appTitle: config.appTitle,
+    onUnreadChanged: (unread) => viewManager.updateSwitcherUnread(unread),
   });
 
   // No surface is left to report a zero after removal or a view dying on
   // its own — holding the last count would inflate the badge all session.
+  // PVM's own "add" handler registers first and teaches the sender map the
+  // new owner (Profile 0 bootstrapping mid-session); then carry over any
+  // count the root window reported before it was attributable.
+  profilesManager.on("add", () => aggregator.reattribute());
   profilesManager.on("remove", ({ removedId }) =>
     aggregator.removeProfile(removedId)
   );

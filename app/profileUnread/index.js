@@ -36,6 +36,8 @@ class ProfileUnreadAggregator {
    * @param {(update: {icon:string|null, flash:boolean|undefined, tooltip:string}) => void} deps.applyTray
    * @param {(count: number) => void} deps.applyBadgeCount
    * @param {string} deps.appTitle
+   * @param {(unread: Record<string, number>) => void} [deps.onUnreadChanged]
+   *   Called with the per-profile snapshot whenever a count changes.
    */
   constructor(deps) {
     this.#deps = deps;
@@ -45,12 +47,49 @@ class ProfileUnreadAggregator {
     const profileId = this.#deps.resolveProfileId(event);
     const senderKey = `wc:${event?.sender?.id ?? "unknown"}`;
     if (profileId) {
-      // Drop the bucket this sender made pre-bootstrap, or its count would
-      // double once updates re-key to the profile id.
-      this.#buckets.delete(senderKey);
-      return profileId;
+      return { key: profileId, moved: this.#moveBucket(senderKey, profileId) };
     }
-    return senderKey;
+    return { key: senderKey, moved: false };
+  }
+
+  // Carry a pre-bootstrap bucket over to its profile rather than dropping
+  // it: renderers dedupe and may never re-send that count. Returns whether
+  // the published (profile-keyed) view changed.
+  #moveBucket(senderKey, profileId) {
+    const stale = this.#buckets.get(senderKey);
+    if (!stale) return false;
+    this.#buckets.delete(senderKey);
+    if (this.#buckets.has(profileId)) return false;
+    this.#buckets.set(profileId, stale);
+    return stale.count > 0;
+  }
+
+  /**
+   * Re-attribute pre-bootstrap buckets whose sender now resolves to a
+   * profile (Profile 0 created mid-session, e.g. on first login). Call
+   * after the sender map learns the new owner.
+   */
+  reattribute() {
+    try {
+      let changed = false;
+      // Moving deletes the current key and adds a profile key mid-iteration;
+      // Map iteration tolerates both, and added keys fail the wc: check.
+      for (const key of this.#buckets.keys()) {
+        if (!key.startsWith("wc:")) continue;
+        const id = Number(key.slice(3));
+        if (!Number.isInteger(id)) continue;
+        const profileId = this.#deps.resolveProfileId({ sender: { id } });
+        if (profileId && this.#moveBucket(key, profileId)) changed = true;
+      }
+      if (changed) {
+        this.#notifyUnread();
+        void this.#refreshTray();
+      }
+    } catch (error) {
+      console.error("[ProfileUnread] reattribute failed", {
+        message: error.message,
+      });
+    }
   }
 
   #bucket(key) {
@@ -86,29 +125,36 @@ class ProfileUnreadAggregator {
 
   #onTrayUpdate(event, { icon, flash, count }) {
     if (!this.#deps.isPrimarySender(event)) return;
-    const bucket = this.#bucket(this.#bucketKey(event));
+    const { key, moved } = this.#bucketKey(event);
+    const bucket = this.#bucket(key);
     bucket.icon = icon ?? null;
     // An icon/theme redraw omits `flash`; preserving the previous request is
     // what keeps an active notification flash running.
     if (flash !== undefined) bucket.flash = !!flash;
+    const before = bucket.count;
     // Legacy {icon, flash} payloads say nothing about the count.
     if (count !== undefined && count !== null) {
       bucket.count = Number.isFinite(count) && count > 0 ? count : 0;
     }
     bucket.iconCount = bucket.count;
+    if (moved || bucket.count !== before) this.#notifyUnread();
     void this.#refreshTray();
   }
 
   #onBadgeCount(event, count) {
     if (!this.#deps.isPrimarySender(event)) return;
-    const bucket = this.#bucket(this.#bucketKey(event));
+    const { key, moved } = this.#bucketKey(event);
+    const bucket = this.#bucket(key);
     const next = Number.isFinite(count) && count > 0 ? count : 0;
-    const changed = bucket.count !== next;
+    const changed = moved || bucket.count !== next;
     bucket.count = next;
     this.#deps.applyBadgeCount(this.#sum());
     // Only an out-of-band badge change gets here with a new count; the tray
     // would otherwise keep a stale total with nothing scheduled to fix it.
-    if (changed) void this.#refreshTray();
+    if (changed) {
+      this.#notifyUnread();
+      void this.#refreshTray();
+    }
   }
 
   removeProfile(profileId) {
@@ -122,7 +168,33 @@ class ProfileUnreadAggregator {
     // outlive it; stop it explicitly. Another bucket's `true` or `false` still
     // wins, because those are real requests.
     const stopFlash = removed.flash === true && this.#flash() === undefined;
+    this.#notifyUnread();
     void this.#refreshTray(stopFlash ? false : undefined);
+  }
+
+  /**
+   * Per-profile unread counts (attributed, non-zero buckets only — a
+   * pre-bootstrap `wc:` bucket has no profile row to decorate).
+   * @returns {Record<string, number>}
+   */
+  unreadByProfile() {
+    const unread = {};
+    for (const [key, bucket] of this.#buckets) {
+      if (bucket.count > 0 && !key.startsWith("wc:")) unread[key] = bucket.count;
+    }
+    return unread;
+  }
+
+  // removeProfile runs from event-emitter callbacks, outside the guarded
+  // entry points — a pill push failure must not escape there either.
+  #notifyUnread() {
+    try {
+      this.#deps.onUnreadChanged?.(this.unreadByProfile());
+    } catch (error) {
+      console.error("[ProfileUnread] unread push failed", {
+        message: error.message,
+      });
+    }
   }
 
   /**

@@ -1,6 +1,7 @@
 const { WebContentsView, session, ipcMain } = require("electron");
 const path = require("node:path");
 const SenderProfileMap = require("./senderProfileMap");
+const { reloadIfSignedOut } = require("./signOutReload");
 
 const LEGACY_PARTITION = "persist:teams-4-linux";
 
@@ -111,6 +112,8 @@ class ProfileViewManager {
   #setExpandedHandler = null;
   // Fired only when a view dies outside removal (removal has its own event).
   #viewGoneListeners = new Set();
+  // Last per-profile unread snapshot, replayed when the pill (re)loads.
+  #switcherUnread = {};
 
   /**
    * @param {Electron.BrowserWindow} window  Main app window
@@ -534,9 +537,18 @@ class ProfileViewManager {
     // did-finish-load of its own webContents; profile views need the same,
     // or a share from a second profile runs with Teams' raw constraints
     // (audio kept, no preview relay) (#2979).
-    view.webContents.on("did-finish-load", () =>
-      this.#onViewDidFinishLoad(view.webContents)
-    );
+    view.webContents.on("did-finish-load", () => {
+      if (
+        reloadIfSignedOut(
+          view.webContents,
+          profile.url || this.#config.url,
+          this.#config.chromeUserAgent
+        )
+      ) {
+        return;
+      }
+      this.#onViewDidFinishLoad(view.webContents);
+    });
     // Only the active profile's title reaches the window (#3068).
     view.webContents.on("page-title-updated", (_event, title) => {
       if (this.#profilesManager.getActive()?.id === profileId) {
@@ -832,7 +844,12 @@ class ProfileViewManager {
     // Push the initial profile state once the renderer is ready. The renderer
     // also pulls state itself on load (via profile-list / profile-get-active),
     // so this is belt-and-suspenders against push/load ordering.
-    view.webContents.once("did-finish-load", () => this.#pushSwitcherState());
+    // Every load, not just the first: unread is push-only (the pill never
+    // pulls it), so a reloaded pill would otherwise lose its dots.
+    view.webContents.on("did-finish-load", () => {
+      this.#pushSwitcherState();
+      this.#pushSwitcherUnread();
+    });
   }
 
   #applyChromeBounds() {
@@ -864,6 +881,26 @@ class ProfileViewManager {
     } catch {
       // View may be mid-teardown; ignore.
     }
+  }
+
+  /**
+   * Push per-profile unread counts to the pill on its own channel — the full
+   * state push re-reads the settings store, which must stay off the
+   * per-badge-tick path.
+   * @param {Record<string, number>} unread
+   */
+  updateSwitcherUnread(unread) {
+    this.#switcherUnread = unread ?? {};
+    this.#pushSwitcherUnread();
+  }
+
+  #pushSwitcherUnread() {
+    if (!this.#chromeView || this.#chromeView.webContents.isDestroyed()) {
+      return;
+    }
+    this.#chromeView.webContents.send("profile-switcher-unread", {
+      unreadByProfileId: this.#switcherUnread,
+    });
   }
 
   #pushSwitcherState() {

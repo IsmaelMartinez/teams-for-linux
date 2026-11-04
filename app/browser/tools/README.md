@@ -155,6 +155,9 @@ Implements custom keyboard shortcuts for in-app actions like zoom control and na
 #### [frameless.js](frameless.js)
 Ensures proper functionality of the top bar in frameless mode (i.e. without native window title bar).
 
+#### [integratedTitleBar.js](integratedTitleBar.js)
+The renderer side of `window.titleBar: "integrated"` (client-side decorations). It keeps the controls in the Teams top bar clickable inside the drag region. It reports the bar's height and colour to the main process (`title-bar-overlay-update`). The native window controls are drawn on that colour at zero alpha, so they sit directly on the page while their hover background still matches it. When Teams' own buttons would sit under the window controls, it reserves space for them. On pages with no Teams top bar, such as sign-in, it adds a drag strip along the top and hides the page scrollbar. Needs `ipcRenderer`. The main-process half is `app/mainAppWindow/titleBar.js`.
+
 #### Global Shortcuts System (Main Process)
 System-wide keyboard shortcuts that work even when Teams is not focused. When triggered, the keyboard event is forwarded to Teams, which handles it with its built-in shortcuts. Configured via the `shortcuts.global` array in `config.json` (the flat `globalShortcuts` is deprecated but still accepted).
 

@@ -19,7 +19,9 @@ Custom in-app toast notifications as an alternative to OS-level notifications.
 
 ```json
 {
-  "notificationMethod": "custom",
+  "notifications": {
+    "method": "custom"
+  },
   "customNotification": {
     "toastDuration": 5000
   }

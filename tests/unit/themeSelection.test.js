@@ -38,7 +38,7 @@ function loadConfig(configPath) {
       ...(raw.appearance && typeof raw.appearance === "object" ? raw.appearance : {}),
     },
   };
-  applyRenamedOptions(config, raw);
+  applyRenamedOptions(config, { file: raw });
   if (raw.watchConfigFile && fs.existsSync(path.join(configPath, "config.json"))) watchedConfigs.add(config);
   return config;
 }

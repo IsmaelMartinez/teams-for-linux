@@ -23,7 +23,9 @@ async function launchApp(notificationMethod) {
   const electronApp = await electron.launch({
     args: [
       './app/index.js',
-      `--notificationMethod=${notificationMethod}`,
+      // Nested name: the flat --notificationMethod is deprecated, and a
+      // deprecated flag opens the startup warning modal before any window.
+      `--notifications.method=${notificationMethod}`,
       ...(process.env.CI ? ['--no-sandbox'] : []),
     ],
     env: { ...process.env, E2E_USER_DATA_DIR: userDataDir },

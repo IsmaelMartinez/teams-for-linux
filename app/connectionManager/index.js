@@ -164,6 +164,14 @@ class ConnectionManager {
         console.info(`[CONNECTION] Teams navigation finished in ${elapsedSeconds()}s`);
       }
     } catch (err) {
+      // Teams' launcher page (msteams:// call and chat links) redirects in the
+      // page, which rejects loadURL with ERR_ABORTED although the new page is
+      // loading. Retrying would reload over the redirect, dropping the link and
+      // leaving "Waiting for network..." as the title (#3152).
+      if (err.code === "ERR_ABORTED") {
+        console.info(`[CONNECTION] Teams redirected the initial load after ${elapsedSeconds()}s`);
+        return;
+      }
       console.error(`[CONNECTION] Failed to load page after ${elapsedSeconds()}s: ${err.message}`);
       _ConnectionManager_needsReload.set(this, true);
       this.debouncedRefresh();

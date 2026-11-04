@@ -3,6 +3,8 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert');
 const { EventEmitter } = require('node:events');
+const v8 = require('node:v8');
+const vm = require('node:vm');
 
 const electronPath = require.resolve('electron');
 const servicePath = require.resolve('../../app/notifications/service');
@@ -335,5 +337,86 @@ describe('NotificationService click and close relay', () => {
 		notifications[0].emit('close');
 
 		assert.deepStrictEqual(sends, [['notification-closed', 'notif-7']]);
+	});
+});
+
+// Electron's Notification is only weakly held by V8. Once the JS object is
+// collected the native notification loses its delegate, so a click from the
+// GNOME or KDE notification list, after the banner has gone, reaches no
+// handler (#3121). A forced full collection shows what the service still holds.
+v8.setFlagsFromString('--expose-gc');
+const gc = vm.runInNewContext('gc');
+
+async function collectGarbage() {
+	// WeakRef targets stay alive until the current job ends.
+	await new Promise((resolve) => setImmediate(resolve));
+	gc();
+}
+
+// Swap the mock's strong references for weak ones, so only the service can
+// keep a notification alive.
+function releaseMockReferences() {
+	const refs = notifications.map((notification) => new WeakRef(notification));
+	notifications.length = 0;
+	return refs;
+}
+
+describe('NotificationService keeps notifications alive', () => {
+	let originalConsoleDebug;
+	let originalConsoleWarn;
+
+	beforeEach(() => {
+		installElectronMock();
+		originalConsoleDebug = console.debug;
+		originalConsoleWarn = console.warn;
+		console.debug = () => {};
+		console.warn = () => {};
+	});
+
+	afterEach(() => {
+		console.debug = originalConsoleDebug;
+		console.warn = originalConsoleWarn;
+		cleanupElectronMock();
+	});
+
+	it('still relays a click that arrives after a garbage collection', async () => {
+		makeService(async () => {});
+
+		await show({ notificationId: 'live-1' }, makeSender());
+		const [ref] = releaseMockReferences();
+		await collectGarbage();
+
+		assert.ok(ref.deref(), 'notification was collected while still clickable');
+		ref.deref().emit('click');
+		assert.deepStrictEqual(sends, [['notification-clicked', 'live-1']]);
+	});
+
+	for (const event of ['click', 'close']) {
+		it(`lets go of the notification once it emits ${event}`, async () => {
+			makeService(async () => {});
+
+			await show({ notificationId: `live-${event}` }, makeSender());
+			const [ref] = releaseMockReferences();
+			await collectGarbage();
+			assert.ok(ref.deref(), 'notification was collected before it emitted');
+
+			ref.deref().emit(event);
+			await collectGarbage();
+			assert.strictEqual(ref.deref(), undefined);
+		});
+	}
+
+	it('lets go of the oldest notification once more than 50 are live', async () => {
+		makeService(async () => {});
+
+		// 50 is MAX_TRACKED_NOTIFICATIONS in app/notifications/service.js.
+		for (let i = 0; i <= 50; i++) {
+			await show({ notificationId: `live-${i}` }, makeSender());
+		}
+		const refs = releaseMockReferences();
+		await collectGarbage();
+
+		assert.strictEqual(refs[0].deref(), undefined);
+		assert.ok(refs.slice(1).every((ref) => ref.deref()), 'a newer notification was collected');
 	});
 });

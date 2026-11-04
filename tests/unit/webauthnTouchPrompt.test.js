@@ -17,7 +17,12 @@ class MockBrowserWindow extends EventEmitter {
 	constructor(options) {
 		super();
 		this.options = options;
-		this.webContents = { id: MockBrowserWindow.nextId++ };
+		this.webContents = {
+			id: MockBrowserWindow.nextId++,
+			scripts: [],
+			once(event, listener) { if (event === 'dom-ready') this.domReady = listener; },
+			executeJavaScript(code) { this.scripts.push(code); return Promise.resolve(); },
+		};
 		this.loadedFile = null;
 		this.shown = false;
 		this.destroyed = false;
@@ -25,6 +30,7 @@ class MockBrowserWindow extends EventEmitter {
 
 	loadFile(file) {
 		this.loadedFile = file;
+		this.webContents.domReady?.();
 		// Electron emits this once the page is ready; the prompt shows itself here.
 		this.emit('ready-to-show');
 	}
@@ -93,6 +99,21 @@ describe('WebAuthn touch prompt - window', () => {
 		loadPrompt()(() => {});
 
 		assert.strictEqual(windows[0].options.title, 'Waiting for your security key');
+	});
+
+	it('becomes an insert-your-key prompt when asked for that view', () => {
+		loadPrompt()(() => {}, 'insert');
+
+		assert.strictEqual(windows[0].options.title, 'Insert your security key');
+		// The page URL stays plain: a query string kept the window from showing.
+		assert.strictEqual(path.basename(windows[0].loadedFile), 'touchPrompt.html');
+		assert.match(windows[0].webContents.scripts.join(''), /Insert your security key/);
+	});
+
+	it('leaves the page text alone for the touch view', () => {
+		loadPrompt()(() => {});
+
+		assert.deepStrictEqual(windows[0].webContents.scripts, []);
 	});
 
 	it('loads its own page with an isolated, sandboxed preload', () => {

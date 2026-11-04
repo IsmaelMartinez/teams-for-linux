@@ -29,10 +29,12 @@ To have your custom certs recognized on every run, add them to your
 
 ```json
 {
-  "customCACertsFingerprints": [
-    "sha256/YOUR-CERTIFICATE-FINGERPRINT-HERE",
-    "sha256/ANOTHER-CERTIFICATE-FINGERPRINT-IF-NEEDED"
-  ]
+  "auth": {
+    "customCACertificateFingerprints": [
+      "sha256/YOUR-CERTIFICATE-FINGERPRINT-HERE",
+      "sha256/ANOTHER-CERTIFICATE-FINGERPRINT-IF-NEEDED"
+    ]
+  }
 }
 ```
 
@@ -53,7 +55,7 @@ The practical consequence differs by distribution:
     automatically for every user and no extra step is needed.
 
 :::note
-`customCACertsFingerprints` is checked on every TLS verification, so it also covers a proxy
+`auth.customCACertificateFingerprints` is checked on every TLS verification, so it also covers a proxy
 that intercepts every connection. Importing the CA into NSS, as below, is still the stricter
 option: the allowlist accepts the connection outright, which also bypasses Chromium's
 hostname check for it, whereas a CA trusted through NSS keeps every other check in place.
@@ -117,7 +119,7 @@ candidate paths above still apply, just relative to the remapped home:
     `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/data/pki/nssdb`
 
 The config file is remapped the same way, which is a common reason
-`customCACertsFingerprints` looks like it is being ignored on these packages. See
+`auth.customCACertificateFingerprints` looks like it is being ignored on these packages. See
 [Configuration](configuration.md) for the config locations.
 
 ## Corporate Certificate Scenarios
@@ -136,10 +138,14 @@ Many corporate environments use proxy servers with custom certificates:
 
 ```json
 {
-  "customCACertsFingerprints": [
-    "sha256/YOUR-CORPORATE-PROXY-CERT-FINGERPRINT"
-  ],
-  "proxyServer": "proxy.company.com:8080"
+  "auth": {
+    "customCACertificateFingerprints": [
+      "sha256/YOUR-CORPORATE-PROXY-CERT-FINGERPRINT"
+    ]
+  },
+  "network": {
+    "proxyServer": "proxy.company.com:8080"
+  }
 }
 ```
 
@@ -149,11 +155,13 @@ For environments with multiple custom CAs:
 
 ```json
 {
-  "customCACertsFingerprints": [
-    "sha256/YOUR-ROOT-CA-FINGERPRINT",
-    "sha256/YOUR-INTERMEDIATE-CA-FINGERPRINT",
-    "sha256/YOUR-PROXY-CA-FINGERPRINT"
-  ]
+  "auth": {
+    "customCACertificateFingerprints": [
+      "sha256/YOUR-ROOT-CA-FINGERPRINT",
+      "sha256/YOUR-INTERMEDIATE-CA-FINGERPRINT",
+      "sha256/YOUR-PROXY-CA-FINGERPRINT"
+    ]
+  }
 }
 ```
 
@@ -166,7 +174,7 @@ For environments with multiple custom CAs:
 Error: certificate verify failed: self signed certificate in certificate chain
 ```
 
-**Solution**: Add the self-signed certificate fingerprint to `customCACertsFingerprints`.
+**Solution**: Add the self-signed certificate fingerprint to `auth.customCACertificateFingerprints`.
 
 #### Unknown Certificate Authority
 ```

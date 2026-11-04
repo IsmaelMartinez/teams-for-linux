@@ -10,13 +10,13 @@ For configuration options, see [Configuration](configuration.md). For developmen
 
 - **Cache Issues**: Clear cache directories (see [Cache Management](configuration.md#cache-management))
 - **Login Problems**: Clear stored data and cache
-- **Notification Issues**: Check `notificationMethod` in config
+- **Notification Issues**: Check `notifications.method` in config
 - **Audio/Video**: Verify device selection in Teams settings
 - **Installation**: Use clean install and clear previous data
 
 ## Performance Tuning
 
-When the app feels slow or heavy, seven configuration options are the first-line knobs to check. `performance.disableGpu` turns off GPU compositing and hardware acceleration, which helps on broken graphics drivers and hurts otherwise. `cacheManagement.maxCacheSizeMB` (default 600) and `cacheManagement.cacheCheckIntervalMs` (default one hour) govern automatic cache cleanup, while `performance.electronCLIFlags` passes arbitrary Chromium flags for tuning memory, GPU, or rendering behaviour. `appIdleTimeout` and `appIdleTimeoutCheckInterval` control how often idle state is polled, and `wayland.xwaylandOptimizations` affects GPU behaviour under XWayland. See [Configuration](configuration.md) for details on each option.
+When the app feels slow or heavy, seven configuration options are the first-line knobs to check. `performance.disableGpu` turns off GPU compositing and hardware acceleration, which helps on broken graphics drivers and hurts otherwise. `cacheManagement.maxCacheSizeMB` (default 600) and `cacheManagement.cacheCheckIntervalMs` (default one hour) govern automatic cache cleanup, while `performance.electronCLIFlags` passes arbitrary Chromium flags for tuning memory, GPU, or rendering behaviour. `idleDetection.timeout` and `idleDetection.checkInterval.detectIdle` control how often idle state is polled, and `wayland.xwaylandOptimizations` affects GPU behaviour under XWayland. See [Configuration](configuration.md) for details on each option.
 
 ---
 
@@ -400,7 +400,7 @@ If you start Teams for Linux with `--user-data-dir`, put `config.json` in that d
     }
     ```
 
-3. Plug your key in **before** triggering sign-in. The v1 implementation uses the first connected FIDO2 device. If you see a "No FIDO2 hardware device found" error, the key was not detected.
+3. If no key is plugged in when sign-in starts, an "Insert your security key" prompt waits for one and sign-in continues on its own once it is detected. The v1 implementation uses the first connected FIDO2 device.
 
 4. Verify the key is visible to libfido2 from a terminal: `fido2-token -L`. If this says "permission denied" on `/dev/hidraw*`, your user is not in the correct group. libfido2 typically ships a udev rule; if it did not install or is missing, add your user to the group your distribution uses for HID access (often `plugdev` on Debian/Ubuntu, or install `libfido2-udev` if your package manager has it). Replug the key after fixing group membership.
 
@@ -470,7 +470,7 @@ Replace `<your-chrome-version>` with the Chrome version Teams for Linux reports.
 
 **Solutions/Workarounds:**
 
-1.  **Check Configuration:** Please refer to the `notificationMethod`, and other notification settings, in the [Configuration Documentation](configuration.md) for more information.
+1.  **Check Configuration:** Please refer to the `notifications.method`, and other notification settings, in the [Configuration Documentation](configuration.md) for more information.
 
 ---
 
@@ -488,8 +488,7 @@ Replace `<your-chrome-version>` with the Chrome version Teams for Linux reports.
 
     ```json
     {
-      "notificationMethod": "electron",
-      "notifications": { "timeoutType": "never" }
+      "notifications": { "method": "electron", "timeoutType": "never" }
     }
     ```
 
@@ -608,6 +607,30 @@ The `performance.electronCLIFlags` config option (`config.json`) **cannot** over
 ---
 
 ### Other
+
+#### Issue: "We couldn't open your Teams app" when joining from a browser
+
+**Description:** Clicking "Join on the Teams app" on Teams' launcher page does nothing and the page ends with "We couldn't open your Teams app". The browser shows no "Open link with" prompt.
+
+**Potential Causes:**
+*   The launcher hands the meeting over with the `web+msteams:` scheme instead of `msteams:`. Teams decides this server side, so it can differ between accounts. The browser console reports `Prevented navigation to "web+msteams:..." due to an unknown protocol`.
+*   An installation from before `web+msteams:` support does not register that scheme, so the browser has nothing to launch.
+
+**Solutions/Workarounds:**
+
+1.  **Update to a release with `web+msteams:` support.** The package then registers `x-scheme-handler/web+msteams` next to `x-scheme-handler/msteams`.
+
+2.  **Register the scheme by hand on an older install:**
+
+    ```bash
+    xdg-mime default teams-for-linux.desktop 'x-scheme-handler/web+msteams'
+    ```
+
+    The app also has to understand the link, so this only helps on a release that includes the fix.
+
+3.  **Allow the link in Firefox.** When the prompt appears, choose "Always allow" so later launches do not depend on the page triggering it.
+
+**Related GitHub Issues:** [Issue #3161](https://github.com/IsmaelMartinez/teams-for-linux/issues/3161)
 
 #### Issue: Spellchecker Not Working
 

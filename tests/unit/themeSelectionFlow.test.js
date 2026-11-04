@@ -41,7 +41,7 @@ function loadConfig(configPath) {
     customCSSLocation: raw.customCSSLocation ?? "",
     appearance: { cssName: "", cssLocation: "", ...raw.appearance },
   };
-  applyRenamedOptions(config, raw);
+  applyRenamedOptions(config, { file: raw });
   return config;
 }
 loadConfig.getConfigFilePath = (configPath) => path.join(configPath, "config.json");

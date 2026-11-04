@@ -5,6 +5,10 @@ const path = require("node:path");
 const ICON_FETCH_TIMEOUT_MS = 1000;
 const MAX_ICON_BYTES = 5 * 1024 * 1024;
 
+// Electron does not always emit close, so live notifications are capped like
+// the renderer's NotificationBridge, dropping the oldest first.
+const MAX_TRACKED_NOTIFICATIONS = 50;
+
 const USER_STATUS = {
   UNKNOWN: -1,
   AVAILABLE: 1,
@@ -16,6 +20,11 @@ class NotificationService {
   #mainWindow;
   #getUserStatus;
   #notificationSounds;
+  // Electron's Notification is only weakly held by V8. Once the JS object is
+  // collected the native notification loses its delegate, so a click from the
+  // GNOME or KDE notification list, after the banner has gone, does nothing
+  // (issue #3121). Keyed by notificationId, in insertion order.
+  #liveNotifications = new Map();
 
   constructor(soundPlayer, config, mainWindow, getUserStatus) {
     this.#soundPlayer = soundPlayer;
@@ -101,6 +110,8 @@ class NotificationService {
       };
 
       notification.on("click", () => {
+        // Electron destroys the native notification after a click.
+        this.#liveNotifications.delete(options.notificationId);
         // notifications.electron.clickAction controls window behaviour on click
         // (issue #2647). Defaults to "show" so existing behaviour is unchanged.
         const clickAction = this.#config.notifications?.electron?.clickAction ?? "show";
@@ -128,10 +139,12 @@ class NotificationService {
       });
 
       notification.on("close", () => {
+        this.#liveNotifications.delete(options.notificationId);
         console.debug("[NOTIFICATIONS] Notification dismissed by system");
         relay("notification-closed");
       });
 
+      this.#keepAlive(options.notificationId, notification);
       notification.show();
 
       const totalTime = Date.now() - startTime;
@@ -147,6 +160,13 @@ class NotificationService {
         elapsedMs: Date.now() - startTime,
         suggestion: "Check if notification permissions are granted or icon data is valid"
       });
+    }
+  }
+
+  #keepAlive(id, notification) {
+    this.#liveNotifications.set(id, notification);
+    if (this.#liveNotifications.size > MAX_TRACKED_NOTIFICATIONS) {
+      this.#liveNotifications.delete(this.#liveNotifications.keys().next().value);
     }
   }
 

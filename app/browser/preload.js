@@ -440,6 +440,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       { name: "cameraAspectRatio", path: "./tools/cameraAspectRatio" },
       { name: "navigationButtons", path: "./tools/navigationButtons" },
       { name: "framelessTweaks", path: "./tools/frameless" },
+      { name: "integratedTitleBar", path: "./tools/integratedTitleBar" },
       { name: "customStickers", path: "./tools/customStickers" },
       { name: "dockIconRenderer", path: "./tools/dockIconRenderer" },
       { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching" },
@@ -447,7 +448,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     ];
 
     // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)
-    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "meetingStartDetector", "webauthnOverride", "speakingIndicator", "customStickers", "dockIconRenderer"]);
+    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "meetingStartDetector", "webauthnOverride", "speakingIndicator", "customStickers", "dockIconRenderer", "integratedTitleBar"]);
 
     let successCount = 0;
     for (const module of modules) {

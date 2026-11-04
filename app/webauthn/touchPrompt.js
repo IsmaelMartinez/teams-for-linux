@@ -31,10 +31,13 @@ const log = require("./log");
  * @param {() => void} onCancel - Invoked once if the user cancels. The caller
  *   is expected to abort the in-flight security-key call; this module does not
  *   know how to stop it.
+ * @param {"touch"|"insert"} [view] - "insert" shows the same window as an
+ *   "insert your security key" prompt while the caller polls for a device;
+ *   the text is swapped in once the page's DOM is ready.
  * @returns {{ dismiss: () => void }}
  */
-function showTouchPrompt(onCancel) {
-  log.info("[WEBAUTHN:TOUCH] Showing touch prompt");
+function showTouchPrompt(onCancel, view = "touch") {
+  log.info("[WEBAUTHN:TOUCH] Showing touch prompt", { view });
 
   const win = new BrowserWindow({
     width: 380,
@@ -51,7 +54,7 @@ function showTouchPrompt(onCancel) {
     autoHideMenuBar: true,
     // Matches the heading: the prompt spans the whole call and does not claim
     // to know when the key's LED actually started blinking.
-    title: "Waiting for your security key",
+    title: view === "insert" ? "Insert your security key" : "Waiting for your security key",
     webPreferences: {
       preload: path.join(__dirname, "touchPromptPreload.js"),
       contextIsolation: true,
@@ -99,6 +102,22 @@ function showTouchPrompt(onCancel) {
     win.show();
     win.focus();
   });
+  // The insert view swaps the text in place rather than through a query
+  // string: a `?view=` on the file URL left ready-to-show unfired on
+  // Wayland with the GPU disabled, so the window never appeared.
+  if (view === "insert") {
+    win.webContents.once("dom-ready", () => {
+      win.webContents.executeJavaScript(`
+        document.title = "Insert your security key";
+        document.querySelector("h3").textContent = "No security key found";
+        document.querySelector("output").textContent = "Insert your security key.";
+      `).catch((err) => {
+        // The window can be dismissed while the script is still pending.
+        if (win.isDestroyed()) return;
+        log.warn("[WEBAUTHN:TOUCH] Could not set the insert text", err.message);
+      });
+    });
+  }
   win.loadFile(path.join(__dirname, "touchPrompt.html"));
 
   return {

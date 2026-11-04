@@ -9,7 +9,12 @@ const {
   buildDeprecationWarning,
   isMigrationMenuAvailable,
 } = require("./deprecation");
-const { applyRenamedOptions, isOptionSetByUser } = require("./renames");
+const {
+  applyRenamedOptions,
+  deprecationSources,
+  isOptionSetByUser,
+  readUserSources,
+} = require("./renames");
 const { mergeConfigFiles, applyObjectDefaults } = require("./mergeDefaults");
 const watchedConfigs = new WeakSet();
 
@@ -109,28 +114,25 @@ function extractYargConfig(configObject, appVersion) {
   return { yargsInstance, parsedConfig };
 }
 
-function checkUsedDeprecatedValues(yargsInstance, configObject, config) {
+function checkUsedDeprecatedValues(yargsInstance, sources, config) {
   // yargs v18: getDeprecatedOptions() must be called on the instance
   const message = buildDeprecationWarning(
     yargsInstance.getDeprecatedOptions(),
-    configObject.configFile,
+    sources,
     isMigrationMenuAvailable(config)
   );
   if (!message) return;
 
-  // Log only, on purpose. Appending to `config.warnings` makes
-  // showConfigurationDialogs in app/index.js open a blocking modal at startup,
-  // and the ADR-025 batches deprecate keys as common as `url` and `appTitle`,
-  // so nearly every customised config would meet one. The flat names keep
-  // working until 2.30.0 (#2842), so there is nothing to act on yet.
-  // The message points at "Settings > Show Updated Config…" (#2913) when that
-  // menu is reachable, which is the action to take; the remaining gap is that
-  // with the file transport off by default the warning itself reaches nobody,
-  // so a real surface is still needed before the flat names are removed.
-  // Wait until every rename has landed: the acknowledgement is keyed on a hash
-  // of this message, so prompting once per batch re-prompts people who already
-  // dismissed it.
   console.warn(message);
+  // Gate C in #2842: the log alone reaches nobody, since the file transport is
+  // off by default and a desktop launch discards stdout. So the message also
+  // goes to the acknowledge-once Configuration Warning modal
+  // (showConfigurationDialogs in app/index.js). That modal will reach most
+  // customised configs, because keys as common as `url` and `appTitle` are
+  // deprecated; with removal in 2.32.0 that is now the point. It shows once:
+  // the acknowledgement is keyed on a hash of this text, which is why
+  // buildDeprecationWarning keeps it free of values and in a fixed order.
+  config.warnings = [...(config.warnings || []), message];
 }
 
 function argv(configPath, appVersion) {
@@ -154,10 +156,16 @@ function argv(configPath, appVersion) {
   // leaf; restore the declared defaults of the leaves left unset.
   applyObjectDefaults(config, configOptions);
 
+  // What the user supplied, per source (command line, environment, config
+  // file). The presence oracle for the projection, the GPU check and the
+  // deprecation warning alike; see app/config/renames.js for why the resolved
+  // config cannot be it.
+  const userArgv = process.argv.slice(1);
+  const sources = readUserSources(configObject.configFile, userArgv);
+
   // ADR-025: project any nested value the user supplied onto the flat key that
-  // modules still read. Must run before anything consumes the config. The raw
-  // config file is the presence oracle; see app/config/renames.js for why.
-  applyRenamedOptions(config, configObject.configFile);
+  // modules still read. Must run before anything consumes the config.
+  applyRenamedOptions(config, sources);
 
   if (configObject.isConfigFile && config.watchConfigFile) {
     fs.watch(getConfigFilePath(configPath), (event, filename) => {
@@ -174,21 +182,27 @@ function argv(configPath, appVersion) {
   // Counts both names: since ADR-025 the option is also spelled
   // performance.disableGpu, and missing that spelling would let the Wayland
   // default overwrite the choice of a user who opted back into the GPU.
-  config.disableGpuExplicitlySet = isOptionSetByUser(
-    configObject.configFile,
-    process.argv,
-    "disableGpu"
+  config.disableGpuExplicitlySet = isOptionSetByUser(sources, "disableGpu");
+
+  // loadMenuToggleSettings in app/index.js re-reads the menu toggles from
+  // config.json at app-ready; it skips these so the command line and the
+  // environment keep beating the file. Names only, never values.
+  config.optionsSetOutsideConfigFile = Object.keys(configOptions).filter((flat) =>
+    isOptionSetByUser(sources, flat, ["cli", "env"])
   );
 
   logger.init(config.logConfig);
 
-  // Runs after logger.init so the warning reaches the log file and not just
-  // stdout, for the users who have file logging on. It is deliberately quiet
-  // for everyone else: the file transport is off by default and a desktop
-  // launch discards stdout, so nothing surfaces this today. That is only
-  // acceptable while there is nothing to act on; see checkUsedDeprecatedValues.
-  // Pass yargs instance to access getDeprecatedOptions() in v18
-  checkUsedDeprecatedValues(yargsInstance, configObject, config);
+  // Runs after logger.init so the warning reaches the log file too, for the
+  // users who have file logging on; everyone else meets it in the startup
+  // modal. Pass yargs instance to access getDeprecatedOptions() in v18
+  // Chromium switch aliases such as --disable-gpu are permanent and not
+  // reported; see CHROMIUM_SWITCH_ALIASES in app/config/renames.js.
+  checkUsedDeprecatedValues(
+    yargsInstance,
+    deprecationSources(sources, userArgv),
+    config
+  );
 
   // Warn-only schema validation of the merged (system + user) config file
   // contents (issue #2597). Runs after logger.init so warnings reach the log.

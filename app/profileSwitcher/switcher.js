@@ -1,5 +1,6 @@
 const pill = document.getElementById("pill");
 const pillAvatar = document.getElementById("pill-avatar");
+const pillUnread = document.getElementById("pill-unread");
 const scrim = document.getElementById("scrim");
 const dropdown = document.getElementById("dropdown");
 const listEl = document.getElementById("profile-list");
@@ -15,6 +16,8 @@ let open = false; // dropdown open
 // pushed by main in profile-switcher-state. Default false so we never
 // advertise a chord before main confirms it works.
 let shortcutsAvailable = false;
+/** @type {Record<string, number>} profile id → unread count, pushed by main */
+let unreadByProfileId = {};
 
 function activeProfile() {
   return profiles.find((p) => p.id === activeId) || null;
@@ -34,13 +37,30 @@ function paintAvatar(el, profile) {
       : DEFAULT_AVATAR_COLOR;
 }
 
+function unreadFor(profileId) {
+  const count = unreadByProfileId[profileId];
+  return Number.isFinite(count) && count > 0 ? count : 0;
+}
+
 function renderPill() {
   const active = activeProfile();
   paintAvatar(pillAvatar, active);
-  pill.title = active ? `${active.name} — switch profile` : "Switch profile";
+  // Only OTHER profiles light the dot: the active one's unread is already
+  // on screen in Teams itself.
+  const elsewhere = profiles.some(
+    (p) => p.id !== activeId && unreadFor(p.id) > 0
+  );
+  pillUnread.hidden = !elsewhere;
+  const label = active ? `${active.name} — switch profile` : "Switch profile";
+  pill.title = elsewhere ? `${label} (unread in other profiles)` : label;
 }
 
 function renderList() {
+  // Pushes rebuild the list while the dropdown is open; put keyboard focus
+  // back on the same profile's row or Enter stops working mid-navigation.
+  const focusedId = listEl.contains(document.activeElement)
+    ? document.activeElement.dataset.profileId
+    : null;
   listEl.textContent = "";
   let nextSlot = 0;
   for (const profile of profiles) {
@@ -49,6 +69,7 @@ function renderList() {
     row.type = "button";
     row.className =
       "profile-row" + (profile.id === activeId ? " active" : "");
+    row.dataset.profileId = profile.id;
 
     const avatar = document.createElement("span");
     avatar.className = "avatar";
@@ -59,6 +80,14 @@ function renderList() {
     name.textContent = profile.name;
 
     row.append(avatar, name);
+    const unread = unreadFor(profile.id);
+    if (unread > 0) {
+      const badge = document.createElement("span");
+      badge.className = "unread-badge";
+      badge.textContent = unread > 99 ? "99+" : String(unread);
+      badge.setAttribute("aria-label", `${unread} unread`);
+      row.append(badge);
+    }
     // Matches the accelerator scheme in app/menus/profilesMenu.js: pinned
     // profiles get Ctrl+Alt+<slot>, slotted by list order. Only advertised
     // when the chord can actually fire (per-window menus don't exist on
@@ -75,6 +104,11 @@ function renderList() {
     row.addEventListener("click", () => selectProfile(profile.id));
     li.append(row);
     listEl.append(li);
+  }
+  if (focusedId) {
+    listEl
+      .querySelector(`[data-profile-id="${CSS.escape(focusedId)}"]`)
+      ?.focus();
   }
 }
 
@@ -149,6 +183,13 @@ api.onState((state) => {
   if (typeof state?.shortcutsAvailable === "boolean") {
     shortcutsAvailable = state.shortcutsAvailable;
   }
+  renderPill();
+  if (open) renderList();
+});
+
+api.onUnread((payload) => {
+  const next = payload?.unreadByProfileId;
+  unreadByProfileId = next && typeof next === "object" ? next : {};
   renderPill();
   if (open) renderList();
 });
