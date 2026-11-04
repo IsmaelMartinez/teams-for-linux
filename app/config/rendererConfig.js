@@ -11,6 +11,7 @@ const SECRET_PATHS = [
   ["auth", "clientCertificate", "password"],
   ["auth", "clientCertificate", "path"],
   ["auth", "basic", "user"],
+  ["auth", "intune", "user"],
   ["auth", "basic", "passwordCommand"],
   ["auth", "webLogin", "user"],
   ["auth", "webLogin", "passwordCommand"],

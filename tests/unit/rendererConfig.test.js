@@ -13,6 +13,7 @@ describe('toRendererConfig', () => {
 		auth: {
 			clientCertificate: { path: '/c.p12', password: 'cert-secret' },
 			basic: { user: 'b', passwordCommand: 'pass show basic' },
+			intune: { enabled: true, user: 'intune@example.com' },
 			webLogin: { user: 'w', passwordCommand: 'pass show web' },
 		},
 		clientCertPassword: 'cert-secret',
@@ -34,6 +35,8 @@ describe('toRendererConfig', () => {
 		assert.strictEqual(safe.auth.clientCertificate.path, undefined);
 		assert.strictEqual(safe.auth.basic.user, undefined);
 		assert.strictEqual(safe.auth.webLogin.user, undefined);
+		assert.strictEqual(safe.auth.intune.user, undefined);
+		assert.strictEqual(safe.auth.intune.enabled, true);
 		assert.strictEqual(safe.ssoBasicAuthUser, undefined);
 		assert.strictEqual(safe.clientCertPath, undefined);
 	});
