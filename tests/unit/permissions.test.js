@@ -10,43 +10,55 @@ const { isPermissionAllowed, installPermissionHandlers } = require('../../app/se
 // otherwise, so pages that are not Teams must not get the mic, camera or
 // notifications for free.
 const none = new Set();
+const allowed = (request, trusted = none) => isPermissionAllowed(request, trusted);
 
 describe('isPermissionAllowed', () => {
-	it('allows the Teams hosts and the Microsoft sign-in hosts', () => {
+	it('allows the Teams, government Teams and Microsoft sign-in hosts', () => {
 		for (const url of [
 			'https://teams.cloud.microsoft/v2/',
 			'https://teams.microsoft.com/',
 			'https://teams.live.com/',
 			'https://teams.microsoft.com.mcas.ms/',
+			'https://gov.teams.microsoft.us/',
+			'https://dod.teams.microsoft.us/',
 			'https://login.microsoftonline.com/common/oauth2',
+			'https://login.microsoftonline.us/common/oauth2',
 		]) {
-			assert.strictEqual(isPermissionAllowed({ topLevelUrl: url }, none), true, url);
+			assert.strictEqual(allowed({ permission: 'notifications', isMainFrame: true, topLevelUrl: url, requestingUrl: url }), true, url);
 		}
 	});
 
-	it('allows an iframe embedded by Teams through the top-level page', () => {
+	it('lets a frame embedded by Teams use only frame-policy-gated permissions', () => {
+		const frame = { isMainFrame: false, topLevelUrl: 'https://teams.microsoft.com/', requestingUrl: 'https://contoso.sharepoint.com/' };
+		for (const permission of ['media', 'display-capture', 'clipboard-read', 'clipboard-sanitized-write', 'fullscreen']) {
+			assert.strictEqual(allowed({ ...frame, permission }), true, permission);
+		}
+		for (const permission of ['notifications', 'openExternal', 'fileSystem', 'hid', 'usb', 'serial', 'geolocation']) {
+			assert.strictEqual(allowed({ ...frame, permission }), false, permission);
+		}
+	});
+
+	it('allows the PiP about:blank window through its inherited Teams origin', () => {
 		assert.strictEqual(
-			isPermissionAllowed({ topLevelUrl: 'https://teams.microsoft.com/', requestingUrl: 'https://contoso.sharepoint.com/' }, none),
+			allowed({ permission: 'media', isMainFrame: true, topLevelUrl: 'about:blank', requestingUrl: 'https://teams.microsoft.com' }),
 			true,
 		);
 	});
 
-	it('allows the PiP about:blank window through the inherited Teams origin', () => {
-		assert.strictEqual(
-			isPermissionAllowed({ topLevelUrl: 'about:blank', requestingUrl: 'https://teams.microsoft.com' }, none),
-			true,
-		);
+	it('leaves opening external apps to any main frame, for federated sign-in', () => {
+		assert.strictEqual(allowed({ permission: 'openExternal', isMainFrame: true, topLevelUrl: 'https://idp.example/', requestingUrl: 'https://idp.example/' }), true);
+		assert.strictEqual(allowed({ permission: 'openExternal', isMainFrame: false, topLevelUrl: 'https://evil.example/', requestingUrl: 'https://evil.example/' }), false);
 	});
 
 	it('allows the configured URL and profile URL origins outside the known hosts', () => {
-		const trusted = new Set(['https://gov.teams.microsoft.us']);
-		assert.strictEqual(isPermissionAllowed({ topLevelUrl: 'https://gov.teams.microsoft.us/v2/' }, trusted), true);
+		const trusted = new Set(['https://tenant.example']);
+		assert.strictEqual(allowed({ permission: 'notifications', isMainFrame: true, requestingUrl: 'https://tenant.example/teams' }, trusted), true);
 	});
 
 	it('allows the app\'s own local pages only', () => {
 		const appPage = pathToFileURL(path.join(__dirname, '..', '..', 'app', 'quickChat', 'quickChatModal.html')).href;
-		assert.strictEqual(isPermissionAllowed({ topLevelUrl: appPage }, none), true);
-		assert.strictEqual(isPermissionAllowed({ topLevelUrl: 'file:///tmp/evil.html' }, none), false);
+		assert.strictEqual(allowed({ permission: 'clipboard-sanitized-write', isMainFrame: true, requestingUrl: appPage }), true);
+		assert.strictEqual(allowed({ permission: 'clipboard-sanitized-write', isMainFrame: true, requestingUrl: 'file:///tmp/evil.html' }), false);
 	});
 
 	it('denies a page that is neither Teams nor sign-in', () => {
@@ -57,9 +69,11 @@ describe('isPermissionAllowed', () => {
 			'https://evil.com.teams.microsoft.com.example/',
 			'not a url',
 		]) {
-			assert.strictEqual(isPermissionAllowed({ topLevelUrl: url, requestingUrl: url }, none), false, url);
+			for (const permission of ['media', 'notifications']) {
+				assert.strictEqual(allowed({ permission, isMainFrame: true, topLevelUrl: url, requestingUrl: url }), false, `${permission} ${url}`);
+			}
 		}
-		assert.strictEqual(isPermissionAllowed({}, none), false);
+		assert.strictEqual(allowed({ permission: 'media' }), false);
 	});
 });
 
@@ -70,6 +84,7 @@ describe('installPermissionHandlers', () => {
 			setPermissionCheckHandler(fn) { this.check = fn; },
 		};
 	}
+	const page = (url) => ({ getURL: () => url });
 
 	it('installs on the default session and on sessions created later', () => {
 		const listeners = {};
@@ -84,20 +99,28 @@ describe('installPermissionHandlers', () => {
 	});
 
 	it('answers requests and checks with the policy, reading profile URLs live', () => {
-		const app = { on() {} };
 		const s = fakeSession();
 		const profileUrls = [];
-		installPermissionHandlers({ url: 'https://teams.cloud.microsoft' }, app, s, () => profileUrls);
-		const page = (url) => ({ getURL: () => url });
+		installPermissionHandlers({ url: 'https://teams.cloud.microsoft' }, { on() {} }, s, () => profileUrls);
 
 		let granted;
-		s.request(page('https://teams.cloud.microsoft/'), 'media', (v) => { granted = v; }, { requestingUrl: 'https://teams.cloud.microsoft/' });
+		s.request(page('https://teams.cloud.microsoft/'), 'media', (v) => { granted = v; }, { isMainFrame: true, requestingUrl: 'https://teams.cloud.microsoft/' });
 		assert.strictEqual(granted, true);
-		s.request(page('https://evil.example/'), 'media', (v) => { granted = v; }, { requestingUrl: 'https://evil.example/' });
+		s.request(page('https://evil.example/'), 'media', (v) => { granted = v; }, { isMainFrame: true, requestingUrl: 'https://evil.example/' });
 		assert.strictEqual(granted, false);
 
-		assert.strictEqual(s.check(page('https://tenant.example/'), 'notifications', 'https://tenant.example'), false);
+		assert.strictEqual(s.check(page('https://tenant.example/'), 'notifications', 'https://tenant.example', { isMainFrame: true }), false);
 		profileUrls.push('https://tenant.example/teams');
-		assert.strictEqual(s.check(page('https://tenant.example/'), 'notifications', 'https://tenant.example'), true);
+		assert.strictEqual(s.check(page('https://tenant.example/'), 'notifications', 'https://tenant.example', { isMainFrame: true }), true);
+	});
+
+	it('prefers securityOrigin over requestingUrl for the PiP window', () => {
+		const s = fakeSession();
+		installPermissionHandlers({ url: 'https://teams.cloud.microsoft' }, { on() {} }, s);
+		let granted;
+		s.request(page('about:blank'), 'media', (v) => { granted = v; }, {
+			isMainFrame: true, requestingUrl: 'about:blank', securityOrigin: 'https://teams.cloud.microsoft',
+		});
+		assert.strictEqual(granted, true);
 	});
 });

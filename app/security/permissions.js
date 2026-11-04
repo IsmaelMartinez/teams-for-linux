@@ -9,13 +9,31 @@ const APP_ROOT = path.join(__dirname, "..");
 // in-app, a navigation away from Teams) could use the microphone, camera or
 // notifications without a prompt (GHSA-58j7-22f8-6xqp).
 //
-// A request is granted when either the window's top-level page or the
-// requesting origin is trusted. The top-level check keeps the apps Teams
-// embeds in iframes (Whiteboard, Loop, SharePoint) working, since Teams
-// already decides what to embed; the requester check covers the Document
-// PiP about:blank window, which inherits the Teams origin.
+// A request is granted when the requester itself is trusted. A cross-origin
+// frame inside a trusted page (Whiteboard, Loop, SharePoint embedded by Teams)
+// only inherits the permissions Chromium already gates per frame with
+// Permissions Policy; the rest (notifications, device APIs, file system) need
+// a trusted requester. Opening external apps is left to any main frame, as
+// before, since federated sign-in hands off to authenticator apps.
 
-const AUTH_LOGIN_HOSTS = ["login.microsoftonline.com", "login.microsoft.com", "login.live.com"];
+const AUTH_LOGIN_HOSTS = [
+  "login.microsoftonline.com",
+  "login.microsoft.com",
+  "login.live.com",
+  "login.microsoftonline.us",
+];
+// GCC High and DoD serve Teams outside the commercial hosts isTeamsHost knows.
+const GOV_TEAMS_DOMAIN = "teams.microsoft.us";
+
+const FRAME_POLICY_GATED = new Set([
+  "media",
+  "display-capture",
+  "clipboard-read",
+  "clipboard-sanitized-write",
+  "fullscreen",
+]);
+
+const MAX_LOGGED_DENIALS = 100;
 
 function originOf(url) {
   try {
@@ -24,6 +42,10 @@ function originOf(url) {
   } catch {
     return null;
   }
+}
+
+function hostMatches(host, domain) {
+  return host === domain || host.endsWith("." + domain);
 }
 
 /**
@@ -50,19 +72,26 @@ function isTrustedUrl(url, trustedOrigins) {
   }
   if (parsed.protocol !== "https:") return false;
   const host = parsed.hostname;
-  return isTeamsHost(host) || AUTH_LOGIN_HOSTS.some((d) => host === d || host.endsWith("." + d));
+  return (
+    isTeamsHost(host) ||
+    hostMatches(host, GOV_TEAMS_DOMAIN) ||
+    AUTH_LOGIN_HOSTS.some((d) => hostMatches(host, d))
+  );
 }
 
 /**
  * Pure decision used by both handlers.
- * @param {{ topLevelUrl?: string, requestingUrl?: string }} request
+ * @param {{ permission: string, isMainFrame?: boolean, topLevelUrl?: string, requestingUrl?: string }} request
  * @param {Set<string>} trustedOrigins
  * @returns {boolean}
  */
-function isPermissionAllowed({ topLevelUrl, requestingUrl }, trustedOrigins) {
+function isPermissionAllowed({ permission, isMainFrame, topLevelUrl, requestingUrl }, trustedOrigins) {
+  if (permission === "openExternal" && isMainFrame) return true;
+  if (typeof requestingUrl === "string" && isTrustedUrl(requestingUrl, trustedOrigins)) return true;
   return (
-    (typeof topLevelUrl === "string" && isTrustedUrl(topLevelUrl, trustedOrigins)) ||
-    (typeof requestingUrl === "string" && isTrustedUrl(requestingUrl, trustedOrigins))
+    FRAME_POLICY_GATED.has(permission) &&
+    typeof topLevelUrl === "string" &&
+    isTrustedUrl(topLevelUrl, trustedOrigins)
   );
 }
 
@@ -85,28 +114,33 @@ function topLevelUrlOf(webContents) {
 function installPermissionHandlers(config, app, defaultSession, getProfileUrls = () => []) {
   const trustedOrigins = () =>
     new Set([config.url, ...getProfileUrls()].map(originOf).filter(Boolean));
-  const deniedOrigins = new Set();
+  const loggedDenials = new Set();
 
-  const decide = (webContents, permission, requestingUrl) => {
+  const decide = (webContents, permission, details, requestingUrl) => {
     const allowed = isPermissionAllowed(
-      { topLevelUrl: topLevelUrlOf(webContents), requestingUrl },
+      { permission, isMainFrame: details?.isMainFrame, topLevelUrl: topLevelUrlOf(webContents), requestingUrl },
       trustedOrigins(),
     );
-    const origin = originOf(requestingUrl) ?? "unknown";
-    if (!allowed && !deniedOrigins.has(`${permission}|${origin}`)) {
-      deniedOrigins.add(`${permission}|${origin}`);
-      console.warn("[PERMISSIONS] Denied permission for an untrusted origin", { permission, origin });
+    const key = `${permission}|${originOf(requestingUrl) ?? "unknown"}`;
+    if (!allowed && loggedDenials.size < MAX_LOGGED_DENIALS && !loggedDenials.has(key)) {
+      loggedDenials.add(key);
+      console.warn("[PERMISSIONS] Denied permission for an untrusted origin", {
+        permission,
+        origin: originOf(requestingUrl) ?? "unknown",
+      });
     }
     return allowed;
   };
 
   const applyTo = (targetSession) => {
     try {
+      // For the about:blank Document PiP window requestingUrl is about:blank,
+      // while securityOrigin carries the inherited Teams origin.
       targetSession.setPermissionRequestHandler((webContents, permission, callback, details) => {
-        callback(decide(webContents, permission, details?.requestingUrl));
+        callback(decide(webContents, permission, details, details?.securityOrigin || details?.requestingUrl));
       });
-      targetSession.setPermissionCheckHandler((webContents, permission, requestingOrigin) =>
-        decide(webContents, permission, requestingOrigin),
+      targetSession.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) =>
+        decide(webContents, permission, details, requestingOrigin),
       );
     } catch (error) {
       console.error("[PERMISSIONS] Could not install permission handlers", { message: error.message });

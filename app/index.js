@@ -773,7 +773,10 @@ async function handleAppReady() {
     // (GHSA-58j7-22f8-6xqp). Same timing as above, so profile partitions are
     // caught by the session-created listener.
     installPermissionHandlers(config, app, session.defaultSession, () =>
-      profilesManager.list().map((p) => p.url).filter(Boolean),
+      profilesManager
+        .list()
+        .map((p) => p.url)
+        .filter((url) => typeof url === "string" && url.startsWith("https://")),
     );
 
     await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService, profilesManager);
