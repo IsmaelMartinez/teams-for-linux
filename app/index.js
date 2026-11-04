@@ -19,6 +19,7 @@ const { registerGraphApiHandlers } = require("./graphApi/ipcHandlers");
 const { allowedChannels } = require("./security/ipcValidator");
 const { installIpcSecurity } = require("./security/ipcSecurity");
 const { installWebviewGuard } = require("./security/webviewGuard");
+const { installPermissionHandlers } = require("./security/permissions");
 const { sanitize: sanitizePii } = require("./utils/logSanitizer");
 const { isPreLoginAuthNoise, parseChunkLoadFailure, formatChunkLoadWarning } = require("./utils/rendererErrors");
 const { register: registerGlobalShortcuts, sendKeyboardEventToWindow } = require("./globalShortcuts");
@@ -767,6 +768,13 @@ async function handleAppReady() {
     // so it covers the very first TLS handshake, and before profile partitions
     // exist so their sessions are caught by the session-created listener.
     certificateModule.installCertificateVerifyProc(config, app, session.defaultSession);
+
+    // Device permissions only for Teams, sign-in and the app's own pages
+    // (GHSA-58j7-22f8-6xqp). Same timing as above, so profile partitions are
+    // caught by the session-created listener.
+    installPermissionHandlers(config, app, session.defaultSession, () =>
+      profilesManager.list().map((p) => p.url).filter(Boolean),
+    );
 
     await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService, profilesManager);
 
