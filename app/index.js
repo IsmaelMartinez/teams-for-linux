@@ -66,6 +66,7 @@ if (process.platform === "linux") {
 }
 
 const { NETWORK_ERROR_PATTERNS } = require("./config/defaults");
+const { toRendererConfig } = require("./config/rendererConfig");
 
 function isNetworkError(message) {
   if (typeof message !== 'string') return false;
@@ -267,9 +268,10 @@ if (gotTheLock) {
 
   // Restart application when configuration file changes
   ipcMain.on("config-file-changed", restartApp);
-  // Get current application configuration
+  // Get current application configuration, without credentials: page script
+  // in the Teams window can read whatever this returns (GHSA-58j7-22f8-6xqp)
   ipcMain.handle("get-config", async () => {
-    return config;
+    return toRendererConfig(config);
   });
 
   notificationService.initialize();

@@ -22,9 +22,12 @@
  */
 
 class MQTTStatusMonitor {
+	// Private: anything on `this` is reachable from page script (GHSA-58j7-22f8-6xqp).
+	#ipcRenderer = null;
+
 	init(config, ipcRenderer) {
 		this.config = config;
-		this.ipcRenderer = ipcRenderer;
+		this.#ipcRenderer = ipcRenderer;
 		this.lastStatus = null;
 		this.observer = null;
 		this.pollInterval = null;
@@ -117,7 +120,7 @@ class MQTTStatusMonitor {
 				this.lastStatus = status;
 
 				if (this.config.mqtt?.enabled || (process.platform === 'linux' && this.config.dbusControl?.enabled === true)) {
-					this.ipcRenderer.invoke('user-status-changed', {
+					this.#ipcRenderer.invoke('user-status-changed', {
 						data: { status: status }
 					});
 				}

@@ -1,0 +1,50 @@
+'use strict';
+
+const { describe, it } = require('node:test');
+const assert = require('node:assert');
+const { toRendererConfig } = require('../../app/config/rendererConfig');
+
+// GHSA-58j7-22f8-6xqp: page script in the Teams window can read whatever
+// `get-config` returns, so credentials must never be in it.
+describe('toRendererConfig', () => {
+	const config = () => ({
+		url: 'https://teams.cloud.microsoft',
+		mqtt: { enabled: true, brokerUrl: 'mqtt://broker', username: 'u', password: 'mqtt-secret' },
+		auth: {
+			clientCertificate: { path: '/c.p12', password: 'cert-secret' },
+			basic: { user: 'b', passwordCommand: 'pass show basic' },
+			webLogin: { user: 'w', passwordCommand: 'pass show web' },
+		},
+		clientCertPassword: 'cert-secret',
+		ssoBasicAuthPasswordCommand: 'pass show basic',
+		documentPictureInPictureFrameName: 'teams-for-linux-document-pip-x',
+	});
+
+	it('removes every credential, nested and flat', () => {
+		const text = JSON.stringify(toRendererConfig(config()));
+		for (const secret of ['mqtt-secret', 'cert-secret', 'pass show basic', 'pass show web']) {
+			assert.ok(!text.includes(secret), `${secret} leaked`);
+		}
+	});
+
+	it('keeps everything else, including the PiP frame name the preload needs', () => {
+		const safe = toRendererConfig(config());
+		assert.strictEqual(safe.url, 'https://teams.cloud.microsoft');
+		assert.strictEqual(safe.mqtt.enabled, true);
+		assert.strictEqual(safe.mqtt.username, 'u');
+		assert.strictEqual(safe.auth.clientCertificate.path, '/c.p12');
+		assert.strictEqual(safe.documentPictureInPictureFrameName, 'teams-for-linux-document-pip-x');
+	});
+
+	it('leaves the main-process config untouched', () => {
+		const original = config();
+		toRendererConfig(original);
+		assert.strictEqual(original.mqtt.password, 'mqtt-secret');
+		assert.strictEqual(original.clientCertPassword, 'cert-secret');
+	});
+
+	it('copes with missing groups', () => {
+		assert.deepStrictEqual(toRendererConfig({ url: 'x' }), { url: 'x' });
+		assert.deepStrictEqual(toRendererConfig({ auth: null }), { auth: null });
+	});
+});

@@ -3,13 +3,16 @@ const path = require("node:path");
 const { presenceColor, isDoNotDisturb } = require("./presenceColors");
 
 class DockIconRenderer {
+  // Private: anything on `this` is reachable from page script (GHSA-58j7-22f8-6xqp).
+  #ipcRenderer = null;
+
   init(config, ipcRenderer) {
     // The dock only exists on macOS; the main process discards the IPC
     // elsewhere, so don't pay for rendering at all on other platforms.
     if (process.platform !== "darwin" || !config.media?.showStatusOnDockIcon) {
       return;
     }
-    this.ipcRenderer = ipcRenderer;
+    this.#ipcRenderer = ipcRenderer;
 
     // Resolved lazily on first render() so preload init isn't blocked by disk
     // I/O + image encoding during DOMContentLoaded. render() memoizes the
@@ -33,10 +36,10 @@ class DockIconRenderer {
       // Dock icon, so a render failure resets cleanly instead of leaving a
       // stale overlay.
       const iconDataUrl = await this.render(status);
-      this.ipcRenderer.send("dock-icon-update", iconDataUrl);
+      this.#ipcRenderer.send("dock-icon-update", iconDataUrl);
     } catch (err) {
       console.error("[DockIconRenderer] Failed to update dock icon:", err);
-      this.ipcRenderer.send("dock-icon-update", null);
+      this.#ipcRenderer.send("dock-icon-update", null);
     }
   }
 

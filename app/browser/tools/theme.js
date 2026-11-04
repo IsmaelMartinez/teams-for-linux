@@ -1,8 +1,9 @@
 const ReactHandler = require("./reactHandler");
 
 class ThemeManager {
+  // ipcRenderer is only used here, never stored: anything on `this` is
+  // reachable from page script (GHSA-58j7-22f8-6xqp).
   init(config, ipcRenderer) {
-    this.ipcRenderer = ipcRenderer;
     this.config = config;
 
     // Deliberately do NOT set Teams' own `clientPreferences.theme.followOsTheme`.
@@ -12,7 +13,7 @@ class ThemeManager {
     // rejection (#2662). We follow the OS theme ourselves below by driving
     // `userTheme` from the main-process `system-theme-changed` events instead.
     if (config.followSystemTheme) {
-      this.ipcRenderer.on("system-theme-changed", this.applyTheme);
+      ipcRenderer.on("system-theme-changed", this.applyTheme);
     }
   }
 

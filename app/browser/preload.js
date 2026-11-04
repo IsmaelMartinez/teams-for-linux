@@ -107,11 +107,13 @@ globalThis.electronAPI = {
   onSelectSource: (callback) => {
     ipcRenderer.once("select-source", (_event, ...args) => callback(...args));
   },
-  send: (channel, ...args) => {
-    return ipcRenderer.send(channel, ...args);
+  // The PiP frame name stays with the preload's own tool: page script holding
+  // it could open the always-on-top window itself (GHSA-58j7-22f8-6xqp).
+  getConfig: async () => {
+    const pageConfig = await ipcRenderer.invoke("get-config");
+    delete pageConfig.documentPictureInPictureFrameName;
+    return pageConfig;
   },
-
-  getConfig: () => ipcRenderer.invoke("get-config"),
 
   showNotification: (options) => {
     if (!options || typeof options !== 'object') {
@@ -404,7 +406,14 @@ function createCustomNotification(title, options) {
   console.debug("Preload: CustomNotification factory initialized");
 })();
 
-document.addEventListener('DOMContentLoaded', async () => {
+// Page script shares this world and can dispatch its own DOMContentLoaded, so
+// only the browser's event may run init, and only once: each run hands the raw
+// ipcRenderer to the modules again (GHSA-58j7-22f8-6xqp). A flag rather than
+// `once`, so a synthetic event fired first cannot use up the listener.
+let browserModulesStarted = false;
+document.addEventListener('DOMContentLoaded', async (event) => {
+  if (!event.isTrusted || browserModulesStarted) return;
+  browserModulesStarted = true;
   console.debug("Preload: DOMContentLoaded, initializing browser modules...");
   try {
     const config = await ipcRenderer.invoke("get-config");

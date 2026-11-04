@@ -16,9 +16,12 @@ class TrayIconRenderer {
   #baseIconDataUrl = null;
   #statusCode = null;
   #currentCount = 0;
+  // Private: anything on `this` is reachable from page script, including via
+  // the bind(this) below (GHSA-58j7-22f8-6xqp).
+  #ipcRenderer = null;
 
   init(config, ipcRenderer) {
-    this.ipcRenderer = ipcRenderer;
+    this.#ipcRenderer = ipcRenderer;
     this.config = config;
     const iconChooser = new TrayIconChooser(config);
     this.baseIcon = nativeImage.createFromPath(iconChooser.getFile());
@@ -153,7 +156,7 @@ class TrayIconRenderer {
       return;
     }
 
-    this.ipcRenderer.send("tray-update", {
+    this.#ipcRenderer.send("tray-update", {
       icon: icon,
       flash: count > 0 && !this.config.disableNotificationWindowFlash,
       count: count,
@@ -165,7 +168,7 @@ class TrayIconRenderer {
     });
 
     if (!this.config.disableBadgeCount) {
-      await this.ipcRenderer.invoke("set-badge-count", count).catch(err =>
+      await this.#ipcRenderer.invoke("set-badge-count", count).catch(err =>
         console.error("[TRAY_DIAG] Failed to set badge count:", err.message)
       );
     }
