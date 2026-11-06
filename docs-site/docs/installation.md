@@ -207,6 +207,10 @@ chmod +x teams-for-linux_*.AppImage
 For AppImage files, install [`AppImageLauncher`](https://github.com/TheAssassin/AppImageLauncher) for better desktop integration, including automatic menu entries and file associations.
 :::
 
+:::note FUSE requirement
+From 2.30.0 the AppImage uses the static AppImage runtime, so `libfuse2` is no longer needed. It still mounts itself through FUSE, which needs the `fusermount` or `fusermount3` command (the `fuse` or `fuse3` package; most desktop distributions install one). Where FUSE is not available at all, such as in some containers, run it with `./teams-for-linux_*.AppImage --appimage-extract-and-run`.
+:::
+
 #### Portable Installation (tar.gz)
 
 ```bash
