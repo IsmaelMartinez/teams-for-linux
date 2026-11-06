@@ -2,6 +2,7 @@ import { _electron as electron } from 'playwright';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 // Shared scaffolding for the multi-account E2E specs (and any future
 // flag-toggle test). Keeps the launch/discover/cleanup boilerplate in
@@ -206,9 +207,10 @@ export async function invokeHandler(electronApp, channel, args = []) {
 
 // Pinned channels (profile-*, Graph) accept only the app's own pages, so a
 // direct handler call poses as the profile switcher pill, their real caller.
-export const APP_PAGE_URL = new URL(
-  '../../../app/profileSwitcher/switcher.html',
-  import.meta.url
+// Resolved from the working directory like the `./app/index.js` launch path:
+// Playwright compiles these helpers to CommonJS, so import.meta is unavailable.
+export const APP_PAGE_URL = pathToFileURL(
+  join(process.cwd(), 'app', 'profileSwitcher', 'switcher.html')
 ).href;
 
 /**
