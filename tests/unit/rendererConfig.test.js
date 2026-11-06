@@ -48,6 +48,40 @@ describe('toRendererConfig', () => {
 		assert.strictEqual(safe.documentPictureInPictureFrameName, 'teams-for-linux-document-pip-x');
 	});
 
+	it('drops kebab-case aliases, environment keys and runtime-only keys', () => {
+		const safe = toRendererConfig({
+			...config(),
+			'client-cert-password': 'cert-secret',
+			'sso-basic-auth-password-command': 'pass show basic',
+			githubToken: 'env-secret',
+			appPath: '/opt/teams-for-linux',
+		});
+		const text = JSON.stringify(safe);
+		for (const secret of ['cert-secret', 'pass show basic', 'env-secret']) {
+			assert.ok(!text.includes(secret), `${secret} leaked`);
+		}
+		assert.strictEqual(safe.appPath, undefined);
+	});
+
+	it('drops the secrets from the config the real loader produces', () => {
+		const yargs = require('yargs');
+		const configOptions = require('../../app/config/options');
+		process.env.T4L_TEST_ENV_SECRET = 'env-secret';
+		try {
+			const parsed = yargs()
+				.env(true)
+				.options(configOptions)
+				.parse(['--clientCertPassword=cert-secret', '--mqtt.password=mqtt-secret']);
+			assert.strictEqual(parsed.t4lTestEnvSecret, 'env-secret', 'precondition: env vars become config keys');
+			const text = JSON.stringify(toRendererConfig(parsed));
+			for (const secret of ['cert-secret', 'mqtt-secret', 'env-secret']) {
+				assert.ok(!text.includes(secret), `${secret} leaked`);
+			}
+		} finally {
+			delete process.env.T4L_TEST_ENV_SECRET;
+		}
+	});
+
 	it('leaves the main-process config untouched', () => {
 		const original = config();
 		toRendererConfig(original);
@@ -57,6 +91,7 @@ describe('toRendererConfig', () => {
 
 	it('copes with missing groups', () => {
 		assert.deepStrictEqual(toRendererConfig({ url: 'x' }), { url: 'x' });
+		assert.deepStrictEqual(toRendererConfig({}), {});
 		assert.deepStrictEqual(toRendererConfig({ auth: null }), { auth: null });
 	});
 });

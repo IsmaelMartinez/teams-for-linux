@@ -2,8 +2,19 @@
 // (contextIsolation off), so whatever `get-config` returns is readable by page
 // script through electronAPI.getConfig(). No renderer code needs credentials
 // or the account and broker details next to them, so they never leave the
-// main process (GHSA-58j7-22f8-6xqp). Both spellings are listed:
-// applyRenamedOptions copies each nested value onto its deprecated flat name.
+// main process (GHSA-58j7-22f8-6xqp).
+//
+// Only declared options are copied: the parsed config also holds yargs'
+// kebab-case alias of every option (`client-cert-password`) and, because the
+// loader runs `.env(true)` without a prefix, a key for every environment
+// variable of the process. The PiP frame name is the one runtime-only key the
+// preload needs; electronAPI.getConfig strips it before page script sees it.
+const configOptions = require("./options");
+
+const RENDERER_KEYS = [...Object.keys(configOptions), "documentPictureInPictureFrameName"];
+
+// Both spellings are listed: applyRenamedOptions copies each nested value onto
+// its deprecated flat name.
 const SECRET_PATHS = [
   ["mqtt", "password"],
   ["mqtt", "username"],
@@ -36,9 +47,13 @@ function deletePath(target, keys) {
  * @returns {object}
  */
 function toRendererConfig(config) {
-  const copy = structuredClone(config);
+  const picked = {};
+  for (const key of RENDERER_KEYS) {
+    if (Object.hasOwn(config, key)) picked[key] = config[key];
+  }
+  const copy = structuredClone(picked);
   for (const keys of SECRET_PATHS) deletePath(copy, keys);
   return copy;
 }
 
-module.exports = { toRendererConfig, SECRET_PATHS };
+module.exports = { toRendererConfig, SECRET_PATHS, RENDERER_KEYS };
