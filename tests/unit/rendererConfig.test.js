@@ -71,10 +71,17 @@ describe('toRendererConfig', () => {
 			const parsed = yargs()
 				.env(true)
 				.options(configOptions)
-				.parse(['--clientCertPassword=cert-secret', '--mqtt.password=mqtt-secret']);
+				.parse([
+					'--clientCertPassword=cert-secret',
+					'--mqtt.password=mqtt-secret',
+					'--auth.client-certificate.password=cert-secret',
+					'--auth.basic.password-command=pass show basic',
+					'--mqtt.broker-url=mqtt://broker-secret',
+				]);
 			assert.strictEqual(parsed.t4lTestEnvSecret, 'env-secret', 'precondition: env vars become config keys');
 			const text = JSON.stringify(toRendererConfig(parsed));
-			for (const secret of ['cert-secret', 'mqtt-secret', 'env-secret']) {
+			assert.ok(parsed.auth['client-certificate'], 'precondition: dotted kebab flags keep a kebab copy');
+			for (const secret of ['cert-secret', 'mqtt-secret', 'env-secret', 'pass show basic', 'broker-secret']) {
 				assert.ok(!text.includes(secret), `${secret} leaked`);
 			}
 		} finally {

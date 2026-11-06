@@ -32,13 +32,19 @@ const SECRET_PATHS = [
   ["ssoBasicAuthPasswordCommand"],
 ];
 
-function deletePath(target, keys) {
-  let node = target;
-  for (const key of keys.slice(0, -1)) {
-    node = node?.[key];
-    if (node === null || typeof node !== "object") return;
+const toKebab = (key) => key.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
+
+// yargs keeps a kebab-case copy at every level of a dotted flag
+// (`--auth.client-certificate.password` also sets
+// `auth["client-certificate"].password`), so both spellings of each
+// component are followed.
+function deletePath(node, keys) {
+  if (node === null || typeof node !== "object") return;
+  const [key, ...rest] = keys;
+  for (const spelling of new Set([key, toKebab(key)])) {
+    if (rest.length === 0) delete node[spelling];
+    else deletePath(node[spelling], rest);
   }
-  delete node[keys.at(-1)];
 }
 
 /**
