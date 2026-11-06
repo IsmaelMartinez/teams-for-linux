@@ -1,3 +1,5 @@
+"use strict";
+
 const { webFrame, ipcRenderer } = require("electron");
 
 //zoomFactor can be configurable

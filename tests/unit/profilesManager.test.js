@@ -41,6 +41,38 @@ afterEach(() => {
   delete require.cache[electronPath];
 });
 
+// A profile URL loads with the full preload on every start, so only https is
+// accepted, on both mutation paths (GHSA-58j7-22f8-6xqp).
+describe('ProfilesManager url validation', () => {
+  it('accepts an https URL on add() and update()', () => {
+    const pm = new ProfilesManager(makeStore());
+    const p = pm.add({ name: 'Work', url: 'https://teams.cloud.microsoft' });
+    assert.strictEqual(p.url, 'https://teams.cloud.microsoft');
+    assert.strictEqual(pm.update(p.id, { url: 'https://teams.microsoft.us' }).url, 'https://teams.microsoft.us');
+  });
+
+  it('rejects non-https and malformed URLs on add()', () => {
+    const pm = new ProfilesManager(makeStore());
+    assert.throws(() => pm.add({ name: 'A', url: 'http://example.com' }), /must use https/);
+    assert.throws(() => pm.add({ name: 'B', url: 'file:///etc/passwd' }), /must use https/);
+    assert.throws(() => pm.add({ name: 'C', url: 'javascript:alert(1)' }), /must use https/);
+    assert.throws(() => pm.add({ name: 'D', url: 'not a url' }), /not a valid URL/);
+  });
+
+  it('rejects non-https URLs on update() and keeps the old one', () => {
+    const pm = new ProfilesManager(makeStore());
+    const p = pm.add({ name: 'Work', url: 'https://teams.cloud.microsoft' });
+    assert.throws(() => pm.update(p.id, { url: 'http://example.com' }), /must use https/);
+    assert.strictEqual(pm.list().find((x) => x.id === p.id).url, 'https://teams.cloud.microsoft');
+  });
+
+  it('still allows clearing the URL', () => {
+    const pm = new ProfilesManager(makeStore());
+    const p = pm.add({ name: 'Work', url: 'https://teams.cloud.microsoft' });
+    assert.strictEqual(pm.update(p.id, { url: '' }).url, undefined);
+  });
+});
+
 // ADR-020 Phase 1c.2: at most 5 profiles can be pinned (the Ctrl+Alt+1…5
 // shortcut slots). The cap must hold on BOTH mutation paths — update() and
 // add() — since `pinned` arrives over IPC on each.

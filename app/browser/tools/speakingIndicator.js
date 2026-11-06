@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Speaking Indicator Browser Tool
  *
@@ -33,8 +35,8 @@
  * zero while unmuted and quiet (#2465), so that case shows as muted. The raw
  * sender signals are logged at debug level whenever they change.
  *
- * When ipcRenderer is provided (always true today since the module is in
- * modulesRequiringIpc), the same state transitions are forwarded to the main
+ * When ipcRenderer is provided (always true today since the module is flagged
+ * `ipc: true` in preload.js), the same state transitions are forwarded to the main
  * process via the `microphone-state-changed` IPC channel for MQTT publishing.
  * Values: 'speaking' | 'silent' | 'muted' | 'off' (off when the call ends).
  *

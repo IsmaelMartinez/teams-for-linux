@@ -1,0 +1,65 @@
+// The Teams window shares its JavaScript world with the preload
+// (contextIsolation off), so whatever `get-config` returns is readable by page
+// script through electronAPI.getConfig(). No renderer code needs credentials
+// or the account and broker details next to them, so they never leave the
+// main process (GHSA-58j7-22f8-6xqp).
+//
+// Only declared options are copied: the parsed config also holds yargs'
+// kebab-case alias of every option (`client-cert-password`) and, because the
+// loader runs `.env(true)` without a prefix, a key for every environment
+// variable of the process. The PiP frame name is the one runtime-only key the
+// preload needs; electronAPI.getConfig strips it before page script sees it.
+const configOptions = require("./options");
+
+const RENDERER_KEYS = [...Object.keys(configOptions), "documentPictureInPictureFrameName"];
+
+// Both spellings are listed: applyRenamedOptions copies each nested value onto
+// its deprecated flat name.
+const SECRET_PATHS = [
+  ["mqtt", "password"],
+  ["mqtt", "username"],
+  ["mqtt", "brokerUrl"],
+  ["auth", "clientCertificate", "password"],
+  ["auth", "clientCertificate", "path"],
+  ["auth", "basic", "user"],
+  ["auth", "intune", "user"],
+  ["auth", "basic", "passwordCommand"],
+  ["auth", "webLogin", "user"],
+  ["auth", "webLogin", "passwordCommand"],
+  ["clientCertPassword"],
+  ["clientCertPath"],
+  ["ssoBasicAuthUser"],
+  ["ssoBasicAuthPasswordCommand"],
+];
+
+const toKebab = (key) => key.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
+
+// yargs keeps a kebab-case copy at every level of a dotted flag
+// (`--auth.client-certificate.password` also sets
+// `auth["client-certificate"].password`), so both spellings of each
+// component are followed.
+function deletePath(node, keys) {
+  if (node === null || typeof node !== "object") return;
+  const [key, ...rest] = keys;
+  for (const spelling of new Set([key, toKebab(key)])) {
+    if (rest.length === 0) delete node[spelling];
+    else deletePath(node[spelling], rest);
+  }
+}
+
+/**
+ * Copy of the config that is safe to hand to a renderer.
+ * @param {object} config - the resolved application config
+ * @returns {object}
+ */
+function toRendererConfig(config) {
+  const picked = {};
+  for (const key of RENDERER_KEYS) {
+    if (Object.hasOwn(config, key)) picked[key] = config[key];
+  }
+  const copy = structuredClone(picked);
+  for (const keys of SECRET_PATHS) deletePath(copy, keys);
+  return copy;
+}
+
+module.exports = { toRendererConfig, SECRET_PATHS, RENDERER_KEYS };

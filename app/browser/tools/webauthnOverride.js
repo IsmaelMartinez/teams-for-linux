@@ -1,3 +1,5 @@
+"use strict";
+
 // app/browser/tools/webauthnOverride.js
 
 /**

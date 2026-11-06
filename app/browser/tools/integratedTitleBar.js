@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Integrated title bar (client-side decorations), renderer half.
  *

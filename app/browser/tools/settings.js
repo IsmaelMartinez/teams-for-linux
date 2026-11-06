@@ -1,21 +1,20 @@
+"use strict";
+
 const ReactHandler = require("./reactHandler");
 
-let _Settings_config = new WeakMap();
-let _Settings_ipcRenderer = new WeakMap();
+// ipcRenderer is used in init only and never stored: page script can patch
+// WeakMap.prototype.set and read anything on `this` (GHSA-58j7-22f8-6xqp).
 class Settings {
+  #config;
+
   init(config, ipcRenderer) {
-    _Settings_config.set(this, config);
-    _Settings_ipcRenderer.set(this, ipcRenderer);
-    this.ipcRenderer.on("get-teams-settings", retrieve);
-    this.ipcRenderer.on("set-teams-settings", restore);
+    this.#config = config;
+    ipcRenderer.on("get-teams-settings", retrieve);
+    ipcRenderer.on("set-teams-settings", restore);
   }
 
   get config() {
-    return _Settings_config.get(this);
-  }
-
-  get ipcRenderer() {
-    return _Settings_ipcRenderer.get(this);
+    return this.#config;
   }
 }
 

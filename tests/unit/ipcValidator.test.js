@@ -177,6 +177,19 @@ describe('isSenderAllowed (GHSA-3vg9-cwq9-p773)', () => {
 		}
 	});
 
+	it('pins the profile and Graph channels to app pages (GHSA-58j7-22f8-6xqp)', () => {
+		const pinned = [
+			'profile-list', 'profile-get-active', 'profile-switch',
+			'profile-add', 'profile-update', 'profile-remove',
+			'add-profile-submit', 'add-profile-cancel',
+			'manage-profile-rename', 'manage-profile-pin', 'manage-profile-remove', 'manage-profile-close',
+			'graph-api-search-people', 'graph-api-send-chat-message',
+		];
+		for (const channel of pinned) {
+			assert.ok(appPageOnlyChannels.has(channel), `${channel} must be app-page only`);
+		}
+	});
+
 	it('rejects file URLs outside the app directory, including traversal', () => {
 		const channel = 'desktop-capturer-get-sources';
 		assert.strictEqual(isSenderAllowed(channel, { senderFrame: { url: 'file:///etc/passwd' } }), false);

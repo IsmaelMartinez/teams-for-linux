@@ -2,6 +2,7 @@ const { WebContentsView, session, ipcMain } = require("electron");
 const path = require("node:path");
 const SenderProfileMap = require("./senderProfileMap");
 const { reloadIfSignedOut } = require("./signOutReload");
+const { isHttpsUrl } = require("../profilesManager");
 
 const LEGACY_PARTITION = "persist:teams-4-linux";
 
@@ -541,7 +542,7 @@ class ProfileViewManager {
       if (
         reloadIfSignedOut(
           view.webContents,
-          profile.url || this.#config.url,
+          this.#urlFor(profile),
           this.#config.chromeUserAgent
         )
       ) {
@@ -628,10 +629,18 @@ class ProfileViewManager {
       }
     });
 
-    const url = profile.url || this.#config.url;
-    view.webContents.loadURL(url, {
+    view.webContents.loadURL(this.#urlFor(profile), {
       userAgent: this.#config.chromeUserAgent,
     });
+  }
+
+  // A URL saved before https was enforced would otherwise load with the full
+  // preload (GHSA-58j7-22f8-6xqp); fall back to the Teams URL instead.
+  #urlFor(profile) {
+    if (!profile.url) return this.#config.url;
+    if (isHttpsUrl(profile.url)) return profile.url;
+    console.warn("[ProfileViewManager] Ignoring a stored profile URL that is not https");
+    return this.#config.url;
   }
 
   // Make `profileId` the visible profile (no-op if it already is, or if it

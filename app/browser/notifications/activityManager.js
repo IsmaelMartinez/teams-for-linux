@@ -1,22 +1,28 @@
+"use strict";
+
 const activityHub = require("../tools/activityHub");
 const wakeLock = require("../tools/wakeLock");
 
 class ActivityManager {
+  // Private and passed to the handlers below as an argument: anything on
+  // `this` is reachable from page script (GHSA-58j7-22f8-6xqp).
+  #ipcRenderer;
+
   constructor(ipcRenderer, config) {
-    this.ipcRenderer = ipcRenderer;
+    this.#ipcRenderer = ipcRenderer;
     this.config = config;
     this.myStatus = -1;
   }
 
   start() {
-    setActivityHandlers(this);
-    setEventHandlers(this);
+    setActivityHandlers(this.#ipcRenderer);
+    setEventHandlers(this.#ipcRenderer);
     activityHub.start();
     this.watchSystemIdleState();
   }
 
   watchSystemIdleState() {
-    this.ipcRenderer.invoke("get-system-idle-state").then((state) => {
+    this.#ipcRenderer.invoke("get-system-idle-state").then((state) => {
       let timeOut;
       if (this.config.awayOnSystemIdle) {
         timeOut = this.setStatusAwayWhenScreenLocked(state);
@@ -52,11 +58,11 @@ class ActivityManager {
   }
 }
 
-function setEventHandlers(self) {
-  self.ipcRenderer.on("enable-wakelock", () => wakeLock.enable());
-  self.ipcRenderer.on("disable-wakelock", () => wakeLock.disable());
+function setEventHandlers(ipcRenderer) {
+  ipcRenderer.on("enable-wakelock", () => wakeLock.enable());
+  ipcRenderer.on("disable-wakelock", () => wakeLock.disable());
 
-  self.ipcRenderer.on('incoming-call-action', (event, action) => {
+  ipcRenderer.on('incoming-call-action', (event, action) => {
     const actionWrapper = document.querySelector('[data-testid="calling-actions"],[data-testid="msn-actions"]');
     if (actionWrapper) {
       const buttons = actionWrapper.querySelectorAll("button");
@@ -84,34 +90,34 @@ function setEventHandlers(self) {
   });
 }
 
-function setActivityHandlers(self) {
-  activityHub.on("incoming-call-created", incomingCallCreatedHandler(self));
-  activityHub.on("incoming-call-ended", incomingCallEndedHandler(self));
-  activityHub.on("call-connected", callConnectedHandler(self));
-  activityHub.on("call-disconnected", callDisconnectedHandler(self));
+function setActivityHandlers(ipcRenderer) {
+  activityHub.on("incoming-call-created", incomingCallCreatedHandler(ipcRenderer));
+  activityHub.on("incoming-call-ended", incomingCallEndedHandler(ipcRenderer));
+  activityHub.on("call-connected", callConnectedHandler(ipcRenderer));
+  activityHub.on("call-disconnected", callDisconnectedHandler(ipcRenderer));
 }
 
-function incomingCallCreatedHandler(self) {
+function incomingCallCreatedHandler(ipcRenderer) {
   return async (data) => {
-    self.ipcRenderer.invoke("incoming-call-created", data);
+    ipcRenderer.invoke("incoming-call-created", data);
   };
 }
 
-function incomingCallEndedHandler(self) {
+function incomingCallEndedHandler(ipcRenderer) {
   return async () => {
-    self.ipcRenderer.invoke("incoming-call-ended");
+    ipcRenderer.invoke("incoming-call-ended");
   };
 }
 
-function callConnectedHandler(self) {
+function callConnectedHandler(ipcRenderer) {
   return async () => {
-    self.ipcRenderer.invoke("call-connected");
+    ipcRenderer.invoke("call-connected");
   };
 }
 
-function callDisconnectedHandler(self) {
+function callDisconnectedHandler(ipcRenderer) {
   return async () => {
-    self.ipcRenderer.invoke("call-disconnected");
+    ipcRenderer.invoke("call-disconnected");
   };
 }
 

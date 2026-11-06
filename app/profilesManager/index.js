@@ -29,6 +29,31 @@ function ensureLength(value, max, field) {
   }
 }
 
+// A profile URL loads with the full preload on every start, so only an https
+// address is accepted (GHSA-58j7-22f8-6xqp). Hosts are not restricted, since
+// tenants use clouds and custom domains beyond the Microsoft defaults.
+function protocolOf(value) {
+  try {
+    return new URL(value).protocol;
+  } catch {
+    return null;
+  }
+}
+
+function isHttpsUrl(value) {
+  return protocolOf(value) === "https:";
+}
+
+function ensureHttpsUrl(value) {
+  const protocol = protocolOf(value);
+  if (protocol === null) {
+    throw new Error("[ProfilesManager] url is not a valid URL");
+  }
+  if (protocol !== "https:") {
+    throw new Error("[ProfilesManager] url must use https");
+  }
+}
+
 /**
  * ProfilesManager — Phase 1b foundation for the multi-account switcher
  * (ADR-020). Owns CRUD against `settingsStore` under `app.profiles`. UI
@@ -125,6 +150,7 @@ class ProfilesManager {
     ensureLength(record.avatarColor, MAX_AVATAR_COLOR_LEN, "avatarColor");
     ensureLength(record.avatarInitials, MAX_AVATAR_INITIALS_LEN, "avatarInitials");
     ensureLength(record.url, MAX_URL_LEN, "url");
+    if (typeof record.url === "string" && record.url) ensureHttpsUrl(record.url);
 
     const id = crypto.randomUUID();
     const profile = this.#buildRecord(id, `${PARTITION_PREFIX}${id}`, name, record);
@@ -281,6 +307,7 @@ class ProfilesManager {
   #applyUrl(next, url) {
     if (typeof url === "string" && url) {
       ensureLength(url, MAX_URL_LEN, "url");
+      ensureHttpsUrl(url);
       next.url = url;
     } else if (url === null || url === "") {
       delete next.url;
@@ -342,3 +369,4 @@ function deriveInitials(name) {
 }
 
 module.exports = ProfilesManager;
+module.exports.isHttpsUrl = isHttpsUrl;

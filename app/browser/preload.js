@@ -1,3 +1,10 @@
+"use strict";
+// Strict mode is a security boundary here, not style: EventEmitter calls
+// listeners with `this` set to the raw ipcRenderer, and V8's stack-trace API
+// (CallSite.getThis) hands that receiver to page script running inside any
+// sloppy-mode frame. Every file that registers an ipcRenderer listener must be
+// strict (GHSA-58j7-22f8-6xqp; enforced by tests/unit/preloadIpcLeak.test.js).
+
 const { ipcRenderer } = require("electron");
 
 // #2677: Electron removed the non-standard `File.path` from dropped files, so
@@ -107,11 +114,14 @@ globalThis.electronAPI = {
   onSelectSource: (callback) => {
     ipcRenderer.once("select-source", (_event, ...args) => callback(...args));
   },
-  send: (channel, ...args) => {
-    return ipcRenderer.send(channel, ...args);
+  // No page needs the PiP frame name, so it is not handed out. Defence in
+  // depth only: the name guards against cross-origin frames, which cannot
+  // reach electronAPI anyway (GHSA-58j7-22f8-6xqp).
+  getConfig: async () => {
+    const pageConfig = await ipcRenderer.invoke("get-config");
+    delete pageConfig.documentPictureInPictureFrameName;
+    return pageConfig;
   },
-
-  getConfig: () => ipcRenderer.invoke("get-config"),
 
   showNotification: (options) => {
     if (!options || typeof options !== 'object') {
@@ -404,7 +414,14 @@ function createCustomNotification(title, options) {
   console.debug("Preload: CustomNotification factory initialized");
 })();
 
-document.addEventListener('DOMContentLoaded', async () => {
+// Page script shares this world and can dispatch its own DOMContentLoaded, so
+// only the browser's event may run init, and only once: each run hands the raw
+// ipcRenderer to the modules again (GHSA-58j7-22f8-6xqp). A flag rather than
+// `once`, so a synthetic event fired first cannot use up the listener.
+let browserModulesStarted = false;
+document.addEventListener('DOMContentLoaded', async (event) => {
+  if (!event.isTrusted || browserModulesStarted) return;
+  browserModulesStarted = true;
   console.debug("Preload: DOMContentLoaded, initializing browser modules...");
   try {
     const config = await ipcRenderer.invoke("get-config");
@@ -421,40 +438,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     // NOTE: the unread-count event is handled by trayIconRenderer.js; a second
     // listener here previously caused duplicate IPC traffic and rendering.
 
+    // CRITICAL: `ipc: true` modules need ipcRenderer for IPC communication;
+    // trayIconRenderer and mqttStatusMonitor must keep it (see CLAUDE.md, #1902).
+    // Every entry sets `ipc` itself: a missing own property would be read from
+    // Object.prototype, which page script controls.
     const modules = [
-      { name: "zoom", path: "./tools/zoom" },
-      { name: "shortcuts", path: "./tools/shortcuts" },
-      { name: "settings", path: "./tools/settings" },
-      { name: "theme", path: "./tools/theme" },
-      { name: "emulatePlatform", path: "./tools/emulatePlatform" },
-      { name: "webauthnOverride", path: "./tools/webauthnOverride" },
-      { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
-      { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
-      { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
-      { name: "meetingStartDetector", path: "./tools/meetingStartDetector" },
-      { name: "overrideMicConstraints", path: "./tools/overrideMicConstraints" },
-      { name: "disableAutogain", path: "./tools/disableAutogain" },
-      { name: "ignoreSystemMute", path: "./tools/ignoreSystemMute" },
-      { name: "speakingIndicator", path: "./tools/speakingIndicator" },
-      { name: "cameraResolution", path: "./tools/cameraResolution" },
-      { name: "cameraAspectRatio", path: "./tools/cameraAspectRatio" },
-      { name: "navigationButtons", path: "./tools/navigationButtons" },
-      { name: "framelessTweaks", path: "./tools/frameless" },
-      { name: "integratedTitleBar", path: "./tools/integratedTitleBar" },
-      { name: "customStickers", path: "./tools/customStickers" },
-      { name: "dockIconRenderer", path: "./tools/dockIconRenderer" },
-      { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching" },
-      { name: "documentPictureInPicture", path: "./tools/documentPictureInPicture" }
+      { name: "zoom", path: "./tools/zoom", ipc: false },
+      { name: "shortcuts", path: "./tools/shortcuts", ipc: false },
+      { name: "settings", path: "./tools/settings", ipc: true },
+      { name: "theme", path: "./tools/theme", ipc: true },
+      { name: "emulatePlatform", path: "./tools/emulatePlatform", ipc: false },
+      { name: "webauthnOverride", path: "./tools/webauthnOverride", ipc: true },
+      { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride", ipc: false },
+      { name: "trayIconRenderer", path: "./tools/trayIconRenderer", ipc: true },
+      { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor", ipc: true },
+      { name: "meetingStartDetector", path: "./tools/meetingStartDetector", ipc: true },
+      { name: "overrideMicConstraints", path: "./tools/overrideMicConstraints", ipc: false },
+      { name: "disableAutogain", path: "./tools/disableAutogain", ipc: false },
+      { name: "ignoreSystemMute", path: "./tools/ignoreSystemMute", ipc: false },
+      { name: "speakingIndicator", path: "./tools/speakingIndicator", ipc: true },
+      { name: "cameraResolution", path: "./tools/cameraResolution", ipc: false },
+      { name: "cameraAspectRatio", path: "./tools/cameraAspectRatio", ipc: false },
+      { name: "navigationButtons", path: "./tools/navigationButtons", ipc: false },
+      { name: "framelessTweaks", path: "./tools/frameless", ipc: false },
+      { name: "integratedTitleBar", path: "./tools/integratedTitleBar", ipc: true },
+      { name: "customStickers", path: "./tools/customStickers", ipc: true },
+      { name: "dockIconRenderer", path: "./tools/dockIconRenderer", ipc: true },
+      { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching", ipc: false },
+      { name: "documentPictureInPicture", path: "./tools/documentPictureInPicture", ipc: false }
     ];
 
-    // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)
-    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "meetingStartDetector", "webauthnOverride", "speakingIndicator", "customStickers", "dockIconRenderer", "integratedTitleBar"]);
-
+    // An indexed loop over own properties, not for...of or Set.has: page script
+    // runs before this event and can patch the shared Array and Set built-ins
+    // to swap entries or flags while ipcRenderer is being handed out.
     let successCount = 0;
-    for (const module of modules) {
+    for (let i = 0; i < modules.length; i++) {
+      const module = modules[i];
       try {
         const moduleInstance = require(module.path);
-        if (modulesRequiringIpc.has(module.name)) {
+        if (module.ipc === true) {
           moduleInstance.init(config, ipcRenderer);
         } else {
           moduleInstance.init(config);

@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Meeting Start Detector (#2587, Phase 2 of #2370)
  *
