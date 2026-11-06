@@ -123,6 +123,35 @@ describe('installPermissionHandlers', () => {
 		assert.strictEqual(s.check(page('https://tenant.example/'), 'notifications', 'https://tenant.example', { isMainFrame: true }), true);
 	});
 
+	// Shapes recorded from Electron 44 for a page loaded with loadFile: the
+	// origin is a bare file:/// and only requestingUrl has the path.
+	it('identifies local pages by requestingUrl, not their bare file origin', () => {
+		const s = fakeSession();
+		installPermissionHandlers({ url: 'https://teams.cloud.microsoft' }, { on() {} }, s);
+		const appPage = pathToFileURL(path.join(__dirname, '..', '..', 'app', 'quickChat', 'quickChatModal.html')).href;
+		const otherPage = 'file:///tmp/evil.html';
+
+		assert.strictEqual(s.check(page(appPage), 'notifications', 'file:///', { isMainFrame: true, requestingUrl: appPage }), true);
+		assert.strictEqual(s.check(page(otherPage), 'notifications', 'file:///', { isMainFrame: true, requestingUrl: otherPage }), false);
+
+		let granted;
+		s.request(page(appPage), 'media', (v) => { granted = v; }, { isMainFrame: true, securityOrigin: 'file:///', requestingUrl: appPage });
+		assert.strictEqual(granted, true);
+		s.request(page(otherPage), 'media', (v) => { granted = v; }, { isMainFrame: true, securityOrigin: 'file:///', requestingUrl: otherPage });
+		assert.strictEqual(granted, false);
+	});
+
+	it('logs the scheme of a denied requester, never its host', (t) => {
+		const warnings = [];
+		t.mock.method(console, 'warn', (...args) => warnings.push(JSON.stringify(args)));
+		const s = fakeSession();
+		installPermissionHandlers({ url: 'https://teams.cloud.microsoft' }, { on() {} }, s);
+		s.check(page('https://idp.contoso.example/'), 'notifications', 'https://idp.contoso.example', { isMainFrame: true });
+		assert.strictEqual(warnings.length, 1);
+		assert.ok(!warnings[0].includes('contoso'), warnings[0]);
+		assert.ok(warnings[0].includes('"scheme":"https"'), warnings[0]);
+	});
+
 	it('prefers securityOrigin over requestingUrl for the PiP window', () => {
 		const s = fakeSession();
 		installPermissionHandlers({ url: 'https://teams.cloud.microsoft' }, { on() {} }, s);

@@ -108,6 +108,20 @@ function isPermissionAllowed({ permission, isMainFrame, topLevelUrl, requestingU
   );
 }
 
+// Local pages report a bare `file:///` origin, which says nothing about which
+// file asked; their requestingUrl carries the path isTrustedUrl checks against
+// the app directory. Web pages keep the origin, which for the about:blank PiP
+// window is the inherited Teams origin.
+function requesterOf(details, origin) {
+  const url = details?.requestingUrl;
+  return typeof url === "string" && url.startsWith("file:") ? url : origin;
+}
+
+// Logged instead of the origin, which can name a tenant's identity provider.
+function schemeLabel(url) {
+  return schemeOf(url)?.slice(0, -1) ?? "unknown";
+}
+
 function topLevelUrlOf(webContents) {
   try {
     return webContents?.getURL();
@@ -145,7 +159,7 @@ function installPermissionHandlers(config, app, defaultSession, getProfileUrls =
       loggedDenials.add(key);
       console.warn("[PERMISSIONS] Denied permission for an untrusted origin", {
         permission,
-        origin: originOf(requestingUrl) ?? "unknown",
+        scheme: schemeLabel(requestingUrl),
       });
     }
     return allowed;
@@ -156,10 +170,11 @@ function installPermissionHandlers(config, app, defaultSession, getProfileUrls =
       // For the about:blank Document PiP window requestingUrl is about:blank,
       // while securityOrigin carries the inherited Teams origin.
       targetSession.setPermissionRequestHandler((webContents, permission, callback, details) => {
-        callback(decide(webContents, permission, details, details?.securityOrigin || details?.requestingUrl));
+        const origin = details?.securityOrigin || details?.requestingUrl;
+        callback(decide(webContents, permission, details, requesterOf(details, origin)));
       });
       targetSession.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) =>
-        decide(webContents, permission, details, requestingOrigin),
+        decide(webContents, permission, details, requesterOf(details, requestingOrigin)),
       );
     } catch (error) {
       console.error("[PERMISSIONS] Could not install permission handlers", { message: error.message });
