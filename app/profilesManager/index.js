@@ -32,11 +32,21 @@ function ensureLength(value, max, field) {
 // A profile URL loads with the full preload on every start, so only an https
 // address is accepted (GHSA-58j7-22f8-6xqp). Hosts are not restricted, since
 // tenants use clouds and custom domains beyond the Microsoft defaults.
-function ensureHttpsUrl(value) {
-  let protocol;
+function protocolOf(value) {
   try {
-    protocol = new URL(value).protocol;
+    return new URL(value).protocol;
   } catch {
+    return null;
+  }
+}
+
+function isHttpsUrl(value) {
+  return protocolOf(value) === "https:";
+}
+
+function ensureHttpsUrl(value) {
+  const protocol = protocolOf(value);
+  if (protocol === null) {
     throw new Error("[ProfilesManager] url is not a valid URL");
   }
   if (protocol !== "https:") {
@@ -359,3 +369,4 @@ function deriveInitials(name) {
 }
 
 module.exports = ProfilesManager;
+module.exports.isHttpsUrl = isHttpsUrl;

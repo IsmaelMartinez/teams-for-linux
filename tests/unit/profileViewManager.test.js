@@ -549,6 +549,31 @@ describe('ProfileViewManager per-view load hook (#2979)', () => {
   });
 });
 
+// GHSA-58j7-22f8-6xqp: a profile URL stored before https was enforced must
+// not load with the full preload.
+describe('ProfileViewManager ignores stored non-https profile URLs', () => {
+  it('loads the Teams URL instead, on first load and on the signed-out reload', () => {
+    const stale = { ...PROFILE_A, url: 'http://evil.example/' };
+    const custom = { ...PROFILE_B, url: 'https://tenant.example/' };
+    const pvm = new ProfileViewManager(
+      fakeWindow(),
+      fakeProfilesManager([LEGACY, stale, custom]),
+      { url: 'https://teams.cloud.microsoft', chromeUserAgent: 'UA' },
+      () => {},
+      () => {}
+    );
+    pvm.initialize();
+    const [viewA, viewB] = createdViews;
+
+    assert.strictEqual(viewA.webContents.loads[0][0], 'https://teams.cloud.microsoft');
+    assert.strictEqual(viewB.webContents.loads[0][0], 'https://tenant.example/');
+
+    viewA.webContents.url = 'https://login.microsoftonline.com/common/oauth2/v2.0/logout?x=1';
+    viewA.webContents.emit('did-finish-load');
+    assert.strictEqual(viewA.webContents.loads.at(-1)[0], 'https://teams.cloud.microsoft');
+  });
+});
+
 // #3057: on Linux a profile view that loads while detached and is attached
 // later paints but never receives input. Views are therefore attached at
 // creation and a switch only toggles visibility; nothing is detached.
