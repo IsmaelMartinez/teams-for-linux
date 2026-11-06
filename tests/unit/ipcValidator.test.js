@@ -181,6 +181,8 @@ describe('isSenderAllowed (GHSA-3vg9-cwq9-p773)', () => {
 		const pinned = [
 			'profile-list', 'profile-get-active', 'profile-switch',
 			'profile-add', 'profile-update', 'profile-remove',
+			'add-profile-submit', 'add-profile-cancel',
+			'manage-profile-rename', 'manage-profile-pin', 'manage-profile-remove', 'manage-profile-close',
 			'graph-api-search-people', 'graph-api-send-chat-message',
 		];
 		for (const channel of pinned) {

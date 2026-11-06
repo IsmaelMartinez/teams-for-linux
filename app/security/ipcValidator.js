@@ -234,10 +234,11 @@ function validateIpcChannel(channel, payload = null) {
 
 // Channels only local app pages may use, never a web page in the Teams window.
 // The screen-share picker (app/screenSharing/index.html): capturing the screen
-// or picking a source (GHSA-3vg9-cwq9-p773). The profile switcher and Quick
-// Chat (app/profileSwitcher, app/quickChat): adding a profile would let a page
-// persist a URL that loads with the preload on every start, and the Graph
-// channels send messages as the user (GHSA-58j7-22f8-6xqp).
+// or picking a source (GHSA-3vg9-cwq9-p773). The profile switcher, the profile
+// dialogs and Quick Chat (app/profileSwitcher, app/profileDialogs,
+// app/quickChat): adding a profile would let a page persist a URL that loads
+// with the preload on every start and is trusted for device permissions, and
+// the Graph channels send messages as the user (GHSA-58j7-22f8-6xqp).
 const appPageOnlyChannels = new Set([
   'close-view',
   'desktop-capturer-get-sources',
@@ -250,6 +251,12 @@ const appPageOnlyChannels = new Set([
   'profile-add',
   'profile-update',
   'profile-remove',
+  'add-profile-submit',
+  'add-profile-cancel',
+  'manage-profile-rename',
+  'manage-profile-pin',
+  'manage-profile-remove',
+  'manage-profile-close',
   'graph-api-search-people',
   'graph-api-send-chat-message',
 ]);
