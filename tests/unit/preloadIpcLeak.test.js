@@ -60,12 +60,14 @@ describe('preload does not hand ipcRenderer to page script', () => {
 		.map((f) => join(browserDir, f));
 
 	// EventEmitter calls listeners with `this` = ipcRenderer, and V8's
-	// CallSite.getThis() returns that receiver for sloppy-mode frames.
-	it('every file that registers an ipcRenderer listener is strict mode', () => {
+	// CallSite.getThis() returns that receiver for sloppy-mode frames. A sloppy
+	// function holding ipcRenderer as an argument also exposes it through
+	// `fn.caller.arguments` to any page hook it calls (console, DOM).
+	it('every file that touches ipcRenderer is strict mode', () => {
 		for (const file of [PRELOAD_PATH, ...files]) {
 			const text = readFileSync(file, 'utf8');
-			if (!/ipcRenderer\.(on|once)\(/.test(text)) continue;
-			assert.match(text, /^(\s*\/\/[^\n]*\n)*\s*["']use strict["'];/, `${file} registers an ipcRenderer listener but is not strict`);
+			if (!/\bipcRenderer\b/.test(text)) continue;
+			assert.match(text, /^(\s*\/\/[^\n]*\n)*\s*["']use strict["'];/, `${file} touches ipcRenderer but is not strict`);
 		}
 	});
 

@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Speaking Indicator Browser Tool
  *

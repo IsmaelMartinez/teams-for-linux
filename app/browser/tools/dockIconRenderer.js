@@ -1,3 +1,5 @@
+"use strict";
+
 const { nativeImage } = require("electron");
 const path = require("node:path");
 const { presenceColor, isDoNotDisturb } = require("./presenceColors");

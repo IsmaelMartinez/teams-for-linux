@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Custom Stickers Browser Tool
  *
