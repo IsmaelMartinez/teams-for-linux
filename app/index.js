@@ -772,12 +772,22 @@ async function handleAppReady() {
     // Device permissions only for Teams, sign-in and the app's own pages
     // (GHSA-58j7-22f8-6xqp). Same timing as above, so profile partitions are
     // caught by the session-created listener.
-    installPermissionHandlers(config, app, session.defaultSession, () =>
-      profilesManager
+    // Cached because electron-store re-reads its JSON on every access and
+    // permission checks are frequent; profile events invalidate it.
+    let profileUrlCache = null;
+    const invalidateProfileUrls = () => {
+      profileUrlCache = null;
+    };
+    profilesManager.on("add", invalidateProfileUrls);
+    profilesManager.on("update", invalidateProfileUrls);
+    profilesManager.on("remove", invalidateProfileUrls);
+    installPermissionHandlers(config, app, session.defaultSession, () => {
+      profileUrlCache ??= profilesManager
         .list()
         .map((p) => p.url)
-        .filter((url) => typeof url === "string" && url.startsWith("https://")),
-    );
+        .filter((url) => typeof url === "string" && url.startsWith("https://"));
+      return profileUrlCache;
+    });
 
     await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService, profilesManager);
 
