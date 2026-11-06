@@ -76,4 +76,17 @@ describe('preload does not hand ipcRenderer to page script', () => {
 			assert.doesNotMatch(text, /\.set\(this,\s*ipcRenderer\)/, `${file} stores ipcRenderer in a WeakMap`);
 		}
 	});
+
+	// Page script can replace a method on `this` before init registers it, and
+	// the listener receives the Electron event, whose sender is ipcRenderer.
+	it('no ipcRenderer listener is a method read from an object', () => {
+		for (const file of [PRELOAD_PATH, ...files]) {
+			const text = readFileSync(file, 'utf8');
+			assert.doesNotMatch(
+				text,
+				/ipcRenderer\.(on|once)\(\s*[^,]+,\s*[\w$]+(\.[\w$]+)+(\.bind\([^)]*\))?\s*[,)]/,
+				`${file} registers an object method as an ipcRenderer listener`,
+			);
+		}
+	});
 });

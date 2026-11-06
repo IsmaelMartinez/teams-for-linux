@@ -191,12 +191,16 @@ When adding or modifying IPC channels, you must:
 **CRITICAL: DO NOT REMOVE** - The `trayIconRenderer` and `mqttStatusMonitor` modules **MUST** be included in the list of modules that receive `ipcRenderer` during initialization in `app/browser/preload.js`.
 
 ```javascript
-// REQUIRED: These modules need ipcRenderer for IPC communication
-const modulesRequiringIpc = ["settings", "theme", "trayIconRenderer", "mqttStatusMonitor"];
-if (modulesRequiringIpc.includes(module.name)) {
+// REQUIRED: modules flagged `ipc: true` receive ipcRenderer during init
+{ name: "trayIconRenderer", path: "./tools/trayIconRenderer", ipc: true },
+{ name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor", ipc: true },
+// ...
+if (module.ipc === true) {
   moduleInstance.init(config, ipcRenderer);
 }
 ```
+
+The flag lives on each entry and the loop is indexed, rather than a Set and `for...of`, because page script shares the preload's JavaScript world and can patch `Set.prototype.has` or the array iterator.
 
 **Why this is critical:**
 - The `trayIconRenderer` module requires `ipcRenderer` to communicate with the main process for tray icon updates

@@ -438,40 +438,43 @@ document.addEventListener('DOMContentLoaded', async (event) => {
     // NOTE: the unread-count event is handled by trayIconRenderer.js; a second
     // listener here previously caused duplicate IPC traffic and rendering.
 
+    // CRITICAL: `ipc: true` modules need ipcRenderer for IPC communication;
+    // trayIconRenderer and mqttStatusMonitor must keep it (see CLAUDE.md, #1902).
     const modules = [
       { name: "zoom", path: "./tools/zoom" },
       { name: "shortcuts", path: "./tools/shortcuts" },
-      { name: "settings", path: "./tools/settings" },
-      { name: "theme", path: "./tools/theme" },
+      { name: "settings", path: "./tools/settings", ipc: true },
+      { name: "theme", path: "./tools/theme", ipc: true },
       { name: "emulatePlatform", path: "./tools/emulatePlatform" },
-      { name: "webauthnOverride", path: "./tools/webauthnOverride" },
+      { name: "webauthnOverride", path: "./tools/webauthnOverride", ipc: true },
       { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
-      { name: "trayIconRenderer", path: "./tools/trayIconRenderer" },
-      { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor" },
-      { name: "meetingStartDetector", path: "./tools/meetingStartDetector" },
+      { name: "trayIconRenderer", path: "./tools/trayIconRenderer", ipc: true },
+      { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor", ipc: true },
+      { name: "meetingStartDetector", path: "./tools/meetingStartDetector", ipc: true },
       { name: "overrideMicConstraints", path: "./tools/overrideMicConstraints" },
       { name: "disableAutogain", path: "./tools/disableAutogain" },
       { name: "ignoreSystemMute", path: "./tools/ignoreSystemMute" },
-      { name: "speakingIndicator", path: "./tools/speakingIndicator" },
+      { name: "speakingIndicator", path: "./tools/speakingIndicator", ipc: true },
       { name: "cameraResolution", path: "./tools/cameraResolution" },
       { name: "cameraAspectRatio", path: "./tools/cameraAspectRatio" },
       { name: "navigationButtons", path: "./tools/navigationButtons" },
       { name: "framelessTweaks", path: "./tools/frameless" },
-      { name: "integratedTitleBar", path: "./tools/integratedTitleBar" },
-      { name: "customStickers", path: "./tools/customStickers" },
-      { name: "dockIconRenderer", path: "./tools/dockIconRenderer" },
+      { name: "integratedTitleBar", path: "./tools/integratedTitleBar", ipc: true },
+      { name: "customStickers", path: "./tools/customStickers", ipc: true },
+      { name: "dockIconRenderer", path: "./tools/dockIconRenderer", ipc: true },
       { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching" },
       { name: "documentPictureInPicture", path: "./tools/documentPictureInPicture" }
     ];
 
-    // CRITICAL: These modules need ipcRenderer for IPC communication (see CLAUDE.md)
-    const modulesRequiringIpc = new Set(["settings", "theme", "trayIconRenderer", "mqttStatusMonitor", "meetingStartDetector", "webauthnOverride", "speakingIndicator", "customStickers", "dockIconRenderer", "integratedTitleBar"]);
-
+    // An indexed loop over own properties, not for...of or Set.has: page script
+    // runs before this event and can patch the shared Array and Set built-ins
+    // to swap entries or flags while ipcRenderer is being handed out.
     let successCount = 0;
-    for (const module of modules) {
+    for (let i = 0; i < modules.length; i++) {
+      const module = modules[i];
       try {
         const moduleInstance = require(module.path);
-        if (modulesRequiringIpc.has(module.name)) {
+        if (module.ipc === true) {
           moduleInstance.init(config, ipcRenderer);
         } else {
           moduleInstance.init(config);

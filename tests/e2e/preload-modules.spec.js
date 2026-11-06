@@ -9,7 +9,7 @@ import {
 // Integration regression check for issue #1902 (CLAUDE.md "Modules
 // Requiring IPC Initialization"). The static guard in
 // `tests/unit/preloadModules.test.js` asserts that `trayIconRenderer`
-// stays in the `modulesRequiringIpc` Set in `app/browser/preload.js`.
+// keeps `ipc: true` in the `modules` list in `app/browser/preload.js`.
 // This test exercises the runtime consequence end-to-end: if the module
 // is not initialised with `ipcRenderer`, `this.ipcRenderer` is undefined
 // and the `unread-count` event handler throws before any IPC is sent.
@@ -76,8 +76,8 @@ test('preload passes ipcRenderer to trayIconRenderer (regression #1902)', async 
     expect(
       first.index,
       'trayIconRenderer should send a `tray-update` IPC when `unread-count` fires. ' +
-        'If this fails, check that `modulesRequiringIpc` in `app/browser/preload.js` ' +
-        'still includes "trayIconRenderer" (CLAUDE.md / issue #1902).'
+        'If this fails, check that "trayIconRenderer" still has `ipc: true` in the ' +
+        '`modules` list in `app/browser/preload.js` (CLAUDE.md / issue #1902).'
     ).toBeGreaterThanOrEqual(0);
     expect(first.captured[first.index]).toMatchObject({ count: 2 });
 
