@@ -39,6 +39,15 @@ describe('preload.js modules passing ipcRenderer', () => {
 		});
 	}
 
+	it('sets ipc on every entry, so none falls through to Object.prototype', () => {
+		const list = source.slice(source.indexOf('const modules = ['));
+		const entries = list.slice(0, list.indexOf('];')).match(/\{[^}]*\}/g) || [];
+		assert.ok(entries.length > 10, 'could not find the modules list');
+		for (const entry of entries) {
+			assert.match(entry, /ipc:\s*(true|false)\s*\}$/, `${entry} has no own ipc flag`);
+		}
+	});
+
 	it('hands ipcRenderer only to flagged modules, through an indexed loop', () => {
 		assert.match(source, /if \(module\.ipc === true\) \{\s*moduleInstance\.init\(config, ipcRenderer\);/);
 		assert.match(source, /for \(let i = 0; i < modules\.length; i\+\+\)/);

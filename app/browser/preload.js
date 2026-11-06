@@ -440,30 +440,32 @@ document.addEventListener('DOMContentLoaded', async (event) => {
 
     // CRITICAL: `ipc: true` modules need ipcRenderer for IPC communication;
     // trayIconRenderer and mqttStatusMonitor must keep it (see CLAUDE.md, #1902).
+    // Every entry sets `ipc` itself: a missing own property would be read from
+    // Object.prototype, which page script controls.
     const modules = [
-      { name: "zoom", path: "./tools/zoom" },
-      { name: "shortcuts", path: "./tools/shortcuts" },
+      { name: "zoom", path: "./tools/zoom", ipc: false },
+      { name: "shortcuts", path: "./tools/shortcuts", ipc: false },
       { name: "settings", path: "./tools/settings", ipc: true },
       { name: "theme", path: "./tools/theme", ipc: true },
-      { name: "emulatePlatform", path: "./tools/emulatePlatform" },
+      { name: "emulatePlatform", path: "./tools/emulatePlatform", ipc: false },
       { name: "webauthnOverride", path: "./tools/webauthnOverride", ipc: true },
-      { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride" },
+      { name: "timestampCopyOverride", path: "./tools/timestampCopyOverride", ipc: false },
       { name: "trayIconRenderer", path: "./tools/trayIconRenderer", ipc: true },
       { name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor", ipc: true },
       { name: "meetingStartDetector", path: "./tools/meetingStartDetector", ipc: true },
-      { name: "overrideMicConstraints", path: "./tools/overrideMicConstraints" },
-      { name: "disableAutogain", path: "./tools/disableAutogain" },
-      { name: "ignoreSystemMute", path: "./tools/ignoreSystemMute" },
+      { name: "overrideMicConstraints", path: "./tools/overrideMicConstraints", ipc: false },
+      { name: "disableAutogain", path: "./tools/disableAutogain", ipc: false },
+      { name: "ignoreSystemMute", path: "./tools/ignoreSystemMute", ipc: false },
       { name: "speakingIndicator", path: "./tools/speakingIndicator", ipc: true },
-      { name: "cameraResolution", path: "./tools/cameraResolution" },
-      { name: "cameraAspectRatio", path: "./tools/cameraAspectRatio" },
-      { name: "navigationButtons", path: "./tools/navigationButtons" },
-      { name: "framelessTweaks", path: "./tools/frameless" },
+      { name: "cameraResolution", path: "./tools/cameraResolution", ipc: false },
+      { name: "cameraAspectRatio", path: "./tools/cameraAspectRatio", ipc: false },
+      { name: "navigationButtons", path: "./tools/navigationButtons", ipc: false },
+      { name: "framelessTweaks", path: "./tools/frameless", ipc: false },
       { name: "integratedTitleBar", path: "./tools/integratedTitleBar", ipc: true },
       { name: "customStickers", path: "./tools/customStickers", ipc: true },
       { name: "dockIconRenderer", path: "./tools/dockIconRenderer", ipc: true },
-      { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching" },
-      { name: "documentPictureInPicture", path: "./tools/documentPictureInPicture" }
+      { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching", ipc: false },
+      { name: "documentPictureInPicture", path: "./tools/documentPictureInPicture", ipc: false }
     ];
 
     // An indexed loop over own properties, not for...of or Set.has: page script
