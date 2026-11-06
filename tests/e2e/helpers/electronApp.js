@@ -191,16 +191,25 @@ export async function getContentViewChildBounds(electronApp) {
  */
 export async function invokeHandler(electronApp, channel, args = []) {
   return await electronApp.evaluate(
-    ({ ipcMain }, { channel, args }) => {
+    ({ ipcMain }, { channel, args, senderUrl }) => {
       const handler = ipcMain._invokeHandlers?.get?.(channel);
       if (!handler) return { error: `${channel} handler missing` };
-      return Promise.resolve(handler({}, ...args)).then((result) => ({
+      return Promise.resolve(
+        handler({ senderFrame: { url: senderUrl } }, ...args)
+      ).then((result) => ({
         result,
       }));
     },
-    { channel, args }
+    { channel, args, senderUrl: APP_PAGE_URL }
   );
 }
+
+// Pinned channels (profile-*, Graph) accept only the app's own pages, so a
+// direct handler call poses as the profile switcher pill, their real caller.
+export const APP_PAGE_URL = new URL(
+  '../../../app/profileSwitcher/switcher.html',
+  import.meta.url
+).href;
 
 /**
  * Best-effort shutdown of the electronApp + temp userData dir. Mirrors

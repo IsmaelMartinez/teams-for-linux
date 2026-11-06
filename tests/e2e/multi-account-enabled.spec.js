@@ -7,6 +7,7 @@ import {
   getEventHandlerCounts,
   getContentViewChildBounds,
   invokeHandler,
+  APP_PAGE_URL,
   closeAndCleanup,
   PROFILE_IPC_CHANNELS,
   SWITCHER_EVENT_CHANNELS,
@@ -49,14 +50,9 @@ test('multi-account enabled, no profiles yet = same redirect to Microsoft login'
 
     // With no prior cookies on persist:teams-4-linux, the bootstrap
     // heuristic should skip — `app.profiles` stays empty.
-    const profiles = await ctx.electronApp.evaluate(({ ipcMain }) => {
-      const map = ipcMain._invokeHandlers;
-      const handler = map?.get?.('profile-list');
-      if (!handler) return { error: 'profile-list handler missing' };
-      return handler({}, []).then((list) => ({ list }));
-    });
-    expect(profiles).toHaveProperty('list');
-    expect(profiles.list).toEqual([]);
+    const profiles = await invokeHandler(ctx.electronApp, 'profile-list');
+    expect(profiles).toHaveProperty('result');
+    expect(profiles.result).toEqual([]);
 
     // Phase 1c.2: the switcher pill is created when the flag is on. Its
     // open-add / open-manage listeners and the set-expanded invoke handler
@@ -135,13 +131,18 @@ test('pinning caps at 5 and maps Ctrl+Alt accelerators onto pinned profiles', as
     // slot mapping itself is covered by tests/unit/profilesMenu.test.js —
     // the menu here is set per-window via window.setMenu, which
     // Menu.getApplicationMenu cannot introspect on Linux.)
-    const sixth = await ctx.electronApp.evaluate(({ ipcMain }, id) => {
-      const handler = ipcMain._invokeHandlers?.get?.('profile-update');
-      if (!handler) return { error: 'profile-update handler missing' };
-      return Promise.resolve(handler({}, id, { pinned: true }))
-        .then((result) => ({ result }))
-        .catch((error) => ({ rejected: error.message }));
-    }, ids[5]);
+    const sixth = await ctx.electronApp.evaluate(
+      ({ ipcMain }, { id, senderUrl }) => {
+        const handler = ipcMain._invokeHandlers?.get?.('profile-update');
+        if (!handler) return { error: 'profile-update handler missing' };
+        return Promise.resolve(
+          handler({ senderFrame: { url: senderUrl } }, id, { pinned: true })
+        )
+          .then((result) => ({ result }))
+          .catch((error) => ({ rejected: error.message }));
+      },
+      { id: ids[5], senderUrl: APP_PAGE_URL }
+    );
     expect(sixth).toHaveProperty('rejected');
     expect(sixth.rejected).toMatch(/at most 5/i);
 
