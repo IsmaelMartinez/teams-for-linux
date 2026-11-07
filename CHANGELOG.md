@@ -38,6 +38,10 @@
 * **deps:** bump joi from 17.13.8 to 17.13.9 in /docs-site ([#3179](https://github.com/IsmaelMartinez/teams-for-linux/issues/3179)) ([4e89226](https://github.com/IsmaelMartinez/teams-for-linux/commit/4e8922644976f5857b5323f54a0ed4dd0266e0cc))
 * **deps:** bump qs from 6.16.0 to 6.17.1 in /docs-site ([#3157](https://github.com/IsmaelMartinez/teams-for-linux/issues/3157)) ([a763e38](https://github.com/IsmaelMartinez/teams-for-linux/commit/a763e38cb4f6701d57d1b6755979ef86b0289283))
 
+### Thanks
+
+Big thanks to @app/dependabot, @Atem18, @dssouza-ti, @nikolainyegaard for contributing to this release.
+
 ## [2.29.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.28.0...v2.29.0) (2026-10-30)
 
 
