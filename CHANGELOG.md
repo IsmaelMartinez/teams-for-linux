@@ -40,7 +40,7 @@
 
 ### Thanks
 
-Big thanks to @app/dependabot, @Atem18, @dssouza-ti, @nikolainyegaard for contributing to this release.
+Big thanks to @app/dependabot, @Atem18, @dssouza-ti, @nikolainyegaard, @siw0o0 for contributing to this release.
 
 ## [2.29.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.28.0...v2.29.0) (2026-10-30)
 
