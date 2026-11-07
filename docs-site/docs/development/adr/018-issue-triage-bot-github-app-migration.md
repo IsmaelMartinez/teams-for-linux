@@ -6,7 +6,9 @@ id: 018-issue-triage-bot-github-app-migration
 
 ## Status
 
-Implemented
+⛔ Superseded
+
+**Superseded by**: retirement of the service on 2026-11-07 ([github-issue-triage-bot ADR-009](https://github.com/IsmaelMartinez/github-issue-triage-bot/blob/main/docs/decisions/009-retire-the-service.md)). The GitHub App is uninstalled, the repository is archived, and issue-history lookups are now done by the maintainer's review skill using `.github/hats.md`.
 
 ## Context
 
