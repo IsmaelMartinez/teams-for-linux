@@ -16,9 +16,10 @@ The optional control service exposes a deliberately small set of named Teams act
 | `AcceptAudio`, `AcceptVideo`, `DeclineCall` | `() -> b` | Dispatch the corresponding action for the known incoming call |
 | `ToggleMute`, `ToggleVideo`, `ToggleHandRaise`, `LeaveCall` | `() -> b` | Use the application's fixed Teams shortcut mapping |
 | `Mute`, `Unmute` | `(b force) -> b` | Set desired mute state; already-desired state returns false. Unknown state requires `force=true`; argument must be Boolean. |
+| `SetStatus` | `(s status) -> b` | Set the selected profile's Teams status. Accepted values are `available`, `busy`, `do_not_disturb`, `away`, `be_right_back`, and `offline`. |
 | `GetState` | `() -> s` | Current JSON state snapshot |
 
-`true` means dispatch, not acknowledgement from Teams. Incoming-call actions target the latest ringing renderer; shortcuts target the selected profile and fail closed if its renderer is unavailable. There is intentionally no arbitrary shortcut method or calendar/Graph API in this first version. Thus only named commands can request fixed actions.
+`true` means dispatch, not acknowledgement from Teams. Incoming-call actions target the latest ringing renderer; shortcuts and `SetStatus` target the selected profile and fail closed if its renderer is unavailable. `SetStatus` obtains an in-memory token for Teams' own presence service in the selected renderer, then uses its `forceavailability` endpoint; the token is never returned by D-Bus or persisted by Teams for Linux. That endpoint is undocumented and not part of Microsoft Graph: the current Teams web client still uses it, but it is region-routed and Microsoft may change or restrict it without notice. There is intentionally no arbitrary shortcut method or calendar/Graph API in this first version. Thus only named commands can request fixed actions.
 
 ## Signals and state
 
@@ -40,6 +41,7 @@ busctl --user introspect "$BUS" "$OBJ_PATH" "$IFACE"
 busctl --user call "$BUS" "$OBJ_PATH" "$IFACE" GetState
 busctl --user call "$BUS" "$OBJ_PATH" "$IFACE" AcceptAudio
 busctl --user call "$BUS" "$OBJ_PATH" "$IFACE" ToggleMute
+busctl --user call "$BUS" "$OBJ_PATH" "$IFACE" SetStatus s busy
 busctl --user call "$BUS" "$OBJ_PATH" "$IFACE" Mute b false
 busctl --user call "$BUS" "$OBJ_PATH" "$IFACE" Unmute b false
 busctl --user monitor "$BUS"

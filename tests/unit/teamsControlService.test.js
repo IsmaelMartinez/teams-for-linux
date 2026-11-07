@@ -16,13 +16,18 @@ function fixture(state = {}) {
 		microphoneControlState: 'unknown', screenSharing: false, meetingStarted: false, ...snapshot,
 	});
 	const keyEvents = [];
-	const contents = { isDestroyed: () => false, sendInputEvent: (event) => keyEvents.push(event) };
+	const scripts = [];
+	const contents = {
+		isDestroyed: () => false,
+		sendInputEvent: (event) => keyEvents.push(event),
+		executeJavaScript: (script) => { scripts.push(script); return Promise.resolve(true); },
+	};
 	const control = new TeamsControlService({
 		getShortcutWebContents: () => contents,
 		performIncomingCallAction: () => true,
 		stateService,
 	});
-	return { control, keyEvents, stateService };
+	return { control, keyEvents, scripts, stateService };
 }
 
 describe('TeamsControlService transport-neutral controls', () => {
@@ -116,6 +121,39 @@ describe('TeamsControlService transport-neutral controls', () => {
 		const { control, keyEvents } = fixture({ microphoneControlState: 'unknown' });
 		assert.equal(control.mute('true'), false, 'force accepts booleans only');
 		assert.equal(keyEvents.length, 0);
+	});
+
+	it('sets a validated status through Teams\' authenticated presence endpoint', async () => {
+		const { control, scripts } = fixture();
+		assert.equal(control.setStatus('busy'), true);
+		assert.equal(scripts.length, 1);
+		assert.match(scripts[0], /acquireToken\("https:\/\/presence\.teams\.microsoft\.com"\)/);
+		assert.match(scripts[0], /https:\/\/presence\.teams\.microsoft\.com\/v1\/me\/forceavailability\//);
+		assert.match(scripts[0], /method: "PUT"/);
+		assert.match(scripts[0], /body: JSON\.stringify\(\{"availability":"Busy"\}\)/);
+		assert.match(scripts[0], /Authorization: "Bearer " \+ tokenResult\.token/);
+		for (const invalid of [undefined, null, '', 'Busy', 'in_a_call', 'anything']) {
+			assert.equal(control.setStatus(invalid), false);
+		}
+		assert.equal(scripts.length, 1, 'invalid status does not execute renderer code');
+	});
+
+	it('includes the required OffWork activity when setting offline', () => {
+		const { control, scripts } = fixture();
+		assert.equal(control.setStatus('offline'), true);
+		assert.equal(scripts.length, 1);
+		assert.match(scripts[0], /body: JSON\.stringify\(\{"availability":"Offline","activity":"OffWork"\}\)/);
+	});
+
+	it('does not set status when the renderer cannot execute JavaScript', () => {
+		const { control } = fixture();
+		control.getShortcutWebContents = () => ({ isDestroyed: () => false });
+		assert.equal(control.setStatus('available'), false);
+		control.getShortcutWebContents = () => ({
+			isDestroyed: () => false,
+			executeJavaScript() { throw Error('renderer unavailable'); },
+		});
+		assert.equal(control.setStatus('available'), false);
 	});
 
 });
