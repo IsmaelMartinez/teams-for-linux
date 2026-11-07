@@ -285,7 +285,6 @@ When a PR has review comments, address them proactively:
 - **Quick Reference Guide**: `docs-site/docs/quick-reference.md` - Fast access to commands, configs, and troubleshooting
 - **Module Index**: `docs-site/docs/development/module-index.md` - Complete catalog of all application modules
 - **ADR Index**: `docs-site/docs/development/adr/README.md` - Architecture decision records and rationale
-- **Research Index**: `docs-site/docs/development/research/README.md` - Feature research and investigations
 - **Full Contributing Guide**: `docs-site/docs/development/contributing.md`
 - **Release Process**: `docs-site/docs/development/manual-release-process.md` - Release workflow using release-please
 - **Configuration Reference**: `docs-site/docs/configuration.md`
@@ -297,7 +296,6 @@ When a PR has review comments, address them proactively:
 - https://ismaelmartinez.github.io/teams-for-linux/quick-reference
 - https://ismaelmartinez.github.io/teams-for-linux/development/module-index
 - https://ismaelmartinez.github.io/teams-for-linux/development/adr/
-- https://ismaelmartinez.github.io/teams-for-linux/development/research/
 - https://ismaelmartinez.github.io/teams-for-linux/development/contributing
 - https://ismaelmartinez.github.io/teams-for-linux/configuration
 - https://ismaelmartinez.github.io/teams-for-linux/troubleshooting

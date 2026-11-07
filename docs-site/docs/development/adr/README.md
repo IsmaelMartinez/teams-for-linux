@@ -2,7 +2,7 @@
 title: "Architecture Decision Records"
 sidebar_position: 1
 type: reference
-last_updated: 2026-10-22
+last_updated: 2026-11-07
 tags: [adr, architecture, decisions]
 ---
 
@@ -54,7 +54,9 @@ Architecture Decision Records capture important architectural decisions along wi
 | [030](030-graph-api-teams-session-token.md) | Graph API Access via the Teams Session Token | ✅ Implemented | 2025-11-21 | v2.6.17 |
 | [031](031-ozone-platform-x11-default.md) | Keep the `--ozone-platform=x11` Default on Wayland | 🔄 Superseded by 034 except snap | 2026-09-05 | N/A |
 | [032](032-secondary-window-for-calls.md) | Opt-in Secondary Window for the Same Account During Calls | 🚧 Proposed | 2026-09-18 | N/A |
-| [034](034-native-wayland-default.md) | Native Wayland by Default on deb, rpm and integrated AppImage | 🚧 Proposed | 2026-10-22 | N/A |
+| [033](033-dbus-control-api.md) | Opt-in D-Bus Control API for Teams Actions and State | ✅ Implemented | 2026-10-06 | v2.25.0+ |
+| [034](034-native-wayland-default.md) | Native Wayland by Default on deb, rpm and integrated AppImage | ✅ Accepted | 2026-10-22 | next release after v2.30.0 |
+| [035](035-renderer-trust-boundary.md) | Renderer Trust Boundary with Context Isolation Disabled | ✅ Implemented | 2026-11-07 | v2.24.0, v2.30.0 |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -77,6 +79,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [024](024-smartcard-pkcs11-pin-dialog.md) | Smartcard PKCS#11 PIN Dialog | PIN collected in a hardened main-process window, never injected into the Teams page |
 | [028](028-third-party-idp-otc-prefill.md) | One-Time-Code Pre-fill on Third-Party IdPs | Rejected DOM-based OTC pre-fill for Okta and similar; Electron cannot host a password-manager extension, so contract-backed factors are the answer |
 | [030](030-graph-api-teams-session-token.md) | Graph API Access via the Teams Session Token | Reuse the Teams web app's own Graph token for API access instead of registering a separate Azure AD application |
+| [035](035-renderer-trust-boundary.md) | Renderer Trust Boundary with Context Isolation Disabled | Treat the Teams window's JavaScript world as page-controlled: `ipcRenderer` stays in preload closures, the main process pins privileged channels to the sender frame, the renderer config carries no credentials, and session permission handlers grant devices only to trusted requesters |
 
 **Key Outcomes:**
 - Eliminated daily re-authentication issues
@@ -86,6 +89,7 @@ Architecture Decision Records capture important architectural decisions along wi
 - Support for Microsoft Identity Broker versions ≤ 2.0.1 and > 2.0.1
 - PII sanitization with zero dependencies, UUIDs correlatable for debugging
 - Graph API token reuse needs no app registration or admin consent, but caps scopes at what Teams web already holds (`/me/presence` returns 403)
+- Three 2026 advisories (GHSA-3vg9, GHSA-6xpg, GHSA-58j7) closed by moving trust out of the shared renderer world; a navigation lock in front of the preload is the remaining follow-up
 
 ### Screen Sharing
 
@@ -108,9 +112,9 @@ Architecture Decision Records capture important architectural decisions along wi
 | [034](034-native-wayland-default.md) | Native Wayland by Default on deb, rpm and integrated AppImage | Drop the packaged `--ozone-platform=x11` on deb, rpm and AppImage on the Electron 44 baseline; snap keeps it. Answers ADR-031's reopen triggers and names the GNOME multi-monitor case as the open risk |
 
 **Key Outcomes:**
-- Predictable default rendering path across deb, rpm, AppImage, tar.gz and snap
+- deb, rpm and integrated AppImage follow the session backend from the release after v2.30.0, like Flatpak and tar.gz; the snap keeps `--ozone-platform=x11`
 - `electronCLIFlags` cannot override the flag; only a genuine command-line or `.desktop` override can
-- Reopen triggers tied to a working snap core24 migration, a verified Electron/Chromium fix, and ADR-016 matrix validation
+- ADR-016 matrix passed on the shipped AppImage; the GNOME two-monitor case and Enterprise Linux 8 are the pre-release's remaining checks
 
 ### Testing & Quality
 
@@ -188,12 +192,13 @@ Architecture Decision Records capture important architectural decisions along wi
 |-----|-------|---------|
 | [006](006-cli-argument-parsing-library.md) | CLI Argument Parsing Library | Keep yargs for config parsing, use MQTT for action commands instead of CLI subcommands |
 | [007](007-embedded-mqtt-broker.md) | Embedded MQTT Broker | Rejected bundling Aedes broker - users still need client tools, better alternatives exist |
+| [033](033-dbus-control-api.md) | Opt-in D-Bus Control API | Fixed named Teams actions and observed state on the Linux user session bus, behind `dbusControl.enabled`, through a transport-neutral control service; MQTT stays independent |
 
 **Key Outcomes:**
 - Avoid fragile CLI argument bypass layer
 - MQTT commands provide clean architecture for external triggers
 - Users provide own MQTT broker (localhost or Home Assistant)
-- Consider HTTP server for zero-dependency alternative (future)
+- Same-machine integrations (Stream Deck, headset bridges, busy lights) use the D-Bus API with no broker; the HTTP server idea from ADR-007 was not needed
 
 ### UI Features
 
@@ -387,20 +392,23 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 31
-- **Implemented**: 18
+- **Total ADRs**: 34
+- **Implemented**: 20
 - **Accepted**: 4
 - **Proposed**: 1
 - **Rejected**: 4
-- **Superseded**: 4
-- **Average length**: ~1050 words
+- **Superseded**: 5
+- **Average length**: ~1200 words
 - **Topics covered**: 11 (Authentication & Security, Screen Sharing, Linux Desktop & Display Server, Testing & Quality, Performance, Documentation & Standards, Release Process & Automation, Community & Metrics, MQTT & Integration, UI Features, Distribution & Packaging)
+
+## Research Notes
+
+Active investigations live in `docs-site/docs/development/research/` while they are open, as plain markdown with a date, scope and recommendation. Once the question is decided, whether the feature shipped, was rejected or is parked, the decision moves into an ADR (new or updated) and the research document is deleted; the ADR's Related section names the deleted file so `git log --all -- <path>` recovers the full investigation. The directory does not exist while nothing is open, which has been the case since 2026-09; recreate it for the next spike.
 
 ## Related Documentation
 
 - **Contributing Guide**: [Development Guidelines](../contributing.md)
 - **Module Documentation**: [Module Index](../module-index.md)
-- **Research Documents**: [Research Index](../research/README.md)
 - **Development Roadmap**: [Future Plans](../plan/roadmap.md)
 - **Configuration Reference**: [Configuration Options](../../configuration.md)
 

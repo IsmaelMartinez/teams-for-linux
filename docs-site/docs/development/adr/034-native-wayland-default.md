@@ -6,7 +6,9 @@ id: 034-native-wayland-default
 
 ## Status
 
-🚧 Proposed (2026-10-22)
+✅ Accepted (2026-11-07)
+
+Merged in [PR #3129](https://github.com/IsmaelMartinez/teams-for-linux/pull/3129) on 2026-11-07, right after v2.30.0 was cut, so it ships in the next release and gets a pre-release cycle of its own. Of the acceptance evidence named below, the nine-configuration matrix passed against the PR's own AppImage and a KDE Plasma 6.7.5 two-monitor check saw no shrink; the GNOME two-monitor check and the Enterprise Linux 8 case are what the pre-release has to confirm before this moves to Implemented. Rollback is the one-line restore of the `executableArgs` block.
 
 Supersedes [ADR-031](031-ozone-platform-x11-default.md) for the deb, rpm and AppImage targets. ADR-031 stays in force for snap. "AppImage" here means an integrated AppImage, one registered by AppImageLauncher or appimaged, whose launcher is the embedded `.desktop` entry; an AppImage run directly goes through `AppRun`, which never carried the flag, so it has been native Wayland on a Wayland session all along.
 

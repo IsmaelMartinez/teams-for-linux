@@ -30,7 +30,7 @@ As a compensating control for disabled `contextIsolation` and `sandbox` features
 
 Unauthorized IPC channels will be blocked and logged. If you encounter "Unauthorized IPC channel" errors, verify the channel name is in the official allowlist.
 
-For more information, see the [IPC Channel Validation documentation](./security-architecture.md#ipc-channel-validation).
+For more information, see the [IPC Channel Validation documentation](./security-architecture.md#2-ipc-channel-validation).
 
 ## Usage from Renderer Process
 

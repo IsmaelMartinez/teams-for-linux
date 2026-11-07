@@ -94,3 +94,4 @@ Teams for Linux uses `yargs` for CLI argument parsing. We evaluated whether to:
 
 - [yargs Documentation](https://yargs.js.org/)
 - [commander.js Documentation](https://github.com/tj/commander.js)
+- [ADR-033](033-dbus-control-api.md): the local, broker-free action path that landed in 2026 as an opt-in D-Bus interface

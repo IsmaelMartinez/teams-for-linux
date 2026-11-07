@@ -78,7 +78,9 @@ Supporting infrastructure, utilities, and cross-cutting concerns.
 | **Config** | `app/config/` | Configuration file loading and parsing | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/config/README.md) |
 | **Connection Manager** | `app/connectionManager/` | Network connectivity and connection state | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/connectionManager/README.md) |
 | **Partitions** | `app/partitions/` | Electron partition management for sessions | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/partitions/README.md) |
-| **Security** | `app/security/` | Security controls and validation | No README yet |
+| **Security** | `app/security/` | IPC allowlist and sender pinning, webview guard, session permission policy ([ADR-035](adr/035-renderer-trust-boundary.md)) | [Security Architecture](security-architecture.md) |
+| **Control** | `app/control/` | Transport-neutral named Teams actions and observed state for optional adapters ([ADR-033](adr/033-dbus-control-api.md)) | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/control/README.md) |
+| **D-Bus** | `app/dbus/` | Opt-in Linux session-bus adapter for the control service | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/dbus/README.md), [D-Bus control guide](dbus-control.md) |
 | **Certificate** | `app/certificate/` | Custom certificate handling | [User Guide](../certificate.md) |
 
 ## UI Components
