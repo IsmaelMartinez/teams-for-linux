@@ -40,7 +40,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [015](015-quick-chat-inline-messaging.md) | Quick Chat Inline Messaging | ✅ Implemented | 2026-02-04 | N/A |
 | [016](016-cross-distro-testing-environment.md) | Cross-Distro Testing Environment | ✅ Implemented | 2026-02-25 | v2.7.9 |
 | [017](017-workflow-run-pr-comments.md) | Use workflow_run for PR Artifact Comments | ✅ Implemented | 2026-02-26 | N/A |
-| [018](018-issue-triage-bot-github-app-migration.md) | Issue Triage Bot GitHub App Migration | ✅ Implemented | 2026-03-06 | N/A |
+| [018](018-issue-triage-bot-github-app-migration.md) | Issue Triage Bot GitHub App Migration | 🔄 Superseded (service retired 2026-11-07) | 2026-03-06 | N/A |
 | [019](019-repo-activity-dashboard.md) | Repository Activity Dashboard | ✅ Implemented | 2026-03-11 | N/A |
 | [020](020-multi-account-profile-switcher.md) | Multi-Account Profile Switcher | ✅ Implemented | 2026-04-16 | v2.9.0+ |
 | [021](021-webauthn-fido2-linux.md) | WebAuthn / FIDO2 Hardware Security Keys on Linux | ✅ Implemented | 2026-04-21 | v2.10.0 |
@@ -167,7 +167,7 @@ Architecture Decision Records capture important architectural decisions along wi
 - Quality score: 9.0/10 on validation testing
 - Zero cost (uses Gemini API free tier)
 - Fork PRs receive artifact download comments without 403 permission errors
-- Issue triage bot runs as a standalone GitHub App with one-click installation and no in-repo workflow files
+- Issue triage bot ran as a standalone GitHub App with no in-repo workflow files until it was retired on 2026-11-07
 
 ### Community & Metrics
 

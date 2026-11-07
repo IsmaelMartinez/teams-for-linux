@@ -72,7 +72,7 @@ Phase 2 work depending on a user trigger.
 
 ## Infrastructure
 
-- **Bot Automation**: issue triage is a standalone Go service ([github-issue-triage-bot](https://github.com/IsmaelMartinez/github-issue-triage-bot), [ADR-018](../adr/018-issue-triage-bot-github-app-migration.md)).
+- **Bot Automation**: the standalone issue triage bot was retired on 2026-11-07 ([ADR-018](../adr/018-issue-triage-bot-github-app-migration.md)); triage is done by the maintainer with a review skill that uses `.github/hats.md`.
 - **Cross-Distro Testing**: 9 configurations on Docker, all passing ([ADR-016](../adr/016-cross-distro-testing-environment.md)).
 - **Release Automation**: managed by [release-please](https://github.com/googleapis/release-please); merge the auto-generated Release PR to trigger a release.
 - **Repo Health**: [repo-butler](https://github.com/IsmaelMartinez/repo-butler) generates a daily dashboard at [the portfolio page](https://ismaelmartinez.github.io/repo-butler/teams-for-linux.html).
