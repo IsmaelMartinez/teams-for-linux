@@ -1,5 +1,47 @@
 # Changelog
 
+## [2.30.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.29.0...v2.30.0) (2026-11-07)
+
+
+### Features
+
+* copy a chosen app icon into the user icon theme ([#3031](https://github.com/IsmaelMartinez/teams-for-linux/issues/3031)) ([f67da45](https://github.com/IsmaelMartinez/teams-for-linux/commit/f67da4557c54702d2e66bb6a2fc595a270cc9026))
+* **window:** add an integrated title bar with client-side decorations ([#3174](https://github.com/IsmaelMartinez/teams-for-linux/issues/3174)) ([bef9b88](https://github.com/IsmaelMartinez/teams-for-linux/commit/bef9b88bbe6d5343d49f37200debf965a2075042))
+
+
+### Bug Fixes
+
+* **appimage:** switch to the static AppImage runtime so libfuse2 is no longer required ([#3176](https://github.com/IsmaelMartinez/teams-for-linux/issues/3176)) ([91db9b4](https://github.com/IsmaelMartinez/teams-for-linux/commit/91db9b4ee07143dee7e088d7a45f316e6448b1d3))
+* **auth:** load teams again when sign-out lands on microsoft's signed-out page ([#3169](https://github.com/IsmaelMartinez/teams-for-linux/issues/3169)) ([188dd7f](https://github.com/IsmaelMartinez/teams-for-linux/commit/188dd7fc02c38b3814da43471a07b16130c7b9b6))
+* **protocol:** handle web+msteams links from the Teams launcher ([#3162](https://github.com/IsmaelMartinez/teams-for-linux/issues/3162)) ([a85cef4](https://github.com/IsmaelMartinez/teams-for-linux/commit/a85cef4cae29675f2a41922f544bd2a4d1c3ee23))
+* **security:** grant device permissions only to Teams, sign-in and app pages ([#3185](https://github.com/IsmaelMartinez/teams-for-linux/issues/3185)) ([14ffd51](https://github.com/IsmaelMartinez/teams-for-linux/commit/14ffd51744bdcde4bf76a9dcff219ff2692b59a3))
+* **security:** harden the preload IPC surface and keep credentials out of the renderer ([#3184](https://github.com/IsmaelMartinez/teams-for-linux/issues/3184)) ([cb1b026](https://github.com/IsmaelMartinez/teams-for-linux/commit/cb1b02687c114100af396c53f8f224515977eb7f))
+* **webauthn:** wait for a security key instead of failing when none is plugged in ([#3168](https://github.com/IsmaelMartinez/teams-for-linux/issues/3168)) ([1266c3e](https://github.com/IsmaelMartinez/teams-for-linux/commit/1266c3e155d3cb8dd7c99ff073e1f05bc0dd5d38))
+
+
+### Documentation
+
+* **appimage:** note that libfuse2 is no longer required from 2.30.0 ([#3186](https://github.com/IsmaelMartinez/teams-for-linux/issues/3186)) ([838a12b](https://github.com/IsmaelMartinez/teams-for-linux/commit/838a12bfd524fbfc656599b50e99c567c9c46c5d))
+
+
+### Maintenance
+
+* **deps-dev:** bump eslint ([#3170](https://github.com/IsmaelMartinez/teams-for-linux/issues/3170)) ([a1d9a61](https://github.com/IsmaelMartinez/teams-for-linux/commit/a1d9a6196c45cc39ca6f48d90f62008f940dc553))
+* **deps-dev:** bump follow-redirects from 1.16.1 to 1.16.2 ([#3159](https://github.com/IsmaelMartinez/teams-for-linux/issues/3159)) ([c10b384](https://github.com/IsmaelMartinez/teams-for-linux/commit/c10b3844f7939949f67dc04550131c8de2f363c9))
+* **deps-dev:** bump qs from 6.16.0 to 6.17.1 ([#3156](https://github.com/IsmaelMartinez/teams-for-linux/issues/3156)) ([987516b](https://github.com/IsmaelMartinez/teams-for-linux/commit/987516b74852e2cf6dc8efbdc595d0fdc99c84f0))
+* **deps:** bump actions/setup-node from 7.0.0 to 7.1.0 ([#3163](https://github.com/IsmaelMartinez/teams-for-linux/issues/3163)) ([f2cfb01](https://github.com/IsmaelMartinez/teams-for-linux/commit/f2cfb01d31091b4b7938a993605ab6d7f6d3477c))
+* **deps:** bump actions/upload-artifact from 7.0.1 to 7.0.2 ([#3166](https://github.com/IsmaelMartinez/teams-for-linux/issues/3166)) ([d0d0fce](https://github.com/IsmaelMartinez/teams-for-linux/commit/d0d0fce6e28e42568589dee4299ef00481027466))
+* **deps:** bump canonical/setup-lxd ([#3165](https://github.com/IsmaelMartinez/teams-for-linux/issues/3165)) ([cb3aaec](https://github.com/IsmaelMartinez/teams-for-linux/commit/cb3aaec4283e2da257deb7a59c579e87574140d9))
+* **deps:** bump follow-redirects from 1.16.1 to 1.16.2 in /docs-site ([#3160](https://github.com/IsmaelMartinez/teams-for-linux/issues/3160)) ([fb572a4](https://github.com/IsmaelMartinez/teams-for-linux/commit/fb572a4fbbd0111258910c1b0c6e2032675f1fa4))
+* **deps:** bump github/codeql-action from 4.38.2 to 4.39.1 ([#3167](https://github.com/IsmaelMartinez/teams-for-linux/issues/3167)) ([1c222b1](https://github.com/IsmaelMartinez/teams-for-linux/commit/1c222b1f83e899e01e8828f5463e7741deae9e66))
+* **deps:** bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml ([#3164](https://github.com/IsmaelMartinez/teams-for-linux/issues/3164)) ([a38355d](https://github.com/IsmaelMartinez/teams-for-linux/commit/a38355da1b1f53fb3fb500a419f1c53ec6e49a23))
+* **deps:** bump joi from 17.13.8 to 17.13.9 in /docs-site ([#3179](https://github.com/IsmaelMartinez/teams-for-linux/issues/3179)) ([4e89226](https://github.com/IsmaelMartinez/teams-for-linux/commit/4e8922644976f5857b5323f54a0ed4dd0266e0cc))
+* **deps:** bump qs from 6.16.0 to 6.17.1 in /docs-site ([#3157](https://github.com/IsmaelMartinez/teams-for-linux/issues/3157)) ([a763e38](https://github.com/IsmaelMartinez/teams-for-linux/commit/a763e38cb4f6701d57d1b6755979ef86b0289283))
+
+### Thanks
+
+Big thanks to @app/dependabot, @Atem18, @dssouza-ti, @nikolainyegaard, @siw0o0 for contributing to this release.
+
 ## [2.29.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.28.0...v2.29.0) (2026-10-30)
 
 
