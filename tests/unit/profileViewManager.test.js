@@ -22,7 +22,16 @@ let ipcHandlers; // channel → ipcMain.handle handler
 class FakeWebContents {
   constructor() {
     this.id = nextWcId++;
-    this.session = { clearStorageData: async () => {}, cookies: { on() {} } };
+    const cookieListeners = [];
+    this.session = {
+      clearStorageData: async () => {},
+      cookies: {
+        listeners: cookieListeners,
+        on(event, cb) {
+          cookieListeners.push({ event, cb });
+        },
+      },
+    };
     this._once = {};
     this._on = {};
     this._destroyed = false;
@@ -315,6 +324,26 @@ describe('ProfileViewManager sender attribution wiring', () => {
       partitionSessions['persist:teams-profile-a'].clearCalls,
       1
     );
+  });
+
+  // #3183: dispose() runs on every window close, so clearing there signed
+  // every secondary profile out on each restart.
+  it('dispose keeps profile storage; only removing a profile clears it', () => {
+    const { pm, pvm } = build([LEGACY, PROFILE_A, PROFILE_B]);
+    pm.emit('remove', { removedId: 'profile-b', activeId: 'profile-0' });
+    pvm.dispose();
+    assert.strictEqual(partitionSessions['persist:teams-profile-a']?.clearCalls ?? 0, 0);
+    assert.strictEqual(partitionSessions['persist:teams-profile-b'].clearCalls, 1);
+  });
+
+  it('keeps msal.cache.encryption persistent on each profile view session (#3183)', () => {
+    build([LEGACY, PROFILE_A, PROFILE_B]);
+    // createdViews also holds the switcher chrome view, which hosts no account.
+    const counts = createdViews.map(
+      (view) => view.webContents.session.cookies.listeners.filter((l) => l.event === 'changed').length
+    );
+    assert.strictEqual(counts.filter((n) => n === 1).length, 2, 'one listener per profile view');
+    assert.ok(counts.every((n) => n <= 1), 'never wired twice');
   });
 
   it('dispose after a self-destroyed view does not throw and completes cleanup', () => {
