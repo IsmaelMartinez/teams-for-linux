@@ -190,10 +190,11 @@ describe('ConnectionManager did-fail-load retry scheduling', () => {
 	// Drives start() far enough to capture the registered did-fail-load handler.
 	// refresh() is stubbed out because start() kicks one off and the sweep is
 	// covered by the tests above.
-	function managerWithFakeWindow() {
+	function managerWithFakeWindow({ clearError } = {}) {
 		const ConnectionManager = require('../../app/connectionManager');
 		const manager = new ConnectionManager();
 		const listeners = {};
+		const clearCalls = [];
 		const window = {
 			isDestroyed: () => false,
 			setTitle() {},
@@ -201,6 +202,12 @@ describe('ConnectionManager did-fail-load retry scheduling', () => {
 				on(event, fn) { listeners[event] = fn; },
 				removeListener() {},
 				getURL: () => '',
+				session: {
+					async clearStorageData(options) {
+						clearCalls.push(options);
+						if (clearError) throw clearError;
+					},
+				},
 			},
 		};
 		manager.refresh = () => {};
@@ -210,7 +217,7 @@ describe('ConnectionManager did-fail-load retry scheduling', () => {
 		});
 		let scheduled = 0;
 		manager.debouncedRefresh = () => { scheduled += 1; };
-		return { didFailLoad: listeners['did-fail-load'], scheduledCount: () => scheduled };
+		return { didFailLoad: listeners['did-fail-load'], scheduledCount: () => scheduled, clearCalls };
 	}
 
 	// -7 is what a firewall dropping packets for an unallowed domain produces,
@@ -226,6 +233,26 @@ describe('ConnectionManager did-fail-load retry scheduling', () => {
 	it('ignores a non-network failure', () => {
 		const { didFailLoad, scheduledCount } = managerWithFakeWindow();
 		didFailLoad({}, -3, 'ERR_ABORTED', 'https://teams.cloud.microsoft/', true);
+		assert.strictEqual(scheduledCount(), 0);
+	});
+
+	// A broken service worker left in the profile fails every navigation with
+	// ERR_FAILED, so retrying alone never recovers. Clear the workers once,
+	// keeping the rest of the storage that holds the sign-in.
+	it('clears service workers once and retries after a main-frame ERR_FAILED', async () => {
+		const { didFailLoad, scheduledCount, clearCalls } = managerWithFakeWindow();
+		didFailLoad({}, -2, 'ERR_FAILED', 'https://teams.cloud.microsoft/', true);
+		didFailLoad({}, -2, 'ERR_FAILED', 'https://teams.cloud.microsoft/', true);
+		await new Promise(setImmediate);
+		assert.deepStrictEqual(clearCalls, [{ storages: ['serviceworkers'] }]);
+		assert.strictEqual(scheduledCount(), 1);
+	});
+
+	it('does not retry when clearing service workers fails', async () => {
+		const { didFailLoad, scheduledCount, clearCalls } = managerWithFakeWindow({ clearError: new Error('boom') });
+		didFailLoad({}, -2, 'ERR_FAILED', 'https://teams.cloud.microsoft/', true);
+		await new Promise(setImmediate);
+		assert.strictEqual(clearCalls.length, 1);
 		assert.strictEqual(scheduledCount(), 0);
 	});
 
