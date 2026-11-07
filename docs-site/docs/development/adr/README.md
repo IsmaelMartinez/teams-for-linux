@@ -2,7 +2,7 @@
 title: "Architecture Decision Records"
 sidebar_position: 1
 type: reference
-last_updated: 2026-10-22
+last_updated: 2026-11-07
 tags: [adr, architecture, decisions]
 ---
 
@@ -26,7 +26,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [001](001-desktopcapturer-source-id-format.md) | DesktopCapturer Source ID Format | ✅ Implemented | 2025-09-15 | v2.3.0+ |
 | [002](002-token-cache-secure-storage.md) | Token Cache Secure Storage | ✅ Implemented | 2025-09-08 | v2.5.9 |
 | [003](003-token-refresh-implementation.md) | Token Refresh Implementation | ✅ Implemented | 2025-09-22 | v2.6.0 |
-| [004](004-agents-md-standard-investigation.md) | agents.md Standard Investigation | ❌ Rejected | 2025-11-16 | N/A |
+| [004](004-agents-md-standard-investigation.md) | agents.md Standard Investigation | 🔄 Superseded by [036](036-agents-md-adoption.md) | 2025-11-16 | N/A |
 | [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | 🔄 Superseded by [023](023-release-automation-tooling.md) | 2025-11-17 | v2.6.15 |
 | [006](006-cli-argument-parsing-library.md) | CLI Argument Parsing Library | ✅ Implemented | 2025-11-19 | N/A |
 | [007](007-embedded-mqtt-broker.md) | Embedded MQTT Broker | ❌ Rejected | 2025-11-19 | N/A |
@@ -55,6 +55,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [031](031-ozone-platform-x11-default.md) | Keep the `--ozone-platform=x11` Default on Wayland | 🔄 Superseded by 034 except snap | 2026-09-05 | N/A |
 | [032](032-secondary-window-for-calls.md) | Opt-in Secondary Window for the Same Account During Calls | 🚧 Proposed | 2026-09-18 | N/A |
 | [034](034-native-wayland-default.md) | Native Wayland by Default on deb, rpm and integrated AppImage | 🚧 Proposed | 2026-10-22 | N/A |
+| [036](036-agents-md-adoption.md) | Adopt AGENTS.md as the Agent Instruction File | ✅ Accepted | 2026-11-07 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -143,14 +144,15 @@ Architecture Decision Records capture important architectural decisions along wi
 
 | ADR | Title | Summary |
 |-----|-------|---------|
-| [004](004-agents-md-standard-investigation.md) | agents.md Standard Investigation | Investigated and rejected agents.md standard in favor of tool-specific standards (CLAUDE.md, copilot-instructions.md) |
+| [004](004-agents-md-standard-investigation.md) | agents.md Standard Investigation | Investigated and rejected agents.md standard while no tool read it; superseded by ADR-036 |
+| [036](036-agents-md-adoption.md) | Adopt AGENTS.md as the Agent Instruction File | Renamed `CLAUDE.md` to `AGENTS.md` once Claude Code read it natively (v2.1.277+); no stub or symlink, because a `CLAUDE.md` makes Claude Code ignore `AGENTS.md` |
 | [025](025-config-option-naming-convention.md) | Configuration Option Naming Convention | Nesting criteria, positive naming, and the resolved flat-to-nested rename mapping for configuration options |
 | [029](029-config-schema-single-source-of-truth.md) | Configuration Schema as Single Source of Truth | One-schema-three-consumers thesis: `app/config/options.js` feeds the generated docs, the docs explorer, and startup validation |
 
 **Key Outcomes:**
 - Consolidated instruction files (removed 28% duplication)
 - Centralized markdown standards in contributing.md
-- Maintained tool-specific official standards
+- Single vendor-neutral `AGENTS.md` instruction file, owned by ADR-036
 - Configuration option naming convention and rename mapping owned by ADR-025
 - Configuration schema treated as single source of truth for generated docs, the docs explorer, and startup validation, owned by ADR-029
 

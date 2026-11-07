@@ -314,7 +314,7 @@ When creating or updating any markdown documentation in this project (including 
 :::tip Single Source of Truth
 These markdown standards apply to ALL markdown files in the project:
 - Documentation site (`docs-site/docs/`)
-- Root-level documentation (README, CONTRIBUTING, CLAUDE.md)
+- Root-level documentation (README, CONTRIBUTING, AGENTS.md)
 - Module READMEs in `app/` directories
 
 When updating standards, update this section only. All other files should reference these standards.

@@ -439,7 +439,7 @@ document.addEventListener('DOMContentLoaded', async (event) => {
     // listener here previously caused duplicate IPC traffic and rendering.
 
     // CRITICAL: `ipc: true` modules need ipcRenderer for IPC communication;
-    // trayIconRenderer and mqttStatusMonitor must keep it (see CLAUDE.md, #1902).
+    // trayIconRenderer and mqttStatusMonitor must keep it (see AGENTS.md, #1902).
     // Every entry sets `ipc` itself: a missing own property would be read from
     // Object.prototype, which page script controls.
     const modules = [
