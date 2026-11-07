@@ -589,7 +589,7 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
 
 #### Issue: Sharing the whole screen shows black under XWayland, sharing a window works
 
-**Description:** The deb, rpm, AppImage and snap packages launch with `--ozone-platform=x11`, so on a Wayland session they run under XWayland and screen capture goes through the X11 capturer, which only sees X11 windows. Sharing a single window works, but sharing the whole screen shows a black feed. Flatpak and tar.gz builds run as native Wayland and are not affected by this.
+**Description:** The deb, rpm, AppImage and snap packages launch with `--ozone-platform=x11`, so on a Wayland session they run under XWayland and screen capture goes through the X11 capturer, which only sees X11 windows. Sharing a single window works, but sharing the whole screen shows a black feed. Flatpak and tar.gz builds run as native Wayland and are not affected by this. The x64 snap bundles `libpipewire` and captures through PipeWire even under XWayland, so it is not affected either (see the next entry).
 
 **Solutions/Workarounds:**
 
@@ -600,6 +600,27 @@ Teams for Linux currently launches with --ozone-platform=x11 by default on all L
 :::note Important
 The `performance.electronCLIFlags` config option (`config.json`) **cannot** override `--ozone-platform` because the flag must be set before the Electron process starts, and config is loaded after. Use command-line arguments or `.desktop` file edits instead.
 :::
+
+#### Issue: Screen sharing misbehaves on the snap after the bundled PipeWire update
+
+**Description:** On a Wayland session the x64 snap ships its own `libpipewire-0.3` client library, so screen sharing goes through the PipeWire capturer and the xdg-desktop-portal picker instead of the X11 capturer. If sharing crashes, hangs, or fails to start on your host since that update, you can switch the snap back to the previous X11 capture path.
+
+**Solutions/Workarounds:**
+
+1. **Disable the PipeWire capturer** in `~/snap/teams-for-linux/current/.config/teams-for-linux/config.json`, then quit the app from the tray menu and start it again:
+    ```json
+    {
+      "performance": {
+        "electronCLIFlags": [
+          ["disable-features", "HardwareMediaKeyHandling,UsePortalAccentColor,WebRTCPipeWireCapturer"]
+        ]
+      }
+    }
+    ```
+    A `disable-features` value replaces the app's default list instead of adding to it, so keep `HardwareMediaKeyHandling` and `UsePortalAccentColor` in it. Chromium gives `disable-features` precedence over the `WebRTCPipeWireCapturer` entry the app adds to `enable-features`. Sharing then behaves as described in the XWayland entry above: windows share normally and the whole screen shows only X11 content.
+2. **Report the problem** with your distribution, desktop environment, and session type so the bundle can be fixed.
+
+**Related GitHub Issues:** [#3066](https://github.com/IsmaelMartinez/teams-for-linux/issues/3066), [#3180](https://github.com/IsmaelMartinez/teams-for-linux/issues/3180)
 
 ---
 
