@@ -1,14 +1,15 @@
 const { BrowserWindow } = require('electron');
 const path = require('node:path');
 const { moveWindow } = require('../utils/windowPositioner');
+const { resolveToastOptions } = require('./toastOptions');
 
 class NotificationToast {
   #window;
   #autoCloseTimer;
-  #toastDuration;
+  #options;
 
-  constructor(data, toastDuration = 5000) {
-    this.#toastDuration = toastDuration;
+  constructor(data, options = resolveToastOptions()) {
+    this.#options = options;
 
     this.#window = new BrowserWindow({
       alwaysOnTop: true,
@@ -16,8 +17,8 @@ class NotificationToast {
       focusable: false,
       frame: false,
       fullscreenable: false,
-      height: 110,
-      width: 360,
+      height: options.height,
+      width: options.width,
       minimizable: false,
       movable: false,
       resizable: false,
@@ -34,7 +35,7 @@ class NotificationToast {
     this.#window.loadFile(path.join(__dirname, 'notificationToast.html'));
 
     this.#window.webContents.once('did-finish-load', () => {
-      this.#window.webContents.send('notification-toast-init', data);
+      this.#window.webContents.send('notification-toast-init', data, options.style);
     });
 
     this.#window.on('closed', () => {
@@ -51,12 +52,12 @@ class NotificationToast {
       return;
     }
 
-    moveWindow(this.#window, 'bottomRight');
+    moveWindow(this.#window, this.#options.position, this.#options.margin);
     this.#window.show();
 
     this.#autoCloseTimer = setTimeout(() => {
       this.close();
-    }, this.#toastDuration);
+    }, this.#options.toastDuration);
   }
 
   close() {

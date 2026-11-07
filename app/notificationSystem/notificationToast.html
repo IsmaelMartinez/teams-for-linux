@@ -6,6 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notification Toast</title>
     <style>
+        /* Defaults; overridden from customNotification in config (see applyStyle below). */
+        :root {
+            --toast-background: #2D2D2D;
+            --toast-hover-background: #3A3A3A;
+            --toast-title-color: #FFFFFF;
+            --toast-text-color: #D1D1D1;
+            --toast-title-font-size: 14px;
+            --toast-body-font-size: 13px;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -14,8 +24,8 @@
 
         body {
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-            background-color: #2D2D2D;
-            color: #FFFFFF;
+            background-color: var(--toast-background);
+            color: var(--toast-title-color);
             padding: 16px;
             display: flex;
             flex-direction: column;
@@ -31,12 +41,13 @@
         }
 
         body:hover {
-            background-color: #3a3a3a;
+            background-color: var(--toast-hover-background);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
         }
 
         body:active {
-            background-color: #353535;
+            background-color: var(--toast-hover-background);
+            filter: brightness(0.95);
         }
 
         /* Header with title */
@@ -51,9 +62,9 @@
         }
 
         header .title {
-            font-size: 14px;
+            font-size: var(--toast-title-font-size);
             font-weight: 600;
-            color: #FFFFFF;
+            color: var(--toast-title-color);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -68,8 +79,8 @@
         }
 
         main p {
-            font-size: 13px;
-            color: #D1D1D1;
+            font-size: var(--toast-body-font-size);
+            color: var(--toast-text-color);
             line-height: 1.5;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -86,7 +97,8 @@
             align-items: center;
             gap: 6px;
             font-size: 10px;
-            color: #888888;
+            /* Follows the message colour; on the default background this is #888. */
+            color: color-mix(in srgb, var(--toast-text-color) 55%, transparent);
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             padding-top: 8px;
             margin-top: auto;
@@ -122,9 +134,46 @@
     </footer>
 
     <script>
-        globalThis.notificationApi.onNotificationToastInit((data) => {
+        const STYLE_VARS = {
+            backgroundColor: ['--toast-background', 'color'],
+            hoverBackgroundColor: ['--toast-hover-background', 'color'],
+            titleColor: ['--toast-title-color', 'color'],
+            textColor: ['--toast-text-color', 'color'],
+            titleFontSize: ['--toast-title-font-size', 'px'],
+            bodyFontSize: ['--toast-body-font-size', 'px'],
+        };
+
+        // Values come from the user's config. Each one is checked with
+        // CSS.supports and set as a single custom property, so an invalid
+        // value keeps the default instead of breaking the stylesheet.
+        function applyStyle(style) {
+            if (!style || typeof style !== 'object') return;
+            for (const [key, [property, kind]] of Object.entries(STYLE_VARS)) {
+                const raw = style[key];
+                const value = kind === 'px' ? `${Number(raw)}px` : String(raw ?? '');
+                const valid = kind === 'px' ? Number.isFinite(Number(raw)) && Number(raw) > 0 : CSS.supports('color', value);
+                if (raw !== undefined && valid) {
+                    document.documentElement.style.setProperty(property, value);
+                }
+            }
+        }
+
+        // Show as many body lines as fit (at least the original 2), so a
+        // taller toast shows more of the message.
+        function fitBodyLines() {
+            const body = document.getElementById('body');
+            const lineHeight = Number.parseFloat(getComputedStyle(body).lineHeight);
+            const available = document.querySelector('main').clientHeight;
+            if (lineHeight > 0 && available > 0) {
+                body.style.webkitLineClamp = String(Math.max(2, Math.floor(available / lineHeight)));
+            }
+        }
+
+        globalThis.notificationApi.onNotificationToastInit((data, style) => {
+            applyStyle(style);
             document.getElementById('title').innerText = data.title || 'Teams';
             document.getElementById('body').innerText = data.body || '';
+            fitBodyLines();
         });
 
         document.body.addEventListener('click', () => {

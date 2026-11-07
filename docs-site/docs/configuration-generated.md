@@ -62,7 +62,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 | `minimized` | `boolean` | `false` | Start the application minimized **Deprecated:** use window.minimized instead | `restart` |
 | `minimizeOnClose` | `boolean` | `false` | Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when closeAppOnCross is true) **Deprecated:** use window.minimizeOnClose instead | `restart` |
 | `notificationMethod` | `string` | `"web"` | Notification method to be used by the application (web/electron/custom) **Deprecated:** use notifications.method instead | `restart` |
-| `customNotification` | `object` | `{"toastDuration":5000}` | Custom in-app notification system configuration | `restart` |
+| `customNotification` | `object` | `{"toastDuration":5000,"width":360,"height":110,"position":"bottomRight","margin":0,"backgroundColor":"#2D2D2D","hoverBackgroundColor":"#3A3A3A","titleColor":"#FFFFFF","textColor":"#D1D1D1","titleFontSize":14,"bodyFontSize":13}` | Custom in-app notification system configuration | `restart` |
 | `onNewWindowOpenMeetupJoinUrlInApp` | `boolean` | `true` | Open meetupJoinRegEx URLs in the app instead of the default browser **Deprecated:** use urlHandling.openMeetupJoinInApp instead | `restart` |
 | `partition` | `string` | `"persist:teams-4-linux"` | BrowserWindow webpreferences partition **Deprecated:** use app.partition instead | `restart` |
 | `proxyServer` | `string` | `null` | Proxy Server with format address:port **Deprecated:** use network.proxyServer instead | `restart` |
@@ -184,6 +184,16 @@ Object options group several related settings. The tables below list each nested
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `customNotification.toastDuration` | `number` | `5000` | Time in milliseconds before a custom toast notification auto-dismisses. |
+| `customNotification.width` | `number` | `360` | Toast width in pixels (200 to 1000). |
+| `customNotification.height` | `number` | `110` | Toast height in pixels (80 to 600). A taller toast shows more lines of the message. |
+| `customNotification.position` | `string` | `"bottomRight"` | Screen corner the toast appears in. |
+| `customNotification.margin` | `number` | `0` | Gap in pixels between the toast and the screen edges (0 to 500). Raise it if the toast covers a panel or dock. |
+| `customNotification.backgroundColor` | `string` | `"#2D2D2D"` | Toast background, any CSS colour (e.g. "#5B5FC7"). |
+| `customNotification.hoverBackgroundColor` | `string` | `"#3A3A3A"` | Toast background while the pointer is over it, any CSS colour. |
+| `customNotification.titleColor` | `string` | `"#FFFFFF"` | Title text colour, any CSS colour. |
+| `customNotification.textColor` | `string` | `"#D1D1D1"` | Message text colour, any CSS colour. |
+| `customNotification.titleFontSize` | `number` | `14` | Title font size in pixels (8 to 40). |
+| `customNotification.bodyFontSize` | `number` | `13` | Message font size in pixels (8 to 40). |
 
 ### network
 

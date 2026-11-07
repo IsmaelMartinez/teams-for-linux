@@ -287,7 +287,7 @@ missing or show the wrong status.
 | `disableNotificationWindowFlash` | `boolean` | `false` | Deprecated, use `notifications.windowFlash` (inverted) |
 | `notifications.method` | `string` | `"web"` | Notification method. Choices: `web`, `electron`, `custom` |
 | `notificationMethod` | `string` | `"web"` | Deprecated, use `notifications.method` |
-| `customNotification` | `object` | `{ toastDuration: 5000 }` | Configuration for custom in-app toast notifications (used when `notifications.method` is `custom`) |
+| `customNotification` | `object` | `{ toastDuration: 5000, width: 360, height: 110, position: "bottomRight", margin: 0, ... }` | Configuration for custom in-app toast notifications (used when `notifications.method` is `custom`): duration, size, screen corner, margin, colours and font sizes. See [Custom Notifications Setup](#custom-notifications-setup) |
 | `notifications.urgency` | `string` | `"normal"` | Default urgency for new notifications. Choices: `low`, `normal`, `critical` |
 | `defaultNotificationUrgency` | `string` | `"normal"` | Deprecated, use `notifications.urgency` |
 | `notifications.timeoutType` | `string` | `"default"` | How long notifications stay in the system notification center (Linux/Windows only). Choices: `default` (auto-clear per system policy) or `never` (persist until the user dismisses, useful on GNOME and other desktops that auto-remove notifications). Mirrors Electron's Notification `timeoutType`. May not be honoured by every notification daemon. |
@@ -1108,16 +1108,42 @@ When enabled, this flag:
 }
 ```
 
+A larger, Teams-purple toast in the top-right corner:
+
+```json
+{
+  "notifications": {
+    "method": "custom"
+  },
+  "customNotification": {
+    "width": 440,
+    "height": 150,
+    "position": "topRight",
+    "margin": 12,
+    "backgroundColor": "#5B5FC7",
+    "hoverBackgroundColor": "#4F52B2",
+    "textColor": "#F1F1FF",
+    "titleFontSize": 16,
+    "bodyFontSize": 15
+  }
+}
+```
+
 > [!NOTE]
 > The `custom` notification method displays in-app toast notifications instead of OS-level notifications. This is useful when:
 > - Your notification daemon is unreliable or not running
 > - You experience application freezes with web/electron notifications
 > - OS notifications don't work consistently on your desktop environment
 >
-> **Configuration options:**
+> **Configuration options** (set only the ones you want to change; the rest keep their defaults):
 > - `toastDuration`: Time in milliseconds before toast auto-dismisses (default: 5000ms)
+> - `width` / `height`: Toast size in pixels (default: 360 × 110; limits 200–1000 × 80–600). A taller toast shows more lines of the message.
+> - `position`: Screen corner, one of `bottomRight` (default), `topRight`, `bottomLeft`, `topLeft`
+> - `margin`: Gap in pixels from the screen edges (default: 0). Raise it if the toast covers a panel or dock, which can happen on multi-monitor setups where the reported work area includes the panel.
+> - `backgroundColor`, `hoverBackgroundColor`, `titleColor`, `textColor`: Any CSS colour (defaults: `#2D2D2D`, `#3A3A3A`, `#FFFFFF`, `#D1D1D1`). Invalid values are ignored.
+> - `titleFontSize` / `bodyFontSize`: Font sizes in pixels (defaults: 14 and 13)
 >
-> Toasts appear in the bottom-right corner and clicking them focuses the main Teams window.
+> Clicking a toast focuses the main Teams window.
 
 ### System-wide Configuration
 

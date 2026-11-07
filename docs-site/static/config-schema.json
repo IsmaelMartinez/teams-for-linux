@@ -778,7 +778,17 @@
       "name": "customNotification",
       "type": "object",
       "default": {
-        "toastDuration": 5000
+        "toastDuration": 5000,
+        "width": 360,
+        "height": 110,
+        "position": "bottomRight",
+        "margin": 0,
+        "backgroundColor": "#2D2D2D",
+        "hoverBackgroundColor": "#3A3A3A",
+        "titleColor": "#FFFFFF",
+        "textColor": "#D1D1D1",
+        "titleFontSize": 14,
+        "bodyFontSize": 13
       },
       "description": "Custom in-app notification system configuration",
       "applyMode": "restart",
@@ -788,6 +798,72 @@
           "type": "number",
           "default": 5000,
           "description": "Time in milliseconds before a custom toast notification auto-dismisses."
+        },
+        {
+          "path": "width",
+          "type": "number",
+          "default": 360,
+          "description": "Toast width in pixels (200 to 1000)."
+        },
+        {
+          "path": "height",
+          "type": "number",
+          "default": 110,
+          "description": "Toast height in pixels (80 to 600). A taller toast shows more lines of the message."
+        },
+        {
+          "path": "position",
+          "type": "string",
+          "default": "bottomRight",
+          "description": "Screen corner the toast appears in.",
+          "choices": [
+            "bottomRight",
+            "topRight",
+            "bottomLeft",
+            "topLeft"
+          ]
+        },
+        {
+          "path": "margin",
+          "type": "number",
+          "default": 0,
+          "description": "Gap in pixels between the toast and the screen edges (0 to 500). Raise it if the toast covers a panel or dock."
+        },
+        {
+          "path": "backgroundColor",
+          "type": "string",
+          "default": "#2D2D2D",
+          "description": "Toast background, any CSS colour (e.g. \"#5B5FC7\")."
+        },
+        {
+          "path": "hoverBackgroundColor",
+          "type": "string",
+          "default": "#3A3A3A",
+          "description": "Toast background while the pointer is over it, any CSS colour."
+        },
+        {
+          "path": "titleColor",
+          "type": "string",
+          "default": "#FFFFFF",
+          "description": "Title text colour, any CSS colour."
+        },
+        {
+          "path": "textColor",
+          "type": "string",
+          "default": "#D1D1D1",
+          "description": "Message text colour, any CSS colour."
+        },
+        {
+          "path": "titleFontSize",
+          "type": "number",
+          "default": 14,
+          "description": "Title font size in pixels (8 to 40)."
+        },
+        {
+          "path": "bodyFontSize",
+          "type": "number",
+          "default": 13,
+          "description": "Message font size in pixels (8 to 40)."
         }
       ]
     },
