@@ -114,7 +114,7 @@ Architecture Decision Records capture important architectural decisions along wi
 **Key Outcomes:**
 - deb, rpm and integrated AppImage follow the session backend from the release after v2.30.0, like Flatpak and tar.gz; the snap keeps `--ozone-platform=x11`
 - `electronCLIFlags` cannot override the flag; only a genuine command-line or `.desktop` override can
-- ADR-016 matrix passed on the shipped AppImage; the GNOME two-monitor case and Enterprise Linux 8 are the pre-release's remaining checks
+- ADR-016 matrix, GNOME and KDE two-monitor checks all passed on the PR build; Enterprise Linux 8 (GTK 3.22) needs the documented `.desktop` override
 
 ### Testing & Quality
 
