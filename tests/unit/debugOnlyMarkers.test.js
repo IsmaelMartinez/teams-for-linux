@@ -5,7 +5,7 @@ const assert = require('node:assert');
 const { readdirSync, readFileSync, statSync } = require('node:fs');
 const path = require('node:path');
 
-// CLAUDE.md requires temporary debug instrumentation to be marked
+// AGENTS.md requires temporary debug instrumentation to be marked
 // "DEBUG-ONLY: Remove before merge" and stripped before it reaches main. That
 // convention only works if something enforces it: the #2587 meeting-start
 // sampler carried the marker and still shipped in v2.15.0, logging toast text

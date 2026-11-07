@@ -6,7 +6,9 @@ id: 004-agents-md-standard-investigation
 
 ## Status
 
-Rejected
+Superseded by [ADR-036](036-agents-md-adoption.md)
+
+Claude Code reads `AGENTS.md` natively since v2.1.277, the re-evaluation trigger recorded under Future Consideration below, so the repository renamed `CLAUDE.md` to `AGENTS.md` on 2026-11-07. The consolidation strategy described here still stands.
 
 ## Context
 

@@ -417,7 +417,7 @@ const MAX_RENDERER_LOG_FIELD_LENGTH = 4096;
  * result. Non-strings fall back to the supplied fallback.
  *
  * Renderer errors from Teams can contain UserId/tenantId/Trace ID/Correlation
- * ID values that match the shared UUID pattern. CLAUDE.md treats account IDs
+ * ID values that match the shared UUID pattern. AGENTS.md treats account IDs
  * and SSO info as must-not-log.
  *
  * @param {unknown} value - The field value to sanitize.

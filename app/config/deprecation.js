@@ -10,7 +10,7 @@
 // It changes only when the set of deprecated names the user sets, or where they
 // set them, changes, and then prompting again is right.
 //
-// PII safety (see CLAUDE.md): the message contains option NAMES and the
+// PII safety (see AGENTS.md): the message contains option NAMES and the
 // author-written deprecation text only, never config values.
 //
 // Every source yargs reads is inspected: the config file, command-line flags

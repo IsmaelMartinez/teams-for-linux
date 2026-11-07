@@ -104,6 +104,7 @@ const sidebars: SidebarsConfig = {
             'development/adr/031-ozone-platform-x11-default',
             'development/adr/032-secondary-window-for-calls',
             'development/adr/034-native-wayland-default',
+            'development/adr/036-agents-md-adoption',
           ],
         },
         {

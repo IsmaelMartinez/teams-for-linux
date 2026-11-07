@@ -338,7 +338,7 @@ test("focusCompose only targets conversation routes on a Teams frame", async () 
   assert.strictEqual((await focusCompose(rejecting, DEEP_LINK, TEAMS_URL)).focused, false);
 });
 
-// Unit tests have no DOM (CLAUDE.md): the injected function is pinned by its
+// Unit tests have no DOM (AGENTS.md): the injected function is pinned by its
 // source text, and its behaviour is checked in a real renderer with an
 // Electron probe (hidden BrowserWindow + executeJavaScript), see the PR.
 function injectedSource() {
