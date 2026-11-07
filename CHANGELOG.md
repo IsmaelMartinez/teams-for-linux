@@ -18,6 +18,10 @@
 
 * **deps:** bump minimatch from 10.2.5 to 11.0.5 in /docs-site ([#3190](https://github.com/IsmaelMartinez/teams-for-linux/issues/3190)) ([335b0c1](https://github.com/IsmaelMartinez/teams-for-linux/commit/335b0c14dae10cda9518fddbf5dd3310ebaf6c4a))
 
+### Thanks
+
+Big thanks to @app/dependabot, @nikolainyegaard, @smorokin for contributing to this release.
+
 ## [2.30.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.29.0...v2.30.0) (2026-11-07)
 
 
