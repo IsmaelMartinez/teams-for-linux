@@ -182,12 +182,17 @@ describe('isSenderAllowed (GHSA-3vg9-cwq9-p773)', () => {
 			'profile-list', 'profile-get-active', 'profile-switch',
 			'profile-add', 'profile-update', 'profile-remove',
 			'add-profile-submit', 'add-profile-cancel',
-			'manage-profile-rename', 'manage-profile-pin', 'manage-profile-remove', 'manage-profile-close',
+			'manage-profile-rename', 'manage-profile-pin', 'manage-profile-notifications',
+			'manage-profile-remove', 'manage-profile-close',
 			'graph-api-search-people', 'graph-api-send-chat-message',
 		];
 		for (const channel of pinned) {
 			assert.ok(appPageOnlyChannels.has(channel), `${channel} must be app-page only`);
 		}
+	});
+
+	it('leaves the notification-flags pull open to Teams pages: it only returns the caller\'s own flags', () => {
+		assert.ok(!appPageOnlyChannels.has('profile-get-notification-flags'));
 	});
 
 	it('rejects file URLs outside the app directory, including traversal', () => {

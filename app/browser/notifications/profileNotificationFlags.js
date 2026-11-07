@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * This renderer's own multi-account profile notification flags (ADR-020
  * Phase 2): pulled from main on load, pushed by main when the profile

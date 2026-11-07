@@ -265,6 +265,7 @@ const appPageOnlyChannels = new Set([
   'add-profile-cancel',
   'manage-profile-rename',
   'manage-profile-pin',
+  'manage-profile-notifications',
   'manage-profile-remove',
   'manage-profile-close',
   'graph-api-search-people',

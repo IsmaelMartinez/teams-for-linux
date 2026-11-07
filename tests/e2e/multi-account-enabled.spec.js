@@ -316,6 +316,10 @@ test('unread in a background profile lights the pill dot and its row badge', asy
     await expect
       .poll(async () => (await readPill(ctx.electronApp)).dotHidden)
       .toBe(true);
+  } finally {
+    await closeAndCleanup(ctx);
+  }
+});
 
 // Phase 2: per-profile notification flags are enforced inside each profile's
 // own renderer — pulled on load, pushed on update — by the preload's

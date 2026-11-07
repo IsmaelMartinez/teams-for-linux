@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * ADR-020 Phase 2: per-profile `disableNotifications` and `muted`.
  *
