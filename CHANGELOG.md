@@ -11,6 +11,7 @@
 
 ### Bug Fixes
 
+* **appimage:** switch to the static AppImage runtime so libfuse2 is no longer required ([#3176](https://github.com/IsmaelMartinez/teams-for-linux/issues/3176)) ([91db9b4](https://github.com/IsmaelMartinez/teams-for-linux/commit/91db9b4ee07143dee7e088d7a45f316e6448b1d3))
 * **auth:** load teams again when sign-out lands on microsoft's signed-out page ([#3169](https://github.com/IsmaelMartinez/teams-for-linux/issues/3169)) ([188dd7f](https://github.com/IsmaelMartinez/teams-for-linux/commit/188dd7fc02c38b3814da43471a07b16130c7b9b6))
 * **protocol:** handle web+msteams links from the Teams launcher ([#3162](https://github.com/IsmaelMartinez/teams-for-linux/issues/3162)) ([a85cef4](https://github.com/IsmaelMartinez/teams-for-linux/commit/a85cef4cae29675f2a41922f544bd2a4d1c3ee23))
 * **security:** grant device permissions only to Teams, sign-in and app pages ([#3185](https://github.com/IsmaelMartinez/teams-for-linux/issues/3185)) ([14ffd51](https://github.com/IsmaelMartinez/teams-for-linux/commit/14ffd51744bdcde4bf76a9dcff219ff2692b59a3))
@@ -31,7 +32,6 @@
 * **deps:** bump actions/setup-node from 7.0.0 to 7.1.0 ([#3163](https://github.com/IsmaelMartinez/teams-for-linux/issues/3163)) ([f2cfb01](https://github.com/IsmaelMartinez/teams-for-linux/commit/f2cfb01d31091b4b7938a993605ab6d7f6d3477c))
 * **deps:** bump actions/upload-artifact from 7.0.1 to 7.0.2 ([#3166](https://github.com/IsmaelMartinez/teams-for-linux/issues/3166)) ([d0d0fce](https://github.com/IsmaelMartinez/teams-for-linux/commit/d0d0fce6e28e42568589dee4299ef00481027466))
 * **deps:** bump canonical/setup-lxd ([#3165](https://github.com/IsmaelMartinez/teams-for-linux/issues/3165)) ([cb3aaec](https://github.com/IsmaelMartinez/teams-for-linux/commit/cb3aaec4283e2da257deb7a59c579e87574140d9))
-* **deps:** bump electron-store from 11.0.2 to 12.0.0 ([#3115](https://github.com/IsmaelMartinez/teams-for-linux/issues/3115)) ([90330af](https://github.com/IsmaelMartinez/teams-for-linux/commit/90330af890687ced4ccd89b385d15d34dde05273))
 * **deps:** bump follow-redirects from 1.16.1 to 1.16.2 in /docs-site ([#3160](https://github.com/IsmaelMartinez/teams-for-linux/issues/3160)) ([fb572a4](https://github.com/IsmaelMartinez/teams-for-linux/commit/fb572a4fbbd0111258910c1b0c6e2032675f1fa4))
 * **deps:** bump github/codeql-action from 4.38.2 to 4.39.1 ([#3167](https://github.com/IsmaelMartinez/teams-for-linux/issues/3167)) ([1c222b1](https://github.com/IsmaelMartinez/teams-for-linux/commit/1c222b1f83e899e01e8828f5463e7741deae9e66))
 * **deps:** bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml ([#3164](https://github.com/IsmaelMartinez/teams-for-linux/issues/3164)) ([a38355d](https://github.com/IsmaelMartinez/teams-for-linux/commit/a38355da1b1f53fb3fb500a419f1c53ec6e49a23))

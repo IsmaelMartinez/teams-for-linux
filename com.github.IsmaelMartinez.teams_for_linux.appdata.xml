@@ -19,6 +19,7 @@
         <ul>
           <li>copy a chosen app icon into the user icon theme (#3031)</li>
           <li>window: add an integrated title bar with client-side decorations (#3174)</li>
+          <li>appimage: switch to the static AppImage runtime so libfuse2 is no longer required (#3176)</li>
           <li>auth: load teams again when sign-out lands on microsoft's signed-out page (#3169)</li>
           <li>protocol: handle web+msteams links from the Teams launcher (#3162)</li>
           <li>security: grant device permissions only to Teams, sign-in and app pages (#3185)</li>
@@ -31,7 +32,6 @@
           <li>deps: bump actions/setup-node from 7.0.0 to 7.1.0 (#3163)</li>
           <li>deps: bump actions/upload-artifact from 7.0.1 to 7.0.2 (#3166)</li>
           <li>deps: bump canonical/setup-lxd (#3165)</li>
-          <li>deps: bump electron-store from 11.0.2 to 12.0.0 (#3115)</li>
           <li>deps: bump follow-redirects from 1.16.1 to 1.16.2 in /docs-site (#3160)</li>
           <li>deps: bump github/codeql-action from 4.38.2 to 4.39.1 (#3167)</li>
           <li>deps: bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml (#3164)</li>
