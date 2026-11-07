@@ -2,7 +2,7 @@
 title: "Architecture Decision Records"
 sidebar_position: 1
 type: reference
-last_updated: 2026-09-05
+last_updated: 2026-10-22
 tags: [adr, architecture, decisions]
 ---
 
@@ -52,8 +52,9 @@ Architecture Decision Records capture important architectural decisions along wi
 | [028](028-third-party-idp-otc-prefill.md) | One-Time-Code Pre-fill on Third-Party IdPs | ❌ Rejected | 2026-08-19 | N/A |
 | [029](029-config-schema-single-source-of-truth.md) | Configuration Schema as Single Source of Truth | ✅ Accepted | 2026-09-05 | v2.12.0+ |
 | [030](030-graph-api-teams-session-token.md) | Graph API Access via the Teams Session Token | ✅ Implemented | 2025-11-21 | v2.6.17 |
-| [031](031-ozone-platform-x11-default.md) | Keep the `--ozone-platform=x11` Default on Wayland | ✅ Accepted | 2026-09-05 | N/A |
+| [031](031-ozone-platform-x11-default.md) | Keep the `--ozone-platform=x11` Default on Wayland | 🔄 Superseded by 034 except snap | 2026-09-05 | N/A |
 | [032](032-secondary-window-for-calls.md) | Opt-in Secondary Window for the Same Account During Calls | 🚧 Proposed | 2026-09-18 | N/A |
+| [034](034-native-wayland-default.md) | Native Wayland by Default on deb, rpm and integrated AppImage | 🚧 Proposed | 2026-10-22 | N/A |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -103,7 +104,8 @@ Architecture Decision Records capture important architectural decisions along wi
 
 | ADR | Title | Summary |
 |-----|-------|---------|
-| [031](031-ozone-platform-x11-default.md) | Keep the `--ozone-platform=x11` Default on Wayland | Ship `--ozone-platform=x11` as the default on deb, rpm, AppImage and snap; #2506 was reverted the same day as an accidental merge, and #2601 was closed unmerged after a regression, with concrete reopen triggers recorded |
+| [031](031-ozone-platform-x11-default.md) | Keep the `--ozone-platform=x11` Default on Wayland | Ship `--ozone-platform=x11` as the default on deb, rpm, AppImage and snap; #2506 was reverted the same day as an accidental merge, and #2601 was closed unmerged after a regression, with concrete reopen triggers recorded. Superseded by 034 except snap |
+| [034](034-native-wayland-default.md) | Native Wayland by Default on deb, rpm and integrated AppImage | Drop the packaged `--ozone-platform=x11` on deb, rpm and AppImage on the Electron 44 baseline; snap keeps it. Answers ADR-031's reopen triggers and names the GNOME multi-monitor case as the open risk |
 
 **Key Outcomes:**
 - Predictable default rendering path across deb, rpm, AppImage, tar.gz and snap

@@ -209,6 +209,8 @@ if [[ "$MODE" == "login" ]]; then
 
     if [[ "${DISPLAY_SERVER}" == "wayland" ]]; then
         ELECTRON_FLAGS="${ELECTRON_FLAGS} --ozone-platform=wayland"
+    elif [[ "${DISPLAY_SERVER}" == "xwayland" ]]; then
+        ELECTRON_FLAGS="${ELECTRON_FLAGS} --ozone-platform=x11"
     fi
 
     echo ""
