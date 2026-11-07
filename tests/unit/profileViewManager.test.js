@@ -22,7 +22,7 @@ let ipcHandlers; // channel → ipcMain.handle handler
 class FakeWebContents {
   constructor() {
     this.id = nextWcId++;
-    this.session = { clearStorageData: async () => {} };
+    this.session = { clearStorageData: async () => {}, cookies: { on() {} } };
     this._once = {};
     this._on = {};
     this._destroyed = false;

@@ -3,6 +3,7 @@ const path = require("node:path");
 const SenderProfileMap = require("./senderProfileMap");
 const { reloadIfSignedOut } = require("./signOutReload");
 const { isHttpsUrl } = require("../profilesManager");
+const { keepMsalEncryptionCookiePersistent } = require("./msalCookiePersistence");
 
 const LEGACY_PARTITION = "persist:teams-4-linux";
 
@@ -531,6 +532,9 @@ class ProfileViewManager {
     // `setDisplayMediaRequestHandler` is per-session and the root window's
     // binding does not carry across to profile partitions (#2529).
     this.#bindDisplayMediaHandler(view.webContents.session);
+    // msal.cache.encryption must stay persistent on every profile session or
+    // the account signs in again after each restart (#3183).
+    keepMsalEncryptionCookiePersistent(view.webContents.session, this.#config);
     this.#bindWindowOpenHandler(view.webContents, view.webContents, () =>
       this.#activate(profileId)
     );

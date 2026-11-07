@@ -10,7 +10,7 @@ const { join } = require('node:path');
 // bail out on an explicit false. Source-text assertion because
 // app/mainAppWindow/index.js requires the electron runtime.
 
-const INDEX_PATH = join(__dirname, '..', '..', 'app', 'mainAppWindow', 'index.js');
+const INDEX_PATH = join(__dirname, '..', '..', 'app', 'mainAppWindow', 'msalCookiePersistence.js');
 
 describe('keepMsalEncryptionCookiePersistent guard', () => {
 	const source = readFileSync(INDEX_PATH, 'utf8');

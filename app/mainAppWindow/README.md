@@ -7,6 +7,7 @@ Manages the primary BrowserWindow that hosts the Teams web interface.
 - **[index.js](index.js)**: Entry point and window lifecycle management
 - **[browserWindowManager.js](browserWindowManager.js)**: Window creation, configuration, and event handling
 - **[deepLinkRouter.js](deepLinkRouter.js)**: In-page routing for Teams deep links
+- **[msalCookiePersistence.js](msalCookiePersistence.js)**: Promotes the `msal.cache.encryption` session cookie to a persistent one so sign-in survives restarts. Installed once per session on the root window and on every multi-account profile view (#3183)
 - **[protocolLink.js](protocolLink.js)**: Protocol schemes the app registers, `web+msteams:` normalisation and resolving launch arguments to the URL to open
 
 ## Responsibilities
