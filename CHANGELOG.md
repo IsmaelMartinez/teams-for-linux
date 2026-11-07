@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.31.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.30.0...v2.31.0) (2026-11-07)
+
+
+### Features
+
+* **dbus:** add SetStatus presence control ([#3178](https://github.com/IsmaelMartinez/teams-for-linux/issues/3178)) ([5ff80b0](https://github.com/IsmaelMartinez/teams-for-linux/commit/5ff80b0b5fefb05e12ea2c9ade8300061d03d837))
+* run native wayland by default on deb, rpm and appimage ([#3129](https://github.com/IsmaelMartinez/teams-for-linux/issues/3129)) ([9b6f4eb](https://github.com/IsmaelMartinez/teams-for-linux/commit/9b6f4eb9236865e5de134f8c1bb2a2e90a7c07e4))
+
+
+### Documentation
+
+* **adr:** mark ADR-018 superseded now the triage bot is retired ([#3191](https://github.com/IsmaelMartinez/teams-for-linux/issues/3191)) ([83e8ead](https://github.com/IsmaelMartinez/teams-for-linux/commit/83e8ead18d9aee4d1e27729cc0125322424b800a))
+
+
+### Maintenance
+
+* **deps:** bump minimatch from 10.2.5 to 11.0.5 in /docs-site ([#3190](https://github.com/IsmaelMartinez/teams-for-linux/issues/3190)) ([335b0c1](https://github.com/IsmaelMartinez/teams-for-linux/commit/335b0c14dae10cda9518fddbf5dd3310ebaf6c4a))
+
+### Thanks
+
+Big thanks to @app/dependabot, @nikolainyegaard, @smorokin for contributing to this release.
+
 ## [2.30.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.29.0...v2.30.0) (2026-11-07)
 
 
