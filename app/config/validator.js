@@ -1,7 +1,7 @@
 // Schema-driven, warn-only validation of the user-provided config file
 // (issue #2597, Phase 4). Pure data module, no Electron imports.
 //
-// PII safety (see CLAUDE.md): warnings must NEVER contain config VALUES, as
+// PII safety (see AGENTS.md): warnings must NEVER contain config VALUES, as
 // they can hold URLs, tokens or email addresses. Only key names, type names
 // and the public `choices` lists are safe to include.
 

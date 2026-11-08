@@ -34,7 +34,7 @@ const allowedChannels = new Set([
   'get-screen-sharing-status',
   'resize-preview-window',
   // main → renderer only (webContents.postMessage); not gated by this validator,
-  // listed here so the allowlist stays authoritative per CLAUDE.md.
+  // listed here so the allowlist stays authoritative per AGENTS.md.
   'screen-share-port',
   'screen-sharing-started',
   'screen-sharing-stopped',
@@ -166,7 +166,7 @@ const allowedChannels = new Set([
   // open the existing dialogs (handled in `Menus`); set-expanded grows the view
   // to full-window while the dropdown is open (handled in `ProfileViewManager`).
   // State flows main → renderer over `profile-switcher-state` (send direction,
-  // not gated; listed for an authoritative allowlist per CLAUDE.md). All are
+  // not gated; listed for an authoritative allowlist per AGENTS.md). All are
   // registered only when `multiAccount.enabled === true`.
   'profile-switcher-open-add',
   'profile-switcher-open-manage',
@@ -183,7 +183,7 @@ const allowedChannels = new Set([
   // and sender identity in main; registered only when multi-account is on.
   'aggregate-badge-rendered',
   // main → renderer only (webContents.send); not gated by this validator,
-  // listed so the allowlist stays authoritative per CLAUDE.md.
+  // listed so the allowlist stays authoritative per AGENTS.md.
   'render-aggregate-badge'
 ]);
 

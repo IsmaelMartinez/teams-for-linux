@@ -106,6 +106,7 @@ const sidebars: SidebarsConfig = {
             'development/adr/033-dbus-control-api',
             'development/adr/034-native-wayland-default',
             'development/adr/035-renderer-trust-boundary',
+            'development/adr/036-agents-md-adoption',
           ],
         },
       ],

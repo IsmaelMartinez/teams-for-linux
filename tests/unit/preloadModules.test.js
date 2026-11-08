@@ -5,7 +5,7 @@ const assert = require('node:assert');
 const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 
-// Regression guard for issue #1902 and the CLAUDE.md "Modules Requiring IPC
+// Regression guard for issue #1902 and the AGENTS.md "Modules Requiring IPC
 // Initialization" rule. The `ipc: true` flag on a `modules` entry in
 // `app/browser/preload.js` controls which browser-side modules receive
 // `ipcRenderer` during `init` (a per-entry flag rather than a Set, because
@@ -13,7 +13,7 @@ const { join } = require('node:path');
 // the flag from `trayIconRenderer` or `mqttStatusMonitor` is a silent regression --- the modules
 // load fine, then crash later inside their handlers with
 // `TypeError: Cannot read properties of undefined (reading 'send')`.
-// CLAUDE.md notes the fix has been "accidentally removed multiple times
+// AGENTS.md notes the fix has been "accidentally removed multiple times
 // in git history".
 //
 // `preload.js` is an Electron preload script that can't be `require`d in
@@ -34,7 +34,7 @@ describe('preload.js modules passing ipcRenderer', () => {
 				entry,
 				`"${name}" lost \`ipc: true\` in the modules list in app/browser/preload.js. ` +
 					'This module needs `ipcRenderer` during init or its IPC calls throw silently. ' +
-					'See CLAUDE.md "Modules Requiring IPC Initialization" and issue #1902.'
+					'See AGENTS.md "Modules Requiring IPC Initialization" and issue #1902.'
 			);
 		});
 	}

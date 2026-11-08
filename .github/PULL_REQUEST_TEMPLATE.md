@@ -38,7 +38,7 @@ List any docs touched in this PR, or note that none were needed.
   - [ ] Updated `docs-site/docs/...`
   - [ ] Updated module `README.md`
   - [ ] Added the new channel to `app/security/ipcValidator.js` and ran `npm run generate-ipc-docs` (IPC channel added or changed)
-  - [ ] No new PII added to logs (see CLAUDE.md "Logging Guidelines")
+  - [ ] No new PII added to logs (see AGENTS.md "Logging Guidelines")
   - [ ] N/A
 -->
 

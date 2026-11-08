@@ -6,7 +6,7 @@ import {
   closeAndCleanup,
 } from './helpers/electronApp.js';
 
-// Integration regression check for issue #1902 (CLAUDE.md "Modules
+// Integration regression check for issue #1902 (AGENTS.md "Modules
 // Requiring IPC Initialization"). The static guard in
 // `tests/unit/preloadModules.test.js` asserts that `trayIconRenderer`
 // keeps `ipc: true` in the `modules` list in `app/browser/preload.js`.
@@ -77,7 +77,7 @@ test('preload passes ipcRenderer to trayIconRenderer (regression #1902)', async 
       first.index,
       'trayIconRenderer should send a `tray-update` IPC when `unread-count` fires. ' +
         'If this fails, check that "trayIconRenderer" still has `ipc: true` in the ' +
-        '`modules` list in `app/browser/preload.js` (CLAUDE.md / issue #1902).'
+        '`modules` list in `app/browser/preload.js` (AGENTS.md / issue #1902).'
     ).toBeGreaterThanOrEqual(0);
     expect(first.captured[first.index]).toMatchObject({ count: 2 });
 

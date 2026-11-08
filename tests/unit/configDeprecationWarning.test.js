@@ -84,7 +84,7 @@ describe('buildDeprecationWarning - aggregation', () => {
 		assert.match(warning, /^1 configuration option is deprecated/);
 	});
 
-	// PII safety (CLAUDE.md): names and the author-written text only, no values.
+	// PII safety (AGENTS.md): names and the author-written text only, no values.
 	it('never includes the configured value from any source', () => {
 		const secret = 'http://user:secret@proxy.internal:3128';
 		const warning = buildDeprecationWarning(
