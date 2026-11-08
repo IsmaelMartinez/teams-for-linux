@@ -428,3 +428,55 @@ test('per-profile notification flags are enforced in that profile renderer', asy
     await closeAndCleanup(ctx);
   }
 });
+
+// Manage dialog: toggling a flag mid-rename rebuilds the list. The typed name
+// must not be lost: removing the focused input blurs it, which commits it.
+test('toggling a notification switch mid-rename keeps the typed name', async () => {
+  const ctx = await startApp({
+    prefix: 'teams-e2e-draft-',
+    config: { multiAccount: { enabled: true } },
+    allowEval: true,
+  });
+
+  try {
+    await waitForLoginRedirect(findMainTeamsWindow(ctx.electronApp));
+    await invokeHandler(ctx.electronApp, 'profile-add', [{ name: 'Work' }]);
+    const draft = await ctx.electronApp.evaluate(async ({ BrowserWindow }) => {
+      const main = BrowserWindow.getAllWindows().find((w) => w.contentView.children.length > 0);
+      const pill = main.contentView.children
+        .map((c) => c.webContents)
+        .find((wc) => wc.getURL().includes('profileSwitcher'));
+      const before = new Set(BrowserWindow.getAllWindows().map((w) => w.id));
+      await pill.executeJavaScript('globalThis.profileSwitcherApi.openManageDialog()');
+      let dialog;
+      for (let i = 0; i < 100 && !dialog; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        dialog = BrowserWindow.getAllWindows().find((w) => !before.has(w.id));
+      }
+      if (!dialog) return { error: 'no dialog' };
+      const page = (js) => dialog.webContents.executeJavaScript(js);
+      for (let i = 0; i < 100; i++) {
+        if (await page(`!!document.querySelector('.profile-name')`)) break;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      await page(`(() => {
+        document.querySelector('.profile-name').click();
+        const input = document.querySelector('.profile-name-input');
+        input.value = 'Work (renamed)';
+        input.dispatchEvent(new Event('input'));
+        document.querySelector('.profile-flag input').click();
+      })()`);
+      // Wait for the update's state push to rebuild the list.
+      for (let i = 0; i < 100; i++) {
+        if (await page(`!document.querySelector('.profile-flag input').checked`)) break;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      return page(`document.querySelector('.profile-name-input')?.value ??
+        document.querySelector('.profile-name')?.textContent ?? null`);
+    });
+    expect(draft).toBe('Work (renamed)');
+  } finally {
+    await closeAndCleanup(ctx);
+  }
+});
