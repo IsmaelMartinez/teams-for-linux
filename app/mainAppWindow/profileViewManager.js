@@ -3,6 +3,7 @@ const path = require("node:path");
 const SenderProfileMap = require("./senderProfileMap");
 const { reloadIfSignedOut } = require("./signOutReload");
 const { isHttpsUrl } = require("../profilesManager");
+const { keepMsalEncryptionCookiePersistent } = require("./msalCookiePersistence");
 
 const LEGACY_PARTITION = "persist:teams-4-linux";
 
@@ -484,7 +485,7 @@ class ProfileViewManager {
   }
 
   #onRemove({ removedId, activeId }) {
-    this.#destroyView(removedId);
+    this.#destroyView(removedId, { clearStorage: true });
     // Re-derive the cached root profile id: removing Profile 0 must make
     // root-window senders unattributed again. One settings read on a rare
     // event, keeping the lookup path I/O-free.
@@ -531,6 +532,9 @@ class ProfileViewManager {
     // `setDisplayMediaRequestHandler` is per-session and the root window's
     // binding does not carry across to profile partitions (#2529).
     this.#bindDisplayMediaHandler(view.webContents.session);
+    // msal.cache.encryption must stay persistent on every profile session or
+    // the account signs in again after each restart (#3183).
+    keepMsalEncryptionCookiePersistent(view.webContents.session, this.#config);
     this.#bindWindowOpenHandler(view.webContents, view.webContents, () =>
       this.#activate(profileId)
     );
@@ -721,7 +725,7 @@ class ProfileViewManager {
     }
   }
 
-  #destroyView(profileId) {
+  #destroyView(profileId, { clearStorage = false } = {}) {
     // Keyed on the creation-time meta, not the live view: if the view's
     // webContents destroyed itself earlier (see #createView), the view entry
     // is already gone but the removal contract below must still run.
@@ -746,8 +750,10 @@ class ProfileViewManager {
     // profile" requires this destructive clear; UI confirmation is the
     // caller's responsibility (Phase 1c.2 dialog). Resolved from the cached
     // partition string, never through the view's webContents — that may be
-    // gone if the page destroyed it.
-    if (meta?.partition) {
+    // gone if the page destroyed it. Only on removal: dispose() runs on every
+    // window close, and clearing there signed every secondary profile out on
+    // each restart (#3183).
+    if (clearStorage && meta?.partition) {
       session
         .fromPartition(meta.partition)
         .clearStorageData()
