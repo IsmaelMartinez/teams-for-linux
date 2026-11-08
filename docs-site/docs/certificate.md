@@ -14,7 +14,7 @@ If you have access to the nodejs console, the fingerprint of the CA that cannot
 be validated will be printed out. You can then start teams-for-linux again with
 
 ```bash
-teams-for-linux --customCACertsFingerprints sha256/YOUR-CERTIFICATE-FINGERPRINT [--customCACertsFingerprints ANOTHER-FINGERPRINT-IF-NEEDED]
+teams-for-linux --auth.customCACertificateFingerprints sha256/YOUR-CERTIFICATE-FINGERPRINT [--auth.customCACertificateFingerprints ANOTHER-FINGERPRINT-IF-NEEDED]
 ```
 
 If you already have the certificate in a file locally, you can calculate the

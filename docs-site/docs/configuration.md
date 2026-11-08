@@ -49,7 +49,7 @@ For a complete, always-up-to-date list of every option generated directly from t
 
 ### Command Line Example
 ```bash
-teams-for-linux --partition nopersist
+teams-for-linux --app.partition nopersist
 ```
 
 ### Basic Config File
@@ -997,7 +997,7 @@ When running under Wayland, GPU acceleration is **automatically disabled by defa
 
 **Command-line argument**:
 ```bash
-teams-for-linux --disableGpu=false
+teams-for-linux --performance.disableGpu=false
 ```
 
 If you don't set this option at all (via config file or CLI), GPU will be disabled automatically on Wayland. This smart default ensures the app works out of the box while allowing power users to optimize performance.

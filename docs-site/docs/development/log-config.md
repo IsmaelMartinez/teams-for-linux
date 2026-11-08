@@ -3,7 +3,7 @@
 Control logging behavior with console logging, [electron-log](https://www.npmjs.com/package/electron-log) integration, or disable logging entirely (since v1.9.0).
 
 :::info
-See [Configuration Documentation](configuration.md) for all available configuration options.
+See [Configuration Documentation](../configuration.md) for all available configuration options.
 :::
 
 ## Configuration Options
@@ -160,5 +160,5 @@ Not all options available in [electron-log](https://github.com/megahertz/electro
 
 ## Related Documentation
 
-- [Configuration Options](configuration.md) - Complete configuration reference
-- [Troubleshooting](troubleshooting.md) - General troubleshooting guide
+- [Configuration Options](../configuration.md) - Complete configuration reference
+- [Troubleshooting](../troubleshooting.md) - General troubleshooting guide

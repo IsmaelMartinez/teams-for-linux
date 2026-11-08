@@ -190,3 +190,5 @@ This decision should be reviewed if:
 2. Implementation effort for embedded broker drops significantly (new library, etc.)
 
 For now: **Proceed with MQTT client only + document broker setup.**
+
+**2026-11 update:** the zero-dependency local alternative landed as an opt-in session D-Bus control API rather than an HTTP server, see [ADR-033](033-dbus-control-api.md). MQTT stays the remote and home-automation path.

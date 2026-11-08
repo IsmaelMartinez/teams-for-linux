@@ -44,16 +44,16 @@ The rest of this page covers the separate-instances approach: one process per ac
 ### Work Profile
 ```bash
 ./teams-for-linux \
-  --appIcon=/path/to/work-icon.png \
-  --class=teams-work \
+  --tray.icon=/path/to/work-icon.png \
+  --window.class=teams-work \
   --user-data-dir=/home/user/.config/teams-profile-work
 ```
 
 ### Personal Profile
 ```bash
 ./teams-for-linux \
-  --appIcon=/path/to/personal-icon.png \
-  --class=teams-personal \
+  --tray.icon=/path/to/personal-icon.png \
+  --window.class=teams-personal \
   --user-data-dir=/home/user/.config/teams-profile-personal
 ```
 
@@ -63,32 +63,34 @@ Replace the `user-data-dir` with the full path where you want to store the profi
 
 ## Command Line Options
 
-### `--appIcon`
+The options below use the nested names from the [configuration reference](configuration.md). The older flat spellings (`--appIcon`, `--appTitle`, `--class`, `--url`) still work until 2.32.0 but print a Configuration Warning at startup, so update any `.desktop` files or scripts that use them.
+
+### `--tray.icon`
 
 Set a custom tray and window icon for each profile:
 
 ```bash
---appIcon=/path/to/icon.png
+--tray.icon=/path/to/icon.png
 ```
 
 This changes the visual icon used in the title bar and system tray/dock, making it easy to distinguish between different profiles.
 
-### `--appTitle`
+### `--app.title`
 
 Label each profile's window and tray tooltip:
 
 ```bash
---appTitle="Teams - Work"
+--app.title="Teams - Work"
 ```
 
-Any value other than the default replaces "Microsoft Teams" at the end of the window title (for example `Chat | Teams - Work`), so taskbars and Alt+Tab show which profile a window belongs to. In `config.json` the same setting is `app.title`.
+Any value other than the default replaces "Microsoft Teams" at the end of the window title (for example `Chat | Teams - Work`), so taskbars and Alt+Tab show which profile a window belongs to. The same setting is `app.title` in `config.json`.
 
-### `--class`
+### `--window.class`
 
 Set the internal application name used by Electron:
 
 ```bash
---class=teams-work
+--window.class=teams-work
 ```
 
 This affects:
@@ -172,7 +174,7 @@ Each profile can have its own `config.json` file in its respective user data dir
 [Desktop Entry]
 Name=Teams for Linux (Work)
 Comment=Microsoft Teams for Linux - Work Profile
-Exec=/path/to/teams-for-linux --class=teams-work --user-data-dir=%h/.config/teams-profile-work --appIcon=%h/.local/share/icons/teams-work.png
+Exec=/path/to/teams-for-linux --window.class=teams-work --user-data-dir=%h/.config/teams-profile-work --tray.icon=%h/.local/share/icons/teams-work.png
 Icon=teams-work
 Terminal=false
 Type=Application
@@ -185,7 +187,7 @@ StartupWMClass=teams-work
 [Desktop Entry]
 Name=Teams for Linux (Personal)
 Comment=Microsoft Teams for Linux - Personal Profile
-Exec=/path/to/teams-for-linux --class=teams-personal --user-data-dir=%h/.config/teams-profile-personal --appIcon=%h/.local/share/icons/teams-personal.png
+Exec=/path/to/teams-for-linux --window.class=teams-personal --user-data-dir=%h/.config/teams-profile-personal --tray.icon=%h/.local/share/icons/teams-personal.png
 Icon=teams-personal
 Terminal=false
 Type=Application
@@ -199,9 +201,9 @@ StartupWMClass=teams-personal
 ```bash
 #!/bin/bash
 /path/to/teams-for-linux \
-  --class=teams-work \
+  --window.class=teams-work \
   --user-data-dir="$HOME/.config/teams-profile-work" \
-  --appIcon="$HOME/.local/share/icons/teams-work.png" \
+  --tray.icon="$HOME/.local/share/icons/teams-work.png" \
   "$@"
 ```
 
@@ -209,9 +211,9 @@ StartupWMClass=teams-personal
 ```bash
 #!/bin/bash
 /path/to/teams-for-linux \
-  --class=teams-personal \
+  --window.class=teams-personal \
   --user-data-dir="$HOME/.config/teams-profile-personal" \
-  --appIcon="$HOME/.local/share/icons/teams-personal.png" \
+  --tray.icon="$HOME/.local/share/icons/teams-personal.png" \
   "$@"
 ```
 
@@ -224,15 +226,15 @@ For users managing multiple organizations:
 ```bash
 # Organization A
 ./teams-for-linux \
-  --class=teams-org-a \
+  --window.class=teams-org-a \
   --user-data-dir="$HOME/.config/teams-org-a" \
-  --appTitle="Teams - Org A"
+  --app.title="Teams - Org A"
 
 # Organization B  
 ./teams-for-linux \
-  --class=teams-org-b \
+  --window.class=teams-org-b \
   --user-data-dir="$HOME/.config/teams-org-b" \
-  --appTitle="Teams - Org B"
+  --app.title="Teams - Org B"
 ```
 
 ### Development vs Production
@@ -242,15 +244,15 @@ For developers working with different Teams environments:
 ```bash
 # Production environment
 ./teams-for-linux \
-  --class=teams-prod \
+  --window.class=teams-prod \
   --user-data-dir="$HOME/.config/teams-production" \
-  --url="https://teams.cloud.microsoft"
+  --app.url="https://teams.cloud.microsoft"
 
 # Development/Test environment
 ./teams-for-linux \
-  --class=teams-dev \
+  --window.class=teams-dev \
   --user-data-dir="$HOME/.config/teams-development" \
-  --url="https://teams-dev.company.com"
+  --app.url="https://teams-dev.company.com"
 ```
 
 ## Best Practices
@@ -286,7 +288,7 @@ $HOME/.config/
 
 ### Profiles Not Isolated
 - **Check user-data-dir**: Ensure each profile uses a different directory
-- **Verify class names**: Different `--class` values help window managers distinguish instances
+- **Verify class names**: Different `--window.class` values help window managers distinguish instances
 - **Clear conflicting cache**: Remove cache if profiles seem to share data
 
 ### Icons Not Showing

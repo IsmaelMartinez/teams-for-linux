@@ -10,11 +10,13 @@ Development and build commands, run from the repository root:
 |---------|--------------|
 | `npm start` | Run the app in development mode (with `--trace-warnings`) |
 | `npm run lint` | Run ESLint validation (required before commits) |
+| `npm run test:unit` | Run the fast unit suite (`node --test`), required before commits |
 | `npm run test:e2e` | Run the Playwright end-to-end tests |
 | `npm run pack` | Development build without packaging (`electron-builder --dir`) |
 | `npm run dist:linux` | Build Linux packages (AppImage, deb, rpm, snap) |
 | `npm run dist` | Build all configured platforms |
 | `npm run generate-ipc-docs` | Regenerate the IPC API docs after changing an IPC channel |
+| `npm run generate-config-docs` | Regenerate the configuration reference and `config-schema.json` after editing `app/config/options.js` (CI checks for drift) |
 | `npm run generate-release-info` | Regenerate the release information file |
 
 See [Contributing](development/contributing.md) for the full development workflow.

@@ -103,15 +103,10 @@ const sidebars: SidebarsConfig = {
             'development/adr/030-graph-api-teams-session-token',
             'development/adr/031-ozone-platform-x11-default',
             'development/adr/032-secondary-window-for-calls',
+            'development/adr/033-dbus-control-api',
             'development/adr/034-native-wayland-default',
+            'development/adr/035-renderer-trust-boundary',
             'development/adr/036-agents-md-adoption',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Research & Analysis',
-          items: [
-            'development/research/README',
           ],
         },
       ],

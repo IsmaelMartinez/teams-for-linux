@@ -50,7 +50,10 @@ npm start
 # Lint code (required before commits)
 npm run lint
 
-# Run E2E tests
+# Unit tests (fast, run before every commit)
+npm run test:unit
+
+# Run E2E tests (CI runs these on every PR)
 npm run test:e2e
 ```
 

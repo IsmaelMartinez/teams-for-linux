@@ -175,7 +175,7 @@ This document lists all IPC (Inter-Process Communication) channels registered in
 ## Channel Security
 
 All IPC channels are validated through the security layer in \`app/security/ipcValidator.js\`.
-See the [IPC Channel Validation documentation](./security-architecture.md#ipc-channel-validation) for more information.
+See the [IPC Channel Validation documentation](./security-architecture.md#2-ipc-channel-validation) for more information.
 
 ## Adding New Channels
 

@@ -334,7 +334,7 @@ Phase 1 migrates the first entry (`isFirstLoginTry` → per-`webContents` `WeakM
   - `app/config/defaults.js` — add the `multiAccount.enabled` default (`false`) plus any sub-keys (currently none)
   - `app/index.js` — startup-time mutual-exclusion check between `auth.intune.enabled` and `multiAccount.enabled`, plus ProfilesManager wiring (already landed on `feat/multi-account-profiles`)
   - `app/mainAppWindow/browserWindowManager.js` — `WebContentsView` creation and bounds/visibility management; gated on `multiAccount.enabled`
-  - `app/partitions/manager.js` — extend (or sibling as `app/profiles/manager.js`) for profile CRUD + partition derivation
+  - `app/partitions/manager.js` — extend (or sibling as `app/profiles/manager.js`) for profile CRUD + partition derivation (landed as `app/profilesManager/index.js`)
   - `app/security/ipcValidator.js` — allowlist the six Phase 1 `profile-*` channels (and later-phase additions as they land)
   - `app/login/index.js` — migrate module-level `isFirstLoginTry` to a per-`webContents` `WeakMap` (landed)
   - `app/mainAppWindow/index.js` — extend `exports.onAppSecondInstance` (where `processArgs` already runs) to parse `--profile-id` and switch before loading the URL (Phase 3)

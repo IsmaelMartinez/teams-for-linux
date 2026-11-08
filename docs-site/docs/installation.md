@@ -272,10 +272,10 @@ teams-for-linux --user-data-dir=/path/to/custom/profile
 
 ```bash
 # Work profile
-teams-for-linux --user-data-dir=~/.config/teams-work --class=teams-work
+teams-for-linux --user-data-dir=~/.config/teams-work --window.class=teams-work
 
 # Personal profile  
-teams-for-linux --user-data-dir=~/.config/teams-personal --class=teams-personal
+teams-for-linux --user-data-dir=~/.config/teams-personal --window.class=teams-personal
 ```
 
 See [Multiple Instances](multiple-instances.md) for detailed setup.

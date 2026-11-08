@@ -1,1 +1,0 @@
-Migrate to release-please for automated release management - by @IsmaelMartinez (#2408)

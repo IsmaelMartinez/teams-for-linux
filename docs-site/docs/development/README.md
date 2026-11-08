@@ -11,7 +11,6 @@ This directory contains technical documentation for Teams for Linux developers a
 - **[ADR-003: Token Refresh Implementation](adr/003-token-refresh-implementation.md)** - Architecture decision for authentication persistence
 - **[module-index.md](module-index.md)** - Catalog of all application modules
 - **[ADR Index](adr/README.md)** - All architecture decision records
-- **[Research Index](research/README.md)** - Feature research and investigations
 - **[plan/roadmap.md](plan/roadmap.md)** - Development priorities and feature status
 
 ## For Contributors
@@ -20,10 +19,9 @@ When working on Teams for Linux:
 
 1. **Review token cache architecture** for authentication and secure storage patterns
 2. **Read the security architecture** to understand security trade-offs and requirements
-3. **Review research documents** in `research/` for context on current implementation choices
-4. **Check ADR documents** for architecture decisions and rationale
-5. **Check planning documents** for background on feature decisions and research
-6. **Run `npm run lint` and `npm run test:unit`** before submitting PRs; CI runs the Playwright e2e suite
+3. **Check ADR documents** for architecture decisions and rationale; the research behind each one is kept in its history, see the ADR index
+4. **Check planning documents** for background on feature decisions
+5. **Run `npm run lint` and `npm run test:unit`** before submitting PRs; CI runs the Playwright e2e suite
 
 ### Key Development Patterns
 
