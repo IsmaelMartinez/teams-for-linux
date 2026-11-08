@@ -75,7 +75,7 @@ To disable the preview window entirely:
 }
 ```
 
-> **Migration note:** the legacy flat `screenSharingThumbnail` key and `screenLockInhibitionMethod` key were removed in this release. Move any existing values into `screenSharing.thumbnail` and `screenSharing.lockInhibitionMethod` respectively before upgrading.
+> **Migration note:** the legacy flat `screenSharingThumbnail` and `screenLockInhibitionMethod` keys are no longer read. If an old config still has them, move the values into `screenSharing.thumbnail` and `screenSharing.lockInhibitionMethod`.
 
 ## Troubleshooting
 

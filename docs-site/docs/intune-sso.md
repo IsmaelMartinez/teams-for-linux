@@ -52,7 +52,7 @@ Enable Intune SSO in your configuration file. You can place the configuration in
 - `auth.intune.enabled`: Enable/disable Intune SSO integration (default: false)
 - `auth.intune.user`: Specific user account to use (default: "" - uses first available account)
 
-**Migration note:** The legacy flat keys `ssoInTuneEnabled` and `ssoInTuneAuthUser` were removed in this release. Move any existing values to `auth.intune.enabled` and `auth.intune.user` respectively before upgrading.
+**Migration note:** The legacy flat keys `ssoInTuneEnabled` and `ssoInTuneAuthUser` are no longer read. If an old config still has them, move the values to `auth.intune.enabled` and `auth.intune.user`.
 
 ## Troubleshooting
 

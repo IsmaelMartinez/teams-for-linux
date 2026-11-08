@@ -55,7 +55,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [031](031-ozone-platform-x11-default.md) | Keep the `--ozone-platform=x11` Default on Wayland | 🔄 Superseded by 034 except snap | 2026-09-05 | N/A |
 | [032](032-secondary-window-for-calls.md) | Opt-in Secondary Window for the Same Account During Calls | 🚧 Proposed | 2026-09-18 | N/A |
 | [033](033-dbus-control-api.md) | Opt-in D-Bus Control API for Teams Actions and State | ✅ Implemented | 2026-10-06 | v2.25.0+ |
-| [034](034-native-wayland-default.md) | Native Wayland by Default on deb, rpm and integrated AppImage | ✅ Accepted | 2026-10-22 | next release after v2.30.0 |
+| [034](034-native-wayland-default.md) | Native Wayland by Default on deb, rpm and integrated AppImage | ✅ Accepted | 2026-10-22 | pending release |
 | [035](035-renderer-trust-boundary.md) | Renderer Trust Boundary with Context Isolation Disabled | ✅ Implemented | 2026-11-07 | v2.24.0, v2.30.0 |
 | [036](036-agents-md-adoption.md) | Adopt AGENTS.md as the Agent Instruction File | ✅ Accepted | 2026-11-07 | N/A |
 
@@ -113,7 +113,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [034](034-native-wayland-default.md) | Native Wayland by Default on deb, rpm and integrated AppImage | Drop the packaged `--ozone-platform=x11` on deb, rpm and AppImage on the Electron 44 baseline; snap keeps it. Answers ADR-031's reopen triggers and names the GNOME multi-monitor case as the open risk |
 
 **Key Outcomes:**
-- deb, rpm and integrated AppImage follow the session backend from the release after v2.30.0, like Flatpak and tar.gz; the snap keeps `--ozone-platform=x11`
+- deb, rpm and integrated AppImage follow the session backend, like Flatpak and tar.gz; the snap keeps `--ozone-platform=x11`
 - `electronCLIFlags` cannot override the flag; only a genuine command-line or `.desktop` override can
 - ADR-016 matrix, GNOME and KDE two-monitor checks all passed on the PR build; Enterprise Linux 8 (GTK 3.22) needs the documented `.desktop` override
 
@@ -394,14 +394,7 @@ When referencing code in ADRs:
 
 ## ADR Statistics
 
-- **Total ADRs**: 35
-- **Implemented**: 20
-- **Accepted**: 5
-- **Proposed**: 1
-- **Rejected**: 3
-- **Superseded**: 6
-- **Average length**: ~1200 words
-- **Topics covered**: 11 (Authentication & Security, Screen Sharing, Linux Desktop & Display Server, Testing & Quality, Performance, Documentation & Standards, Release Process & Automation, Community & Metrics, MQTT & Integration, UI Features, Distribution & Packaging)
+The Status Overview table above is the single source of truth for how many records exist and where each stands; counts are not repeated here so they cannot drift. The topics are the sections under By Topic.
 
 ## Research Notes
 

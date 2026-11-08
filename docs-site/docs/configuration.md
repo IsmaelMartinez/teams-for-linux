@@ -106,7 +106,7 @@ set both, the nested name wins. Menu toggles that save a setting, such as the
 notification switches and the app icon, write the nested name and remove the old
 one.
 
-The old names keep working until **2.32.0**. Using one, in `config.json`, as a
+The old names keep working for now and are scheduled for removal in a coming release (tracked in [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842)). Using one, in `config.json`, as a
 command-line flag or as an environment variable, shows a single Configuration
 Warning once at startup naming every option to move and where you set it. Tick
 "Don't show this again" to dismiss it; it comes back only if the list changes.
@@ -1004,7 +1004,7 @@ If you don't set this option at all (via config file or CLI), GPU will be disabl
 :::
 
 :::note XWayland Optimizations
-When running under XWayland (Wayland session with `--ozone-platform=x11`; since v2.31.0 that flag must be passed explicitly, the deb, rpm and AppImage no longer ship it), the app treats it the same as native Wayland by default. If you experience **camera issues** under XWayland (e.g., camera crash on second launch), you can enable XWayland-specific optimizations:
+When running under XWayland (Wayland session with `--ozone-platform=x11`; the flag must be passed explicitly, since the deb, rpm and AppImage no longer ship it), the app treats it the same as native Wayland by default. If you experience **camera issues** under XWayland (e.g., camera crash on second launch), you can enable XWayland-specific optimizations:
 
 ```json
 {
@@ -1184,7 +1184,7 @@ The configuration file can include Electron CLI flags that will be added when th
 > For options that require a value, provide them as an array where the first element is the flag and the second is its value. If no value is needed, you can use a simple string.
 
 > [!WARNING]
-> The `ozone-platform` flag **cannot** be set via `electronCLIFlags` because it must be applied before the Electron process starts (before any JavaScript executes). Since v2.31.0 the deb, rpm and AppImage ship no `--ozone-platform` flag and Chromium picks the backend per session; the snap still ships `--ozone-platform=x11`. To force a backend, pass `--ozone-platform=x11` or `--ozone-platform=wayland` as a command-line argument when launching the app, or edit the `Exec=` line in your `.desktop` file. See [Troubleshooting: Wayland / Display Issues](troubleshooting.md#wayland--display-issues) for details.
+> The `ozone-platform` flag **cannot** be set via `electronCLIFlags` because it must be applied before the Electron process starts (before any JavaScript executes). The deb, rpm and AppImage ship no `--ozone-platform` flag and Chromium picks the backend per session; the snap still ships `--ozone-platform=x11`. To force a backend, pass `--ozone-platform=x11` or `--ozone-platform=wayland` as a command-line argument when launching the app, or edit the `Exec=` line in your `.desktop` file. See [Troubleshooting: Wayland / Display Issues](troubleshooting.md#wayland--display-issues) for details.
 
 #### Custom Feature Flags (enable-features / disable-features)
 
