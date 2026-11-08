@@ -97,7 +97,7 @@ surface and do not require allowlisting.
 - `app/mainAppWindow/profileViewManager.js` (Phase 1c.1) — owns the
   per-profile `WebContentsView` overlays and the first-run bootstrap. It
   subscribes to the events documented above so any future caller of
-  `add` / `switch` / `remove` (including the upcoming switcher UI) keeps
+  `add` / `switch` / `remove` (including the switcher pill in `app/profileSwitcher/`) keeps
   the view set in sync without extra wiring.
 - `app/login/index.js` (landed in Phase 1b) — migrates the login
   retry-state from a module-level boolean to a per-`webContents` `WeakMap`

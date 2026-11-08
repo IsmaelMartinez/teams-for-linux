@@ -4,10 +4,11 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| latest 2.x release | :white_check_mark: |
-| earlier releases | :x:                |
+| Most recent published version (stable or pre-release) | :white_check_mark: |
+| Most recent stable version, while a newer pre-release exists | :white_check_mark: |
+| Older releases | :x:                |
 
-Only the latest release receives security updates; fixes ship in the next regular release rather than as backports, so upgrade to the current version to benefit from them. The current release is listed on the [releases page](https://github.com/IsmaelMartinez/teams-for-linux/releases).
+New releases ship as a pre-release first and are promoted to stable after a soak, so the most recent stable version stays covered until the pre-release is promoted. Fixes land in the next regular release rather than as backports to older versions, so upgrade to benefit from them. Current versions are listed on the [releases page](https://github.com/IsmaelMartinez/teams-for-linux/releases).
 
 ## Reporting a Vulnerability
 
