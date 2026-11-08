@@ -305,6 +305,38 @@ describe('NotificationService click and close relay', () => {
 		});
 	}
 
+	it("brings the creating renderer's profile forward before showing the window", async () => {
+		const service = makeService(async () => {});
+		const order = [];
+		const sender = makeSender();
+		service.setProfileActivator((target) => {
+			order.push(target === sender ? 'activate:creator' : 'activate:other');
+			windowActions.push('activate');
+		});
+
+		await show({ notificationId: 'notif-a' }, sender);
+		notifications[0].emit('click');
+
+		assert.deepStrictEqual(order, ['activate:creator']);
+		assert.deepStrictEqual(windowActions, ['activate', 'show']);
+		assert.deepStrictEqual(sends, [['notification-clicked', 'notif-a']]);
+	});
+
+	it('leaves the profile alone when clickAction is "none"', async () => {
+		const service = makeService(async () => {}, {
+			config: { notifications: { electron: { clickAction: 'none' } } },
+		});
+		let activated = false;
+		service.setProfileActivator(() => {
+			activated = true;
+		});
+
+		await show({ notificationId: 'notif-b' }, makeSender());
+		notifications[0].emit('click');
+
+		assert.strictEqual(activated, false);
+	});
+
 	it('does not throw or relay when the window is gone', async () => {
 		makeService(async () => {}, { windowMissing: true });
 

@@ -823,6 +823,17 @@ async function handleAppReady() {
           viewManager: profileViewManager,
           profilesManager,
         });
+        const {
+          createProfileActivator,
+          registerWebNotificationClick,
+        } = require("./profileActivation");
+        const activateProfile = createProfileActivator({
+          viewManager: profileViewManager,
+          profilesManager,
+        });
+        notificationService.setProfileActivator(activateProfile);
+        customNotificationManager.setProfileActivator(activateProfile);
+        registerWebNotificationClick({ ipcMain, activate: activateProfile });
         await profileViewManager.bootstrapProfileZeroIfNeeded();
         unreadAggregator = createUnreadAggregator(profileViewManager);
       } else {

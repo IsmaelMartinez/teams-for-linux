@@ -480,3 +480,72 @@ test('toggling a notification switch mid-rename keeps the typed name', async () 
     await closeAndCleanup(ctx);
   }
 });
+
+// Phase 2: a click on a toast brings forward the profile that raised it. The
+// OS toast itself can't be clicked from a test, so this drives the two halves
+// of the `web` path: a reported click switches to the raising profile, and a
+// synthetic click dispatched by page script is ignored.
+test('a notification click switches to the profile that raised it', async () => {
+  const { ctx, a } = await startWithTwoProfiles('teams-e2e-toast-click-');
+
+  try {
+    const activeId = async () =>
+      (await invokeHandler(ctx.electronApp, 'profile-get-active', [])).result?.id;
+    const inBackground = (js) =>
+      ctx.electronApp.evaluate(async ({ BrowserWindow }, js) => {
+        const win = BrowserWindow.getAllWindows().find(
+          (w) => w.contentView.children.length === 3
+        );
+        const background = win.contentView.children.find((c) => !c.getVisible());
+        return background.webContents.executeJavaScript(js);
+      }, js);
+    const notAProfileA = await activeId();
+    expect(notAProfileA).not.toBe(a.result.id);
+
+    // Page script dispatching a click must not steal the window.
+    await expect
+      .poll(() =>
+        inBackground(`(() => {
+          const n = new Notification('Hi', { body: 'x' });
+          n.dispatchEvent(new Event('click'));
+          return Object.prototype.toString.call(n);
+        })()`)
+      , { timeout: 15000 })
+      .toBe('[object Notification]');
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(await activeId()).toBe(notAProfileA);
+
+    // A page that patches addEventListener can't capture the preload's
+    // listener and call it with a forged trusted event.
+    const stolen = await inBackground(`(() => {
+      const recorded = [];
+      const original = EventTarget.prototype.addEventListener;
+      EventTarget.prototype.addEventListener = function (type, fn, ...rest) {
+        if (type === 'click') recorded.push(fn);
+        return original.call(this, type, fn, ...rest);
+      };
+      try {
+        new Notification('Hi', { body: 'y' });
+        for (const fn of recorded) fn({ isTrusted: true });
+        return recorded.length;
+      } finally {
+        EventTarget.prototype.addEventListener = original;
+      }
+    })()`);
+    expect(stolen).toBe(0);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(await activeId()).toBe(notAProfileA);
+
+    // A user click, as the preload reports it, switches to profile A.
+    await ctx.electronApp.evaluate(({ BrowserWindow, ipcMain }) => {
+      const win = BrowserWindow.getAllWindows().find(
+        (w) => w.contentView.children.length === 3
+      );
+      const background = win.contentView.children.find((c) => !c.getVisible());
+      ipcMain.emit('notification-web-clicked', { sender: background.webContents });
+    });
+    await expect.poll(activeId).toBe(a.result.id);
+  } finally {
+    await closeAndCleanup(ctx);
+  }
+});
