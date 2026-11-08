@@ -13,7 +13,7 @@ export default [
   },
   { files: ["**/*.js"], languageOptions: { sourceType: "commonjs" } },
   {
-    files: ["testing/spikes/**/*.js", "tests/e2e/**/*.js", "playwright.config.js"],
+    files: ["tests/e2e/**/*.js", "playwright.config.js"],
     ignores: ["tests/e2e/authenticated/helpers.js"],
     languageOptions: { sourceType: "module" },
   },
