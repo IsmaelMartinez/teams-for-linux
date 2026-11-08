@@ -4,10 +4,9 @@ Handles browser-side code injection and communication with the Teams web interfa
 
 ## Structure
 
-- **[index.js](index.js)**: Entry point for browser integration
+- **[preload.js](preload.js)**: Preload script for the Teams window; loads the tools below once on the trusted `DOMContentLoaded` and exposes the narrow `electronAPI` to the page (see [ADR-035](../../docs-site/docs/development/adr/035-renderer-trust-boundary.md))
 - **[notifications/](notifications/)**: Activity monitoring and unread count management
 - **[tools/](tools/)**: Client-side scripts injected into Teams interface
-- **[preload.js](preload.js)**: Preload script for secure IPC communication
 
 ## Key Features
 

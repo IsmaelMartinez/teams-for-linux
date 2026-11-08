@@ -49,6 +49,9 @@ User-facing features and integrations.
 | **WebAuthn / FIDO2** | `app/webauthn/` | Hardware security key support for Linux via fido2-tools interception of navigator.credentials | [ADR-021](./adr/021-webauthn-fido2-linux.md) |
 | **Client Certificate PIN** | `app/clientCertificate/` | Linux smartcard/NSS client-certificate PIN dialog built on the shared secure prompt ([#2639](https://github.com/IsmaelMartinez/teams-for-linux/issues/2639)) | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/clientCertificate/README.md) |
 | **Profiles Manager** | `app/profilesManager/` | Multi-account profile storage, switching, and lifecycle management | [ADR-020](./adr/020-multi-account-profile-switcher.md) |
+| **Profile Switcher** | `app/profileSwitcher/` | In-app account pill for switching between profile views (ADR-020 Phase 1) | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/profileSwitcher/README.md) |
+| **Profile Unread** | `app/profileUnread/` | Aggregates per-profile unread counts into one tray badge (ADR-020 Phase 2) | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/profileUnread/README.md) |
+| **Custom Stickers** | `app/customStickers/` | Opt-in sticker folder and URL import, sent into the compose box as a paste event | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/customStickers/README.md) |
 | **Profile Dialogs** | `app/profileDialogs/` | Add-profile, manage-profiles, and switch-profile UI dialogs | [ADR-020](./adr/020-multi-account-profile-switcher.md) |
 | **Join Meeting Dialog** | `app/joinMeetingDialog/` | Join Meeting dialog for deep-link navigation handling | — |
 
@@ -78,6 +81,7 @@ Supporting infrastructure, utilities, and cross-cutting concerns.
 | **Config** | `app/config/` | Configuration file loading and parsing | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/config/README.md) |
 | **Connection Manager** | `app/connectionManager/` | Network connectivity and connection state | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/connectionManager/README.md) |
 | **Partitions** | `app/partitions/` | Electron partition management for sessions | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/partitions/README.md) |
+| **Background Portal** | `app/backgroundPortal/` | Flatpak background-running request and status over `org.freedesktop.portal.Background` | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/backgroundPortal/README.md) |
 | **Security** | `app/security/` | IPC allowlist and sender pinning, webview guard, session permission policy ([ADR-035](adr/035-renderer-trust-boundary.md)) | [Security Architecture](security-architecture.md) |
 | **Control** | `app/control/` | Transport-neutral named Teams actions and observed state for optional adapters ([ADR-033](adr/033-dbus-control-api.md)) | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/control/README.md) |
 | **D-Bus** | `app/dbus/` | Opt-in Linux session-bus adapter for the control service | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/dbus/README.md), [D-Bus control guide](dbus-control.md) |

@@ -14,7 +14,7 @@ See the [example README](https://github.com/IsmaelMartinez/teams-for-linux/tree/
 
 1. **Enabling the Feature:**  
    To activate custom backgrounds, launch the application with:  
-   `--isCustomBackgroundEnabled=true`
+   `--customBackground.enabled=true`
 
    For Apache2 users, you might need to add a configuration like the following
    in your `/etc/apache2/apache2.conf`:
@@ -42,7 +42,7 @@ See the [example README](https://github.com/IsmaelMartinez/teams-for-linux/tree/
 
 4. **URL Structure for Images:**  
    Custom images are always loaded using the pattern:  
-   `<customBGServiceBaseUrl>/<image-path>`  
+   `<customBackground.serviceBaseUrl>/<image-path>`  
    Make sure your web server is running and that the specified base URL responds
    correctly.
 
@@ -55,7 +55,7 @@ See the [example README](https://github.com/IsmaelMartinez/teams-for-linux/tree/
 
 ### Configuration File Location
 The list of custom images should be stored at:  
-`<customBGServiceBaseUrl>/config.json`
+`<customBackground.serviceBaseUrl>/config.json`
 
 ### Example Configuration File
 The configuration should be a JSON object with a `videoBackgroundImages`
@@ -109,7 +109,7 @@ cd /path/to/your/images
 python3 -m http.server 8080
 
 # Configure Teams for Linux
-teams-for-linux --isCustomBackgroundEnabled=true --customBGServiceBaseUrl=http://localhost:8080
+teams-for-linux --customBackground.enabled=true --customBackground.serviceBaseUrl=http://localhost:8080
 ```
 
 #### Using Node.js HTTP Server
@@ -124,7 +124,7 @@ cd /path/to/your/images
 http-server -p 8080 --cors
 
 # Configure Teams for Linux
-teams-for-linux --isCustomBackgroundEnabled=true --customBGServiceBaseUrl=http://localhost:8080
+teams-for-linux --customBackground.enabled=true --customBackground.serviceBaseUrl=http://localhost:8080
 ```
 
 ### Advanced Configuration
@@ -161,7 +161,7 @@ For corporate environments with existing web infrastructure:
 
 #### Backgrounds Not Loading
 1. **Check CORS headers**: Ensure your web server includes `Access-Control-Allow-Origin: *`
-2. **Verify URL accessibility**: Test that `<customBGServiceBaseUrl>/config.json` is reachable
+2. **Verify URL accessibility**: Test that `<customBackground.serviceBaseUrl>/config.json` is reachable
 3. **Check image paths**: Ensure image files exist at the specified paths
 
 #### Poor Performance
@@ -178,7 +178,7 @@ For corporate environments with existing web infrastructure:
 Enable debug logging to troubleshoot custom background issues:
 
 ```bash
-teams-for-linux --logConfig='{"level":"debug"}' --isCustomBackgroundEnabled=true
+teams-for-linux --logConfig='{"level":"debug"}' --customBackground.enabled=true
 ```
 
 ## Security Considerations

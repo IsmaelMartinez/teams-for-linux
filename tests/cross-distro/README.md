@@ -170,6 +170,15 @@ The entrypoint handles these automatically:
 - **Wayland:** Sway (headless, XWayland disabled) + wayvnc + foot
 - **XWayland:** Sway (headless, XWayland enabled) + wayvnc + xterm
 
+## Post-auth tests with a saved session
+
+Microsoft's sign-in wall keeps the CI Playwright suite pre-auth. The containers add a second mode that runs tests against a real, persisted session, which is the check to run before an Electron upgrade.
+
+1. `./run.sh ubuntu x11 --login`: starts the container with npm-installed Electron and noVNC, you sign in to Teams in the browser, and `Ctrl+C` saves the session to `./session`.
+2. `./run-all-tests.sh`: for each of the nine distro and display-server configurations, runs `./run.sh <distro> <display> --test`, which mounts the saved session read-only and runs the Playwright specs (app ready, screen sharing, window management), then prints a pass/fail summary. `./run-all-tests.sh --cleanup` removes the session folder.
+
+What the implementation depends on: the session must be created by the same Electron binary that runs the tests (hence the pinned Node.js above), `--password-store=basic` keeps cookies off a D-Bus-bound keyring, `E2E_TESTING=true` bypasses the code-evaluation override in `browserWindowManager.js`, tests wait for `domcontentloaded` because Teams never reaches `networkidle`, and the `desktopCapturer` test is skipped on pure Wayland since it needs an X11 display. Still open: detecting an expired session and prompting for a new login, and whether to store an encrypted session for CI runs or keep this a manual developer workflow.
+
 ## Troubleshooting
 
 **Sway won't start:** Try `docker compose run --privileged ubuntu-wayland` (last resort, weakens isolation).

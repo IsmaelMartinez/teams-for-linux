@@ -64,7 +64,7 @@ Download from [GitHub Releases](https://github.com/IsmaelMartinez/teams-for-linu
 | **[Troubleshooting](https://ismaelmartinez.github.io/teams-for-linux/troubleshooting)** | Common issues and solutions |
 | **[Multiple Profiles](https://ismaelmartinez.github.io/teams-for-linux/multiple-instances)** | Running work & personal accounts |
 | **[Custom Backgrounds](https://ismaelmartinez.github.io/teams-for-linux/custom-backgrounds)** | Video call backgrounds setup |
-| **[Contributing](https://ismaelmartinez.github.io/teams-for-linux/contributing)** | Development setup and contribution guidelines |
+| **[Contributing](https://ismaelmartinez.github.io/teams-for-linux/development/contributing)** | Development setup and contribution guidelines |
 | **[Privacy & Data Protection](https://ismaelmartinez.github.io/teams-for-linux/privacy)** | What personal data the app does and does not handle |
 
 ## Project Activity
@@ -88,8 +88,6 @@ Electron's contextIsolation and sandbox features are disabled to enable Teams DO
 - **AppArmor/SELinux**: Most Linux distributions include these by default
 
 System-level sandboxing provides better isolation than Electron's built-in features while preserving full functionality.
-
-## Advanced Usage
 
 ## History
 

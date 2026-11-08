@@ -4,10 +4,10 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 2.7.x   | :white_check_mark: |
-| < 2.7   | :x:                |
+| latest 2.x release | :white_check_mark: |
+| earlier releases | :x:                |
 
-Only the latest release in the 2.7.x series receives security updates. Users should upgrade to the latest version to benefit from fixes.
+Only the latest release receives security updates; fixes ship in the next regular release rather than as backports, so upgrade to the current version to benefit from them. The current release is listed on the [releases page](https://github.com/IsmaelMartinez/teams-for-linux/releases).
 
 ## Reporting a Vulnerability
 

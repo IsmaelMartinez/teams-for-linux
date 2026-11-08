@@ -22,7 +22,7 @@ After the server starts, access the application by navigating to
 
 > **Note:** Remember to launch Teams for Linux with the appropriate
 > configuration options to enable the custom background feature (refer to the
-> [README](../README.md) for details).
+> [custom backgrounds guide](../../../docs-site/docs/custom-backgrounds.md) for details).
 
 ## Image Credits
 

@@ -48,7 +48,7 @@ The panel and the floating button follow the operating-system dark/light prefere
 
 When the feature is enabled and the default folder did not previously exist, a single bundled example sticker (the wrapper's icon) is copied into it on first run so the panel has something to show. Delete it and replace with your own.
 
-Stickers are sent into Teams by dispatching a synthetic `ClipboardEvent('paste')` at the focused compose box. Teams's editor (CKEditor 5) handles the event the same way it handles a real paste. This was validated end-to-end during the feasibility spike — see [`spike/2476-stickers/`](../../spike/2476-stickers/) at the repo root for the research and design notes.
+Stickers are sent into Teams by dispatching a synthetic `ClipboardEvent('paste')` at the focused compose box. Teams's editor (CKEditor 5) handles the event the same way it handles a real paste. This was validated end-to-end during the feasibility spike for [#2476](https://github.com/IsmaelMartinez/teams-for-linux/issues/2476); the spike notes were removed once the feature shipped and live in [git history](https://github.com/IsmaelMartinez/teams-for-linux/commits/main/spike/2476-stickers) under `spike/2476-stickers/`.
 
 ## What's out of scope
 

@@ -481,7 +481,7 @@ See [Manual Release Process](manual-release-process.md) for detailed instruction
 ### Development Questions
 
 - **[IPC API Documentation](ipc-api.md)** - Inter-process communication reference
-- **[Configuration Guide](configuration.md)** - Understanding the config system
+- **[Configuration Guide](../configuration.md)** - Understanding the config system
 - **[Architecture Overview](#architecture-overview)** - Main and renderer process layout, key components
 
 ### Community Support
@@ -500,7 +500,7 @@ By contributing to Teams for Linux, you agree that your contributions will be li
 
 ## Related Documentation
 
-- [Configuration Options](configuration.md) - Application configuration reference
+- [Configuration Options](../configuration.md) - Application configuration reference
 - [IPC API](ipc-api.md) - Developer integration documentation
 - [Manual Release Process](manual-release-process.md) - Release workflow using release-please
 - [Release Info Generation](release-info.md) - Technical details of release info script

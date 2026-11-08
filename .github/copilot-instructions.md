@@ -48,11 +48,16 @@ npm run dist:linux    # Build Linux packages (AppImage, deb, rpm, snap)
 > **TrayIconRenderer IPC Initialization** - The `trayIconRenderer` module MUST be included in the IPC initialization list in `app/browser/preload.js`. This has been accidentally removed multiple times in git history. See issue #1902 and CLAUDE.md for details.
 
 ```javascript
-// REQUIRED in app/browser/preload.js
-if (module.name === "settings" || module.name === "theme" || module.name === "trayIconRenderer" || module.name === "mqttStatusMonitor") {
+// REQUIRED in app/browser/preload.js: entries flagged `ipc: true` receive ipcRenderer
+{ name: "trayIconRenderer", path: "./tools/trayIconRenderer", ipc: true },
+{ name: "mqttStatusMonitor", path: "./tools/mqttStatusMonitor", ipc: true },
+// ...
+if (module.ipc === true) {
   moduleInstance.init(config, ipcRenderer);
 }
 ```
+
+The flag lives on each entry and the loop is indexed rather than a `Set` with `for...of`, because page script shares the preload's JavaScript world and can patch `Set.prototype.has` or the array iterator (see ADR-035).
 
 ## Project Architecture
 

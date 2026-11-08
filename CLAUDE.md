@@ -157,7 +157,7 @@ When contributing:
 
 The project documentation is built with Docusaurus and deployed to GitHub Pages:
 - **URL**: https://ismaelmartinez.github.io/teams-for-linux/
-- **Platform**: Docusaurus 3.9.2
+- **Platform**: Docusaurus 3 (version pinned in `docs-site/package.json`)
 - **Local Development**: `cd docs-site && npm run start`
 - **Deployment**: Automated via GitHub Actions
 
@@ -239,8 +239,9 @@ When a PR has review comments, address them proactively:
 2. For each actionable review comment (not automated bots like changelog, build artifacts, SonarQube):
    - Make the requested code changes
    - Commit and push the changes
-3. Reply to the review by adding a PR comment summarizing all changes made, referencing the discussion IDs
-4. Use `gh pr comment {PR_NUMBER} --body "..."` to post the summary
+3. Reply to each review comment individually with the commit hash that addresses it, never silently:
+   `gh api repos/IsmaelMartinez/teams-for-linux/pulls/{PR_NUMBER}/comments -X POST -f body="Applied in <hash>: ..." -F in_reply_to=<comment_id>`
+4. Wait for CI and the bot reviews (Greptile, Copilot) to finish on the new commit before reporting done
 
 ### Development Roadmap
 
@@ -253,18 +254,17 @@ When a PR has review comments, address them proactively:
 **After implementing a feature (PR merged):**
 - Update the roadmap to reflect the completed work
 - Move completed features to appropriate sections or remove if fully done
-- Update status indicators (Ready → Implemented, etc.)
+- Move items between Active Themes, Awaiting User Feedback and Not Planned as their state changes
 - Add any new insights or follow-up work discovered during implementation
 
 **Label note:** The GitHub label `release ready` (formerly `ready`) means the fix is merged to main and included in the next release. When triaging, apply `release ready` only to issues or PRs that are done and waiting for the release cut.
 
 **Roadmap sections:**
-- **Ready for Implementation** - Features with completed research, ready to build
-- **User Feedback Received** - MVP shipped, user feedback identifies gaps to address
-- **Requires Validation First** - Features needing spikes/validation before implementation
-- **Stalled** - Work started but blocked (e.g., awaiting user validation)
-- **Awaiting User Feedback** - Shipped features, waiting for requests before expanding
+- **Principles** - How features are chosen and shipped
+- **Active Themes** - Orientation map of ongoing areas, each linking to its live GitHub label
+- **Awaiting User Feedback** - Shipped features whose next phase waits for a user request
 - **Not Planned / Not Feasible** - Rejected or infeasible features with rationale
+- **Infrastructure** - Bots, cross-distro testing, release automation, repo health
 
 ## Important Notes
 
