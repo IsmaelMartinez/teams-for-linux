@@ -63,7 +63,7 @@ Replace the `user-data-dir` with the full path where you want to store the profi
 
 ## Command Line Options
 
-The options below use the nested names from the [configuration reference](configuration.md). The older flat spellings (`--appIcon`, `--appTitle`, `--class`, `--url`) still work until their scheduled removal but print a Configuration Warning at startup, so update any `.desktop` files or scripts that use them.
+The options below use the nested names from the [configuration reference](configuration.md). The older flat spellings (`--appIcon`, `--appTitle`, `--class`, `--url`) still work until their scheduled removal (tracked in [#2842](https://github.com/IsmaelMartinez/teams-for-linux/issues/2842)) but print a Configuration Warning at startup, so update any `.desktop` files or scripts that use them.
 
 ### `--tray.icon`
 
