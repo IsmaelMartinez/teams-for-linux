@@ -501,7 +501,7 @@ Replace `<your-chrome-version>` with the Chrome version Teams for Linux reports.
 ### Wayland / Display Issues
 
 :::info Default Behavior
-The deb, rpm and AppImage packages ship no `--ozone-platform` flag ([ADR-034](development/adr/034-native-wayland-default.md); releases before it forced X11), so Chromium picks the backend per session: native Wayland on a Wayland session, X11 otherwise. The snap still launches with `--ozone-platform=x11` (see [ADR-034](development/adr/034-native-wayland-default.md)). To force a backend, pass `--ozone-platform=x11` or `--ozone-platform=wayland` on the command line or in your `.desktop` file.
+From the first release that includes [ADR-034](development/adr/034-native-wayland-default.md) (check the [changelog](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/CHANGELOG.md)), the deb, rpm and AppImage packages ship no `--ozone-platform` flag; earlier releases still force X11. Without the flag, Chromium picks the backend per session: native Wayland on a Wayland session, X11 otherwise. The snap still launches with `--ozone-platform=x11` (see [ADR-034](development/adr/034-native-wayland-default.md)). To force a backend, pass `--ozone-platform=x11` or `--ozone-platform=wayland` on the command line or in your `.desktop` file.
 
 If you had `wayland.xwaylandOptimizations` enabled on an earlier release, it only applies when the app runs under XWayland, which it no longer does by default: add `--ozone-platform=x11` to your `Exec=` line to keep it.
 :::
