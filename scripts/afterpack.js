@@ -4,6 +4,7 @@ const path = require("node:path");
 const { generateReleaseInfo } = require("./generateReleaseInfo");
 const { generateDebianChangelog } = require("./generateDebianChangelog");
 const { patchSnapDesktopLauncher } = require("./patchSnapDesktopLauncher");
+const { removeCompiledCborExtract } = require("./removeCompiledCborExtract");
 
 function getAppFileName(context) {
   const productFileName = context.packager.appInfo.productFilename;
@@ -28,6 +29,7 @@ exports.default = async function afterPack(context) {
     if (context.electronPlatformName === "linux") {
       await generateReleaseInfoForLinux();
       await patchSnapLauncherIfNeeded(context);
+      await removeCompiledCborExtract(context.appOutDir);
     }
 
     const appPath = `${context.appOutDir}/${getAppFileName(context)}`;
