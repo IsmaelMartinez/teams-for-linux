@@ -19,8 +19,11 @@ const CASES = [
   { id: 'invalid-colour', options: { backgroundColor: 'not-a-colour' } },
 ];
 
-// Runs in each toast page once its init message has arrived.
-function measureToast() {
+// Runs in each toast page once its init message has arrived. The toast
+// animates background changes (`transition: all 0.2s`), so wait for every
+// running transition to finish rather than reading a value mid-fade.
+async function measureToast() {
+  await Promise.all(document.getAnimations().map((animation) => animation.finished));
   const body = document.getElementById('body');
   const style = getComputedStyle(body);
   const lineHeight = Number.parseFloat(style.lineHeight);

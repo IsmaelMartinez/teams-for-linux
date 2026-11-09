@@ -16,8 +16,11 @@ const { resolveToastOptions } = require(path.join(root, 'app/notificationSystem/
 const LONG_BODY = 'This message is long enough to need many lines in the toast. '.repeat(12);
 
 // Held for the life of the process so the toasts aren't garbage-collected
-// while the spec measures them.
+// while the spec measures them, and closed cleanly when the spec quits.
 const toasts = [];
+app.on('before-quit', () => {
+  for (const toast of toasts) toast.close();
+});
 
 app.whenReady().then(() => {
   const cases = JSON.parse(process.env.TOAST_CASES || '[]');
