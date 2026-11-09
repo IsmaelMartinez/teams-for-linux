@@ -305,6 +305,8 @@ The `get-calendar` command retrieves calendar events for a specified date range:
 
 **Response Topic:** `teams/calendar`
 
+All events in the range are returned: Graph API results are paged, and Teams for Linux follows the paging links and merges every page into one `value` array (capped at 50 pages).
+
 ### Calendar Response Format
 
 Calendar data is published to the `teams/calendar` topic as raw Graph API JSON:

@@ -233,7 +233,47 @@ class GraphApiClient {
     const queryString = this._buildODataQuery(queryOptions);
     const endpoint = `/me/calendar/calendarView?${queryString}`;
 
-    return await this.makeRequest(endpoint);
+    return await this._collectAllPages(endpoint);
+  }
+
+  /**
+   * Follow @odata.nextLink until absent and merge every page's `value` array.
+   * Graph returns only a default page (10 events for calendarView) per request.
+   * Keeps the single-request `{ success, data }` shape with `data.value` holding all items.
+   */
+  async _collectAllPages(endpoint) {
+    const MAX_PAGES = 50;
+    let result = await this.makeRequest(endpoint);
+    if (!result.success) {
+      return result;
+    }
+
+    const { '@odata.nextLink': firstNextLink, ...firstPage } = result.data ?? {};
+    const items = [...(firstPage.value ?? [])];
+    let nextLink = firstNextLink;
+    let pages = 1;
+
+    while (nextLink) {
+      if (!nextLink.startsWith(`${this.baseUrl}/`)) {
+        // Never send the bearer token to a host other than Graph
+        logger.warn('[GRAPH_API] Refusing to follow nextLink outside Graph API');
+        return { success: false, error: 'Unexpected nextLink host in paged response' };
+      }
+      if (pages >= MAX_PAGES) {
+        logger.warn('[GRAPH_API] Page limit reached, results truncated', { maxPages: MAX_PAGES });
+        break;
+      }
+
+      result = await this.makeRequest(nextLink);
+      if (!result.success) {
+        return result;
+      }
+      items.push(...(result.data?.value ?? []));
+      nextLink = result.data?.['@odata.nextLink'];
+      pages++;
+    }
+
+    return { success: true, data: { ...firstPage, value: items } };
   }
 
   /** Create a calendar event (requires subject, start, end objects) */

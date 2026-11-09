@@ -45,7 +45,7 @@ All seven channels below are the complete Graph API allowlist entries in
 |---------|------|---------|
 | `graph-api-get-user-profile` | handle | Get the current user profile (`/me`) |
 | `graph-api-get-calendar-events` | handle | List calendar events with OData options |
-| `graph-api-get-calendar-view` | handle | List events in a date range (`/me/calendar/calendarView`) |
+| `graph-api-get-calendar-view` | handle | List all events in a date range (`/me/calendar/calendarView`); follows `@odata.nextLink`, capped at 50 pages |
 | `graph-api-create-calendar-event` | handle | Create a calendar event |
 | `graph-api-get-mail-messages` | handle | List mail messages with OData options |
 | `graph-api-search-people` | handle | People API search (Quick Chat contact search) |
