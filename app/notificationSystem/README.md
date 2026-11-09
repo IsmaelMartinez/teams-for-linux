@@ -45,4 +45,5 @@ Custom in-app toast notifications as an alternative to OS-level notifications.
 - Uses `electron-positioner` for multi-monitor support
 - Keeps active toasts in memory to prevent garbage collection
 - Toast appears in the configured corner (`bottomRight` by default), `margin` pixels from the screen edges, with auto-dismiss
+- `windowPositioner` keeps the toast inside the display's work area, so an oversized margin or toast never pushes the title off screen
 - Style values are checked with `CSS.supports` in the toast page and set as custom properties, so an invalid value keeps the default

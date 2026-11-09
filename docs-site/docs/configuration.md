@@ -1139,7 +1139,7 @@ A larger, Teams-purple toast in the top-right corner:
 > - `toastDuration`: Time in milliseconds before toast auto-dismisses (default: 5000ms)
 > - `width` / `height`: Toast size in pixels (default: 360 × 110; limits 200–1000 × 80–600). A taller toast shows more lines of the message.
 > - `position`: Screen corner, one of `bottomRight` (default), `topRight`, `bottomLeft`, `topLeft`
-> - `margin`: Gap in pixels from the screen edges (default: 0). Raise it if the toast covers a panel or dock, which can happen on multi-monitor setups where the reported work area includes the panel.
+> - `margin`: Gap in pixels from the screen edges (default: 0). Raise it if the toast covers a panel or dock, which can happen on multi-monitor setups where the reported work area includes the panel. The toast is always kept inside the screen's work area: a margin larger than the space left only moves it as far as the opposite edge.
 > - `backgroundColor`, `hoverBackgroundColor`, `titleColor`, `textColor`: Any CSS colour (defaults: `#2D2D2D`, `#3A3A3A`, `#FFFFFF`, `#D1D1D1`). Invalid values are ignored.
 > - `titleFontSize` / `bodyFontSize`: Font sizes in pixels (defaults: 14 and 13)
 >

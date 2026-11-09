@@ -84,6 +84,27 @@ describe('windowPositioner calculatePosition', () => {
   it('returns null for an unknown position', () => {
     assert.strictEqual(calculatePosition('centre', workArea, bounds), null);
   });
+
+  it('keeps a toast inside the work area when the margin is larger than the space left', () => {
+    const small = { x: 0, y: 0, width: 1280, height: 720 };
+    const big = { width: 1000, height: 600 };
+    // Without clamping these would be (-220, -380), cutting off the title.
+    assert.deepStrictEqual(calculatePosition('bottomRight', small, big, 500), { x: 0, y: 0 });
+    assert.deepStrictEqual(calculatePosition('topLeft', small, big, 500), { x: 280, y: 120 });
+  });
+
+  it('keeps the clamped toast on the right display of a multi-monitor work area', () => {
+    const big = { width: 1000, height: 600 };
+    assert.deepStrictEqual(calculatePosition('bottomRight', workArea, big, 2000), { x: 1920, y: 0 });
+  });
+
+  it('aligns a toast larger than the work area to its top-left edge', () => {
+    const small = { x: 0, y: 0, width: 1280, height: 720 };
+    const huge = { width: 1500, height: 900 };
+    for (const position of ['bottomRight', 'topRight', 'bottomLeft', 'topLeft']) {
+      assert.deepStrictEqual(calculatePosition(position, small, huge, 12), { x: 0, y: 0 }, position);
+    }
+  });
 });
 
 describe('notificationToast.html styling', () => {
