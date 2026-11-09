@@ -10,6 +10,7 @@ On Linux, Chromium's WebAuthn implementation lacks hardware support. This module
 - `touchPrompt.js`: "Waiting for your security key" prompt shown for the duration of the security-key call, with a Cancel that aborts it. Same BrowserWindow + contextBridge pattern as `pinDialog.js`. The same window doubles as the "Insert your security key" prompt (`view: "insert"`, text swapped in on `dom-ready`; a query string on the file URL stopped the window from ever showing on Wayland) while `index.js` polls `fido2-token -L` once a second for a key, before the PIN is asked for.
 - `originAllowlist.js`: Builds the set of origins a ceremony may be served for, from the built-in Microsoft origins plus `auth.webauthn.extraOrigins`. Shared with the preload relay so both gates agree.
 - `index.js`: Sets up `ipcMain` handlers, origin validation, and PIN callback wiring.
+- `backendStatus.js`: Decides at window creation whether a `fido2-tools` backend will answer (Linux, `auth.webauthn.enabled` and the three binaries on `PATH`). When none will, it passes `--webauthn-no-backend` to the renderer, and the top of `preload.js` hides `PublicKeyCredential` and refuses public-key requests with `NotSupportedError` before any page script runs. Without that, Electron leaves `PublicKeyCredential` defined, Microsoft's sign-in offers a security key, and `navigator.credentials.get()` never settles.
 
 ## Prerequisites
 
