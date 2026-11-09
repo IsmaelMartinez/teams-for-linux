@@ -63,5 +63,6 @@ describe('GraphApiClient.getCalendarView paging', () => {
 		assert.strictEqual(result.success, true);
 		assert.strictEqual(calls.length, 50);
 		assert.strictEqual(result.data.value.length, 50);
+		assert.strictEqual(result.data['@odata.nextLink'], `${BASE}/next49`);
 	});
 });

@@ -252,6 +252,7 @@ class GraphApiClient {
     const items = [...(firstPage.value ?? [])];
     let nextLink = firstNextLink;
     let pages = 1;
+    let remainingLink;
 
     while (nextLink) {
       if (!nextLink.startsWith(`${this.baseUrl}/`)) {
@@ -261,6 +262,8 @@ class GraphApiClient {
       }
       if (pages >= MAX_PAGES) {
         logger.warn('[GRAPH_API] Page limit reached, results truncated', { maxPages: MAX_PAGES });
+        // Keep the continuation link so consumers can tell the result is incomplete
+        remainingLink = nextLink;
         break;
       }
 
@@ -273,7 +276,10 @@ class GraphApiClient {
       pages++;
     }
 
-    return { success: true, data: { ...firstPage, value: items } };
+    return {
+      success: true,
+      data: { ...firstPage, value: items, ...(remainingLink && { '@odata.nextLink': remainingLink }) }
+    };
   }
 
   /** Create a calendar event (requires subject, start, end objects) */
