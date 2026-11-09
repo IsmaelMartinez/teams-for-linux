@@ -15,10 +15,14 @@ const { resolveToastOptions } = require(path.join(root, 'app/notificationSystem/
 
 const LONG_BODY = 'This message is long enough to need many lines in the toast. '.repeat(12);
 
+// Held for the life of the process so the toasts aren't garbage-collected
+// while the spec measures them.
+const toasts = [];
+
 app.whenReady().then(() => {
   const cases = JSON.parse(process.env.TOAST_CASES || '[]');
   for (const { id, options } of cases) {
     // Never shown: the layout is computed for hidden windows too.
-    new NotificationToast({ title: id, body: LONG_BODY }, resolveToastOptions(options));
+    toasts.push(new NotificationToast({ title: id, body: LONG_BODY }, resolveToastOptions(options)));
   }
 });
