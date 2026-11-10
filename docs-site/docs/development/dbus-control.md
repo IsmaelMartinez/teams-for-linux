@@ -57,7 +57,7 @@ When a call is answered, `incomingCall` can become false a moment before `inCall
 
 `microphoneControlState` is `muted`, `unmuted` or `off` (no active call), and `unknown` until the first observation. It is derived from the outgoing audio, so a microphone with built-in noise reduction that sends silence while you are quiet can read `muted` after about half a second; the [MQTT microphone topic](../mqtt-integration.md#published-topics) uses the same detection. `Mute` and `Unmute` rely on the same observation: they toggle only from a known `muted` or `unmuted` state (or with `force` set to true) and return false when the state already matches. On such a microphone a quiet, unmuted line can make `Mute` do nothing and `Unmute` send a toggle that mutes. Test this with your device before driving a mute LED from `MicrophoneControlChanged` or relying on `Mute` and `Unmute`; a bridge whose device has a single mute button can use `ToggleMute`, which sends the shortcut regardless of state.
 
-A community example for EPOS/Sennheiser DECT bases is discussed in [issue #3151](https://github.com/IsmaelMartinez/teams-for-linux/issues/3151).
+A community example for EPOS/Sennheiser DECT bases is discussed in [issue #3151](https://github.com/IsmaelMartinez/teams-for-linux/issues/3151). Its author published the [HID headset bridge](https://gist.github.com/rsteber/4e71e80ad0fc19a109053840e033909c) as a gist with the script, a systemd user service, a udev rule and the HID report layouts of the two devices tested; it is a third-party example, not maintained here.
 
 ## Separate application instances
 
