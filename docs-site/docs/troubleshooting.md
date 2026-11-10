@@ -366,8 +366,10 @@ with a fresh profile loads Teams normally.
 
 2.  **On older versions**, quit Teams for Linux and delete only the
     `Partitions/teams-4-linux/Service Worker` directory inside the profile:
-    `~/.config/teams-for-linux/` (Linux), `~/Library/Application Support/teams-for-linux/`
-    (macOS), or `%APPDATA%\teams-for-linux\` (Windows). Cookies and local storage are kept,
+    `~/.config/teams-for-linux/` (Linux), `~/snap/teams-for-linux/current/.config/teams-for-linux/`
+    (Snap), `~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/`
+    (Flatpak), `~/Library/Application Support/teams-for-linux/` (macOS), or
+    `%APPDATA%\teams-for-linux\` (Windows). Cookies and local storage are kept,
     so you stay signed in. Deleting `Cache` alone does not help.
 
 ---
