@@ -31,6 +31,10 @@
 * **deps:** bump the minor-and-patch group with 3 updates ([#3205](https://github.com/IsmaelMartinez/teams-for-linux/issues/3205)) ([2758e3e](https://github.com/IsmaelMartinez/teams-for-linux/commit/2758e3ea85337c36ca38b796803a03121fcb4911))
 * remove the finished smartcard PIN spike script ([#3200](https://github.com/IsmaelMartinez/teams-for-linux/issues/3200)) ([e630b24](https://github.com/IsmaelMartinez/teams-for-linux/commit/e630b2459908e47f31cfe35d21b2b0ae32b8e635))
 
+### Thanks
+
+Big thanks to @app/dependabot, @khaneliman, @nikolainyegaard, @smorokin for contributing to this release.
+
 ## [2.30.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.29.0...v2.30.0) (2026-11-07)
 
 

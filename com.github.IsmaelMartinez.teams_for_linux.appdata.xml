@@ -14,6 +14,25 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.31.0" date="2026-11-10">
+      <description>
+        <ul>
+          <li>dbus: add SetStatus presence control (#3178)</li>
+          <li>run native wayland by default on deb, rpm and appimage (#3129)</li>
+          <li>auth: keep msal.cache.encryption persistent on every profile session (#3193)</li>
+          <li>build: ship the prebuilt cbor-extract instead of the runner-compiled copy (#3194)</li>
+          <li>connection: clear service workers after a main-frame ERR_FAILED (#3145)</li>
+          <li>ADR catch-up, research index retirement and documentation sweep (#3196)</li>
+          <li>adr: mark ADR-018 superseded now the triage bot is retired (#3191)</li>
+          <li>describe versions relative to the release stream instead of hard-coded numbers (#3199)</li>
+          <li>link the community headset bridge and fix two shortcut rows (#3195)</li>
+          <li>move CLAUDE.md to AGENTS.md (ADR-036) (#3197)</li>
+          <li>deps: bump minimatch from 10.2.5 to 11.0.5 in /docs-site (#3190)</li>
+          <li>deps: bump the minor-and-patch group with 3 updates (#3205)</li>
+          <li>remove the finished smartcard PIN spike script (#3200)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.30.0" date="2026-11-07">
       <description>
         <ul>
