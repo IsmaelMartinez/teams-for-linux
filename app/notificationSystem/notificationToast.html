@@ -179,8 +179,9 @@
             document.getElementById('title').innerText = data.title || 'Teams';
             document.getElementById('body').innerText = data.body || '';
             fitBodyLines();
-            // Commit the configured style before enabling transitions.
-            getComputedStyle(document.body).backgroundColor;
+            // Force a style/layout flush so the configured style is committed
+            // before transitions are enabled.
+            document.body.getBoundingClientRect();
             document.body.classList.add('ready');
             globalThis.notificationApi.notifyReady();
         });
