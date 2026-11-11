@@ -12,4 +12,10 @@ contextBridge.exposeInMainWorld('notificationApi', {
   notifyClick: () => {
     ipcRenderer.send('notification-toast-click');
   },
+
+  // Tells the main process the init style is applied, so the toast can be
+  // shown without first painting the default look.
+  notifyReady: () => {
+    ipcRenderer.send('notification-toast-ready');
+  },
 });

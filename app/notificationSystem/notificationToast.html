@@ -36,8 +36,13 @@
             overflow: hidden;
             border-radius: 12px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-            transition: all 0.2s ease-out;
             border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Added after the first init, so a configured background is painted
+           straight away instead of fading in from the default. */
+        body.ready {
+            transition: background-color 0.2s ease-out, box-shadow 0.2s ease-out, filter 0.2s ease-out;
         }
 
         body:hover {
@@ -174,6 +179,10 @@
             document.getElementById('title').innerText = data.title || 'Teams';
             document.getElementById('body').innerText = data.body || '';
             fitBodyLines();
+            // Commit the configured style before enabling transitions.
+            getComputedStyle(document.body).backgroundColor;
+            document.body.classList.add('ready');
+            globalThis.notificationApi.notifyReady();
         });
 
         document.body.addEventListener('click', () => {

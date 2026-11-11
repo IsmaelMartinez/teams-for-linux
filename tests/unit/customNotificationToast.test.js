@@ -126,4 +126,12 @@ describe('notificationToast.html styling', () => {
     assert.match(html, /CSS\.supports\('color', value\)/);
     assert.match(html, /style\.setProperty\(property, value\)/);
   });
+
+  it('enables transitions only after the init style is applied', () => {
+    const bodyRule = /\n\s*body \{([^}]*)\}/.exec(html)[1];
+    assert.doesNotMatch(bodyRule, /transition/, 'a custom background would fade in from the default');
+    assert.match(html, /body\.ready \{[^}]*transition:/);
+    assert.match(html, /applyStyle\(style\);[\s\S]*classList\.add\('ready'\)/);
+    assert.match(html, /classList\.add\('ready'\);\s*globalThis\.notificationApi\.notifyReady\(\);/, 'ack only after the style is applied');
+  });
 });
