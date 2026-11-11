@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.31.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.31.0...v2.31.1) (2026-11-11)
+
+
+### Bug Fixes
+
+* **build:** exclude the compiled cbor-extract from the package instead of deleting it after packing ([#3209](https://github.com/IsmaelMartinez/teams-for-linux/issues/3209)) ([2df360e](https://github.com/IsmaelMartinez/teams-for-linux/commit/2df360e6a65a007356d4c5443dc4856e328be215))
+
 ## [2.31.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.30.0...v2.31.0) (2026-11-10)
 
 
