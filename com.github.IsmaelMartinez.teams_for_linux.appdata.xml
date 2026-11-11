@@ -14,6 +14,13 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.31.1" date="2026-11-11">
+      <description>
+        <ul>
+          <li>build: exclude the compiled cbor-extract from the package instead of deleting it after packing (#3209)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.31.0" date="2026-11-10">
       <description>
         <ul>
