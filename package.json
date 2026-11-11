@@ -102,6 +102,9 @@
       "appimage": "1.0.3"
     },
     "linux": {
+      "files": [
+        "!**/node_modules/cbor-extract/build{,/**}"
+      ],
       "category": "Chat;Network;Office",
       "packageCategory": "net",
       "executableName": "teams-for-linux",
