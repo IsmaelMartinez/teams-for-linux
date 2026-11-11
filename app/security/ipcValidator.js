@@ -54,6 +54,8 @@ const allowedChannels = new Set([
   'notification-clicked',
   'notification-show-toast',
   'notification-toast-click',
+  // Handled per toast on its own webContents.ipc, not ipcMain.
+  'notification-toast-ready',
   'user-status-changed',
   'set-badge-count',
   'tray-update',

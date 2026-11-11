@@ -1,19 +1,20 @@
 const { ipcMain } = require('electron');
 const NotificationToast = require('./NotificationToast');
+const { resolveToastOptions } = require('./toastOptions');
 
 class CustomNotificationManager {
   #mainWindow;
-  #toastDuration;
+  #toastOptions;
   #activeToasts;
 
   constructor(config, mainWindow) {
     this.#mainWindow = mainWindow;
-    this.#toastDuration = config?.customNotification?.toastDuration || 5000;
+    this.#toastOptions = resolveToastOptions(config?.customNotification);
     this.#activeToasts = new Set();
   }
 
   initialize() {
-    // Display custom in-app toast notification in bottom-right corner
+    // Display custom in-app toast notification (corner set by customNotification.position)
     ipcMain.on('notification-show-toast', this.#handleShowToast.bind(this));
     // Handle toast clicks - close the window and focus main window
     ipcMain.on('notification-toast-click', this.#handleToastClick.bind(this));
@@ -30,7 +31,7 @@ class CustomNotificationManager {
     try {
       const toast = new NotificationToast(
         data,
-        this.#toastDuration
+        this.#toastOptions
       );
 
       this.#activeToasts.add(toast);

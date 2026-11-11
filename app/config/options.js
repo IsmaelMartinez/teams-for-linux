@@ -690,6 +690,16 @@ module.exports = {
       customNotification: {
         default: {
           toastDuration: 5000,
+          width: 360,
+          height: 110,
+          position: "bottomRight",
+          margin: 0,
+          backgroundColor: "#2D2D2D",
+          hoverBackgroundColor: "#3A3A3A",
+          titleColor: "#FFFFFF",
+          textColor: "#D1D1D1",
+          titleFontSize: 14,
+          bodyFontSize: 13,
         },
         describe:
           "Custom in-app notification system configuration",
@@ -699,6 +709,49 @@ module.exports = {
             type: "number",
             describe:
               "Time in milliseconds before a custom toast notification auto-dismisses.",
+          },
+          "width": {
+            type: "number",
+            describe: "Toast width in pixels (200 to 1000).",
+          },
+          "height": {
+            type: "number",
+            describe:
+              "Toast height in pixels (80 to 600). A taller toast shows more lines of the message.",
+          },
+          "position": {
+            type: "string",
+            choices: ["bottomRight", "topRight", "bottomLeft", "topLeft"],
+            describe: "Screen corner the toast appears in.",
+          },
+          "margin": {
+            type: "number",
+            describe:
+              "Gap in pixels between the toast and the screen edges (0 to 500). Raise it if the toast covers a panel or dock.",
+          },
+          "backgroundColor": {
+            type: "string",
+            describe: "Toast background, any CSS colour (e.g. \"#5B5FC7\").",
+          },
+          "hoverBackgroundColor": {
+            type: "string",
+            describe: "Toast background while the pointer is over it, any CSS colour.",
+          },
+          "titleColor": {
+            type: "string",
+            describe: "Title text colour, any CSS colour.",
+          },
+          "textColor": {
+            type: "string",
+            describe: "Message text colour, any CSS colour.",
+          },
+          "titleFontSize": {
+            type: "number",
+            describe: "Title font size in pixels (8 to 40).",
+          },
+          "bodyFontSize": {
+            type: "number",
+            describe: "Message font size in pixels (8 to 40).",
           },
         },
         applyMode: "restart",
