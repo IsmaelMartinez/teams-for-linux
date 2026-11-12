@@ -19,6 +19,8 @@
  * - Remote participants on the stage only. Large meetings page their tiles, so
  *   people off the current page are not listed. Your own state is already
  *   published as `MicrophoneChanged`.
+ * - One entry per tile. Two people with the same display name are two entries;
+ *   the tiles carry no stable participant id to tell them apart by.
  * - Runs only on Linux with `dbusControl.enabled` and
  *   `dbusControl.callParticipants` both true, and only while in a call.
  * - Participant names are personal data. They go to the main process over
@@ -32,19 +34,17 @@ const MAX_PARTICIPANTS = 100;
 const MAX_NAME_LENGTH = 128;
 const OUTLINE_SELECTOR = '[data-tid="voice-level-stream-outline"]';
 
-/** Pure reader, exported for tests: the stage as [{ name, speaking }], sorted by name. */
+/** Pure reader, exported for tests: one { name, speaking } per stage tile, sorted by name. */
 function readStage(doc = globalThis.document, getStyle = globalThis.getComputedStyle) {
-	const byName = new Map();
+	const participants = [];
 	for (const outline of doc?.querySelectorAll?.(OUTLINE_SELECTOR) ?? []) {
 		const name = tileName(outline);
 		if (!name) continue;
-		const speaking = isSpeaking(outline, getStyle);
-		// The same person can appear twice (e.g. tile + spotlight); speaking wins.
-		byName.set(name, (byName.get(name) ?? false) || speaking);
-		if (byName.size >= MAX_PARTICIPANTS) break;
+		participants.push({ name, speaking: isSpeaking(outline, getStyle) });
+		if (participants.length >= MAX_PARTICIPANTS) break;
 	}
-	return [...byName].map(([name, speaking]) => ({ name, speaking }))
-		.sort((a, b) => a.name.localeCompare(b.name));
+	// Stable order so an unchanged stage serializes identically between polls.
+	return participants.sort((a, b) => a.name.localeCompare(b.name) || Number(b.speaking) - Number(a.speaking));
 }
 
 function tileName(outline) {
@@ -65,7 +65,7 @@ function isSpeaking(outline, getStyle) {
 class CallParticipants {
 	#ipcRenderer = null;
 	#timer = null;
-	#last = null;
+	#last = ""; // JSON of the last list sent; "" = nothing sent yet (JSON.stringify never returns "")
 
 	init(config, ipcRenderer) {
 		const enabled = process.platform === "linux"
@@ -80,7 +80,7 @@ class CallParticipants {
 
 	#start() {
 		if (this.#timer) return;
-		this.#last = null;
+		this.#last = "";
 		this.#timer = setInterval(() => this.#poll(), POLL_INTERVAL_MS);
 	}
 
@@ -88,7 +88,7 @@ class CallParticipants {
 		if (this.#timer) clearInterval(this.#timer);
 		this.#timer = null;
 		this.#send([]);
-		this.#last = null;
+		this.#last = "";
 	}
 
 	#poll() {

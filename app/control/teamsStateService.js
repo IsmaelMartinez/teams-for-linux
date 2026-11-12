@@ -50,7 +50,8 @@ class TeamsStateService extends EventEmitter {
 		try {
 			const active = this.getActiveWebContents?.();
 			if (this.getActiveWebContents) {
-				Object.assign(snapshot, PROFILE_DEFAULTS, active ? this.profileByContents.get(active) : {},
+				// Profile values can hold arrays (callParticipants): copy them so callers get a detached snapshot.
+				Object.assign(snapshot, PROFILE_DEFAULTS, structuredClone(active ? this.profileByContents.get(active) || {} : {}),
 					active ? this.microphoneByContents.get(active) || {} : {});
 				if (!active || !this.microphoneByContents.has(active)) {
 					snapshot.microphoneState = 'unknown';

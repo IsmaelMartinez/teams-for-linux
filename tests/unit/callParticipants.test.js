@@ -41,9 +41,21 @@ describe('callParticipants readStage', () => {
 		assert.deepEqual(tool.readStage(doc, styleOf), [{ name: 'Ada Lovelace', speaking: false }]);
 	});
 
-	it('merges duplicate tiles for one person, speaking wins', () => {
-		const doc = stage(tile('Ada', '0'), tile('Ada', '1'), tile('Ada', '0'));
-		assert.deepEqual(tool.readStage(doc, styleOf), [{ name: 'Ada', speaking: true }]);
+	it('keeps two people who share a display name as separate entries', () => {
+		const doc = stage(tile('John Smith', '0'), tile('John Smith', '1'));
+		assert.deepEqual(tool.readStage(doc, styleOf), [
+			{ name: 'John Smith', speaking: true },
+			{ name: 'John Smith', speaking: false },
+		]);
+		// Switching which of them speaks is a visible change, not a merged no-op.
+		const swapped = stage(tile('John Smith', '1'), tile('John Smith', '1'));
+		assert.deepEqual(tool.readStage(swapped, styleOf).map((p) => p.speaking), [true, true]);
+	});
+
+	it('orders tiles stably so an unchanged stage serializes the same', () => {
+		const a = tool.readStage(stage(tile('Bea', '0'), tile('Ada', '1'), tile('Ada', '0')), styleOf);
+		const b = tool.readStage(stage(tile('Ada', '0'), tile('Bea', '0'), tile('Ada', '1')), styleOf);
+		assert.equal(JSON.stringify(a), JSON.stringify(b));
 	});
 
 	it('treats an unreadable or partial outline as not speaking', () => {
@@ -179,6 +191,21 @@ describe('TeamsStateService callParticipants', () => {
 		assert.deepEqual(service.getState().callParticipants, [{ name: 'Ada', speaking: false }]);
 		ipcEmitter.emit('call-participants-changed', {}, []);
 		assert.equal(service.getState().callParticipants, null);
+	});
+
+	it('returns a detached copy for the active profile', () => {
+		appEmitter.removeAllListeners();
+		ipcEmitter.removeAllListeners();
+		service?.dispose();
+		const contents = {};
+		service = new TeamsStateService({ dbusControl: { enabled: true, callParticipants: true } }, { getActiveWebContents: () => contents });
+		service.initialize();
+		ipcEmitter.emit('call-participants-changed', { sender: contents }, [{ name: 'Ada', speaking: false }]);
+		const first = service.getState();
+		assert.deepEqual(first.callParticipants, [{ name: 'Ada', speaking: false }]);
+		first.callParticipants[0].name = 'mutated';
+		first.callParticipants.push({ name: 'Eve', speaking: true });
+		assert.deepEqual(service.getState().callParticipants, [{ name: 'Ada', speaking: false }]);
 	});
 
 	it('bounds names and list length', () => {
