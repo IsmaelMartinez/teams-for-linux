@@ -634,7 +634,7 @@ If you had `wayland.xwaylandOptimizations` enabled on an earlier release, it onl
 
 #### Issue: Sharing the whole screen shows black under XWayland, sharing a window works
 
-**Description:** The snap launches with `--ozone-platform=x11`, so on a Wayland session it runs under XWayland and screen capture goes through the X11 capturer, which only sees X11 windows. Sharing a single window works, but sharing the whole screen shows a black feed. The same applies to any package launched with `--ozone-platform=x11` by hand. From the first release that includes [ADR-034](development/adr/034-native-wayland-default.md), the deb, rpm and AppImage run as native Wayland by default, like Flatpak and tar.gz, and are not affected; earlier releases force X11 and behave like the snap.
+**Description:** The snap launches with `--ozone-platform=x11`, so on a Wayland session it runs under XWayland and screen capture goes through the X11 capturer, which only sees X11 windows. Sharing a single window works, but sharing the whole screen shows a black feed. The same applies to any package launched with `--ozone-platform=x11` by hand. From the first release that includes [ADR-034](development/adr/034-native-wayland-default.md), the deb, rpm and AppImage run as native Wayland by default, like Flatpak and tar.gz, and are not affected; earlier releases force X11 and behave like the snap. Snaps that bundle `libpipewire` (x64 builds from [#3181](https://github.com/IsmaelMartinez/teams-for-linux/pull/3181) on) capture through PipeWire even under XWayland and are not affected; see the next entry if that path misbehaves.
 
 **Solutions/Workarounds:**
 
@@ -645,6 +645,27 @@ If you had `wayland.xwaylandOptimizations` enabled on an earlier release, it onl
 :::note Important
 The `performance.electronCLIFlags` config option (`config.json`) **cannot** override `--ozone-platform` because the flag must be set before the Electron process starts, and config is loaded after. Use command-line arguments or `.desktop` file edits instead.
 :::
+
+#### Issue: Screen sharing misbehaves on the snap after the bundled PipeWire update
+
+**Description:** On a Wayland session the x64 snap ships its own `libpipewire-0.3` client library, so screen sharing goes through the PipeWire capturer and the xdg-desktop-portal picker instead of the X11 capturer. If sharing crashes, hangs, or fails to start on your host since that update, you can switch the snap back to the previous X11 capture path.
+
+**Solutions/Workarounds:**
+
+1. **Disable the PipeWire capturer** in `~/snap/teams-for-linux/current/.config/teams-for-linux/config.json`, then quit the app from the tray menu and start it again:
+    ```json
+    {
+      "performance": {
+        "electronCLIFlags": [
+          ["disable-features", "HardwareMediaKeyHandling,UsePortalAccentColor,WebRTCPipeWireCapturer"]
+        ]
+      }
+    }
+    ```
+    A `disable-features` value replaces the app's default list instead of adding to it, so keep `HardwareMediaKeyHandling` and `UsePortalAccentColor` in it. Chromium gives `disable-features` precedence over the `WebRTCPipeWireCapturer` entry the app adds to `enable-features`. Sharing then behaves as described in the XWayland entry above: windows share normally and the whole screen shows only X11 content.
+2. **Report the problem** with your distribution, desktop environment, and session type so the bundle can be fixed.
+
+**Related GitHub Issues:** [#3066](https://github.com/IsmaelMartinez/teams-for-linux/issues/3066), [#3180](https://github.com/IsmaelMartinez/teams-for-linux/issues/3180)
 
 ---
 
