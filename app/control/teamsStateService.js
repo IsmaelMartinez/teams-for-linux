@@ -11,8 +11,10 @@ const MICROPHONE_CONTROL = new Map([['muted', 'muted'], ['speaking', 'unmuted'],
 const microphoneControl = (state) => MICROPHONE_CONTROL.get(state) || 'unknown';
 const PROFILE_DEFAULTS = {
 	presenceStatus: 'unknown', presenceStatusCode: -1, inCall: false,
-	cameraEnabled: false, screenSharing: false, meetingStarted: false,
+	cameraEnabled: false, screenSharing: false, meetingStarted: false, callParticipants: null,
 };
+const MAX_PARTICIPANTS = 100;
+const MAX_NAME_LENGTH = 128;
 
 /** Main-process, transport-independent snapshot of the Teams state we observe. */
 class TeamsStateService extends EventEmitter {
@@ -25,11 +27,14 @@ class TeamsStateService extends EventEmitter {
 		this.profileByContents = new WeakMap();
 		this.meetingTimers = new Map();
 		this.callerEnabled = config.mqtt?.incomingCallCaller?.enabled === true;
+		// Participant names are personal data: only observed when the D-Bus opt-in asks for them.
+		this.participantsEnabled = config.dbusControl?.enabled === true && config.dbusControl?.callParticipants === true;
 		this.resetMs = this.#resetDelay(config.mqtt?.meetingStartDetection?.resetSeconds);
 		this.state = {
 			presenceStatus: 'unknown', presenceStatusCode: -1, inCall: false, incomingCall: false,
 			incomingCallCaller: null, cameraEnabled: false, microphoneState: 'unknown',
 			microphoneControlState: 'unknown', screenSharing: false, meetingStarted: false,
+			callParticipants: null,
 		};
 		this.initialized = false;
 		this.listeners = [];
@@ -115,12 +120,17 @@ class TeamsStateService extends EventEmitter {
 		on(this.ipc, 'screen-sharing-started', (event) => this.#updateProfile(event?.sender, { screenSharing: true }));
 		on(this.ipc, 'screen-sharing-stopped', (event) => this.#updateProfile(event?.sender, { screenSharing: false }));
 		on(this.ipc, 'meeting-started', (event) => this.#startMeetingPulse(event?.sender));
+		on(this.ipc, 'call-participants-changed', (event, participants) => {
+			if (!this.participantsEnabled) return;
+			const sanitized = this.#sanitizeParticipants(participants);
+			if (sanitized) this.#updateProfile(event?.sender, { callParticipants: sanitized.length ? sanitized : null });
+		});
 		on(this.app, 'teams-call-connected', (sender) => {
 			this.#updateProfile(sender, { inCall: true });
 			this.#clearMeetingPulse(sender);
 		});
 		on(this.app, 'teams-call-disconnected', (sender) => {
-			this.#updateProfile(sender, { inCall: false, cameraEnabled: false, screenSharing: false });
+			this.#updateProfile(sender, { inCall: false, cameraEnabled: false, screenSharing: false, callParticipants: null });
 			const previousMicrophone = this.getState();
 			try {
 				const active = this.getActiveWebContents?.();
@@ -146,6 +156,17 @@ class TeamsStateService extends EventEmitter {
 			if (value !== undefined && value !== null && ['string', 'number', 'boolean'].includes(typeof value)) caller[key] = value;
 		}
 		return Object.keys(caller).length ? caller : null;
+	}
+
+	#sanitizeParticipants(participants) {
+		if (!Array.isArray(participants)) return null;
+		const out = [];
+		for (const entry of participants.slice(0, MAX_PARTICIPANTS)) {
+			if (!entry || typeof entry !== 'object' || typeof entry.name !== 'string') continue;
+			const name = entry.name.trim().slice(0, MAX_NAME_LENGTH);
+			if (name) out.push({ name, speaking: entry.speaking === true });
+		}
+		return out;
 	}
 
 	#setMicrophone(state, previous = this.getState()) {

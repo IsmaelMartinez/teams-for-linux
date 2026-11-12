@@ -110,6 +110,7 @@ describe('DBusControlService', () => {
 				IncomingCallCallerChanged: ['s', 'callerJson'], CameraChanged: ['b', 'enabled'],
 				MicrophoneChanged: ['s', 'state'], MicrophoneControlChanged: ['s', 'state'],
 				ScreenSharingChanged: ['b', 'sharing'], MeetingStartedChanged: ['b', 'started'],
+				CallParticipantsChanged: ['s', 'participantsJson'],
 			},
 			properties: {},
 		});
@@ -240,6 +241,7 @@ describe('DBusControlService', () => {
 			['StateChanged', 's'], ['PresenceChanged', 'si'], ['InCallChanged', 'b'], ['IncomingCallChanged', 'b'],
 			['CameraChanged', 'b'], ['MicrophoneChanged', 's'], ['MicrophoneControlChanged', 's'],
 			['ScreenSharingChanged', 'b'], ['MeetingStartedChanged', 'b'], ['IncomingCallCallerChanged', 's'],
+			['CallParticipantsChanged', 's'],
 		]);
 		for (const [path, iface, , , args] of bus.sentSignals) { assert.equal(path, OBJECT_PATH); assert.equal(iface, INTERFACE_NAME); assert.ok(Array.isArray(args)); }
 		assert.deepEqual(JSON.parse(bus.sentSignals[0][4][0]), snapshot);

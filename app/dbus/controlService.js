@@ -35,6 +35,7 @@ const INTERFACE = {
     MicrophoneControlChanged: ["s", "state"],
     ScreenSharingChanged: ["b", "sharing"],
     MeetingStartedChanged: ["b", "started"],
+    CallParticipantsChanged: ["s", "participantsJson"],
   },
   // dbus-native 0.7.9 declares every exported property read/write and cannot
   // safely enforce read-only access. State is exposed by GetState + signals,
@@ -199,6 +200,9 @@ class DBusControlService {
       }
       if (!previous || JSON.stringify(previous.incomingCallCaller) !== JSON.stringify(snapshot.incomingCallCaller)) {
         this.sendSignal(bus, "IncomingCallCallerChanged", [JSON.stringify(snapshot.incomingCallCaller ?? null)]);
+      }
+      if (!previous || JSON.stringify(previous.callParticipants) !== JSON.stringify(snapshot.callParticipants)) {
+        this.sendSignal(bus, "CallParticipantsChanged", [JSON.stringify(snapshot.callParticipants ?? null)]);
       }
       this.lastState = snapshot;
     } catch {

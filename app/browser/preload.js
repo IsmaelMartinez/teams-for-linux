@@ -457,6 +457,7 @@ document.addEventListener('DOMContentLoaded', async (event) => {
       { name: "disableAutogain", path: "./tools/disableAutogain", ipc: false },
       { name: "ignoreSystemMute", path: "./tools/ignoreSystemMute", ipc: false },
       { name: "speakingIndicator", path: "./tools/speakingIndicator", ipc: true },
+      { name: "callParticipants", path: "./tools/callParticipants", ipc: true },
       { name: "cameraResolution", path: "./tools/cameraResolution", ipc: false },
       { name: "cameraAspectRatio", path: "./tools/cameraAspectRatio", ipc: false },
       { name: "navigationButtons", path: "./tools/navigationButtons", ipc: false },

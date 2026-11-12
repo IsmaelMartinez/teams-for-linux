@@ -118,6 +118,12 @@ Fixes camera video stretching when moving Teams between monitors with different 
 
 **Use Case**: Multi-monitor setups with different orientations, prevents stretched/distorted camera feed when moving windows between portrait and landscape monitors
 
+#### [callParticipants.js](callParticipants.js)
+Reads the remote participants on the meeting stage and who is speaking, and sends them to the main process for the D-Bus `CallParticipantsChanged` signal. Each tile has `data-tid="voice-level-stream-outline"`; its `::before` is opaque while that person speaks. The display name is the tile's text. Polls every 500 ms during a call and sends only changes. Names are never logged.
+
+**Configuration**: `dbusControl.enabled: true` and `dbusControl.callParticipants: true` (Linux only)
+**Use Case**: Local note takers and accessibility tools that attribute speech to participants
+
 #### [wakeLock.js](wakeLock.js)
 Prevents system sleep during meetings and active calls.
 

@@ -8,7 +8,7 @@ const { EventEmitter } = require('node:events');
 const options = require('../../app/config/options');
 
 it('defines D-Bus as disabled by default and requiring restart', () => {
-	assert.deepEqual(options.dbusControl.default, { enabled: false, busName: '' });
+	assert.deepEqual(options.dbusControl.default, { enabled: false, busName: '', callParticipants: false });
 	assert.equal(options.dbusControl.fields.enabled.type, 'boolean');
 	assert.equal(options.dbusControl.fields.busName.type, 'string');
 	assert.equal(options.dbusControl.applyMode, 'restart');
