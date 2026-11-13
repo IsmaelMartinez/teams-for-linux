@@ -41,6 +41,13 @@ describe('callParticipants readStage', () => {
 		assert.deepEqual(tool.readStage(doc, styleOf), [{ name: 'Ada Lovelace', speaking: false }]);
 	});
 
+	it('skips tiles showing a transition status instead of a name', () => {
+		const doc = stage(tile('Leaving...', '0'), tile('Reconnecting\u2026', '1'), tile('Ada Lovelace', '0'));
+		assert.deepEqual(tool.readStage(doc, styleOf), [{ name: 'Ada Lovelace', speaking: false }]);
+		// A name with an ellipsis inside it is still a name.
+		assert.deepEqual(tool.readStage(stage(tile('Ada... Lovelace', '0')), styleOf), [{ name: 'Ada... Lovelace', speaking: false }]);
+	});
+
 	it('keeps two people who share a display name as separate entries', () => {
 		const doc = stage(tile('John Smith', '0'), tile('John Smith', '1'));
 		assert.deepEqual(tool.readStage(doc, styleOf), [

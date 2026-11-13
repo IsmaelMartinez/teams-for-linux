@@ -19,6 +19,10 @@
  * - Remote participants on the stage only. Large meetings page their tiles, so
  *   people off the current page are not listed. Your own state is already
  *   published as `MicrophoneChanged`.
+ * - A tile in transition shows a status instead of the name ("Leaving...",
+ *   "Connecting...", "Reconnecting..."). Those lines end in an ellipsis in
+ *   every Teams language, so a tile whose first line does is skipped rather
+ *   than reported as a person.
  * - One entry per tile. Two people with the same display name are two entries;
  *   the tiles carry no stable participant id to tell them apart by.
  * - Runs only on Linux with `dbusControl.enabled` and
@@ -33,6 +37,7 @@ const POLL_INTERVAL_MS = 500;
 const MAX_PARTICIPANTS = 100;
 const MAX_NAME_LENGTH = 128;
 const OUTLINE_SELECTOR = '[data-tid="voice-level-stream-outline"]';
+const STATUS_LINE = /(\.\.\.|\u2026)$/u; // "Leaving...", "Connecting…": a transition, not a name
 
 /** Pure reader, exported for tests: one { name, speaking } per stage tile, sorted by name. */
 function readStage(doc = globalThis.document, getStyle = globalThis.getComputedStyle) {
@@ -50,7 +55,8 @@ function readStage(doc = globalThis.document, getStyle = globalThis.getComputedS
 function tileName(outline) {
 	const text = outline?.parentElement?.innerText ?? outline?.parentElement?.textContent ?? "";
 	const first = text.split("\n").map((line) => line.trim()).find(Boolean);
-	return first ? first.slice(0, MAX_NAME_LENGTH) : null;
+	if (!first || STATUS_LINE.test(first)) return null;
+	return first.slice(0, MAX_NAME_LENGTH);
 }
 
 function isSpeaking(outline, getStyle) {
