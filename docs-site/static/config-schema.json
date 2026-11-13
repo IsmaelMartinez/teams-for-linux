@@ -1043,9 +1043,11 @@
         "showStatusOnDockIcon": false,
         "macPerformanceMode": true,
         "preventDeviceSwitching": false,
-        "documentPictureInPicture": true
+        "documentPictureInPicture": true,
+        "documentPictureInPictureMaxWidth": 800,
+        "documentPictureInPictureMaxHeight": 600
       },
-      "description": "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the app icon (the Dock on macOS, the tray icon elsewhere). macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications. documentPictureInPicture: replace Electron's non-functional Document Picture-in-Picture API so Teams can show its floating call controls (Call Monitor) in a small always-on-top window; defaults to true, set false to fall back to Electron's native (broken) API.",
+      "description": "Media settings for microphone, camera, and video. showStatusOnDockIcon: overlay the user presence status on the app icon (the Dock on macOS, the tray icon elsewhere). macPerformanceMode: on macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; defaults to true, set false to opt out without disabling the GPU entirely. preventDeviceSwitching: prevent automatic audio/video device switching by blocking device change notifications. documentPictureInPicture: replace Electron's non-functional Document Picture-in-Picture API so Teams can show its floating call controls (Call Monitor) in a small always-on-top window; defaults to true, set false to fall back to Electron's native (broken) API. documentPictureInPictureMaxWidth / documentPictureInPictureMaxHeight: the largest size, in pixels, that window can be resized to (default 800x600); raise them to read shared content in the compact view.",
       "applyMode": "restart",
       "fields": [
         {
@@ -1146,6 +1148,18 @@
           "type": "boolean",
           "default": true,
           "description": "On macOS, force-enable native hardware/rendering optimizations (Metal ANGLE, GPU rasterization, hardware WebRTC codecs) at startup; set false to opt out without disabling the GPU entirely."
+        },
+        {
+          "path": "documentPictureInPictureMaxWidth",
+          "type": "number",
+          "default": 800,
+          "description": "Largest width, in pixels, of the floating call window (Call Monitor). Values below 100 fall back to the default."
+        },
+        {
+          "path": "documentPictureInPictureMaxHeight",
+          "type": "number",
+          "default": 600,
+          "description": "Largest height, in pixels, of the floating call window (Call Monitor). Values below 100 fall back to the default."
         }
       ]
     },

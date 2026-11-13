@@ -55,7 +55,7 @@ function createProfileWindowOpenHandler({ config, loadInView }) {
   }
   return (details) => {
     if (isDocumentPictureInPictureRequest(details, config)) {
-      return documentPictureInPictureResponse();
+      return documentPictureInPictureResponse(config);
     }
     const url = typeof details?.url === "string" ? details.url : "";
     if (deepLinkRe?.test(url)) {
