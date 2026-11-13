@@ -155,6 +155,17 @@ source the nested name wins.
 | `alwaysOnTop` | `boolean` | `true` | Deprecated, use `window.alwaysOnTop` |
 | `window.class` | `string` | `null` | Custom value for the WM_CLASS property |
 | `class` | `string` | `null` | Deprecated, use `window.class` |
+| `window.showStatus` | `boolean` | `false` | Overlay the user's Teams status on the main window icon (Linux and Windows). See [Presence status on the window icon](#presence-status-on-the-window-icon) |
+
+#### Presence status on the window icon
+
+`window.showStatus` draws the same presence dot as the tray overlay (see [Presence status on the tray icon](#presence-status-on-the-tray-icon)) on the main window icon, which is what the taskbar or panel entry shows on Linux and Windows. The tray is often collapsed or hidden, so this puts the status where it can be seen at a glance. The dot goes in the bottom-right corner, matching the tray overlay. Until a status has been read, and whenever it is unknown, the window keeps its plain icon. macOS ignores the option, because it shows the Dock instead (`media.showStatusOnDockIcon`).
+
+The two overlays are independent: you can turn on either one, or both. Like the tray dot, it relies on reading the status off the Teams UI, so it is best effort.
+
+Some docks show the icon of the desktop entry the window is matched to, not the window's own icon. KDE Plasma does this whenever the matched entry has an `Icon=` line, and then the dot does not show. With multi-account on, the icon follows the active profile.
+
+On a native Wayland session the window icon reaches the dock only if the desktop supports the `xdg-toplevel-icon` protocol. KDE Plasma 6 does: there the dot shows and updates live. KDE Plasma 5.27 does not, so there the dot shows only when the app runs under XWayland (`--ozone-platform=x11`).
 
 #### Integrated title bar
 

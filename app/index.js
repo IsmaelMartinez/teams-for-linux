@@ -38,6 +38,9 @@ const { PROTOCOL_SCHEMES } = require("./mainAppWindow/protocolLink");
 const TeamsControlService = require("./control/teamsControlService");
 const TeamsStateService = require("./control/teamsStateService");
 const IdleMonitor = require("./idle/monitor");
+const WindowStatusIcon = require("./windowStatusIcon");
+const TrayIconChooser = require("./browser/tools/trayIconChooser");
+const { wantsWindowStatus } = require("./browser/tools/presenceColors");
 const AutoUpdater = require("./autoUpdater");
 const WebAuthn = require("./webauthn");
 const os = require("node:os");
@@ -185,6 +188,7 @@ const profilesManager = new ProfilesManager(appConfig.settingsStore);
 // multi-account flag is on; the manager is wired to the main window
 // after `mainAppWindow.onAppReady` resolves.
 let profileViewManager = null;
+let windowStatusIcon = null;
 let dbusControlService = null;
 
 // ADR-020 Phase 2 unread aggregation; null with the flag off, where the
@@ -307,6 +311,17 @@ if (gotTheLock) {
       }
     }
   });
+  if (wantsWindowStatus(config)) {
+    windowStatusIcon = new WindowStatusIcon({
+      ipcMain,
+      nativeImage,
+      getWindow: () => mainAppWindow.getWindow(),
+      getActiveWebContents: getControlWebContents,
+      // config.appIcon follows the App Icon menu, which writes it in place.
+      getPlainIcon: () => TrayIconChooser.windowImage(new TrayIconChooser(config).getFile()),
+    });
+    windowStatusIcon.initialize();
+  }
   // Get application version number
   ipcMain.handle("get-app-version", async () => {
     return config.appVersion;
@@ -836,6 +851,15 @@ async function handleAppReady() {
         registerWebNotificationClick({ ipcMain, activate: activateProfile });
         await profileViewManager.bootstrapProfileZeroIfNeeded();
         unreadAggregator = createUnreadAggregator(profileViewManager);
+        // Registered after the view manager's own listeners, so the new
+        // profile is already the active page when the icon is re-applied.
+        // Removing the active profile picks another one but emits "remove",
+        // not "switch", so both re-apply the icon.
+        if (windowStatusIcon) {
+          const refreshWindowIcon = () => windowStatusIcon.refresh();
+          profilesManager.on("switch", refreshWindowIcon);
+          profilesManager.on("remove", refreshWindowIcon);
+        }
       } else {
         console.warn(
           "[ProfileViewManager] main window unavailable after onAppReady; multi-account features disabled for this session"

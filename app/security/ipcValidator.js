@@ -63,6 +63,7 @@ const allowedChannels = new Set([
   'set-badge-count',
   'tray-update',
   'dock-icon-update',
+  'window-icon-update',
 
   // Call management (sorted alphabetically)
   'call-connected',

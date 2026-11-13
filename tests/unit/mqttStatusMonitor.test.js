@@ -79,6 +79,22 @@ describe('MQTTStatusMonitor presence overlay opt-in', () => {
 		}));
 	});
 
+	it('starts for the window icon overlay alone, without MQTT or D-Bus', () => {
+		withPlatform('linux', () => withBrowserGlobals(({ monitor, domEvents }) => {
+			monitor.init({ mqtt: { enabled: false }, dbusControl: { enabled: false }, window: { showStatus: true } }, { invoke() {} });
+			assert.equal(domEvents[0][0], 'DOMContentLoaded');
+		}));
+	});
+
+	// macOS has no window icon on screen (the Dock shows instead), so the
+	// window option alone must not pay for DOM scraping there.
+	it('ignores the window icon overlay on macOS', () => {
+		withPlatform('darwin', () => withBrowserGlobals(({ monitor, domEvents }) => {
+			monitor.init({ mqtt: { enabled: false }, window: { showStatus: true } }, { invoke() {} });
+			assert.deepEqual(domEvents, []);
+		}));
+	});
+
 	it('leaves monitoring off when nothing asks for the status', () => {
 		withPlatform('linux', () => withBrowserGlobals(({ monitor, domEvents }) => {
 			monitor.init({ mqtt: { enabled: false }, dbusControl: { enabled: false }, media: { showStatusOnDockIcon: false } }, { invoke() {} });
