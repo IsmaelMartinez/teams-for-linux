@@ -21,8 +21,10 @@
  *   published as `MicrophoneChanged`.
  * - A tile in transition shows a status instead of the name ("Leaving...",
  *   "Connecting...", "Reconnecting..."). Those lines end in an ellipsis in
- *   every Teams language, so a tile whose first line does is skipped rather
- *   than reported as a person.
+ *   every Teams language, so a silent tile whose first line does is skipped
+ *   rather than reported as a person. A tile with the speaking outline is
+ *   always kept, so someone whose name really ends in an ellipsis is still
+ *   reported whenever they speak; while silent they are left out.
  * - One entry per tile. Two people with the same display name are two entries;
  *   the tiles carry no stable participant id to tell them apart by.
  * - Runs only on Linux with `dbusControl.enabled` and
@@ -37,7 +39,7 @@ const POLL_INTERVAL_MS = 500;
 const MAX_PARTICIPANTS = 100;
 const MAX_NAME_LENGTH = 128;
 const OUTLINE_SELECTOR = '[data-tid="voice-level-stream-outline"]';
-const STATUS_LINE = /(\.\.\.|\u2026)$/u; // "Leaving...", "Connecting…": a transition, not a name
+const STATUS_LINE = /(\.\.\.|\u2026)$/u; // "Leaving...", "Connecting…": a transition, unless the tile speaks
 
 /** Pure reader, exported for tests: one { name, speaking } per stage tile, sorted by name. */
 function readStage(doc = globalThis.document, getStyle = globalThis.getComputedStyle) {
@@ -45,7 +47,9 @@ function readStage(doc = globalThis.document, getStyle = globalThis.getComputedS
 	for (const outline of doc?.querySelectorAll?.(OUTLINE_SELECTOR) ?? []) {
 		const name = tileName(outline);
 		if (!name) continue;
-		participants.push({ name, speaking: isSpeaking(outline, getStyle) });
+		const speaking = isSpeaking(outline, getStyle);
+		if (!speaking && STATUS_LINE.test(name)) continue;
+		participants.push({ name, speaking });
 		if (participants.length >= MAX_PARTICIPANTS) break;
 	}
 	// Stable order so an unchanged stage serializes identically between polls.
@@ -55,8 +59,7 @@ function readStage(doc = globalThis.document, getStyle = globalThis.getComputedS
 function tileName(outline) {
 	const text = outline?.parentElement?.innerText ?? outline?.parentElement?.textContent ?? "";
 	const first = text.split("\n").map((line) => line.trim()).find(Boolean);
-	if (!first || STATUS_LINE.test(first)) return null;
-	return first.slice(0, MAX_NAME_LENGTH);
+	return first ? first.slice(0, MAX_NAME_LENGTH) : null;
 }
 
 function isSpeaking(outline, getStyle) {
