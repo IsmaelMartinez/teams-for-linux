@@ -53,6 +53,8 @@ User-facing features and integrations.
 | **Profile Unread** | `app/profileUnread/` | Aggregates per-profile unread counts into one tray badge (ADR-020 Phase 2) | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/profileUnread/README.md) |
 | **Custom Stickers** | `app/customStickers/` | Opt-in sticker folder and URL import, sent into the compose box as a paste event | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/customStickers/README.md) |
 | **Profile Dialogs** | `app/profileDialogs/` | Add-profile, manage-profiles, and switch-profile UI dialogs | [ADR-020](./adr/020-multi-account-profile-switcher.md) |
+| **Profile Unread** | `app/profileUnread/` | Aggregates unread across profiles into one tray badge, dock count and tooltip | [ADR-020](./adr/020-multi-account-profile-switcher.md), [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/profileUnread/README.md) |
+| **Profile Notifications** | `app/profileNotifications/` | Per-profile `disableNotifications` and `muted`, enforced in each profile's renderer | [ADR-020](./adr/020-multi-account-profile-switcher.md), [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/profileNotifications/README.md) |
 | **Join Meeting Dialog** | `app/joinMeetingDialog/` | Join Meeting dialog for deep-link navigation handling | — |
 
 ## System Integration Modules

@@ -6,6 +6,7 @@ const {
   systemPreferences,
   nativeImage,
   session,
+  webContents,
 } = require("electron");
 const path = require("node:path");
 const crypto = require("node:crypto");
@@ -813,6 +814,15 @@ async function handleAppReady() {
           mainAppWindow.setTitleOverride
         );
         profileViewManager.initialize();
+        const {
+          registerProfileNotificationFlags,
+        } = require("./profileNotifications");
+        registerProfileNotificationFlags({
+          ipcMain,
+          getAllWebContents: () => webContents.getAllWebContents(),
+          viewManager: profileViewManager,
+          profilesManager,
+        });
         await profileViewManager.bootstrapProfileZeroIfNeeded();
         unreadAggregator = createUnreadAggregator(profileViewManager);
       } else {

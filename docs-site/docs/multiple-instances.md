@@ -27,7 +27,7 @@ With the flag on, a **Profiles** menu appears in the application menu:
 
 - **Add profile…** — create a new account profile (name, optional custom URL, optional avatar initials and color).
 - **Switch to** — jump between profiles; each runs in its own isolated session (`persist:teams-profile-{uuid}`), so cookies, tokens, and storage never cross tenants.
-- **Manage profiles…** — rename or remove existing profiles.
+- **Manage profiles…** — rename or remove existing profiles, and turn each profile's **Notifications** and **Sound** on or off. A profile with notifications off still counts its unread in the tray badge and the switcher.
 
 On first launch after enabling the flag, your existing session is migrated into a default **"My account"** profile, so you stay logged in with no re-authentication.
 

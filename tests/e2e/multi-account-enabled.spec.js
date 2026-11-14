@@ -320,3 +320,163 @@ test('unread in a background profile lights the pill dot and its row badge', asy
     await closeAndCleanup(ctx);
   }
 });
+
+// Phase 2: per-profile notification flags are enforced inside each profile's
+// own renderer — pulled on load, pushed on update — by the preload's
+// Notification override and sound request.
+function profileViewIds(electronApp) {
+  return electronApp.evaluate(({ BrowserWindow }) => {
+    const win = BrowserWindow.getAllWindows().find(
+      (w) => w.contentView.children.length > 0
+    );
+    return win.contentView.children
+      .map((c) => c.webContents)
+      .filter((wc) => wc && !wc.getURL().includes('profileSwitcher'))
+      .map((wc) => wc.id);
+  });
+}
+
+// Creates a notification in the given renderer and reports what the page got
+// back and how many sound requests reached main.
+function notifyIn(electronApp, webContentsId) {
+  return electronApp.evaluate(async ({ webContents }, id) => {
+    const wc = webContents.fromId(id);
+    const before = globalThis.__soundCalls;
+    const page = await wc.executeJavaScript(`(() => {
+      const n = new Notification('Hello', { body: 'from e2e' });
+      return {
+        kind: Object.prototype.toString.call(n),
+        silent: n.silent === true,
+        // Teams drives every notification's lifecycle; an object without
+        // these breaks its notifier for the rest of the session.
+        lifecycle: typeof n.close === 'function' && typeof n.addEventListener === 'function',
+      };
+    })()`);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    return { ...page, sounds: globalThis.__soundCalls - before };
+  }, webContentsId);
+}
+
+test('per-profile notification flags are enforced in that profile renderer', async () => {
+  const ctx = await startApp({
+    prefix: 'teams-e2e-notify-',
+    config: { multiAccount: { enabled: true } },
+    allowEval: true,
+  });
+
+  try {
+    await waitForLoginRedirect(findMainTeamsWindow(ctx.electronApp));
+    // Count sound requests instead of playing them.
+    await ctx.electronApp.evaluate(({ ipcMain }) => {
+      globalThis.__soundCalls = 0;
+      ipcMain.removeHandler('play-notification-sound');
+      ipcMain.handle('play-notification-sound', () => {
+        globalThis.__soundCalls += 1;
+      });
+    });
+
+    const a = await invokeHandler(ctx.electronApp, 'profile-add', [
+      { name: 'Loud' },
+    ]);
+    const [viewA] = await profileViewIds(ctx.electronApp);
+    await expect
+      .poll(async () => (await notifyIn(ctx.electronApp, viewA)).kind, { timeout: 15000 })
+      .toBe('[object Notification]');
+    expect(await notifyIn(ctx.electronApp, viewA)).toEqual({
+      kind: '[object Notification]',
+      silent: false,
+      lifecycle: true,
+      sounds: 1,
+    });
+
+    // Push: muting the live profile silences its next toast.
+    await invokeHandler(ctx.electronApp, 'profile-update', [
+      a.result.id,
+      { muted: true },
+    ]);
+    await expect
+      .poll(async () => (await notifyIn(ctx.electronApp, viewA)).silent)
+      .toBe(true);
+    expect((await notifyIn(ctx.electronApp, viewA)).sounds).toBe(0);
+
+    // Teams may reuse its options object, so the mute must never be written
+    // into it — or it would outlive the mute. One call, so a navigation of
+    // the page can't hide a regression.
+    const callerObject = await ctx.electronApp.evaluate(
+      async ({ webContents }, id) =>
+        webContents.fromId(id).executeJavaScript(`(() => {
+          const opts = { body: 'reused' };
+          const n = new Notification('Again', opts);
+          return { toastSilent: n.silent === true, written: 'silent' in opts };
+        })()`),
+      viewA
+    );
+    expect(callerObject).toEqual({ toastSilent: true, written: false });
+
+    // Pull: a profile created with notifications off never shows a toast.
+    await invokeHandler(ctx.electronApp, 'profile-add', [
+      { name: 'Quiet', disableNotifications: true },
+    ]);
+    const viewB = (await profileViewIds(ctx.electronApp)).find((id) => id !== viewA);
+    await expect
+      .poll(async () => (await notifyIn(ctx.electronApp, viewB)).kind, { timeout: 15000 })
+      .toBe('[object Object]');
+    const quiet = await notifyIn(ctx.electronApp, viewB);
+    expect(quiet.lifecycle).toBe(true);
+    expect(quiet.sounds).toBe(0);
+  } finally {
+    await closeAndCleanup(ctx);
+  }
+});
+
+// Manage dialog: toggling a flag mid-rename rebuilds the list. The typed name
+// must not be lost: removing the focused input blurs it, which commits it.
+test('toggling a notification switch mid-rename keeps the typed name', async () => {
+  const ctx = await startApp({
+    prefix: 'teams-e2e-draft-',
+    config: { multiAccount: { enabled: true } },
+    allowEval: true,
+  });
+
+  try {
+    await waitForLoginRedirect(findMainTeamsWindow(ctx.electronApp));
+    await invokeHandler(ctx.electronApp, 'profile-add', [{ name: 'Work' }]);
+    const draft = await ctx.electronApp.evaluate(async ({ BrowserWindow }) => {
+      const main = BrowserWindow.getAllWindows().find((w) => w.contentView.children.length > 0);
+      const pill = main.contentView.children
+        .map((c) => c.webContents)
+        .find((wc) => wc.getURL().includes('profileSwitcher'));
+      const before = new Set(BrowserWindow.getAllWindows().map((w) => w.id));
+      await pill.executeJavaScript('globalThis.profileSwitcherApi.openManageDialog()');
+      let dialog;
+      for (let i = 0; i < 100 && !dialog; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        dialog = BrowserWindow.getAllWindows().find((w) => !before.has(w.id));
+      }
+      if (!dialog) return { error: 'no dialog' };
+      const page = (js) => dialog.webContents.executeJavaScript(js);
+      for (let i = 0; i < 100; i++) {
+        if (await page(`!!document.querySelector('.profile-name')`)) break;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      await page(`(() => {
+        document.querySelector('.profile-name').click();
+        const input = document.querySelector('.profile-name-input');
+        input.value = 'Work (renamed)';
+        input.dispatchEvent(new Event('input'));
+        document.querySelector('.profile-flag input').click();
+      })()`);
+      // Wait for the update's state push to rebuild the list.
+      for (let i = 0; i < 100; i++) {
+        if (await page(`!document.querySelector('.profile-flag input').checked`)) break;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      return page(`document.querySelector('.profile-name-input')?.value ??
+        document.querySelector('.profile-name')?.textContent ?? null`);
+    });
+    expect(draft).toBe('Work (renamed)');
+  } finally {
+    await closeAndCleanup(ctx);
+  }
+});

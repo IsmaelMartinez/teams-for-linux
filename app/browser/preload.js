@@ -220,12 +220,23 @@ globalThis.electronAPI = {
 
 // Config is fetched asynchronously; the Notification override below reads it via closure
 let notificationConfig = null;
+const ProfileNotificationFlags = require("./notifications/profileNotificationFlags");
+const profileFlags = new ProfileNotificationFlags();
+ipcRenderer.on("profile-notification-flags", (_event, flags) => {
+  profileFlags.applyPush(flags);
+});
 ipcRenderer.invoke("get-config").then((config) => {
   notificationConfig = config;
   console.debug("Preload: Config loaded for notifications:", {
     notificationMethod: config?.notificationMethod,
     disableNotifications: config?.disableNotifications
   });
+  // The handler exists only with the multi-account flag on.
+  if (config?.multiAccount?.enabled) {
+    return profileFlags.pull(() =>
+      ipcRenderer.invoke("profile-get-notification-flags")
+    );
+  }
 }).catch((err) => {
   console.error("Preload: Failed to load config for notifications:", err);
 });
@@ -260,6 +271,7 @@ function createNotificationStub() {
 }
 
 function playNotificationSound(notifSound) {
+  if (profileFlags.muted) return;
   // Skip renderer-side sound for "electron" method — the main process
   // notification service already plays the sound before showing the notification.
   const method = notificationConfig?.notificationMethod || "web";
@@ -369,8 +381,18 @@ function createCustomNotification(title, options) {
       // Return dummy object to avoid Teams errors
       return { onclick: null, onclose: null, onerror: null };
     }
+    // A full stub, not the bare object above: this profile can be switched
+    // back on mid-session, and Teams stops notifying for good once its
+    // lifecycle calls fail on a returned object.
+    if (profileFlags.disableNotifications) {
+      return createNotificationStub();
+    }
 
-    options = options || {};
+    // A copy: Teams may reuse its options object, and a profile-derived
+    // `silent` must not outlive the mute.
+    options = { ...options };
+    // Covers the OS sound of web toasts and, via main, electron toasts.
+    if (profileFlags.muted) options.silent = true;
     options.icon = options.icon || ICON_BASE64;
     options.title = options.title || title;
     options.type = options.type || "new-message";

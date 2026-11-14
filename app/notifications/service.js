@@ -79,11 +79,14 @@ class NotificationService {
     try {
       const iconPromise = this.#loadIcon(options.icon).catch(() => null);
 
-      // Play notification sound if configured (await to catch any errors)
-      await this.#playNotificationSound({
-        type: options.type,
-        audio: "default",
-      });
+      // Play notification sound if configured (await to catch any errors).
+      // `silent` comes from a profile muted in multi-account mode.
+      if (!options.silent) {
+        await this.#playNotificationSound({
+          type: options.type,
+          audio: "default",
+        });
+      }
 
       const icon = await iconPromise;
       const notificationConfig = {
@@ -91,6 +94,7 @@ class NotificationService {
         body: options.body,
         urgency: this.#config.defaultNotificationUrgency,
         timeoutType: options.timeoutType === "never" ? "never" : "default",
+        silent: options.silent === true,
       };
 
       if (icon) notificationConfig.icon = icon;
