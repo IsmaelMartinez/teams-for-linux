@@ -75,10 +75,13 @@ class SpeakingIndicator {
 	#audioPc = null; // connection that last carried our outgoing audio level
 	#audioTransceiver = null; // its transceiver, still judged once the track is detached
 	#lastMuteSignals = ''; // serialized signals from the last debug line
+	#stickersEnabled = false;
 
 	init(config, ipcRenderer) {
 		const overlayEnabled = config.media?.microphone?.speakingIndicator === true;
 		const mqttEnabled = config.mqtt?.enabled === true || (process.platform === 'linux' && config.dbusControl?.enabled === true);
+
+		this.#stickersEnabled = config.customStickers?.enabled === true || false;
 
 		if (!overlayEnabled && !mqttEnabled) {
 			return;
@@ -510,10 +513,18 @@ class SpeakingIndicator {
 
 		const style = document.createElement('style');
 		style.id = STYLES_ID;
+
+		// If both Custom Stickers and the speaking Indicator are enabled the Sticker Button sits on top of the Indicator
+		// Move the Indicator up by 50px so both can be displayed at the same time
+		let bottom = 20;
+		if(this.#stickersEnabled) {
+			bottom = 70;
+		}
+
 		style.textContent = `
 			#${OVERLAY_ID} {
 				position: fixed;
-				bottom: 20px;
+				bottom: ${bottom}px;
 				right: 20px;
 				width: 24px;
 				height: 24px;
