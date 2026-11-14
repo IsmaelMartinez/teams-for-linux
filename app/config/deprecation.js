@@ -20,6 +20,8 @@
 // When the flat names stop being read (#2842).
 const REMOVAL_VERSION = "2.32.0";
 
+const { isIntegratedTitleBar } = require("../mainAppWindow/titleBar");
+
 // Display order and wording, independent of the precedence order the
 // projection uses, so the message reads file first.
 const SOURCE_LABELS = [
@@ -40,12 +42,13 @@ function suppliedIn(source, option) {
  *   option declared `deprecated: true` with no text.
  * @param {{cli?: object, env?: object, file?: object}} sources what the user
  *   supplied, per source; see readUserSources in app/config/renames.js.
- * @param {boolean} [menuAvailable] whether the Settings entry that offers the
- *   migration can actually be reached; see isMigrationMenuAvailable. Pointing
- *   users at a menu they do not have would be worse than saying nothing.
+ * @param {string|null} [menuLocation] where the Settings entry that offers the
+ *   migration can be reached, as a phrase; see migrationMenuLocation. Null or
+ *   omitted leaves the pointer out: naming a menu the user does not have would
+ *   be worse than saying nothing.
  * @returns {string|null} a single warning, or null when nothing is deprecated.
  */
-function buildDeprecationWarning(deprecatedOptions, sources, menuAvailable) {
+function buildDeprecationWarning(deprecatedOptions, sources, menuLocation) {
   const used = Object.keys(deprecatedOptions || {})
     .sort((a, b) => a.localeCompare(b, "en"))
     .map((option) => ({
@@ -75,9 +78,9 @@ function buildDeprecationWarning(deprecatedOptions, sources, menuAvailable) {
   );
 
   const notes = [];
-  if (inFile && menuAvailable) {
+  if (inFile && menuLocation) {
     notes.push(
-      "Show Updated Config… (in the tray icon menu, or in the menu bar under Settings; press Alt if the menu bar is hidden) writes a copy of your config using the new names. Your own config.json is left alone."
+      `Show Updated Config… (${menuLocation}) writes a copy of your config using the new names. Your own config.json is left alone.`
     );
   }
   if (outsideFile) {
@@ -91,21 +94,31 @@ function buildDeprecationWarning(deprecatedOptions, sources, menuAvailable) {
 }
 
 /**
- * Whether "Settings > Show Updated Config…" can be reached at all, which is
- * what decides whether the warning points at it.
+ * Where "Settings > Show Updated Config…" can be reached, as the phrase the
+ * warning puts in brackets, or null when nowhere.
  *
- * Two surfaces carry the same App submenu, so either is enough: the menu bar,
- * attached unless `menubar` is "hidden" (`initialize` in app/menus/index.js),
- * and the tray context menu, built from that submenu when the tray is on.
- * Gating on the tray alone hid the pointer from anyone who turned the tray off
- * but kept their menu bar.
+ * Two surfaces carry the same App submenu: the tray context menu, when the
+ * tray is on, and the window menu bar. The bar is absent with `menubar:
+ * "hidden"` (`initialize` in app/menus/index.js; with multi-account on it keeps
+ * only a Profiles menu, still no Settings) and with the integrated title bar,
+ * where Electron creates none. Only `menubar: "auto"` needs Alt to show it.
  *
  * @param {Record<string, unknown>} config the resolved config.
- * @returns {boolean}
+ * @param {string} [platform]
+ * @returns {string|null}
  */
-function isMigrationMenuAvailable(config) {
-  if (!config) return false;
-  return config.menubar !== "hidden" || Boolean(config.trayIconEnabled);
+function migrationMenuLocation(config, platform = process.platform) {
+  if (!config) return null;
+  const places = [];
+  if (config.trayIconEnabled) places.push("the tray icon menu");
+  if (config.menubar !== "hidden" && !isIntegratedTitleBar(config, platform)) {
+    places.push(
+      config.menubar === "auto"
+        ? "the menu bar under Settings (press Alt to show it)"
+        : "the menu bar under Settings"
+    );
+  }
+  return places.length > 0 ? `in ${places.join(" or ")}` : null;
 }
 
-module.exports = { buildDeprecationWarning, isMigrationMenuAvailable };
+module.exports = { buildDeprecationWarning, migrationMenuLocation };
