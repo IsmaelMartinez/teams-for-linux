@@ -35,10 +35,16 @@ const LOG_PREFIX = "[DOCUMENT_PIP]";
 const DEFAULT_WIDTH = 400;
 const DEFAULT_HEIGHT = 300;
 const MIN_SIZE = 100;
-// The main process enforces the same cap (PIP_MAX_WIDTH / PIP_MAX_HEIGHT);
-// clamping here keeps the requested and actual sizes in agreement.
+// The main process enforces the same cap (PIP_MAX_WIDTH / PIP_MAX_HEIGHT, or
+// media.documentPictureInPictureMaxWidth / MaxHeight when set); clamping here
+// keeps the requested and actual sizes in agreement.
 const MAX_WIDTH = 800;
 const MAX_HEIGHT = 600;
+
+function capOrDefault(value, fallback) {
+  const number = Math.round(Number(value));
+  return Number.isFinite(number) && number >= MIN_SIZE ? number : fallback;
+}
 
 function toDimension(value, fallback, max) {
   const number = Math.round(Number(value));
@@ -52,8 +58,9 @@ function toDimension(value, fallback, max) {
  * Build a `documentPictureInPicture` replacement bound to `win`.
  * @param {Window} win - The opener window (Teams' main window).
  * @param {string} frameName - The popup name the main process allows.
+ * @param {{ width: number, height: number }} max - The size cap.
  */
-function createDocumentPictureInPicture(win, frameName) {
+function createDocumentPictureInPicture(win, frameName, max) {
   const events = new EventTarget();
   let current = null;
   let onenter = null;
@@ -78,8 +85,8 @@ function createDocumentPictureInPicture(win, frameName) {
       if (isOpen()) {
         current.close();
       }
-      const width = toDimension(options?.width, DEFAULT_WIDTH, MAX_WIDTH);
-      const height = toDimension(options?.height, DEFAULT_HEIGHT, MAX_HEIGHT);
+      const width = toDimension(options?.width, DEFAULT_WIDTH, max.width);
+      const height = toDimension(options?.height, DEFAULT_HEIGHT, max.height);
       console.info(`${LOG_PREFIX} Teams requested a Picture-in-Picture window`, { width, height });
 
       const pip = win.open("about:blank", frameName, `popup,width=${width},height=${height}`);
@@ -153,7 +160,10 @@ function init(config, win = globalThis) {
 
   try {
     Object.defineProperty(win, "documentPictureInPicture", {
-      value: createDocumentPictureInPicture(win, frameName),
+      value: createDocumentPictureInPicture(win, frameName, {
+        width: capOrDefault(config.media.documentPictureInPictureMaxWidth, MAX_WIDTH),
+        height: capOrDefault(config.media.documentPictureInPictureMaxHeight, MAX_HEIGHT),
+      }),
       configurable: true,
       enumerable: true,
       writable: false,

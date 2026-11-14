@@ -113,6 +113,31 @@ describe('documentPictureInPicture browser tool', () => {
     );
   });
 
+  it('clamps requested sizes to a configured cap', async () => {
+    const win = new FakeWindow();
+    tool.init({
+      ...ENABLED,
+      media: { documentPictureInPicture: true, documentPictureInPictureMaxWidth: 1600, documentPictureInPictureMaxHeight: 1200 },
+    }, win);
+    const api = win.documentPictureInPicture;
+    await api.requestWindow({ width: 1280, height: 720 });
+    await api.requestWindow({ width: 5000, height: 4000 });
+    assert.deepStrictEqual(
+      win.opened.map((o) => o.features),
+      ['popup,width=1280,height=720', 'popup,width=1600,height=1200']
+    );
+  });
+
+  it('keeps the default cap for an invalid configured cap', async () => {
+    const win = new FakeWindow();
+    tool.init({
+      ...ENABLED,
+      media: { documentPictureInPicture: true, documentPictureInPictureMaxWidth: 50, documentPictureInPictureMaxHeight: 'big' },
+    }, win);
+    await win.documentPictureInPicture.requestWindow({ width: 5000, height: 4000 });
+    assert.strictEqual(win.opened[0].features, `popup,width=${main.PIP_MAX_WIDTH},height=${main.PIP_MAX_HEIGHT}`);
+  });
+
   it('fires enter (listener and onenter) with the PiP window', async () => {
     const win = new FakeWindow();
     tool.init(ENABLED, win);
@@ -231,12 +256,38 @@ describe('documentPictureInPicture window-open decision', () => {
     });
   });
 
+  it('caps the window at the configured size', () => {
+    const config = {
+      media: { documentPictureInPicture: true, documentPictureInPictureMaxWidth: 1920.4, documentPictureInPictureMaxHeight: 1080 },
+    };
+    const { maxWidth, maxHeight } = main.documentPictureInPictureResponse(config).overrideBrowserWindowOptions;
+    assert.deepStrictEqual([maxWidth, maxHeight], [1920, 1080]);
+  });
+
+  it('falls back to the default cap for a missing or invalid configured size', () => {
+    const defaults = { width: main.PIP_MAX_WIDTH, height: main.PIP_MAX_HEIGHT };
+    for (const media of [
+      undefined,
+      {},
+      { documentPictureInPictureMaxWidth: 0, documentPictureInPictureMaxHeight: -5 },
+      { documentPictureInPictureMaxWidth: 99, documentPictureInPictureMaxHeight: 'nope' },
+      { documentPictureInPictureMaxWidth: null, documentPictureInPictureMaxHeight: Infinity },
+    ]) {
+      assert.deepStrictEqual(main.documentPictureInPictureMaxSize({ media }), defaults, JSON.stringify(media));
+    }
+  });
+
   it('profile views give the PiP popup the same window options', () => {
     const handler = createProfileWindowOpenHandler({
       config: { meetupJoinRegEx: '^https://teams\\.microsoft\\.com/l/meetup-join/', ...ENABLED },
       loadInView: () => assert.fail('PiP popup must not load in the view'),
     });
-    assert.deepStrictEqual(handler(pipDetails), main.documentPictureInPictureResponse());
+    assert.deepStrictEqual(handler(pipDetails), main.documentPictureInPictureResponse(ENABLED));
+    const large = createProfileWindowOpenHandler({
+      config: { media: { documentPictureInPicture: true, documentPictureInPictureMaxWidth: 1600 } },
+      loadInView: () => assert.fail('PiP popup must not load in the view'),
+    });
+    assert.strictEqual(large(pipDetails).overrideBrowserWindowOptions.maxWidth, 1600);
     // Other about:blank popups keep the profile default.
     assert.deepStrictEqual(handler({ url: 'about:blank' }), { action: 'allow' });
   });
