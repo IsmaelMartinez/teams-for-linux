@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.32.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.31.1...v2.32.0) (2026-11-14)
+
+
+### Features
+
+* **multi-account:** per-profile notification and sound switches ([#3198](https://github.com/IsmaelMartinez/teams-for-linux/issues/3198)) ([b6ca62e](https://github.com/IsmaelMartinez/teams-for-linux/commit/b6ca62e66ce54eec061ac372b103afdb5b193394))
+* **notifications:** size, position, margin and style options for custom toasts ([#3201](https://github.com/IsmaelMartinez/teams-for-linux/issues/3201)) ([13d9249](https://github.com/IsmaelMartinez/teams-for-linux/commit/13d9249dc39fa7ea896bab71d4a3be0b1303d4ef))
+
+
+### Bug Fixes
+
+* **graph:** follow [@odata](https://github.com/odata).nextLink so get-calendar returns every event ([#3207](https://github.com/IsmaelMartinez/teams-for-linux/issues/3207)) ([a208373](https://github.com/IsmaelMartinez/teams-for-linux/commit/a208373506a7d61c8b6cd24a8cbfbab9fb0d1832))
+
 ## [2.31.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.31.0...v2.31.1) (2026-11-11)
 
 
