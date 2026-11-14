@@ -75,6 +75,9 @@ const allowedChannels = new Set([
 
   // Scheduled-meeting-start toast detection for MQTT (#2587)
   'meeting-started',
+
+  // Call participants and who is speaking, for the opt-in D-Bus Control API
+  'call-participants-changed',
   
   // Authentication and forms
   'submitForm',

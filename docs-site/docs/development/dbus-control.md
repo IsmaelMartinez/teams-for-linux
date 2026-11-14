@@ -23,11 +23,31 @@ The optional control service exposes a deliberately small set of named Teams act
 
 ## Signals and state
 
-Signals: `StateChanged(s stateJson)`, `PresenceChanged(s status, i statusCode)`, `InCallChanged(b)`, `IncomingCallChanged(b)`, `IncomingCallCallerChanged(s callerJson)`, `CameraChanged(b)`, `MicrophoneChanged(s)`, `MicrophoneControlChanged(s)`, `ScreenSharingChanged(b)`, and `MeetingStartedChanged(b)`. `StateChanged` carries the full snapshot; typed signals follow when values change. Call `GetState` after connecting for an immediate snapshot. No D-Bus properties are exported because the installed dbus-native version exposes properties read/write.
+Signals: `StateChanged(s stateJson)`, `PresenceChanged(s status, i statusCode)`, `InCallChanged(b)`, `IncomingCallChanged(b)`, `IncomingCallCallerChanged(s callerJson)`, `CameraChanged(b)`, `MicrophoneChanged(s)`, `MicrophoneControlChanged(s)`, `ScreenSharingChanged(b)`, `MeetingStartedChanged(b)`, and `CallParticipantsChanged(s participantsJson)`. `StateChanged` carries the full snapshot; typed signals follow when values change. Call `GetState` after connecting for an immediate snapshot. No D-Bus properties are exported because the installed dbus-native version exposes properties read/write.
 
-The snapshot has exactly ten keys: `presenceStatus`, `presenceStatusCode`, `inCall`, `incomingCall`, `incomingCallCaller`, `cameraEnabled`, `microphoneState`, `microphoneControlState`, `screenSharing`, `meetingStarted`. Presence, call and media state are scoped to the selected profile, not an aggregate across accounts; unobserved values are false/unknown rather than stale data from another profile. Incoming-call fields describe the latest ringing renderer, independently of the selected profile. Initial presence/microphone state is unknown, booleans are false, and caller is null. These are observations, not server-confirmed Teams state.
+The snapshot has exactly eleven keys: `presenceStatus`, `presenceStatusCode`, `inCall`, `incomingCall`, `incomingCallCaller`, `cameraEnabled`, `microphoneState`, `microphoneControlState`, `screenSharing`, `meetingStarted`, `callParticipants`. Presence, call and media state are scoped to the selected profile, not an aggregate across accounts; unobserved values are false/unknown rather than stale data from another profile. Incoming-call fields describe the latest ringing renderer, independently of the selected profile. Initial presence/microphone state is unknown, booleans are false, and caller is null. These are observations, not server-confirmed Teams state.
 
 Caller information remains opt-in through `config.mqtt.incomingCallCaller.enabled`, independently of MQTT being enabled. If enabled, caller details may appear in broadcast state signals. The same opt-in requirement applies to other transports; D-Bus caller identity is not used for authorization. The bus API is available to clients on the user session bus and does not add per-caller access control.
+
+## Call participants
+
+Set `dbusControl.callParticipants` to `true` (with `dbusControl.enabled`, restart required) to publish who is in the current call and who is speaking. It is off by default and applies to D-Bus only; MQTT never receives it.
+
+`callParticipants` is `null` outside a call or when the option is off. In a call it is a JSON array sorted by name:
+
+```json
+[{ "name": "Ada Lovelace", "speaking": true }, { "name": "Grace Hopper", "speaking": false }]
+```
+
+`CallParticipantsChanged(s participantsJson)` carries the same array (or `null`) whenever a name or a speaking flag changes. The stage is read every 500 ms, so a speaker change reaches the bus within about half a second.
+
+What it covers, and what it does not:
+
+- Remote participants on the meeting stage. `speaking` follows the outline Teams draws around a tile while that person talks. Your own state is `microphoneState` (`speaking`, `silent`, `muted`).
+- People on another page of a large meeting's gallery are not listed. Names are the display names shown on the tiles, one entry per tile, so two people with the same name appear as two entries.
+- The values come from the Teams web page and follow its markup, so a Teams change can leave the list empty until this is updated. They are observations, not server data.
+
+Names are personal data. They are never logged, and every client on your session bus can read them, so only enable this for local tools you trust, such as a meeting note taker that labels transcript lines with the speaker.
 
 ## Examples
 
@@ -45,6 +65,8 @@ busctl --user call "$BUS" "$OBJ_PATH" "$IFACE" SetStatus s busy
 busctl --user call "$BUS" "$OBJ_PATH" "$IFACE" Mute b false
 busctl --user call "$BUS" "$OBJ_PATH" "$IFACE" Unmute b false
 busctl --user monitor "$BUS"
+# with dbusControl.callParticipants: names and speaking flags as they change
+dbus-monitor --session "type='signal',interface='$IFACE',member='CallParticipantsChanged'"
 ```
 
 ## Writing a device bridge

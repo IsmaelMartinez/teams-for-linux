@@ -10,7 +10,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 
 | Option | Type | Default | Description | Apply |
 |--------|------|---------|-------------|-------|
-| `dbusControl` | `object` | `{"enabled":false,"busName":""}` | Opt-in Linux user session D-Bus control and observed Teams state. Requires restart. | `restart` |
+| `dbusControl` | `object` | `{"enabled":false,"busName":"","callParticipants":false}` | Opt-in Linux user session D-Bus control and observed Teams state. Requires restart. | `restart` |
 | `appActiveCheckInterval` | `number` | `2` | A numeric value in seconds as poll interval to check if the system is active from being idle **Deprecated:** use idleDetection.checkInterval.detectActive instead | `restart` |
 | `screenSharing` | `object` | `{"thumbnail":{"enabled":true,"alwaysOnTop":true},"resolution":{"enabled":false,"mode":"remove"},"lockInhibitionMethod":"Electron"}` | Screen sharing configuration. thumbnail: controls the preview window shown during active sharing. lockInhibitionMethod: screen lock inhibition method (Electron/WakeLockSentinel). | `restart` |
 | `appIcon` | `string` | `""` | Custom app icon (PNG) for the tray, the window icon on Windows and Linux, and the dock on macOS. Also settable from the App Icon menu, which on Linux can also copy it into the user icon theme (~/.local/share/icons) so the taskbar and launcher follow; those files outlive the package and are not written under Snap or Flatpak **Deprecated:** use tray.icon instead | `live` |
@@ -106,6 +106,7 @@ Object options group several related settings. The tables below list each nested
 |-------|------|---------|-------------|
 | `dbusControl.enabled` | `boolean` | `false` | Enable the Linux D-Bus service and its local status monitors. |
 | `dbusControl.busName` | `string` | `""` | Well-known D-Bus service name for this instance. Empty uses FLATPAK_ID or com.github.IsmaelMartinez.teams_for_linux. Use distinct names for separately launched profiles; invalid names disable the service. |
+| `dbusControl.callParticipants` | `boolean` | `false` | Also publish the names of remote call participants on the stage and who is speaking (CallParticipantsChanged). Names are visible to every process on your session bus. |
 
 ### screenSharing
 

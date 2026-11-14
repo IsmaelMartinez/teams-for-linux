@@ -3,3 +3,5 @@
 `controlService.js` adapts the optional control service to the user's Linux session bus: it owns the well-known name, exports the fixed control interface, publishes state snapshots/signals, and detaches listeners/releases resources on stop. It is enabled only on Linux when configured and is not a replacement for or dependency of MQTT. With D-Bus control disabled, this service is not started.
 
 Set `dbusControl.busName` to a distinct well-known name for each separately launched instance. Empty or unset uses the Flatpak app ID or the native default; invalid names disable the service. The object path and interface remain fixed. See the [D-Bus control guide](../../docs-site/docs/development/dbus-control.md#separate-application-instances) for configuration and client examples.
+
+With `dbusControl.callParticipants` also enabled, the snapshot's `callParticipants` (names and speaking flags from the meeting stage) is published as `CallParticipantsChanged`. Names never reach logs or MQTT.

@@ -14,6 +14,7 @@ const TeamsStateService = require('../../app/control/teamsStateService');
 const expectedKeys = [
 	'presenceStatus', 'presenceStatusCode', 'inCall', 'incomingCall', 'incomingCallCaller',
 	'cameraEnabled', 'microphoneState', 'microphoneControlState', 'screenSharing', 'meetingStarted',
+	'callParticipants',
 ].sort();
 
 describe('TeamsStateService', () => {
