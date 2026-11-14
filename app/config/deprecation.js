@@ -77,7 +77,7 @@ function buildDeprecationWarning(deprecatedOptions, sources, menuAvailable) {
   const notes = [];
   if (inFile && menuAvailable) {
     notes.push(
-      "Settings > Show Updated Config… writes a copy of your config using the new names. Your own config.json is left alone."
+      "Show Updated Config… (in the tray icon menu, or in the menu bar under Settings; press Alt if the menu bar is hidden) writes a copy of your config using the new names. Your own config.json is left alone."
     );
   }
   if (outsideFile) {

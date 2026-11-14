@@ -178,7 +178,7 @@ describe('buildDeprecationWarning - pointing at the migration', () => {
 
 	it('points at the menu entry when the menu exists', () => {
 		const warning = buildDeprecationWarning(deprecated, sources, true);
-		assert.match(warning, /Show Updated Config/);
+		assert.match(warning, /Show Updated Config… \(in the tray icon menu, or in the menu bar under Settings; press Alt if the menu bar is hidden\)/);
 	});
 
 	// Some configurations leave no surface carrying Settings at all; see
