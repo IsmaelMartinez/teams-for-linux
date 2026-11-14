@@ -13,6 +13,10 @@
 
 * **graph:** follow [@odata](https://github.com/odata).nextLink so get-calendar returns every event ([#3207](https://github.com/IsmaelMartinez/teams-for-linux/issues/3207)) ([a208373](https://github.com/IsmaelMartinez/teams-for-linux/commit/a208373506a7d61c8b6cd24a8cbfbab9fb0d1832))
 
+### Thanks
+
+Big thanks to @jpenberthy, @Trevayne for contributing to this release.
+
 ## [2.31.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.31.0...v2.31.1) (2026-11-11)
 
 
