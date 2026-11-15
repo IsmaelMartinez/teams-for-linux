@@ -14,6 +14,19 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.32.0" date="2026-11-15">
+      <description>
+        <ul>
+          <li>multi-account: a notification click switches to the profile that raised it (ADR-020 Phase 2) (#3218)</li>
+          <li>multi-account: per-profile notification and sound switches (#3198)</li>
+          <li>notifications: size, position, margin and style options for custom toasts (#3201)</li>
+          <li>config: say where to find Show Updated Config in the deprecation warning (#3217)</li>
+          <li>graph: follow @odata.nextLink so get-calendar returns every event (#3207)</li>
+          <li>snap: bundle libpipewire so Wayland screen sharing uses PipeWire (#3181)</li>
+          <li>config: move the flat-name removal from 2.32.0 to 2.36.0 (#3219)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.31.1" date="2026-11-11">
       <description>
         <ul>
