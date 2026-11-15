@@ -110,8 +110,9 @@ The old names keep working for now and are scheduled for removal in a coming rel
 command-line flag or as an environment variable, shows a single Configuration
 Warning once at startup naming every option to move and where you set it. Tick
 "Don't show this again" to dismiss it; it comes back only if the list changes.
-**Settings > Show Updated Config…** writes a copy of your config with the new
-names. The Chromium switches `--disable-gpu`, `--proxy-server` and
+**Show Updated Config…** (in the tray icon menu, the menu bar under Settings,
+or both, depending on your setup; with `menubar: "auto"` press Alt to show the
+bar) writes a copy of your config with the new names. The Chromium switches `--disable-gpu`, `--proxy-server` and
 `--auth-server-whitelist` stay supported permanently and never raise this
 warning.
 

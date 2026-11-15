@@ -7,7 +7,7 @@ const configOptions = require("./options");
 const { validateConfigFile } = require("./validator");
 const {
   buildDeprecationWarning,
-  isMigrationMenuAvailable,
+  migrationMenuLocation,
 } = require("./deprecation");
 const {
   applyRenamedOptions,
@@ -119,7 +119,7 @@ function checkUsedDeprecatedValues(yargsInstance, sources, config) {
   const message = buildDeprecationWarning(
     yargsInstance.getDeprecatedOptions(),
     sources,
-    isMigrationMenuAvailable(config)
+    migrationMenuLocation(config)
   );
   if (!message) return;
 

@@ -4,7 +4,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert');
 const {
 	buildDeprecationWarning,
-	isMigrationMenuAvailable,
+	migrationMenuLocation,
 } = require('../../app/config/deprecation');
 const options = require('../../app/config/options');
 
@@ -160,14 +160,14 @@ describe('buildDeprecationWarning - command line and environment', () => {
 	// Show Updated Config rewrites the file only; flags and variables are the
 	// user's to change.
 	it('says how to rename flags and variables by hand', () => {
-		const warning = buildDeprecationWarning(deprecated, { cli: { webDebug: true } }, true);
+		const warning = buildDeprecationWarning(deprecated, { cli: { webDebug: true } }, 'in the tray icon menu');
 		assert.match(warning, /--window\.frame/);
 		assert.match(warning, /WINDOW__FRAME/);
 		assert.doesNotMatch(warning, /Show Updated Config/);
 	});
 
 	it('leaves out the by-hand note when only the config file is involved', () => {
-		const warning = buildDeprecationWarning(deprecated, { file: { webDebug: true } }, true);
+		const warning = buildDeprecationWarning(deprecated, { file: { webDebug: true } }, 'in the tray icon menu');
 		assert.doesNotMatch(warning, /WINDOW__FRAME/);
 	});
 });
@@ -177,14 +177,14 @@ describe('buildDeprecationWarning - pointing at the migration', () => {
 	const sources = { file: { clearStorageData: true } };
 
 	it('points at the menu entry when the menu exists', () => {
-		const warning = buildDeprecationWarning(deprecated, sources, true);
-		assert.match(warning, /Show Updated Config/);
+		const warning = buildDeprecationWarning(deprecated, sources, 'in the tray icon menu');
+		assert.match(warning, /Show Updated Config… \(in the tray icon menu\) writes/);
 	});
 
 	// Some configurations leave no surface carrying Settings at all; see
 	// isMigrationMenuAvailable. Those users have nowhere to click.
 	it('says nothing about the menu when there is no menu', () => {
-		const warning = buildDeprecationWarning(deprecated, sources, false);
+		const warning = buildDeprecationWarning(deprecated, sources, null);
 		assert.doesNotMatch(warning, /Show Updated Config/);
 	});
 
@@ -194,57 +194,80 @@ describe('buildDeprecationWarning - pointing at the migration', () => {
 	});
 
 	it('still leads with the deprecated options, not the pointer', () => {
-		const warning = buildDeprecationWarning(deprecated, sources, true);
+		const warning = buildDeprecationWarning(deprecated, sources, 'in the tray icon menu');
 		assert.match(warning, /^1 configuration option is deprecated/);
 	});
 });
 
-describe('isMigrationMenuAvailable', () => {
-	// The regression this function exists for: the gate used to read
-	// trayIconEnabled alone, so turning the tray off suppressed the pointer
-	// for users whose menu bar still carried the entry.
-	it('finds the menu bar even with the tray icon off', () => {
+describe('migrationMenuLocation', () => {
+	const place = (config) => migrationMenuLocation(config, 'linux');
+
+	it('names only the tray when the menu bar is hidden', () => {
+		assert.strictEqual(place({ menubar: 'hidden', trayIconEnabled: true }), 'in the tray icon menu');
+	});
+
+	it('mentions Alt only for an auto-hidden menu bar', () => {
 		assert.strictEqual(
-			isMigrationMenuAvailable({ menubar: 'auto', trayIconEnabled: false }),
-			true
+			place({ menubar: 'auto', trayIconEnabled: true }),
+			'in the tray icon menu or the menu bar under Settings (press Alt to show it)'
+		);
+		assert.strictEqual(
+			place({ menubar: 'auto', trayIconEnabled: false }),
+			'in the menu bar under Settings (press Alt to show it)'
 		);
 	});
 
-	it('finds the tray menu when the menu bar is hidden', () => {
+	it('names both places, without Alt, for a visible menu bar', () => {
 		assert.strictEqual(
-			isMigrationMenuAvailable({ menubar: 'hidden', trayIconEnabled: true }),
-			true
+			place({ menubar: 'visible', trayIconEnabled: true }),
+			'in the tray icon menu or the menu bar under Settings'
+		);
+		assert.strictEqual(
+			place({ menubar: 'visible', trayIconEnabled: false }),
+			'in the menu bar under Settings'
+		);
+	});
+
+	// Electron creates no menu bar under the integrated title bar, so Alt does nothing.
+	it('names only the tray under the integrated title bar', () => {
+		for (const menubar of ['auto', 'visible']) {
+			assert.strictEqual(
+				place({ menubar, trayIconEnabled: true, window: { titleBar: 'integrated' } }),
+				'in the tray icon menu'
+			);
+		}
+		assert.strictEqual(
+			place({ menubar: 'auto', trayIconEnabled: false, window: { titleBar: 'integrated' } }),
+			null
 		);
 	});
 
 	// Menu bar removed and no tray: nothing carries the Settings submenu.
 	it('reports nothing reachable when both surfaces are gone', () => {
-		assert.strictEqual(
-			isMigrationMenuAvailable({ menubar: 'hidden', trayIconEnabled: false }),
-			false
-		);
-	});
-
-	it('treats an explicitly visible menu bar as reachable', () => {
-		assert.strictEqual(
-			isMigrationMenuAvailable({ menubar: 'visible', trayIconEnabled: false }),
-			true
-		);
+		assert.strictEqual(place({ menubar: 'hidden', trayIconEnabled: false }), null);
 	});
 
 	// Pinned against options.js rather than hardcoded: if either default moves,
 	// the pointer's reach changes and this should say so.
 	it('is reachable under the shipped defaults', () => {
-		assert.strictEqual(
-			isMigrationMenuAvailable({
+		assert.notStrictEqual(
+			place({
 				menubar: options.menubar.default,
 				trayIconEnabled: options.trayIconEnabled.default,
 			}),
-			true
+			null
 		);
 	});
 
 	it('reports nothing reachable rather than throwing on a missing config', () => {
-		assert.strictEqual(isMigrationMenuAvailable(undefined), false);
+		assert.strictEqual(place(undefined), null);
+	});
+
+	// The integrated title bar is ignored on macOS, so the menu bar is still there.
+	it('keeps the menu bar on macOS, where the integrated title bar is ignored', () => {
+		assert.strictEqual(
+			migrationMenuLocation({ menubar: 'visible', trayIconEnabled: false, window: { titleBar: 'integrated' } }, 'darwin'),
+			'in the menu bar under Settings'
+		);
 	});
 });
