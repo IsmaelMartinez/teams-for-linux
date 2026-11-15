@@ -21,6 +21,10 @@
 
 * **config:** move the flat-name removal from 2.32.0 to 2.36.0 ([#3219](https://github.com/IsmaelMartinez/teams-for-linux/issues/3219)) ([f924257](https://github.com/IsmaelMartinez/teams-for-linux/commit/f9242577a5587a27d47e7e4406fbc86ff1a120ec))
 
+### Thanks
+
+Big thanks to @frederycomiguel, @jpenberthy, @Trevayne for contributing to this release.
+
 ## [2.31.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.31.0...v2.31.1) (2026-11-11)
 
 
