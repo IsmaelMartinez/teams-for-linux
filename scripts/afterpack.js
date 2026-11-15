@@ -4,6 +4,7 @@ const path = require("node:path");
 const { generateReleaseInfo } = require("./generateReleaseInfo");
 const { generateDebianChangelog } = require("./generateDebianChangelog");
 const { patchSnapDesktopLauncher } = require("./patchSnapDesktopLauncher");
+const { bundleSnapPipewire } = require("./bundleSnapPipewire");
 
 function getAppFileName(context) {
   const productFileName = context.packager.appInfo.productFilename;
@@ -49,6 +50,21 @@ async function patchSnapLauncherIfNeeded(context) {
     return;
   }
   await patchSnapDesktopLauncher(context.arch);
+  await bundleSnapPipewireIfSnapOnly(context);
+}
+
+// The unpacked app is shared by every target in the run, so the bundled
+// libpipewire would also land in a deb/rpm/AppImage built alongside the snap
+// and shadow the host's copy there (#3180).
+async function bundleSnapPipewireIfSnapOnly(context) {
+  if (!context.targets.every((target) => target.name === "snap")) {
+    console.warn(
+      "⚠️  Snap built alongside other Linux targets: skipping the libpipewire bundle. " +
+        "Build the snap on its own (npm run dist:linux:snap) for Wayland screen sharing.",
+    );
+    return;
+  }
+  await bundleSnapPipewire(context.appOutDir, context.arch);
 }
 
 async function generateReleaseInfoForLinux() {
