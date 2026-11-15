@@ -51,7 +51,7 @@ describe('buildDeprecationWarning - aggregation', () => {
 		);
 
 		assert.strictEqual(typeof warning, 'string');
-		assert.match(warning, /^3 configuration options are deprecated and stop working in 2\.32\.0:/);
+		assert.match(warning, /^3 configuration options are deprecated and stop working in 2\.36\.0:/);
 		assert.match(warning, /^ {2}- proxyServer \(config file\): use network\.proxyServer$/m);
 		assert.match(warning, /^ {2}- clearStorageData \(config file\): use storage\.clearData$/m);
 		assert.match(warning, /^ {2}- webDebug \(config file\): use development\.webDebug$/m);
@@ -62,7 +62,7 @@ describe('buildDeprecationWarning - aggregation', () => {
 			{ proxyServer: 'use network.proxyServer' },
 			{ file: { proxyServer: 'http://x' } }
 		);
-		assert.match(warning, /^1 configuration option is deprecated and stops working in 2\.32\.0:/);
+		assert.match(warning, /^1 configuration option is deprecated and stops working in 2\.36\.0:/);
 	});
 
 	it('omits the detail when an option declares `deprecated: true` with no text', () => {

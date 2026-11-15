@@ -588,7 +588,7 @@ describe('Chromium switch aliases', () => {
 		}
 	});
 
-	// Survives the 2.32.0 removal: once a rename exists, the switch drives the
+	// Survives the 2.36.0 removal: once a rename exists, the switch drives the
 	// nested name.
 	it('resolves to the nested name through RENAMES where a rename exists', () => {
 		for (const [name, flat] of Object.entries(CHROMIUM_SWITCH_ALIASES)) {

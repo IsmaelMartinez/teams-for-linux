@@ -129,7 +129,7 @@ function checkUsedDeprecatedValues(yargsInstance, sources, config) {
   // goes to the acknowledge-once Configuration Warning modal
   // (showConfigurationDialogs in app/index.js). That modal will reach most
   // customised configs, because keys as common as `url` and `appTitle` are
-  // deprecated; with removal in 2.32.0 that is now the point. It shows once:
+  // deprecated; with removal in 2.36.0 that is now the point. It shows once:
   // the acknowledgement is keyed on a hash of this text, which is why
   // buildDeprecationWarning keeps it free of values and in a fixed order.
   config.warnings = [...(config.warnings || []), message];

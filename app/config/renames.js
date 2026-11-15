@@ -6,7 +6,7 @@
 // every module reads, so no feature code is swept; a nested value is projected
 // onto the flat key only when the user actually supplied it. The flat
 // declarations, this table and the projection are deleted together at the end
-// of the window (2.32.0, see issue #2842).
+// of the window (2.36.0, see issue #2842).
 //
 // "Supplied" covers the config file, command-line flags and environment
 // variables alike (see readUserSources). Between sources the yargs order
@@ -172,7 +172,7 @@ const RENAMES = [
 // `--disable-gpu`, and Chromium reads all three itself, so these spellings are
 // PERMANENT: they never raise the deprecation warning, and they must keep
 // driving the same behaviour after the flat names go. When the flat names are
-// removed in 2.32.0, map these to the nested names (performance.disableGpu,
+// removed in 2.36.0, map these to the nested names (performance.disableGpu,
 // network.proxyServer, auth.serverWhitelist) instead; chromiumSwitchTarget
 // already resolves them through RENAMES where an entry exists. The camelCase
 // (`--disableGpu`), `--no-` and environment spellings are ours and still warn.

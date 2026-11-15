@@ -74,7 +74,7 @@ describe('startup deprecation warning reaches the modal', () => {
 		assert.strictEqual(warnings.length, 1);
 		const names = [...warnings[0].matchAll(/^ {2}- (\w+)/gm)].map((m) => m[1]);
 		assert.deepStrictEqual(names, ['appTitle', 'url', 'webDebug']);
-		assert.match(warnings[0], /stop working in 2\.32\.0/);
+		assert.match(warnings[0], /stop working in 2\.36\.0/);
 		assert.match(warnings[0], /Show Updated Config… \(in the tray icon menu or the menu bar under Settings \(press Alt to show it\)\)/);
 	});
 

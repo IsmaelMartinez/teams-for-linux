@@ -18,7 +18,7 @@
 // ever passes `--webDebug` is warned before the flat names are removed.
 
 // When the flat names stop being read (#2842).
-const REMOVAL_VERSION = "2.32.0";
+const REMOVAL_VERSION = "2.36.0";
 
 const { isIntegratedTitleBar } = require("../mainAppWindow/titleBar");
 
