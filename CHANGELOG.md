@@ -7,6 +7,10 @@
 
 * **deps:** bump electron to 45.3.2 to stop the screen share crash ([#3213](https://github.com/IsmaelMartinez/teams-for-linux/issues/3213)) ([6802c64](https://github.com/IsmaelMartinez/teams-for-linux/commit/6802c64189604031d438d4e4150fd2f22f397fd3))
 
+### Thanks
+
+Big thanks to @KimP0ssible-no for contributing to this release.
+
 ## [2.32.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.31.1...v2.32.0) (2026-11-15)
 
 
