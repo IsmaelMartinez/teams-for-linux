@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.32.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.31.1...v2.32.0) (2026-11-15)
+
+
+### Features
+
+* **multi-account:** a notification click switches to the profile that raised it (ADR-020 Phase 2) ([#3218](https://github.com/IsmaelMartinez/teams-for-linux/issues/3218)) ([0284769](https://github.com/IsmaelMartinez/teams-for-linux/commit/02847690d581d22d1a14cae755d27acb5a3c93eb))
+* **multi-account:** per-profile notification and sound switches ([#3198](https://github.com/IsmaelMartinez/teams-for-linux/issues/3198)) ([b6ca62e](https://github.com/IsmaelMartinez/teams-for-linux/commit/b6ca62e66ce54eec061ac372b103afdb5b193394))
+* **notifications:** size, position, margin and style options for custom toasts ([#3201](https://github.com/IsmaelMartinez/teams-for-linux/issues/3201)) ([13d9249](https://github.com/IsmaelMartinez/teams-for-linux/commit/13d9249dc39fa7ea896bab71d4a3be0b1303d4ef))
+
+
+### Bug Fixes
+
+* **config:** say where to find Show Updated Config in the deprecation warning ([#3217](https://github.com/IsmaelMartinez/teams-for-linux/issues/3217)) ([61edf0d](https://github.com/IsmaelMartinez/teams-for-linux/commit/61edf0d7fdd5269a2f9476c8ddbc728ad4f77d1e))
+* **graph:** follow [@odata](https://github.com/odata).nextLink so get-calendar returns every event ([#3207](https://github.com/IsmaelMartinez/teams-for-linux/issues/3207)) ([a208373](https://github.com/IsmaelMartinez/teams-for-linux/commit/a208373506a7d61c8b6cd24a8cbfbab9fb0d1832))
+* **snap:** bundle libpipewire so Wayland screen sharing uses PipeWire ([#3181](https://github.com/IsmaelMartinez/teams-for-linux/issues/3181)) ([bdcc638](https://github.com/IsmaelMartinez/teams-for-linux/commit/bdcc63896c1ecb5a8f0961c72843f123f6c21940))
+
+
+### Maintenance
+
+* **config:** move the flat-name removal from 2.32.0 to 2.36.0 ([#3219](https://github.com/IsmaelMartinez/teams-for-linux/issues/3219)) ([f924257](https://github.com/IsmaelMartinez/teams-for-linux/commit/f9242577a5587a27d47e7e4406fbc86ff1a120ec))
+
 ## [2.31.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.31.0...v2.31.1) (2026-11-11)
 
 
