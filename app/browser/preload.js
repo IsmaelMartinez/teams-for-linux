@@ -288,6 +288,28 @@ function playNotificationSound(notifSound) {
   }
 }
 
+// Captured before page script runs: the page shares this JavaScript world
+// and could otherwise intercept the listener below and call it with a forged
+// event.
+const nativeAddEventListener = EventTarget.prototype.addEventListener;
+const reflectApply = Reflect.apply;
+
+// Multi-account: a click on a Chromium toast never reaches main, so report it
+// and let main bring this profile forward. isTrusted is unforgeable, which
+// keeps a page from switching profiles by dispatching a synthetic click.
+function reportWebNotificationClicks(notification) {
+  // The flag is read at click time, not here: config loads asynchronously,
+  // and a toast raised before it arrived must still route when clicked.
+  reflectApply(nativeAddEventListener, notification, [
+    "click",
+    (event) => {
+      if (event.isTrusted && notificationConfig?.multiAccount?.enabled) {
+        ipcRenderer.send("notification-web-clicked");
+      }
+    },
+  ]);
+}
+
 function createWebNotification(classicNotification, title, options) {
   const notifSound = {
     type: options.type,
@@ -301,7 +323,9 @@ function createWebNotification(classicNotification, title, options) {
   console.debug("Continues to default notification workflow");
   if (classicNotification) {
     try {
-      return new classicNotification(title, options);
+      const notification = new classicNotification(title, options);
+      reportWebNotificationClicks(notification);
+      return notification;
     } catch (err) {
       console.debug("Could not create native notification:", err);
       return null;

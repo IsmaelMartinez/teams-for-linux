@@ -92,3 +92,27 @@ describe('preload does not hand ipcRenderer to page script', () => {
 		}
 	});
 });
+
+describe('preload web-notification click reporting (ADR-020 Phase 2)', () => {
+	const source = require('node:fs').readFileSync(
+		require.resolve('../../app/browser/preload.js'),
+		'utf8'
+	);
+
+	it('registers through built-ins captured before page script runs', () => {
+		assert.match(source, /const nativeAddEventListener = EventTarget\.prototype\.addEventListener;/);
+		assert.match(source, /const reflectApply = Reflect\.apply;/);
+		assert.match(source, /reflectApply\(nativeAddEventListener, notification, \[/);
+	});
+
+	it('reports only trusted clicks, and only with multi-account on', () => {
+		assert.match(
+			source,
+			/if \(event\.isTrusted && notificationConfig\?\.multiAccount\?\.enabled\) \{\s*ipcRenderer\.send\("notification-web-clicked"\);/
+		);
+	});
+
+	it('attaches the reporter to every native web notification', () => {
+		assert.match(source, /const notification = new classicNotification\(title, options\);\s*reportWebNotificationClicks\(notification\);/);
+	});
+});

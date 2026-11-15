@@ -6,11 +6,19 @@ class CustomNotificationManager {
   #mainWindow;
   #toastOptions;
   #activeToasts;
+  // toast → the renderer that raised it, so a click can bring that profile
+  // forward (multi-account).
+  #toastOrigins = new WeakMap();
+  #activateProfile = null;
 
   constructor(config, mainWindow) {
     this.#mainWindow = mainWindow;
     this.#toastOptions = resolveToastOptions(config?.customNotification);
     this.#activeToasts = new Set();
+  }
+
+  setProfileActivator(activate) {
+    this.#activateProfile = activate;
   }
 
   initialize() {
@@ -35,6 +43,7 @@ class CustomNotificationManager {
       );
 
       this.#activeToasts.add(toast);
+      this.#toastOrigins.set(toast, event.sender);
 
       // Remove from tracking when toast closes
       const originalClose = toast.close.bind(toast);
@@ -55,6 +64,7 @@ class CustomNotificationManager {
       // Find and close the toast window that was clicked
       for (const toast of this.#activeToasts) {
         if (toast.getWebContents() === event.sender) {
+          this.#activateProfile?.(this.#toastOrigins.get(toast));
           toast.close();
           break;
         }

@@ -56,6 +56,9 @@ const allowedChannels = new Set([
   'notification-toast-click',
   // Handled per toast on its own webContents.ipc, not ipcMain.
   'notification-toast-ready',
+  // Multi-account: a user click on a `web`-method toast, reported by the
+  // raising renderer so main can bring that profile forward (sender-resolved).
+  'notification-web-clicked',
   'user-status-changed',
   'set-badge-count',
   'tray-update',

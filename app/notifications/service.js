@@ -44,6 +44,14 @@ class NotificationService {
     ];
   }
 
+  // Multi-account: brings the clicked notification's profile forward. Set
+  // once the profile view manager exists; unset with the flag off.
+  #activateProfile = null;
+
+  setProfileActivator(activate) {
+    this.#activateProfile = activate;
+  }
+
   initialize() {
     // Play notification sound for Teams messages and calls
     ipcMain.handle("play-notification-sound", this.#handlePlayNotificationSound.bind(this));
@@ -129,6 +137,8 @@ class NotificationService {
         // with it.
         const win = this.#mainWindow.getWindow();
         if (!win || win.isDestroyed()) return;
+        // Before showing, so the window comes up on the right profile.
+        this.#activateProfile?.(sender);
         if (clickAction === "restore") {
           // restore if minimised, show if in the tray, then focus. Whether the
           // focus is honoured is window-manager dependent on Linux.
