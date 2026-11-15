@@ -14,6 +14,13 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.32.1" date="2026-11-15">
+      <description>
+        <ul>
+          <li>deps: bump electron to 45.3.2 to stop the screen share crash (#3213)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.32.0" date="2026-11-15">
       <description>
         <ul>
