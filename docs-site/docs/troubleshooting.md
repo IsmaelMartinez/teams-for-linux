@@ -671,6 +671,33 @@ The `performance.electronCLIFlags` config option (`config.json`) **cannot** over
 
 ### Other
 
+#### Issue: Flatpak shutdown or logout waits for Teams to time out
+
+**Description:** On the Flatpak, shutting down or logging out stalls until systemd's configured stop timeout expires (45 seconds on the reporter's system, while systemd's built-in default is 90 seconds), and the journal shows the `app-flatpak-com.github.IsmaelMartinez.teams_for_linux-<id>.scope` unit "Stopping timed out. Killing."
+
+**Cause:** When systemd stops the scope it sends SIGTERM to every process in it, including `bwrap`, and the Flatpak then deadlocks instead of quitting. The app itself exits in about half a second when only its main process is signalled, and the AppImage of the same version stops cleanly under a scope. This is tracked upstream in [refi64/zypak#50](https://github.com/refi64/zypak/issues/50), where another user reports the same hang with the Bitwarden Flatpak.
+
+**Solutions/Workarounds:**
+
+:::note
+This workaround was reported by a user and has not been verified by the maintainers. It only shortens how long systemd waits before killing the scope; it does not fix the deadlock.
+:::
+
+Create a user drop-in that lowers the stop timeout for these scopes. The trailing dash in the directory name makes it a prefix drop-in, which systemd applies to every unit whose name starts with that prefix (see the drop-in section of [systemd.unit(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html)):
+
+```bash
+mkdir -p ~/.config/systemd/user/app-flatpak-com.github.IsmaelMartinez.teams_for_linux-.scope.d
+cat > ~/.config/systemd/user/app-flatpak-com.github.IsmaelMartinez.teams_for_linux-.scope.d/override.conf <<'EOF'
+[Scope]
+TimeoutStopSec=5s
+EOF
+systemctl --user daemon-reload
+```
+
+The systemd man pages document prefix drop-ins in general but do not list `TimeoutStopSec=` among the options for scope units, so this relies on the reporter's experience.
+
+**Related GitHub Issues:** [Issue #3032](https://github.com/IsmaelMartinez/teams-for-linux/issues/3032)
+
 #### Issue: "We couldn't open your Teams app" when joining from a browser
 
 **Description:** Clicking "Join on the Teams app" on Teams' launcher page does nothing and the page ends with "We couldn't open your Teams app". The browser shows no "Open link with" prompt.
