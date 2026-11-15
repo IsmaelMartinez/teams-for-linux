@@ -671,9 +671,9 @@ The `performance.electronCLIFlags` config option (`config.json`) **cannot** over
 
 ### Other
 
-#### Issue: Flatpak shutdown or logout waits about 45 seconds for Teams
+#### Issue: Flatpak shutdown or logout waits for Teams to time out
 
-**Description:** On the Flatpak, shutting down or logging out stalls for about 45 seconds (systemd's default stop timeout), and the journal shows the `app-flatpak-com.github.IsmaelMartinez.teams_for_linux-<id>.scope` unit "Stopping timed out. Killing."
+**Description:** On the Flatpak, shutting down or logging out stalls until systemd's configured stop timeout expires (45 seconds on the reporter's system, while systemd's built-in default is 90 seconds), and the journal shows the `app-flatpak-com.github.IsmaelMartinez.teams_for_linux-<id>.scope` unit "Stopping timed out. Killing."
 
 **Cause:** When systemd stops the scope it sends SIGTERM to every process in it, including `bwrap`, and the Flatpak then deadlocks instead of quitting. The app itself exits in about half a second when only its main process is signalled, and the AppImage of the same version stops cleanly under a scope. This is tracked upstream in [refi64/zypak#50](https://github.com/refi64/zypak/issues/50), where another user reports the same hang with the Bitwarden Flatpak.
 
