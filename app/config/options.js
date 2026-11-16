@@ -43,7 +43,7 @@ module.exports = {
           },
           callParticipants: {
             type: "boolean",
-            describe: "Also publish the names of remote call participants on the stage and who is speaking (CallParticipantsChanged). Names are visible to every process on your session bus.",
+            describe: "Also publish the names of remote call participants on the stage and who is speaking (CallParticipantsChanged). Names are visible to every process on your session bus. Reads Teams call markup, which can change without notice (experimental).",
           },
         },
         applyMode: "restart",

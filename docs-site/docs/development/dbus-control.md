@@ -31,6 +31,10 @@ Caller information remains opt-in through `config.mqtt.incomingCallCaller.enable
 
 ## Call participants
 
+:::warning Experimental and unsupported
+This option reads the call tiles from Teams' own page markup. Microsoft changes that markup often, sometimes only for some users or views, so the list may stop working or read wrong without notice, and fixes are not promised.
+:::
+
 Set `dbusControl.callParticipants` to `true` (with `dbusControl.enabled`, restart required) to publish who is in the current call and who is speaking. It is off by default and applies to D-Bus only; MQTT never receives it.
 
 `callParticipants` is `null` outside a call or when the option is off. In a call it is a JSON array sorted by name:

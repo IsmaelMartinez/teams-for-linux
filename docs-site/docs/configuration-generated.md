@@ -106,7 +106,7 @@ Object options group several related settings. The tables below list each nested
 |-------|------|---------|-------------|
 | `dbusControl.enabled` | `boolean` | `false` | Enable the Linux D-Bus service and its local status monitors. |
 | `dbusControl.busName` | `string` | `""` | Well-known D-Bus service name for this instance. Empty uses FLATPAK_ID or com.github.IsmaelMartinez.teams_for_linux. Use distinct names for separately launched profiles; invalid names disable the service. |
-| `dbusControl.callParticipants` | `boolean` | `false` | Also publish the names of remote call participants on the stage and who is speaking (CallParticipantsChanged). Names are visible to every process on your session bus. |
+| `dbusControl.callParticipants` | `boolean` | `false` | Also publish the names of remote call participants on the stage and who is speaking (CallParticipantsChanged). Names are visible to every process on your session bus. Reads Teams call markup, which can change without notice (experimental). |
 
 ### screenSharing
 
