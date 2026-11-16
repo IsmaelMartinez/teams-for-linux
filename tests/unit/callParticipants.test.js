@@ -41,6 +41,19 @@ describe('callParticipants readStage', () => {
 		assert.deepEqual(tool.readStage(doc, styleOf), [{ name: 'Ada Lovelace', speaking: false }]);
 	});
 
+	it('takes the name from the name tag, not a raised hand\'s queue number above it', () => {
+		// as measured in a live call: tile text "1\nTest" with the hand raised, name tag "Test"
+		const raised = { parentElement: { innerText: '1\nAda Lovelace', querySelector: (sel) => (sel === '[data-tid="participant-info-nametag"]' ? { innerText: 'Ada Lovelace' } : null) }, opacity: '0' };
+		assert.deepEqual(tool.readStage(stage(raised), styleOf), [{ name: 'Ada Lovelace', speaking: false }]);
+		// the name tag is trusted as it is, even a name that is all digits
+		const digits = { parentElement: { innerText: '007', querySelector: () => ({ innerText: '007' }) }, opacity: '0' };
+		assert.deepEqual(tool.readStage(stage(digits), styleOf), [{ name: '007', speaking: false }]);
+	});
+
+	it('without a name tag, skips a queue number above the name', () => {
+		assert.deepEqual(tool.readStage(stage(tile('2\nAda Lovelace', '1')), styleOf), [{ name: 'Ada Lovelace', speaking: true }]);
+	});
+
 	it('skips silent tiles showing a transition status instead of a name', () => {
 		const doc = stage(tile('Leaving...', '0'), tile('Reconnecting\u2026', '0'), tile('Ada Lovelace', '0'));
 		assert.deepEqual(tool.readStage(doc, styleOf), [{ name: 'Ada Lovelace', speaking: false }]);

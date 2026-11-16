@@ -11,7 +11,10 @@
  * Source: each remote participant tile carries Teams' own test id
  * `data-tid="voice-level-stream-outline"`. While that person speaks, Teams
  * draws the speaking outline as the element's ::before (opacity 1); silent or
- * muted it is transparent (opacity 0). The display name is the tile's text.
+ * muted it is transparent (opacity 0). The display name is the tile's
+ * `data-tid="participant-info-nametag"`; without one, the first line of the
+ * tile's text that is not a number (a raised hand shows its place in the queue,
+ * "1", above the name).
  * Only the `data-tid` and the computed outline are used, never the generated
  * class names, which change between Teams releases.
  *
@@ -39,6 +42,8 @@ const POLL_INTERVAL_MS = 500;
 const MAX_PARTICIPANTS = 100;
 const MAX_NAME_LENGTH = 128;
 const OUTLINE_SELECTOR = '[data-tid="voice-level-stream-outline"]';
+const NAMETAG_SELECTOR = '[data-tid="participant-info-nametag"]';
+const QUEUE_LINE = /^\d+$/u; // a raised hand's place in the queue, shown above the name
 const STATUS_LINE = /(\.\.\.|\u2026)$/u; // "Leaving...", "Connecting…": a transition, unless the tile speaks
 
 /** Pure reader, exported for tests: one { name, speaking } per stage tile, sorted by name. */
@@ -57,9 +62,16 @@ function readStage(doc = globalThis.document, getStyle = globalThis.getComputedS
 }
 
 function tileName(outline) {
-	const text = outline?.parentElement?.innerText ?? outline?.parentElement?.textContent ?? "";
-	const first = text.split("\n").map((line) => line.trim()).find(Boolean);
-	return first ? first.slice(0, MAX_NAME_LENGTH) : null;
+	const tile = outline?.parentElement;
+	// Teams' own name tag first: other lines (a raised hand's place in the queue) can sit above the name
+	const tagged = lines(tile?.querySelector?.(NAMETAG_SELECTOR))[0];
+	const name = tagged ?? lines(tile).find((line) => !QUEUE_LINE.test(line));
+	return name ? name.slice(0, MAX_NAME_LENGTH) : null;
+}
+
+function lines(element) {
+	const text = element?.innerText ?? element?.textContent ?? "";
+	return text.split("\n").map((line) => line.trim()).filter(Boolean);
 }
 
 function isSpeaking(outline, getStyle) {
