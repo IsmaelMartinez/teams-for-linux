@@ -60,6 +60,26 @@ describe('callParticipants readStage', () => {
 		assert.deepEqual(tool.readStage(stage(bare), styleOf), [], 'no name anywhere: no entry');
 	});
 
+	it('keeps a name with a comma whole on a thumbnail when it was seen earlier in the call', () => {
+		const labelled = (label, opacity) => ({ parentElement: { innerText: '', querySelector: () => null },
+			closest: (sel) => (sel === '[aria-label]' ? { getAttribute: () => label } : null), opacity });
+		const known = new Set();
+		// before the share: the name tags show "Smith, Dana" and "Smith"
+		tool.readStage(stage(tile('Smith, Dana', '0'), tile('Smith', '0')), styleOf, known);
+		// during it: only labels, and the longest name each label starts with wins
+		assert.deepEqual(tool.readStage(stage(
+			labelled('Smith, Dana, video is on, Context menu is available', '1'),
+			labelled('Smith, video is off', '0'),
+		), styleOf, known), [
+			{ name: 'Smith', speaking: false },
+			{ name: 'Smith, Dana', speaking: true },
+		]);
+		// someone never seen with a name tag is cut at the first comma, as before
+		assert.deepEqual(tool.readStage(stage(labelled('Park, Zoe, video is on', '0')), styleOf, known), [{ name: 'Park', speaking: false }]);
+		// a name that only starts the same way is not a match
+		assert.deepEqual(tool.readStage(stage(labelled('Smithson, video is on', '0')), styleOf, known), [{ name: 'Smithson', speaking: false }]);
+	});
+
 	it('without a name tag, skips a queue number above the name', () => {
 		assert.deepEqual(tool.readStage(stage(tile('2\nAda Lovelace', '1')), styleOf), [{ name: 'Ada Lovelace', speaking: true }]);
 	});

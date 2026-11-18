@@ -15,7 +15,11 @@
  * `data-tid="participant-info-nametag"`; without one, the first line of the
  * tile's text that is not a number (a raised hand shows its place in the queue,
  * "1", above the name); without either (screen-share thumbnails show no name),
- * the first part of the tile's accessible label.
+ * the tile's accessible label ("Dana Smith, video is on, ..."). The label's
+ * parts are split by commas, so a name with a comma in it ("Smith, Dana") is
+ * matched against the names already read this call, and the longest one the
+ * label starts with is kept whole. Only for someone never seen with a name is
+ * the label cut at its first comma.
  * Only the `data-tid` and the computed outline are used, never the generated
  * class names, which change between Teams releases.
  *
@@ -44,14 +48,18 @@ const MAX_PARTICIPANTS = 100;
 const MAX_NAME_LENGTH = 128;
 const OUTLINE_SELECTOR = '[data-tid="voice-level-stream-outline"]';
 const NAMETAG_SELECTOR = '[data-tid="participant-info-nametag"]';
+const MAX_REMEMBERED = 500;
 const QUEUE_LINE = /^\d+$/u; // a raised hand's place in the queue, shown above the name
 const STATUS_LINE = /(\.\.\.|\u2026)$/u; // "Leaving...", "Connecting…": a transition, unless the tile speaks
 
-/** Pure reader, exported for tests: one { name, speaking } per stage tile, sorted by name. */
-function readStage(doc = globalThis.document, getStyle = globalThis.getComputedStyle) {
+/**
+ * Reader, exported for tests: one { name, speaking } per stage tile, sorted by name. `known` holds the names read
+ * from name tags or tile text during this call, so a screen-share thumbnail's label keeps a name with a comma whole.
+ */
+function readStage(doc = globalThis.document, getStyle = globalThis.getComputedStyle, known = new Set()) {
 	const participants = [];
 	for (const outline of doc?.querySelectorAll?.(OUTLINE_SELECTOR) ?? []) {
-		const name = tileName(outline);
+		const name = tileName(outline, known);
 		if (!name) continue;
 		const speaking = isSpeaking(outline, getStyle);
 		if (!speaking && STATUS_LINE.test(name)) continue;
@@ -62,20 +70,31 @@ function readStage(doc = globalThis.document, getStyle = globalThis.getComputedS
 	return participants.sort((a, b) => a.name.localeCompare(b.name) || Number(b.speaking) - Number(a.speaking));
 }
 
-function tileName(outline) {
+function tileName(outline, known) {
 	const tile = outline?.parentElement;
 	// Teams' own name tag first: other lines (a raised hand's place in the queue) can sit above the name
 	const tagged = lines(tile?.querySelector?.(NAMETAG_SELECTOR))[0];
+	const shown = tagged ?? lines(tile).find((line) => !QUEUE_LINE.test(line));
+	if (shown) {
+		const name = shown.slice(0, MAX_NAME_LENGTH);
+		if (known.size < MAX_REMEMBERED) known.add(name);
+		return name;
+	}
 	// While someone shares their screen, the people shrink to thumbnails with no visible name: the tile's
 	// accessible label still starts with it ("Dana Smith, video is on, ...")
-	const name = tagged ?? lines(tile).find((line) => !QUEUE_LINE.test(line)) ?? labelName(outline);
+	const name = labelName(outline, known);
 	return name ? name.slice(0, MAX_NAME_LENGTH) : null;
 }
 
-function labelName(outline) {
-	const label = outline?.closest?.("[aria-label]")?.getAttribute?.("aria-label") ?? "";
-	const first = label.split(",")[0]?.trim();
-	return first || null;
+function labelName(outline, known) {
+	const label = (outline?.closest?.("[aria-label]")?.getAttribute?.("aria-label") ?? "").trim();
+	if (!label) return null;
+	// a name seen earlier in the call, commas and all ("Smith, Dana, video is on, ...")
+	let match = null;
+	for (const name of known) {
+		if ((label === name || label.startsWith(`${name},`)) && name.length > (match?.length ?? 0)) match = name;
+	}
+	return match ?? (label.split(",")[0].trim() || null);
 }
 
 function lines(element) {
@@ -96,6 +115,7 @@ class CallParticipants {
 	#ipcRenderer = null;
 	#timer = null;
 	#last = ""; // JSON of the last list sent; "" = nothing sent yet (JSON.stringify never returns "")
+	#known = new Set(); // names read this call, kept only in this window and forgotten when the call ends
 
 	init(config, ipcRenderer) {
 		const enabled = process.platform === "linux"
@@ -119,11 +139,12 @@ class CallParticipants {
 		this.#timer = null;
 		this.#send([]);
 		this.#last = "";
+		this.#known.clear();
 	}
 
 	#poll() {
 		try {
-			this.#send(readStage());
+			this.#send(readStage(globalThis.document, globalThis.getComputedStyle, this.#known));
 		} catch (error) {
 			console.debug(`${LOG_PREFIX} Stage read failed`, { error: error?.name });
 		}
