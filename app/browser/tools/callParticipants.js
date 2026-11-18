@@ -14,7 +14,8 @@
  * muted it is transparent (opacity 0). The display name is the tile's
  * `data-tid="participant-info-nametag"`; without one, the first line of the
  * tile's text that is not a number (a raised hand shows its place in the queue,
- * "1", above the name).
+ * "1", above the name); without either (screen-share thumbnails show no name),
+ * the first part of the tile's accessible label.
  * Only the `data-tid` and the computed outline are used, never the generated
  * class names, which change between Teams releases.
  *
@@ -65,8 +66,16 @@ function tileName(outline) {
 	const tile = outline?.parentElement;
 	// Teams' own name tag first: other lines (a raised hand's place in the queue) can sit above the name
 	const tagged = lines(tile?.querySelector?.(NAMETAG_SELECTOR))[0];
-	const name = tagged ?? lines(tile).find((line) => !QUEUE_LINE.test(line));
+	// While someone shares their screen, the people shrink to thumbnails with no visible name: the tile's
+	// accessible label still starts with it ("Dana Smith, video is on, ...")
+	const name = tagged ?? lines(tile).find((line) => !QUEUE_LINE.test(line)) ?? labelName(outline);
 	return name ? name.slice(0, MAX_NAME_LENGTH) : null;
+}
+
+function labelName(outline) {
+	const label = outline?.closest?.("[aria-label]")?.getAttribute?.("aria-label") ?? "";
+	const first = label.split(",")[0]?.trim();
+	return first || null;
 }
 
 function lines(element) {

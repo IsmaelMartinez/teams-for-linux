@@ -50,6 +50,16 @@ describe('callParticipants readStage', () => {
 		assert.deepEqual(tool.readStage(stage(digits), styleOf), [{ name: '007', speaking: false }]);
 	});
 
+	it('reads a screen-share thumbnail with no visible name from its accessible label', () => {
+		// as measured in a live call: during a share the tile has no name tag and no text, only an aria-label
+		const thumb = { parentElement: { innerText: '', querySelector: () => null },
+			closest: (sel) => (sel === '[aria-label]' ? { getAttribute: () => 'Dana Smith, video is on, Has control of production tools, Context menu is available' } : null),
+			opacity: '1' };
+		assert.deepEqual(tool.readStage(stage(thumb), styleOf), [{ name: 'Dana Smith', speaking: true }]);
+		const bare = { parentElement: { innerText: '', querySelector: () => null }, closest: () => null, opacity: '0' };
+		assert.deepEqual(tool.readStage(stage(bare), styleOf), [], 'no name anywhere: no entry');
+	});
+
 	it('without a name tag, skips a queue number above the name', () => {
 		assert.deepEqual(tool.readStage(stage(tile('2\nAda Lovelace', '1')), styleOf), [{ name: 'Ada Lovelace', speaking: true }]);
 	});
