@@ -548,7 +548,7 @@ module.exports = {
       disableGlobalShortcuts: {
         default: [],
         describe:
-          "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use",
+          "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/tutorial/keyboard-shortcuts#accelerators for available accelerators to use",
         type: "array",
         applyMode: "restart",
         deprecated: "use shortcuts.disableWhileFocused instead",
@@ -1345,7 +1345,7 @@ module.exports = {
           "disableWhileFocused": {
             type: "array",
             describe:
-              "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use",
+              "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/tutorial/keyboard-shortcuts#accelerators for available accelerators to use",
           },
         },
         applyMode: "restart",

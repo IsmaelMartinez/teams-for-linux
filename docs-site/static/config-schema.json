@@ -628,7 +628,7 @@
       "name": "disableGlobalShortcuts",
       "type": "array",
       "default": [],
-      "description": "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use",
+      "description": "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/tutorial/keyboard-shortcuts#accelerators for available accelerators to use",
       "applyMode": "restart",
       "deprecated": "use shortcuts.disableWhileFocused instead"
     },
@@ -1551,7 +1551,7 @@
           "path": "disableWhileFocused",
           "type": "array",
           "default": [],
-          "description": "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use"
+          "description": "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/tutorial/keyboard-shortcuts#accelerators for available accelerators to use"
         }
       ]
     },
