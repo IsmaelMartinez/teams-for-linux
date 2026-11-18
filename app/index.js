@@ -20,6 +20,7 @@ const { registerGraphApiHandlers } = require("./graphApi/ipcHandlers");
 const { allowedChannels } = require("./security/ipcValidator");
 const { installIpcSecurity } = require("./security/ipcSecurity");
 const { installWebviewGuard } = require("./security/webviewGuard");
+const quitGuard = require("./utils/quitGuard");
 const { installPermissionHandlers } = require("./security/permissions");
 const { sanitize: sanitizePii } = require("./utils/logSanitizer");
 const { isPreLoginAuthNoise, parseChunkLoadFailure, formatChunkLoadWarning } = require("./utils/rendererErrors");
@@ -267,6 +268,8 @@ if (gotTheLock) {
   installIpcSecurity(ipcMain);
   // Refuse every <webview> attach (GHSA-6xpg-fhf9-chcr). See app/security/webviewGuard.js.
   installWebviewGuard(app);
+  // Let Teams pages unload once quitting, so an active call cannot block Quit.
+  quitGuard.install(app);
 
   // Restart application when configuration file changes
   ipcMain.on("config-file-changed", restartApp);

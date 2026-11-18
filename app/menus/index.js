@@ -18,6 +18,7 @@ const {
   clearStorageForPartitions,
 } = require("../utils/storagePartitions");
 const Tray = require("./tray");
+const { markQuitting } = require("../utils/quitGuard");
 const TrayIconChooser = require("../browser/tools/trayIconChooser");
 const themeIcon = require("./themeIcon");
 const { SpellCheckProvider } = require("../spellCheckProvider");
@@ -88,6 +89,7 @@ class Menus {
 
   async quit(clearStorage = false) {
     this.allowQuit = true;
+    markQuitting();
 
     clearStorage =
       clearStorage &&
