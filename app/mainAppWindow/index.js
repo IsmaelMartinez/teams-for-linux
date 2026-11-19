@@ -29,6 +29,7 @@ const path = require("node:path");
 const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
 const { reloadIfSignedOut } = require("./signOutReload");
 const { keepMsalEncryptionCookiePersistent } = require("./msalCookiePersistence");
+const { isUrlPreviewRequest } = require("./urlPreviewBlock");
 const {
   isDocumentPictureInPictureRequest,
   documentPictureInPictureResponse,
@@ -1156,17 +1157,6 @@ function isMicrosoftTelemetryHost(url) {
     return MS_TELEMETRY_HOSTS.some(
       (h) => hostname === h || hostname.endsWith('.' + h)
     );
-  } catch {
-    return false;
-  }
-}
-
-// The asyncgw subdomain is the tenant's region, for example no-prod.
-function isUrlPreviewRequest(url) {
-  if (!url?.includes('/urlp/v1/url/richInfo')) return false;
-  try {
-    const { hostname, pathname } = new URL(url);
-    return pathname === '/urlp/v1/url/richInfo' && hostname.endsWith('.asyncgw.teams.microsoft.com');
   } catch {
     return false;
   }

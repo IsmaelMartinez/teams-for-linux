@@ -5,24 +5,27 @@ const assert = require('node:assert');
 const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 const vm = require('node:vm');
+const { isUrlPreviewRequest, blockUrlPreviews } = require('../../app/mainAppWindow/urlPreviewBlock');
 
 // app/mainAppWindow/index.js requires the electron runtime, so the handler is
 // extracted from source and run against stubs.
 const source = readFileSync(join(__dirname, '..', '..', 'app', 'mainAppWindow', 'index.js'), 'utf8');
-const extract = (signature) =>
-	source.match(new RegExp(`function ${signature} \\{[\\s\\S]*?\\n\\}`))?.[0];
+const handlerSource = source.match(/function onBeforeRequestHandler\(details, callback\) \{[\s\S]*?\n\}/)?.[0];
 
-function load(disableUrlPreviews) {
-	return vm.runInNewContext(
-		`${extract('isUrlPreviewRequest\\(url\\)')}\n${extract('onBeforeRequestHandler\\(details, callback\\)')}\n({ isUrlPreviewRequest, onBeforeRequestHandler })`,
-		{
-			URL,
-			config: { platform: { disableUrlPreviews } },
-			isMicrosoftTelemetryHost: () => false,
-			customBackgroundService: { beforeRequestHandlerRedirectUrl: () => null },
-			aboutBlankRequestCount: 0,
-		}
-	);
+function loadHandler(disableUrlPreviews) {
+	return vm.runInNewContext(`${handlerSource}\nonBeforeRequestHandler`, {
+		config: { platform: { disableUrlPreviews } },
+		isUrlPreviewRequest,
+		isMicrosoftTelemetryHost: () => false,
+		customBackgroundService: { beforeRequestHandlerRedirectUrl: () => null },
+		aboutBlankRequestCount: 0,
+	});
+}
+
+function fakeSession() {
+	const ses = { listener: null, filter: null };
+	ses.webRequest = { onBeforeRequest: (filter, listener) => Object.assign(ses, { filter, listener }) };
+	return ses;
 }
 
 const PREVIEW = 'https://no-prod.asyncgw.teams.microsoft.com/urlp/v1/url/richInfo?url=https%3A%2F%2Fgitlab.com%2Fa';
@@ -35,7 +38,6 @@ function respond(handler, url) {
 
 describe('URL preview blocking', () => {
 	it('matches the richInfo lookup on any asyncgw region host only', () => {
-		const { isUrlPreviewRequest } = load(true);
 		assert.strictEqual(isUrlPreviewRequest(PREVIEW), true);
 		assert.strictEqual(isUrlPreviewRequest(PREVIEW.replace('no-prod', 'emea')), true);
 		assert.strictEqual(isUrlPreviewRequest(PREVIEW.replace('teams.microsoft.com', 'teams.microsoft.com.evil.example')), false);
@@ -44,9 +46,22 @@ describe('URL preview blocking', () => {
 		assert.strictEqual(isUrlPreviewRequest(undefined), false);
 	});
 
-	it('cancels the lookup only when disableUrlPreviews is on', () => {
-		assert.strictEqual(respond(load(true).onBeforeRequestHandler, PREVIEW).cancel, true);
-		assert.strictEqual(respond(load(false).onBeforeRequestHandler, PREVIEW).cancel, undefined);
-		assert.strictEqual(respond(load(true).onBeforeRequestHandler, 'https://teams.cloud.microsoft/').cancel, undefined);
+	it('root window handler cancels the lookup only when disableUrlPreviews is on', () => {
+		assert.strictEqual(respond(loadHandler(true), PREVIEW).cancel, true);
+		assert.strictEqual(respond(loadHandler(false), PREVIEW).cancel, undefined);
+		assert.strictEqual(respond(loadHandler(true), 'https://teams.cloud.microsoft/').cancel, undefined);
+	});
+
+	it('profile sessions get a listener only when disableUrlPreviews is on', () => {
+		const off = fakeSession();
+		blockUrlPreviews(off, { platform: { disableUrlPreviews: false } });
+		blockUrlPreviews(off, {});
+		assert.strictEqual(off.listener, null);
+
+		const on = fakeSession();
+		blockUrlPreviews(on, { platform: { disableUrlPreviews: true } });
+		assert.deepStrictEqual(on.filter, { urls: ['https://*.asyncgw.teams.microsoft.com/*'] });
+		assert.strictEqual(respond(on.listener, PREVIEW).cancel, true);
+		assert.strictEqual(respond(on.listener, 'https://no-prod.asyncgw.teams.microsoft.com/urlp/v1/url/Thumbnail?url=x').cancel, false);
 	});
 });
