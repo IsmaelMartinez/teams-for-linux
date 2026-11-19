@@ -44,6 +44,11 @@ const PIP_MAX_HEIGHT = 600;
 // applies on its own; only the window behaviour and the cap are set here.
 // alwaysOnTop is a request to the window manager: GNOME and KDE on Wayland
 // may not keep the window above others.
+//
+// sandbox: false matches the main window's webPreferences. Since Electron 45,
+// a popup that inherits from a non-sandboxed opener is created on screen but
+// window.open() returns null, so Teams never gets the window and it stays
+// blank. Setting the same sandbox value explicitly keeps the opener link.
 function documentPictureInPictureResponse() {
   return {
     action: "allow",
@@ -53,6 +58,7 @@ function documentPictureInPictureResponse() {
       fullscreenable: false,
       maxWidth: PIP_MAX_WIDTH,
       maxHeight: PIP_MAX_HEIGHT,
+      webPreferences: { sandbox: false },
     },
   };
 }

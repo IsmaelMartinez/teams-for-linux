@@ -227,6 +227,7 @@ describe('documentPictureInPicture window-open decision', () => {
         fullscreenable: false,
         maxWidth: main.PIP_MAX_WIDTH,
         maxHeight: main.PIP_MAX_HEIGHT,
+        webPreferences: { sandbox: false },
       },
     });
   });
