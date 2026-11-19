@@ -1703,7 +1703,8 @@
         "chromeUserAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<version> Safari/537.36",
         "emulateWindowsChromium": false,
         "spellCheckerLanguages": [],
-        "disableTimestampOnCopy": false
+        "disableTimestampOnCopy": false,
+        "disableUrlPreviews": false
       },
       "description": "Platform emulation and OS integration configuration. Replaces the deprecated chromeUserAgent, emulateWinChromiumPlatform, spellCheckerLanguages and disableTimestampOnCopy options.",
       "applyMode": "restart",
@@ -1731,6 +1732,12 @@
           "type": "boolean",
           "default": false,
           "description": "Controls whether timestamps are included when copying messages in chats"
+        },
+        {
+          "path": "disableUrlPreviews",
+          "type": "boolean",
+          "default": false,
+          "description": "Keep pasted links as plain URLs: block the Teams URL preview lookup that replaces them with the page title and adds a preview card"
         }
       ]
     },

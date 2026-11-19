@@ -1161,8 +1161,20 @@ function isMicrosoftTelemetryHost(url) {
   }
 }
 
+// The asyncgw subdomain is the tenant's region, for example no-prod.
+function isUrlPreviewRequest(url) {
+  if (!url?.includes('/urlp/v1/url/richInfo')) return false;
+  try {
+    const { hostname, pathname } = new URL(url);
+    return pathname === '/urlp/v1/url/richInfo' && hostname.endsWith('.asyncgw.teams.microsoft.com');
+  } catch {
+    return false;
+  }
+}
+
 function onBeforeRequestHandler(details, callback) {
-  if (isMicrosoftTelemetryHost(details.url)) {
+  if (isMicrosoftTelemetryHost(details.url)
+    || (config.platform?.disableUrlPreviews && isUrlPreviewRequest(details.url))) {
     callback({ cancel: true });
     return;
   }
