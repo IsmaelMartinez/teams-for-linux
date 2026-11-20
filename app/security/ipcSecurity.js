@@ -100,9 +100,12 @@ function installIpcSecurity(ipcMain, logger = console) {
   // app/index.js, which exit the app. A renderer message with an unexpected
   // shape must not be able to do that, so the failure is logged and dropped.
   // `handle` needs none of this: Electron sends a rejection back to the caller.
+  // Only the error's name and code are logged: a message or stack can carry
+  // file paths (and so the OS user name) or data taken from the payload.
   function reportListenerError(channel, error) {
     logger.error(`[IPC Security] Listener failed for channel: ${channel}`, {
-      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : typeof error,
+      code: typeof error?.code === "string" ? error.code : undefined,
     });
   }
 

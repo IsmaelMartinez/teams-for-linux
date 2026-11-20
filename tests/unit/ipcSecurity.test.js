@@ -359,7 +359,7 @@ describe('IPC security - listener failures', () => {
     assert.strictEqual(calls, 2);
     assert.strictEqual(logger.errors.length, 1);
     assert.ok(logger.errors[0][0].includes(ALLOWED), logger.errors[0][0]);
-    assert.strictEqual(typeof logger.errors[0][1].message, 'string');
+    assert.strictEqual(logger.errors[0][1].name, 'TypeError');
   });
 
   it('contains an exception thrown by a once() listener', () => {
@@ -367,12 +367,16 @@ describe('IPC security - listener failures', () => {
     const logger = recordingLogger();
     installIpcSecurity(ipcMain, logger);
     ipcMain.once(ALLOWED, () => {
-      throw new Error('boom');
+      const error = new Error("ENOENT: no such file, open '/home/alice/.config/teams-for-linux/settings.json'");
+      error.code = 'ENOENT';
+      throw error;
     });
 
     assert.doesNotThrow(() => ipcMain.emit(ALLOWED, { sender: 'win' }, {}));
     assert.strictEqual(logger.errors.length, 1);
-    assert.strictEqual(logger.errors[0][1].message, 'boom');
+    assert.deepStrictEqual(logger.errors[0][1], { name: 'Error', code: 'ENOENT' });
+    // Neither the message nor the stack is logged: both can carry a path.
+    assert.ok(!JSON.stringify(logger.errors[0]).includes('alice'));
     assert.strictEqual(ipcMain.listenerCount(ALLOWED), 0);
   });
 
@@ -395,6 +399,6 @@ describe('IPC security - listener failures', () => {
 
     assert.deepStrictEqual(unhandled, []);
     assert.strictEqual(logger.errors.length, 1);
-    assert.strictEqual(logger.errors[0][1].message, 'async boom');
+    assert.strictEqual(logger.errors[0][1].name, 'Error');
   });
 });
