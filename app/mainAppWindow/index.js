@@ -29,6 +29,7 @@ const path = require("node:path");
 const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
 const { reloadIfSignedOut } = require("./signOutReload");
 const { keepMsalEncryptionCookiePersistent } = require("./msalCookiePersistence");
+const { isUrlPreviewRequest } = require("./urlPreviewBlock");
 const {
   isDocumentPictureInPictureRequest,
   documentPictureInPictureResponse,
@@ -1162,7 +1163,8 @@ function isMicrosoftTelemetryHost(url) {
 }
 
 function onBeforeRequestHandler(details, callback) {
-  if (isMicrosoftTelemetryHost(details.url)) {
+  if (isMicrosoftTelemetryHost(details.url)
+    || (config.platform?.disableUrlPreviews && isUrlPreviewRequest(details.url))) {
     callback({ cancel: true });
     return;
   }

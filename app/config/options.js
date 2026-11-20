@@ -1484,6 +1484,7 @@ module.exports = {
           emulateWindowsChromium: false,
           spellCheckerLanguages: [],
           disableTimestampOnCopy: false,
+          disableUrlPreviews: false,
         },
         describe:
           "Platform emulation and OS integration configuration. Replaces the deprecated chromeUserAgent, emulateWinChromiumPlatform, spellCheckerLanguages and disableTimestampOnCopy options.",
@@ -1504,6 +1505,10 @@ module.exports = {
           "disableTimestampOnCopy": {
             type: "boolean",
             describe: "Controls whether timestamps are included when copying messages in chats",
+          },
+          "disableUrlPreviews": {
+            type: "boolean",
+            describe: "Keep pasted links as plain URLs: block the Teams URL preview lookup that replaces them with the page title and adds a preview card",
           },
         },
         applyMode: "restart",

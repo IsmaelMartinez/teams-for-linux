@@ -4,6 +4,7 @@ const SenderProfileMap = require("./senderProfileMap");
 const { reloadIfSignedOut } = require("./signOutReload");
 const { isHttpsUrl } = require("../profilesManager");
 const { keepMsalEncryptionCookiePersistent } = require("./msalCookiePersistence");
+const { blockUrlPreviews } = require("./urlPreviewBlock");
 
 const LEGACY_PARTITION = "persist:teams-4-linux";
 
@@ -535,6 +536,7 @@ class ProfileViewManager {
     // msal.cache.encryption must stay persistent on every profile session or
     // the account signs in again after each restart (#3183).
     keepMsalEncryptionCookiePersistent(view.webContents.session, this.#config);
+    blockUrlPreviews(view.webContents.session, this.#config);
     this.#bindWindowOpenHandler(view.webContents, view.webContents, () =>
       this.#activate(profileId)
     );

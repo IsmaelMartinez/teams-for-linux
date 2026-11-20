@@ -983,6 +983,7 @@ Wayland display server settings are organized under the `wayland` configuration 
 | `spellCheckerLanguages` | `array` | `[]` | Deprecated, use `platform.spellCheckerLanguages` |
 | `platform.disableTimestampOnCopy` | `boolean` | `false` | Controls whether timestamps are included when copying messages |
 | `disableTimestampOnCopy` | `boolean` | `false` | Deprecated, use `platform.disableTimestampOnCopy` |
+| `platform.disableUrlPreviews` | `boolean` | `false` | Keep pasted links as plain URLs: blocks the Teams URL preview lookup that replaces them with the page title and adds a preview card |
 
 :::note Wayland GPU Handling
 When running under Wayland, GPU acceleration is **automatically disabled by default** to prevent blank window issues. To enable GPU acceleration on Wayland, you can explicitly override this behavior using either:
