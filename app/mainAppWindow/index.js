@@ -835,7 +835,12 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     maybeScheduleAuthRecovery(event.message, event.sourceId);
   });
 
-  login.handleLoginDialogTry(window, config.ssoBasicAuthUser, config.ssoBasicAuthPasswordCommand);
+  login.handleLoginDialogTry(
+    window,
+    config.ssoBasicAuthUser,
+    config.ssoBasicAuthPasswordCommand,
+    config.auth?.basic?.hosts,
+  );
 
   const url = processArgs(process.argv);
   connectionManager.start(url, {

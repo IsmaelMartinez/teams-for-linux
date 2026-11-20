@@ -445,6 +445,23 @@ Content other than `active` or `inactive` is logged as a warning and ignored, fa
 | `ssoBasicAuthUser` | `string` | `""` | Deprecated, use `auth.basic.user` |
 | `auth.basic.passwordCommand` | `string` | `""` | Command to execute to retrieve password for SSO basic auth |
 | `ssoBasicAuthPasswordCommand` | `string` | `""` | Deprecated, use `auth.basic.passwordCommand` |
+| `auth.basic.hosts` | `array` | `[]` | Hostnames (or parent domains) allowed to receive these credentials or the login dialog, for example your ADFS host. Empty answers any HTTPS server that asks |
+
+The credentials answer an HTTP authentication challenge (Basic or NTLM), and any request the Teams page makes can raise one. Set `auth.basic.hosts` to the servers that should receive them, so no other server is answered:
+
+```json
+{
+  "auth": {
+    "basic": {
+      "user": "DOMAIN\\user",
+      "passwordCommand": "pass show corp/sso",
+      "hosts": ["adfs.example.com"]
+    }
+  }
+}
+```
+
+A proxy that asks for authentication is always answered, and a server reached over cleartext HTTP never is.
 
 #### Web Login Password Pre-fill
 
