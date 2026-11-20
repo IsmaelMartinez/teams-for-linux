@@ -48,6 +48,7 @@ Set `dbusControl.callParticipants` to `true` (with `dbusControl.enabled`, restar
 What it covers, and what it does not:
 
 - Remote participants on the meeting stage. `speaking` follows the outline Teams draws around a tile while that person talks. Your own state is `microphoneState` (`speaking`, `silent`, `muted`).
+- The stage is read from the main window. With the Call Monitor (compact call view) open, the tiles stay there, so names and speaking flags keep updating.
 - People on another page of a large meeting's gallery are not listed. Names are the display names shown on the tiles, one entry per tile, so two people with the same name appear as two entries.
 - The values come from the Teams web page and follow its markup, so a Teams change can leave the list empty until this is updated. They are observations, not server data.
 
