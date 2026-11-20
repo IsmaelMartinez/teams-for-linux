@@ -27,9 +27,6 @@ const AUTH_LOGIN_HOSTS = [
 // GCC High and DoD serve Teams outside the commercial hosts isTeamsHost knows.
 const GOV_TEAMS_DOMAIN = "teams.microsoft.us";
 
-// Teams accessed through Microsoft Defender for Cloud Apps (MCAS).
-const MCAS_TEAMS_DOMAIN = "teams.cloud.microsoft.mcas-gov.ms";
-
 const FRAME_POLICY_GATED = new Set([
   "media",
   "display-capture",
@@ -83,7 +80,6 @@ function isTrustedUrl(url, trustedOrigins) {
   return (
     isTeamsHost(host) ||
     hostMatches(host, GOV_TEAMS_DOMAIN) ||
-    hostMatches(host, MCAS_TEAMS_DOMAIN) ||
     AUTH_LOGIN_HOSTS.some((d) => hostMatches(host, d))
   );
 }

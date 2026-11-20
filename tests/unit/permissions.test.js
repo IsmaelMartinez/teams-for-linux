@@ -33,6 +33,8 @@ describe('isPermissionAllowed', () => {
 		for (const url of [
 			'https://teams.cloud.microsoft.mcas-gov.ms/',
 			'https://sub.teams.cloud.microsoft.mcas-gov.ms/',
+            'https://teams.cloud.microsoft.mcas-gov.us/',
+            'https://sub.teams.cloud.microsoft.mcas-gov.us/'
 		]) {
 			for (const permission of ['media', 'notifications']) {
 				assert.strictEqual(
