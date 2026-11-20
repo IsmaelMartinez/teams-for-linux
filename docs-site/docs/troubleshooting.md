@@ -259,6 +259,59 @@ Both locations sit ahead of `/usr/share/applications` in `XDG_DATA_DIRS`, so the
     *   Open a terminal and run: `pulseaudio -k && pulseaudio --start`
     *   Restart Teams for Linux.
 
+
+#### Issue: Microphone and camera permissions denied when using Microsoft Defender for Cloud Apps (MCAS)
+
+Organizations using Microsoft Defender for Cloud Apps (MCAS) Conditional Access App Control may redirect Microsoft Teams through a reverse proxy.
+
+For example:
+
+- Standard URL: `https://teams.cloud.microsoft`
+- MCAS URL: `https://teams.cloud.microsoft.mcas-gov.ms`
+
+Teams for Linux uses origin-based security checks for microphone and camera permissions. When Teams is accessed through an MCAS-rewritten URL, the application may reject media permissions because the origin is not recognized as trusted.
+
+**Symptoms:**
+
+- Microphone and webcam devices are detected but cannot be accessed.
+- Chromium/Electron reports `PERMISSION_DENIED`.
+- Application logs report:
+
+```text
+[PERMISSIONS] Denied permission for an untrusted origin
+{ permission: 'media', scheme: 'https' }
+```
+
+**Workaround:**
+
+Configure Teams for Linux to use the actual MCAS-rewritten Teams URL.
+
+For AppImage installations, create or edit:
+
+`~/.config/teams-for-linux/config.json`
+
+Add:
+
+```json
+{
+  "app": {
+    "url": "https://teams.cloud.microsoft.mcas-gov.ms"
+  }
+}
+```
+
+For Flatpak installations, the configuration file is located at:
+
+`~/.var/app/com.github.IsmaelMartinez.teams_for_linux/config/teams-for-linux/config.json`
+
+Restart Teams for Linux and verify microphone and camera functionality.
+
+**Notes:**
+
+- Use the actual Teams URL supplied by your organization's managed session.
+- Do not disable Electron security checks or broadly whitelist untrusted domains.
+- Confirmed working with Teams for Linux 2.32.1 (AppImage) on Linux Mint 22.3 XFCE.
+
 ---
 
 ### Login and Authentication
