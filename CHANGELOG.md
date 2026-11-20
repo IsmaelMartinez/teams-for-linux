@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.33.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.32.1...v2.33.0) (2026-11-20)
+
+
+### Features
+
+* **auth:** add auth.basic.hosts to choose which servers receive basic auth credentials ([#3242](https://github.com/IsmaelMartinez/teams-for-linux/issues/3242)) ([f818dbc](https://github.com/IsmaelMartinez/teams-for-linux/commit/f818dbc6e19c74842be02e4ab5e8b26d96b1fde6))
+* **config:** add platform.disableUrlPreviews to keep pasted links as plain URLs ([#3234](https://github.com/IsmaelMartinez/teams-for-linux/issues/3234)) ([16002bf](https://github.com/IsmaelMartinez/teams-for-linux/commit/16002bf66a0ae7eeb58b8250a6c8846c1d461e88))
+
+
+### Bug Fixes
+
+* **ipc:** contain errors thrown by IPC event listeners ([#3241](https://github.com/IsmaelMartinez/teams-for-linux/issues/3241)) ([76b032c](https://github.com/IsmaelMartinez/teams-for-linux/commit/76b032cbeee8fce0a34b2cd7838c14625c28086d))
+* **links:** limit links opened outside the app to web, mail, phone and Teams schemes ([#3240](https://github.com/IsmaelMartinez/teams-for-linux/issues/3240)) ([2104f88](https://github.com/IsmaelMartinez/teams-for-linux/commit/2104f88a3621bb89c7523549378ed9295dc2a77f))
+
+
+### Documentation
+
+* **adr:** record why the flat-name removal moved to 2.36.0 ([#3222](https://github.com/IsmaelMartinez/teams-for-linux/issues/3222)) ([ec48f6c](https://github.com/IsmaelMartinez/teams-for-linux/commit/ec48f6c3ba9f1950618fd159321fe207294d8086))
+* fix dead Electron accelerator links ([#3228](https://github.com/IsmaelMartinez/teams-for-linux/issues/3228)) ([ca40170](https://github.com/IsmaelMartinez/teams-for-linux/commit/ca4017031150ec99a1cdadd07472b1ce272ddb5e))
+* **flatpak:** document the TimeoutStopSec workaround for the slow shutdown ([#3223](https://github.com/IsmaelMartinez/teams-for-linux/issues/3223)) ([2b4119a](https://github.com/IsmaelMartinez/teams-for-linux/commit/2b4119a36d0ecf40a133d572b6b55ebe28ce64cb))
+* **troubleshooting:** describe the insert-key prompt on the stuck passkey screen ([#3227](https://github.com/IsmaelMartinez/teams-for-linux/issues/3227)) ([34e8734](https://github.com/IsmaelMartinez/teams-for-linux/commit/34e8734e5668ce081765a5f73dbcb1a4c5e84a70))
+
+
+### Maintenance
+
+* **deps:** bump katex and mermaid in /docs-site ([#3224](https://github.com/IsmaelMartinez/teams-for-linux/issues/3224)) ([da7b77c](https://github.com/IsmaelMartinez/teams-for-linux/commit/da7b77cf8db4de802b1a2884815c19979bf2f7b5))
+
 ## [2.32.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.32.0...v2.32.1) (2026-11-15)
 
 
