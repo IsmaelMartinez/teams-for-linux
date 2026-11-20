@@ -1422,4 +1422,4 @@ See [Microsoft Teams Keyboard Shortcuts](https://support.microsoft.com/en-us/off
 - **macOS limitation**: Non-QWERTY layouts (Dvorak, AZERTY, Colemak, etc.) are not supported due to [Electron bug #19747](https://github.com/electron/electron/issues/19747)
 - **Linux/Windows**: Works better but may have issues with layout changes during runtime
 
-See [Electron Accelerators](https://www.electronjs.org/docs/latest/api/accelerator) for available key combinations.
+See [Electron Accelerators](https://www.electronjs.org/docs/latest/tutorial/keyboard-shortcuts#accelerators) for available key combinations.
