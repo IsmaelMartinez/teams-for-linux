@@ -23,6 +23,8 @@
  * 1 = Available, 2 = Busy, 3 = Do Not Disturb, 4 = Away, 5 = Be Right Back
  */
 
+const { wantsWindowStatus } = require("./presenceColors");
+
 class MQTTStatusMonitor {
 	// Private: anything on `this` is reachable from page script (GHSA-58j7-22f8-6xqp).
 	#ipcRenderer = null;
@@ -50,7 +52,9 @@ class MQTTStatusMonitor {
 		// media.showStatusOnDockIcon asks for the presence overlay: the Dock on
 		// macOS, the tray icon on the platforms that have no Dock. Either way
 		// the monitor has to run, so there is no platform test here.
-		const statusOverlayWanted = config.media?.showStatusOnDockIcon === true;
+		// window.showStatus asks for it on the window icon (windowIconRenderer.js).
+		const statusOverlayWanted = config.media?.showStatusOnDockIcon === true
+			|| wantsWindowStatus(config);
 		if (!config.mqtt?.enabled && !dbusEnabled && !statusOverlayWanted) {
 			console.debug('Status monitoring disabled');
 			return;

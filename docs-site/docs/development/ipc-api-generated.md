@@ -12,7 +12,7 @@ This document lists all IPC (Inter-Process Communication) channels registered in
 - **Event** channels use `ipcMain.on()` for fire-and-forget notifications
 - **One-Time Event** channels use `ipcMain.once()` for single-use listeners
 
-**Total Channels**: 90
+**Total Channels**: 91
 
 ---
 
@@ -154,6 +154,7 @@ This document lists all IPC (Inter-Process Communication) channels registered in
 | `webauthn:pin-cancel` | Event | Receive cancellation from the PIN dialog when user clicks Cancel or closes the window | [`app/webauthn/pinDialog.js:91`](https://github.com/IsmaelMartinez/teams-for-linux/blob/develop/app/webauthn/pinDialog.js#L91) |
 | `webauthn:pin-submit` | Event | Receive PIN from the PIN dialog when user submits the form | [`app/webauthn/pinDialog.js:89`](https://github.com/IsmaelMartinez/teams-for-linux/blob/develop/app/webauthn/pinDialog.js#L89) |
 | `webauthn:touch-cancel` | Event | Receive cancellation from the touch prompt when user clicks Cancel or closes the window | [`app/webauthn/touchPrompt.js:95`](https://github.com/IsmaelMartinez/teams-for-linux/blob/develop/app/webauthn/touchPrompt.js#L95) |
+| `window-icon-update` | Event | Set the main window icon to the presence overlay the renderer drew, or back to the plain icon when the payload is null (window.showStatus) | [`app/windowStatusIcon/index.js:45`](https://github.com/IsmaelMartinez/teams-for-linux/blob/develop/app/windowStatusIcon/index.js#L45) |
 
 ## Partitions & Zoom
 

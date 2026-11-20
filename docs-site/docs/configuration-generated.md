@@ -91,7 +91,7 @@ For configuration examples, file locations, and platform-specific notes, see the
 | `appearance` | `object` | `{"cssName":"","cssLocation":"","followSystemTheme":false}` | Custom CSS and theme configuration. Replaces the deprecated customCSSName, customCSSLocation and followSystemTheme options. | `restart` |
 | `platform` | `object` | `{"chromeUserAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<version> Safari/537.36","emulateWindowsChromium":false,"spellCheckerLanguages":[],"disableTimestampOnCopy":false,"disableUrlPreviews":false}` | Platform emulation and OS integration configuration. Replaces the deprecated chromeUserAgent, emulateWinChromiumPlatform, spellCheckerLanguages and disableTimestampOnCopy options. | `restart` |
 | `app` | `object` | `{"title":"Microsoft Teams","url":"https://teams.cloud.microsoft","partition":"persist:teams-4-linux"}` | Core application identity and the Teams URL it loads. Replaces the deprecated appTitle, url and partition options. | `restart` |
-| `window` | `object` | `{"frame":true,"titleBar":"system","menubar":"auto","minimized":false,"closeOnCross":false,"minimizeOnClose":false,"alwaysOnTop":true,"class":null}` | Main window geometry, decoration and close behaviour. Replaces the deprecated frame, menubar, minimized, closeAppOnCross, minimizeOnClose, alwaysOnTop and class options. | `restart` |
+| `window` | `object` | `{"frame":true,"titleBar":"system","menubar":"auto","minimized":false,"closeOnCross":false,"minimizeOnClose":false,"alwaysOnTop":true,"class":null,"showStatus":false}` | Main window geometry, decoration, close behaviour and icon. Replaces the deprecated frame, menubar, minimized, closeAppOnCross, minimizeOnClose, alwaysOnTop and class options. | `restart` |
 | `tray` | `object` | `{"enabled":true,"icon":"","iconType":"default","useMutationTitleLogic":true}` | Tray icon configuration. Replaces the deprecated trayIconEnabled, appIcon, appIconType and useMutationTitleLogic options. | `restart` |
 | `performance` | `object` | `{"disableGpu":false,"electronCLIFlags":[]}` | GPU and Chromium startup flag configuration. Replaces the deprecated disableGpu and electronCLIFlags options. | `restart` |
 | `development` | `object` | `{"webDebug":false,"watchConfigFile":false}` | Debugging and development aids. Replaces the deprecated webDebug and watchConfigFile options. | `restart` |
@@ -378,6 +378,7 @@ Object options group several related settings. The tables below list each nested
 | `window.minimizeOnClose` | `boolean` | `false` | Minimize the window when clicking the close (X) cross instead of hiding it to the tray (ignored when closeAppOnCross is true) |
 | `window.alwaysOnTop` | `boolean` | `true` | Keep the pop-out window always on top of other windows. |
 | `window.class` | `string` | `null` | A custom value for the WM_CLASS property |
+| `window.showStatus` | `boolean` | `false` | Overlay the user presence status on the main window icon, which is what the taskbar or panel entry shows on Linux and Windows (ignored on macOS, see media.showStatusOnDockIcon). The dot goes in the bottom-right corner, matching the tray overlay. On a native Wayland session the desktop must support window icons (xdg-toplevel-icon, e.g. KDE Plasma 6); elsewhere run under XWayland |
 
 ### tray
 

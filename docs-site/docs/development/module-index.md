@@ -67,6 +67,7 @@ OS-level integrations and platform-specific functionality.
 | **Idle Monitor** | `app/idle/` | System idle state monitoring & status correlation | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/idle/README.md) |
 | **Login** | `app/login/` | Authentication and login flow management | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/login/README.md) |
 | **SSO Password Pre-fill** | `app/ssoPasswordPrefill/` | Opt-in pre-fill of the Microsoft/federated **web** sign-in form: account, password from a command, optional auto-advance and MFA method ([#2794](https://github.com/IsmaelMartinez/teams-for-linux/issues/2794)). Distinct from `app/login/`, which drives the native HTTP Basic/NTLM dialog. | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/ssoPasswordPrefill/README.md) |
+| **Window Status Icon** | `app/windowStatusIcon/` | Applies the presence overlay drawn by `windowIconRenderer.js` to the main window icon (`window.showStatus`, [#3187](https://github.com/IsmaelMartinez/teams-for-linux/issues/3187)) | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/windowStatusIcon/README.md) |
 | **Menus** | `app/menus/` | Application menu bar and context menus | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/menus/README.md) |
 | **Spell Check Provider** | `app/spellCheckProvider/` | Text spelling correction integration | [README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/spellCheckProvider/README.md) |
 

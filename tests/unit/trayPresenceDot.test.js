@@ -3,7 +3,8 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const electronPath = require.resolve('electron');
+const { installFakeRendererEnv } = require('./helpers/fakeRendererEnv');
+
 const rendererPath = require.resolve('../../app/browser/tools/trayIconRenderer');
 
 const ICON = 'data:image/png;base64,ICON';
@@ -30,7 +31,7 @@ let canvases = [];
 let listeners = new Map();
 let handlers = new Map();
 let sent = [];
-let platform;
+let env;
 
 function canvas() {
   const element = { width: 0, height: 0, ctx: new RecordingContext() };
@@ -72,40 +73,19 @@ function initRenderer(config) {
 
 describe('tray presence status overlay', () => {
   beforeEach(() => {
-    require.cache[electronPath] = {
-      id: electronPath,
-      filename: electronPath,
-      loaded: true,
-      exports: {
-        nativeImage: {
-          createFromPath: () => ({
-            getSize: () => ({ width: 96, height: 96 }),
-            toDataURL: () => ICON,
-          }),
-        },
-      },
-    };
-    globalThis.document = { createElement: (tag) => (tag === 'canvas' ? canvas() : {}) };
-    globalThis.Image = class {
-      set src(_value) {
-        setImmediate(() => this.onload && this.onload());
-      }
-    };
-    globalThis.addEventListener = (event, listener) => {
-      if (!listeners.has(event)) listeners.set(event, []);
-      listeners.get(event).push(listener);
-    };
-    platform = Object.getOwnPropertyDescriptor(process, 'platform');
-    Object.defineProperty(process, 'platform', { ...platform, value: 'linux' });
+    env = installFakeRendererEnv({
+      createFromPath: () => ({
+        getSize: () => ({ width: 96, height: 96 }),
+        toDataURL: () => ICON,
+      }),
+      createCanvas: canvas,
+      getListeners: () => listeners,
+      rendererPath,
+    });
   });
 
   afterEach(() => {
-    Object.defineProperty(process, 'platform', platform);
-    delete require.cache[electronPath];
-    delete require.cache[rendererPath];
-    delete globalThis.document;
-    delete globalThis.Image;
-    delete globalThis.addEventListener;
+    env.restore();
   });
 
   it('draws the status dot in the bottom right when the setting is on', async () => {

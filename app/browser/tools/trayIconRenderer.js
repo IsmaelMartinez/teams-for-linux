@@ -6,11 +6,7 @@ const TrayIconChooser = require("./trayIconChooser");
 // draws the overlay on macOS (dockIconRenderer.js), the platforms that have no
 // Dock draw it on the tray icon, and main asks the same question for the
 // aggregate badge (profileUnread).
-const {
-  presenceColor,
-  isDoNotDisturb,
-  wantsPresenceStatus,
-} = require("./presenceColors");
+const { drawPresenceDot, wantsPresenceStatus } = require("./presenceColors");
 
 class TrayIconRenderer {
   #lastRequestedCount;
@@ -260,26 +256,7 @@ class TrayIconRenderer {
   // Presence dot in the bottom-right corner, the way the Windows client shows
   // it on its tray icon. Colours are shared with the macOS Dock overlay.
   _addPresenceDot(ctx) {
-    const x = 108;
-    const y = 104;
-    const radius = 24;
-
-    // White ring, so the dot stays readable on a dark or busy icon.
-    ctx.fillStyle = "#ffffff";
-    ctx.beginPath();
-    ctx.arc(x, y, radius + 6, 0, 2 * Math.PI);
-    ctx.fill();
-
-    ctx.fillStyle = presenceColor(this.#statusCode);
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, 2 * Math.PI);
-    ctx.fill();
-
-    // Do Not Disturb reads as a white bar, exactly as on the macOS Dock.
-    if (isDoNotDisturb(this.#statusCode)) {
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(x - 13, y - 4, 26, 8);
-    }
+    drawPresenceDot(ctx, this.#statusCode, { x: 108, y: 104, radius: 24 });
   }
 
   _getResizeCanvasWithOriginalIconSize(canvas) {
