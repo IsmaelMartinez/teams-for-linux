@@ -838,7 +838,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     window,
     config.ssoBasicAuthUser,
     config.ssoBasicAuthPasswordCommand,
-    config.auth?.basic?.hosts ?? [],
+    config.auth?.basic?.hosts,
   );
 
   const url = processArgs(process.argv);

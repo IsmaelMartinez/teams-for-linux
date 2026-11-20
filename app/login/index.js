@@ -92,12 +92,27 @@ function isExpectedChallenge(details, authInfo, hosts = []) {
 
 exports.isExpectedChallenge = isExpectedChallenge;
 
+/**
+ * auth.basic.hosts as a list of hostnames. A config file gives an array, but
+ * the command line or an environment variable gives a single string, which
+ * must still restrict the hosts rather than be dropped. Exported for testing.
+ * @param {unknown} value
+ * @returns {string[]}
+ */
+function normalizeHosts(value) {
+  const entries = Array.isArray(value) ? value : [value];
+  return entries.filter((entry) => typeof entry === "string" && entry.trim() !== "").map((entry) => entry.trim());
+}
+
+exports.normalizeHosts = normalizeHosts;
+
 exports.handleLoginDialogTry = function handleLoginDialogTry(
   window,
   ssoBasicAuthUser,
   ssoBasicAuthPasswordCommand,
-  hosts = [],
+  configuredHosts = [],
 ) {
+  const hosts = normalizeHosts(configuredHosts);
   window.webContents.on("login", (event, details, authInfo, callback) => {
     event.preventDefault();
     if (!isExpectedChallenge(details, authInfo, hosts)) {

@@ -59,7 +59,32 @@ describe('isExpectedChallenge', () => {
 	});
 });
 
+describe('normalizeHosts', () => {
+	it('keeps an array, wraps a single string and drops anything unusable', () => {
+		assert.deepStrictEqual(login.normalizeHosts(['adfs.corp.example', ' sso.example ']), ['adfs.corp.example', 'sso.example']);
+		assert.deepStrictEqual(login.normalizeHosts('adfs.corp.example'), ['adfs.corp.example']);
+		assert.deepStrictEqual(login.normalizeHosts(''), []);
+		assert.deepStrictEqual(login.normalizeHosts(undefined), []);
+		assert.deepStrictEqual(login.normalizeHosts(['', 42, null, 'adfs.corp.example']), ['adfs.corp.example']);
+	});
+});
+
 describe('handleLoginDialogTry', () => {
+	it('restricts the hosts when the option arrives as a single string, as from the command line', (t) => {
+		t.mock.method(console, 'warn', () => {});
+		t.mock.method(console, 'debug', () => {});
+		const window = { webContents: new EventEmitter() };
+		login.handleLoginDialogTry(window, 'alice', 'printf s3cr3t', 'adfs.corp.example');
+
+		const refused = [];
+		window.webContents.emit('login', { preventDefault() {} }, { url: 'https://other.example/x.png' }, { isProxy: false, host: 'other.example' }, (...args) => refused.push(args));
+		assert.deepStrictEqual(refused, [[]]);
+
+		const answered = [];
+		window.webContents.emit('login', { preventDefault() {} }, { url: 'https://adfs.corp.example/' }, { isProxy: false, host: 'adfs.corp.example' }, (...args) => answered.push(args));
+		assert.deepStrictEqual(answered, [['alice', 's3cr3t']]);
+	});
+
 	function fire(webContents, url, host) {
 		const answers = [];
 		let prevented = false;
