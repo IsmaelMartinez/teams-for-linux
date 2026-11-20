@@ -28,6 +28,51 @@ describe('isPermissionAllowed', () => {
 		}
 	});
 
+	
+	it('allows MCAS-proxied Teams hosts', () => {
+		for (const url of [
+			'https://teams.cloud.microsoft.mcas-gov.ms/',
+			'https://sub.teams.cloud.microsoft.mcas-gov.ms/',
+            'https://teams.cloud.microsoft.mcas-gov.us/',
+            'https://sub.teams.cloud.microsoft.mcas-gov.us/'
+		]) {
+			for (const permission of ['media', 'notifications']) {
+				assert.strictEqual(
+					allowed({
+						permission,
+						isMainFrame: true,
+						topLevelUrl: url,
+						requestingUrl: url,
+					}),
+					true,
+					`${permission} ${url}`,
+				);
+			}
+		}
+	});
+
+	it('rejects unrelated and spoofed MCAS hosts', () => {
+		for (const url of [
+			'https://outlook.office.com.mcas-gov.ms/',
+			'https://fake-teams.cloud.microsoft.mcas-gov.ms/',
+			'https://teams.cloud.microsoft.mcas-gov.ms.evil.example/',
+			'http://teams.cloud.microsoft.mcas-gov.ms/',
+		]) {
+			for (const permission of ['media', 'notifications']) {
+				assert.strictEqual(
+					allowed({
+						permission,
+						isMainFrame: true,
+						topLevelUrl: url,
+						requestingUrl: url,
+					}),
+					false,
+					`${permission} ${url}`,
+				);
+			}
+		}
+	});
+
 	it('lets a frame embedded by Teams use only frame-policy-gated permissions', () => {
 		const frame = { isMainFrame: false, topLevelUrl: 'https://teams.microsoft.com/', requestingUrl: 'https://contoso.sharepoint.com/' };
 		for (const permission of ['media', 'display-capture', 'clipboard-read', 'clipboard-sanitized-write', 'fullscreen']) {
