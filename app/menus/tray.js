@@ -40,7 +40,7 @@ class ApplicationTray {
       this.lastDirectUpdates.set(event?.sender?.id, data);
     }
     // Handle both old format { icon, flash } and new format { icon, flash, count }
-    const { icon, flash, count } = data;
+    const { icon, flash, count } = data ?? {};
     this.updateTrayImage(icon, flash, count);
   }
 
@@ -100,8 +100,8 @@ class ApplicationTray {
 
   updateTrayImage(iconUrl, flash, count) {
     if (this.tray && !this.tray.isDestroyed()) {
-      // Use original icon path if iconUrl is null/undefined
-      const effectiveIconPath = iconUrl || this.iconPath;
+      // Use the original icon path unless the renderer sent a usable string
+      const effectiveIconPath = typeof iconUrl === "string" && iconUrl ? iconUrl : this.iconPath;
       const image = this.getIconImage(effectiveIconPath);
 
       this.tray.setImage(image);

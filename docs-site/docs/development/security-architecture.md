@@ -74,6 +74,7 @@ const responseHeaders = {
 - **Request Validation**: Validates all IPC requests before processing
 - **Sender Pinning**: Channels only the screen-share picker uses (`desktop-capturer-get-sources`, `get-screen-sharing-displays`, `selected-source`, `close-view`, and the legacy picker's `source-selected`) are answered only when the sending frame shows a file inside the app directory (`isSenderAllowed`), so page script cannot capture the screen or pick a source on its own
 - **No Raw `ipcRenderer` in the Page**: With `contextIsolation: false`, anything `electronAPI` returns is usable by page script, so its listener helpers return nothing and strip Electron's IPC event (whose `sender` is the raw `ipcRenderer`) before calling back
+- **Listener Errors Contained**: an exception or rejected promise from an `ipcMain.on` or `once` listener is logged and dropped by the wrapper in `app/security/ipcSecurity.js`, so a message with an unexpected shape cannot reach the process-wide error handlers that exit the app
 
 ```javascript
 function validateIpcChannel(channel, payload = null) {

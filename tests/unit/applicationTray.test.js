@@ -176,6 +176,22 @@ describe('ApplicationTray aggregation', () => {
     assert.strictEqual(seen.length, 2);
   });
 
+  it('falls back to the base icon when the icon is not a string', () => {
+    build();
+    const nativeTray = trayInstances[0];
+    for (const icon of [{ length: 1 }, 42, ['data:x'], true]) {
+      assert.doesNotThrow(() => trayUpdateHandler({ sender: { id: 1 } }, { icon, count: 0 }));
+      assert.strictEqual(nativeTray.images.at(-1).kind, 'path');
+      assert.strictEqual(nativeTray.images.at(-1).p, '/base/icon.png');
+    }
+  });
+
+  it('accepts a tray-update with no payload', () => {
+    build();
+    assert.doesNotThrow(() => trayUpdateHandler({ sender: { id: 1 } }));
+    assert.strictEqual(trayInstances[0].images.at(-1).p, '/base/icon.png');
+  });
+
   it('does not stash direct updates with multi-account off (flag-off path identical to main)', () => {
     const window = { flashes: [], flashFrame(f) { this.flashes.push(f); }, isFocused: () => false };
     const tray = new ApplicationTray(window, [], '/base/icon.png', { appTitle: 'Teams' });

@@ -336,3 +336,65 @@ describe('IPC security - picker-only channels', () => {
     );
   });
 });
+
+describe('IPC security - listener failures', () => {
+  function recordingLogger() {
+    const errors = [];
+    return { errors, error: (...args) => errors.push(args) };
+  }
+
+  it('contains an exception thrown by an on() listener and keeps it registered', () => {
+    const ipcMain = fakeIpcMain();
+    const logger = recordingLogger();
+    installIpcSecurity(ipcMain, logger);
+    let calls = 0;
+    ipcMain.on(ALLOWED, (_event, payload) => {
+      calls += 1;
+      return payload.width;
+    });
+
+    assert.doesNotThrow(() => ipcMain.emit(ALLOWED, { sender: 'win' }));
+    ipcMain.emit(ALLOWED, { sender: 'win' }, { width: 1 });
+
+    assert.strictEqual(calls, 2);
+    assert.strictEqual(logger.errors.length, 1);
+    assert.ok(logger.errors[0][0].includes(ALLOWED), logger.errors[0][0]);
+    assert.strictEqual(typeof logger.errors[0][1].message, 'string');
+  });
+
+  it('contains an exception thrown by a once() listener', () => {
+    const ipcMain = fakeIpcMain();
+    const logger = recordingLogger();
+    installIpcSecurity(ipcMain, logger);
+    ipcMain.once(ALLOWED, () => {
+      throw new Error('boom');
+    });
+
+    assert.doesNotThrow(() => ipcMain.emit(ALLOWED, { sender: 'win' }, {}));
+    assert.strictEqual(logger.errors.length, 1);
+    assert.strictEqual(logger.errors[0][1].message, 'boom');
+    assert.strictEqual(ipcMain.listenerCount(ALLOWED), 0);
+  });
+
+  it('handles the rejection of an async listener', async () => {
+    const ipcMain = fakeIpcMain();
+    const logger = recordingLogger();
+    installIpcSecurity(ipcMain, logger);
+    const unhandled = [];
+    const onUnhandled = (reason) => unhandled.push(reason);
+    process.on('unhandledRejection', onUnhandled);
+    try {
+      ipcMain.on(ALLOWED, async () => {
+        throw new Error('async boom');
+      });
+      ipcMain.emit(ALLOWED, { sender: 'win' }, {});
+      await new Promise((resolve) => setImmediate(resolve));
+    } finally {
+      process.off('unhandledRejection', onUnhandled);
+    }
+
+    assert.deepStrictEqual(unhandled, []);
+    assert.strictEqual(logger.errors.length, 1);
+    assert.strictEqual(logger.errors[0][1].message, 'async boom');
+  });
+});

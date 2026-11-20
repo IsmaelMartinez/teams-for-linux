@@ -95,6 +95,30 @@ function installIpcSecurity(ipcMain, logger = console) {
     return true;
   }
 
+  // An event listener has no caller to report to, so anything it throws (or a
+  // promise it returns that rejects) would reach the process-wide handlers in
+  // app/index.js, which exit the app. A renderer message with an unexpected
+  // shape must not be able to do that, so the failure is logged and dropped.
+  // `handle` needs none of this: Electron sends a rejection back to the caller.
+  function reportListenerError(channel, error) {
+    logger.error(`[IPC Security] Listener failed for channel: ${channel}`, {
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  function runListener(channel, handler, event, args) {
+    try {
+      const result = handler(event, ...args);
+      if (typeof result?.catch === "function") {
+        result.catch((error) => reportListenerError(channel, error));
+      }
+      return result;
+    } catch (error) {
+      reportListenerError(channel, error);
+      return undefined;
+    }
+  }
+
   ipcMain.handle = (channel, handler) => {
     return originalHandle(channel, (event, ...args) => {
       if (!isAllowed(channel, event, args, "handle request")) {
@@ -107,7 +131,7 @@ function installIpcSecurity(ipcMain, logger = console) {
   ipcMain.on = (channel, handler) => {
     const entry = remember(channel, handler, (event, ...args) => {
       if (!isAllowed(channel, event, args, "event")) return;
-      return handler(event, ...args);
+      return runListener(channel, handler, event, args);
     });
     return originalOn(channel, entry.wrapper);
   };
@@ -121,7 +145,7 @@ function installIpcSecurity(ipcMain, logger = console) {
       if (!isAllowed(channel, event, args, "event")) return;
       originalRemoveListener(channel, entry.wrapper);
       forgetEntry(channel, handler, entry);
-      return handler(event, ...args);
+      return runListener(channel, handler, event, args);
     });
     return originalOn(channel, entry.wrapper);
   };
