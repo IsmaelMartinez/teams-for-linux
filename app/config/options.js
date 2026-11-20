@@ -1184,6 +1184,7 @@ module.exports = {
           basic: {
             user: "",
             passwordCommand: "",
+            hosts: [],
           },
           customCACertificateFingerprints: [],
           webLogin: {
@@ -1253,6 +1254,11 @@ module.exports = {
           "basic.passwordCommand": {
             type: "string",
             describe: "Command to execute to retrieve password for SSO basic auth.",
+          },
+          "basic.hosts": {
+            type: "array",
+            describe:
+              "Hostnames (or parent domains) allowed to receive the basic auth credentials or the login dialog, for example your ADFS host. Empty answers any HTTPS server that asks. Proxy challenges are always answered, and cleartext HTTP servers never are.",
           },
           "customCACertificateFingerprints": {
             type: "array",
