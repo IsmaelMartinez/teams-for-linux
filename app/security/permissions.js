@@ -150,13 +150,21 @@ function installPermissionHandlers(config, app, defaultSession, getProfileUrls =
       },
       trustedOrigins(),
     );
-    const key = `${permission}|${originOf(requestingUrl) ?? "unknown"}`;
+    // A refused link is about the link, not the page: a trusted page is
+    // refused too when the link's scheme is not one the app opens.
+    const refusedLink = permission === "openExternal";
+    const linkScheme = refusedLink ? schemeLabel(details?.externalURL) : "";
+    const key = `${permission}|${originOf(requestingUrl) ?? "unknown"}|${linkScheme}`;
     if (!allowed && loggedDenials.size < MAX_LOGGED_DENIALS && !loggedDenials.has(key)) {
       loggedDenials.add(key);
-      console.warn("[PERMISSIONS] Denied permission for an untrusted origin", {
-        permission,
-        scheme: schemeLabel(requestingUrl),
-      });
+      if (refusedLink) {
+        console.warn("[PERMISSIONS] Refused to open an external link", { scheme: linkScheme });
+      } else {
+        console.warn("[PERMISSIONS] Denied permission for an untrusted origin", {
+          permission,
+          scheme: schemeLabel(requestingUrl),
+        });
+      }
     }
     return allowed;
   };

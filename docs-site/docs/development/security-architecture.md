@@ -168,7 +168,7 @@ _isAllowedTeamsDomain(hostname) {
 
 **Features**:
 - **Trusted requesters get full access to device permissions**: Teams and government Teams hosts, the Microsoft sign-in hosts, the configured URL, `https` profile URLs and the app's own `file:` pages
-- **External links are limited by scheme**: a trusted requester, and a link opened in a new window, may hand only `https`, `http`, `mailto`, `tel`, `sip` and `msteams` URLs to the operating system (`app/helpers/externalUrl.js`); other schemes are refused and logged by scheme only
+- **External links are limited by scheme**: a trusted requester, and a link opened in a new window, may hand only `https`, `http`, `mailto`, `tel`, `sip`, `msteams` and `web+msteams` URLs to the operating system (`app/helpers/externalUrl.js`); other schemes are refused and logged by scheme only
 - **Embedded frames keep only policy-gated permissions**: a cross-origin frame inside a trusted page (Whiteboard, Loop, SharePoint) may use media, display capture, clipboard and fullscreen, which Chromium already gates per frame with Permissions Policy, and nothing else
 - **Other pages may only open mail and phone links**: any other permission from a popup, an in-app link or a page navigated to is denied
 - **Denials logged once** per permission and origin, without the URL path

@@ -14,6 +14,7 @@ describe('isSafeExternalUrl', () => {
 			'tel:+15551234',
 			'sip:user@example.com',
 			'msteams:/l/meetup-join/x',
+			'web+msteams:/l/meetup-join/x',
 		]) {
 			assert.strictEqual(isSafeExternalUrl(url), true, url);
 		}

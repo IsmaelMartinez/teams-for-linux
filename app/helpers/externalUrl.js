@@ -1,9 +1,18 @@
 // Schemes the app hands to the operating system on behalf of a page: web
-// links, mail and phone links, and the Teams and SIP links Teams itself opens.
+// links, mail and phone links, and the Teams and SIP links Teams itself opens
+// (both Teams schemes the app registers, see mainAppWindow/protocolLink.js).
 // Anything else (file shares, search or installer handlers, other apps'
 // custom schemes) is refused, because the OS runs whatever is registered for
 // a scheme without asking.
-const EXTERNAL_SCHEMES = new Set(["https:", "http:", "mailto:", "tel:", "sip:", "msteams:"]);
+const EXTERNAL_SCHEMES = new Set([
+  "https:",
+  "http:",
+  "mailto:",
+  "tel:",
+  "sip:",
+  "msteams:",
+  "web+msteams:",
+]);
 
 /**
  * @param {string} url
