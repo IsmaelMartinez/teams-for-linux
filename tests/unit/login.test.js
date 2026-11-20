@@ -47,6 +47,12 @@ describe('isExpectedChallenge', () => {
 
 	it('answers any HTTPS server while no hosts are configured', () => {
 		assert.strictEqual(login.isExpectedChallenge(...server('https://anything.example/x', 'anything.example')), true);
+		assert.strictEqual(login.isExpectedChallenge(...server('https://anything.example/x', 'anything.example'), null), true);
+	});
+
+	it('answers no server when the restriction holds no hosts', () => {
+		assert.strictEqual(login.isExpectedChallenge(...server('https://anything.example/x', 'anything.example'), []), false);
+		assert.strictEqual(login.isExpectedChallenge({ url: 'https://x.example/' }, { isProxy: true, host: 'proxy.corp.example' }, []), true);
 	});
 
 	it('answers only the configured hosts and their subdomains once the list is set', () => {
@@ -63,13 +69,36 @@ describe('normalizeHosts', () => {
 	it('keeps an array, wraps a single string and drops anything unusable', () => {
 		assert.deepStrictEqual(login.normalizeHosts(['adfs.corp.example', ' sso.example ']), ['adfs.corp.example', 'sso.example']);
 		assert.deepStrictEqual(login.normalizeHosts('adfs.corp.example'), ['adfs.corp.example']);
-		assert.deepStrictEqual(login.normalizeHosts(''), []);
-		assert.deepStrictEqual(login.normalizeHosts(undefined), []);
 		assert.deepStrictEqual(login.normalizeHosts(['', 42, null, 'adfs.corp.example']), ['adfs.corp.example']);
+	});
+
+	it('means no restriction only when the option is unset or empty', () => {
+		for (const value of [undefined, null, '', []]) {
+			assert.strictEqual(login.normalizeHosts(value), null, JSON.stringify(value));
+		}
+	});
+
+	it('keeps a supplied but unusable value as a restriction with no hosts', () => {
+		for (const value of [[''], ['   '], [null], [42], '   ', 42]) {
+			assert.deepStrictEqual(login.normalizeHosts(value), [], JSON.stringify(value));
+		}
 	});
 });
 
 describe('handleLoginDialogTry', () => {
+	it('refuses every server, with one warning, when the configured hosts are unusable', (t) => {
+		const warnings = [];
+		t.mock.method(console, 'warn', (...args) => warnings.push(args[0]));
+		const window = { webContents: new EventEmitter() };
+		login.handleLoginDialogTry(window, 'alice', 'printf s3cr3t', ['   ']);
+		assert.strictEqual(warnings.length, 1);
+		assert.ok(warnings[0].includes('auth.basic.hosts'), warnings[0]);
+
+		const answers = [];
+		window.webContents.emit('login', { preventDefault() {} }, { url: 'https://adfs.corp.example/' }, { isProxy: false, host: 'adfs.corp.example' }, (...args) => answers.push(args));
+		assert.deepStrictEqual(answers, [[]]);
+	});
+
 	it('restricts the hosts when the option arrives as a single string, as from the command line', (t) => {
 		t.mock.method(console, 'warn', () => {});
 		t.mock.method(console, 'debug', () => {});
