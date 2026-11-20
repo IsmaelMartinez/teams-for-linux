@@ -40,6 +40,18 @@ function isDocumentPictureInPictureRequest(details, config) {
 const PIP_MAX_WIDTH = 800;
 const PIP_MAX_HEIGHT = 600;
 
+// The popup must be sandboxed exactly like its opener. Teams windows and
+// profile views run with `sandbox: false`, while a popup created through
+// `overrideBrowserWindowOptions` otherwise gets Electron's default of
+// `sandbox: true`. With the two differing, Chromium has to start the popup in
+// a new renderer process and in a new browsing context group, so the opener
+// link is dropped: `window.open()` returns `null` and Teams, which renders its
+// call controls into the returned window, leaves an empty window behind
+// (Electron 45; earlier versions kept the opener). Only `sandbox` has to
+// match: no preload and no node integration are handed to the popup, and
+// context isolation stays at its default.
+const PIP_WEB_PREFERENCES = Object.freeze({ sandbox: false });
+
 // Width and height come from the popup's `features` string, which Electron
 // applies on its own; only the window behaviour and the cap are set here.
 // alwaysOnTop is a request to the window manager: GNOME and KDE on Wayland
@@ -53,6 +65,7 @@ function documentPictureInPictureResponse() {
       fullscreenable: false,
       maxWidth: PIP_MAX_WIDTH,
       maxHeight: PIP_MAX_HEIGHT,
+      webPreferences: { ...PIP_WEB_PREFERENCES },
     },
   };
 }

@@ -227,8 +227,19 @@ describe('documentPictureInPicture window-open decision', () => {
         fullscreenable: false,
         maxWidth: main.PIP_MAX_WIDTH,
         maxHeight: main.PIP_MAX_HEIGHT,
+        // Must match the opener's sandbox setting or window.open() returns null.
+        webPreferences: { sandbox: false },
       },
     });
+  });
+
+  it('hands out a fresh webPreferences object each time', () => {
+    const first = main.documentPictureInPictureResponse();
+    first.overrideBrowserWindowOptions.webPreferences.sandbox = true;
+    assert.strictEqual(
+      main.documentPictureInPictureResponse().overrideBrowserWindowOptions.webPreferences.sandbox,
+      false,
+    );
   });
 
   it('profile views give the PiP popup the same window options', () => {
