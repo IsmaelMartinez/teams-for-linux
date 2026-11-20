@@ -1,6 +1,7 @@
 const path = require("node:path");
 const { fileURLToPath } = require("node:url");
 const { isTeamsHost } = require("../helpers/teamsHosts");
+const { isSafeExternalUrl, schemeOf } = require("../helpers/externalUrl");
 
 const APP_ROOT = path.join(__dirname, "..");
 
@@ -13,8 +14,9 @@ const APP_ROOT = path.join(__dirname, "..");
 // frame inside a trusted page (Whiteboard, Loop, SharePoint embedded by Teams)
 // only inherits the permissions Chromium already gates per frame with
 // Permissions Policy; the rest (notifications, device APIs, file system) need
-// a trusted requester. Opening external apps follows the same rule, except
-// that any main frame may still open mail and phone links.
+// a trusted requester. Opening external apps is narrower: a trusted requester
+// may open only the schemes in helpers/externalUrl.js, and any other main
+// frame only mail and phone links.
 
 const AUTH_LOGIN_HOSTS = [
   "login.microsoftonline.com",
@@ -82,14 +84,6 @@ function isTrustedUrl(url, trustedOrigins) {
   );
 }
 
-function schemeOf(url) {
-  try {
-    return new URL(url).protocol;
-  } catch {
-    return null;
-  }
-}
-
 /**
  * Pure decision used by both handlers.
  * @param {{ permission: string, isMainFrame?: boolean, topLevelUrl?: string, requestingUrl?: string, externalURL?: string }} request
@@ -97,10 +91,12 @@ function schemeOf(url) {
  * @returns {boolean}
  */
 function isPermissionAllowed({ permission, isMainFrame, topLevelUrl, requestingUrl, externalURL }, trustedOrigins) {
-  if (typeof requestingUrl === "string" && isTrustedUrl(requestingUrl, trustedOrigins)) return true;
+  const trustedRequester = typeof requestingUrl === "string" && isTrustedUrl(requestingUrl, trustedOrigins);
   if (permission === "openExternal") {
+    if (trustedRequester) return isSafeExternalUrl(externalURL);
     return Boolean(isMainFrame) && OPEN_EXTERNAL_ANY_PAGE.has(schemeOf(externalURL));
   }
+  if (trustedRequester) return true;
   return (
     FRAME_POLICY_GATED.has(permission) &&
     typeof topLevelUrl === "string" &&
