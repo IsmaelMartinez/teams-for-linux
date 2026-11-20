@@ -48,9 +48,15 @@ const PIP_MAX_HEIGHT = 600;
 // link is dropped: `window.open()` returns `null` and Teams, which renders its
 // call controls into the returned window, leaves an empty window behind
 // (Electron 45; earlier versions kept the opener). Only `sandbox` has to
-// match: no preload and no node integration are handed to the popup, and
-// context isolation stays at its default.
-const PIP_WEB_PREFERENCES = Object.freeze({ sandbox: false });
+// match; context isolation and node integration are pinned to their secure
+// values so a changed default can never hand the popup more, and no preload is
+// set. `sandbox: false` belongs to the window, not to the blank document, so
+// lockDocumentPictureInPictureWindow keeps the window on about:blank.
+const PIP_WEB_PREFERENCES = Object.freeze({
+  sandbox: false,
+  contextIsolation: true,
+  nodeIntegration: false,
+});
 
 // Width and height come from the popup's `features` string, which Electron
 // applies on its own; only the window behaviour and the cap are set here.
@@ -70,10 +76,22 @@ function documentPictureInPictureResponse() {
   };
 }
 
+// The PiP window runs unsandboxed to keep its opener link, so it must never
+// leave about:blank: navigated to a URL it would become an unsandboxed renderer
+// for that site with a live `window.opener` back to Teams. Teams only renders
+// into the blank document, so blocking every navigation and popup costs
+// nothing. Call it from `did-create-window` for PiP requests, after (or
+// instead of) any other window-open policy, since the last handler set wins.
+function lockDocumentPictureInPictureWindow(webContents) {
+  webContents.on("will-navigate", (event) => event.preventDefault());
+  webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+}
+
 module.exports = {
   PIP_FRAME_NAME,
   PIP_MAX_WIDTH,
   PIP_MAX_HEIGHT,
   isDocumentPictureInPictureRequest,
   documentPictureInPictureResponse,
+  lockDocumentPictureInPictureWindow,
 };

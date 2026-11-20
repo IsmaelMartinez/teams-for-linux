@@ -34,6 +34,7 @@ const { isUrlPreviewRequest } = require("./urlPreviewBlock");
 const {
   isDocumentPictureInPictureRequest,
   documentPictureInPictureResponse,
+  lockDocumentPictureInPictureWindow,
 } = require("./documentPictureInPicture");
 
 const DEFAULT_SCREEN_SHARING_THUMBNAIL_CONFIG = {
@@ -1447,6 +1448,12 @@ function addEventHandlers() {
 
   window.on("page-title-updated", onPageTitleUpdated);
   window.webContents.setWindowOpenHandler(onNewWindow);
+  // Keep the unsandboxed PiP window on about:blank (documentPictureInPicture.js).
+  window.webContents.on("did-create-window", (child, details) => {
+    if (isDocumentPictureInPictureRequest(details, config)) {
+      lockDocumentPictureInPictureWindow(child.webContents);
+    }
+  });
   window.webContents.session.webRequest.onBeforeRequest(
     { urls: ["https://*/*"] },
     onBeforeRequestHandler

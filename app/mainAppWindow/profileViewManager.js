@@ -6,6 +6,10 @@ const { isHttpsUrl } = require("../profilesManager");
 const { keepMsalEncryptionCookiePersistent } = require("./msalCookiePersistence");
 const { blockUrlPreviews } = require("./urlPreviewBlock");
 const webauthnBackend = require("../webauthn/backendStatus");
+const {
+  isDocumentPictureInPictureRequest,
+  lockDocumentPictureInPictureWindow,
+} = require("./documentPictureInPicture");
 
 const LEGACY_PARTITION = "persist:teams-4-linux";
 
@@ -672,8 +676,8 @@ class ProfileViewManager {
   // view or { root: true } for the root window (Profile 0, whose id is
   // mutable so descendants resolve through the map's root profile id).
   #watchDescendants(webContents, owner) {
-    webContents.on("did-create-window", (child) =>
-      this.#trackDescendant(child?.webContents, owner)
+    webContents.on("did-create-window", (child, details) =>
+      this.#trackDescendant(child?.webContents, owner, details)
     );
     webContents.on("did-attach-webview", (_event, guest) =>
       this.#trackDescendant(guest, owner)
@@ -685,7 +689,7 @@ class ProfileViewManager {
   // ORIGINATING view, not the popup), and recurse so grandchildren are
   // covered — `setWindowOpenHandler` and these events are per-webContents,
   // not inherited. Id captured up front — same reasoning as the view itself.
-  #trackDescendant(webContents, owner) {
+  #trackDescendant(webContents, owner, details) {
     if (!webContents || typeof webContents.id !== "number") return;
     const id = webContents.id;
     if (owner.root) {
@@ -705,6 +709,12 @@ class ProfileViewManager {
         this.#registry.unregister(id);
         this.#descendants.get(owner.profileId)?.delete(id);
       });
+    }
+    // The unsandboxed PiP window must stay on about:blank and open nothing, so
+    // it gets the lock instead of the profile policy (which allows any URL).
+    if (isDocumentPictureInPictureRequest(details, this.#config)) {
+      lockDocumentPictureInPictureWindow(webContents);
+      return;
     }
     this.#bindWindowOpenHandler(webContents, owner.loadTarget, owner.activate);
     this.#watchDescendants(webContents, owner);
