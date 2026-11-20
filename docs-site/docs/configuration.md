@@ -445,6 +445,23 @@ Content other than `active` or `inactive` is logged as a warning and ignored, fa
 | `ssoBasicAuthUser` | `string` | `""` | Deprecated, use `auth.basic.user` |
 | `auth.basic.passwordCommand` | `string` | `""` | Command to execute to retrieve password for SSO basic auth |
 | `ssoBasicAuthPasswordCommand` | `string` | `""` | Deprecated, use `auth.basic.passwordCommand` |
+| `auth.basic.hosts` | `array` | `[]` | Hostnames (or parent domains) allowed to receive these credentials or the login dialog, for example your ADFS host. Empty answers any HTTPS server that asks |
+
+The credentials answer an HTTP authentication challenge (Basic or NTLM), and any request the Teams page makes can raise one. Set `auth.basic.hosts` to the servers that should receive them, so no other server is answered:
+
+```json
+{
+  "auth": {
+    "basic": {
+      "user": "DOMAIN\\user",
+      "passwordCommand": "pass show corp/sso",
+      "hosts": ["adfs.example.com"]
+    }
+  }
+}
+```
+
+A proxy that asks for authentication is always answered, and a server reached over cleartext HTTP never is.
 
 #### Web Login Password Pre-fill
 
@@ -983,6 +1000,7 @@ Wayland display server settings are organized under the `wayland` configuration 
 | `spellCheckerLanguages` | `array` | `[]` | Deprecated, use `platform.spellCheckerLanguages` |
 | `platform.disableTimestampOnCopy` | `boolean` | `false` | Controls whether timestamps are included when copying messages |
 | `disableTimestampOnCopy` | `boolean` | `false` | Deprecated, use `platform.disableTimestampOnCopy` |
+| `platform.disableUrlPreviews` | `boolean` | `false` | Keep pasted links as plain URLs: blocks the Teams URL preview lookup that replaces them with the page title and adds a preview card |
 
 :::note Wayland GPU Handling
 When running under Wayland, GPU acceleration is **automatically disabled by default** to prevent blank window issues. To enable GPU acceleration on Wayland, you can explicitly override this behavior using either:
@@ -1422,4 +1440,4 @@ See [Microsoft Teams Keyboard Shortcuts](https://support.microsoft.com/en-us/off
 - **macOS limitation**: Non-QWERTY layouts (Dvorak, AZERTY, Colemak, etc.) are not supported due to [Electron bug #19747](https://github.com/electron/electron/issues/19747)
 - **Linux/Windows**: Works better but may have issues with layout changes during runtime
 
-See [Electron Accelerators](https://www.electronjs.org/docs/latest/api/accelerator) for available key combinations.
+See [Electron Accelerators](https://www.electronjs.org/docs/latest/tutorial/keyboard-shortcuts#accelerators) for available key combinations.

@@ -74,6 +74,7 @@ const responseHeaders = {
 - **Request Validation**: Validates all IPC requests before processing
 - **Sender Pinning**: Channels only the screen-share picker uses (`desktop-capturer-get-sources`, `get-screen-sharing-displays`, `selected-source`, `close-view`, and the legacy picker's `source-selected`) are answered only when the sending frame shows a file inside the app directory (`isSenderAllowed`), so page script cannot capture the screen or pick a source on its own
 - **No Raw `ipcRenderer` in the Page**: With `contextIsolation: false`, anything `electronAPI` returns is usable by page script, so its listener helpers return nothing and strip Electron's IPC event (whose `sender` is the raw `ipcRenderer`) before calling back
+- **Listener Errors Contained**: an exception or rejected promise from an `ipcMain.on` or `once` listener is logged and dropped by the wrapper in `app/security/ipcSecurity.js`, so a message with an unexpected shape cannot reach the process-wide error handlers that exit the app
 
 ```javascript
 function validateIpcChannel(channel, payload = null) {
@@ -167,7 +168,8 @@ _isAllowedTeamsDomain(hostname) {
 **Implementation**: `app/security/permissions.js`, installed on the default session and every profile partition
 
 **Features**:
-- **Trusted requesters get full access**: Teams and government Teams hosts, the Microsoft sign-in hosts, the configured URL, `https` profile URLs and the app's own `file:` pages
+- **Trusted requesters get full access to device permissions**: Teams and government Teams hosts, the Microsoft sign-in hosts, the configured URL, `https` profile URLs and the app's own `file:` pages
+- **External links are limited by scheme**: a trusted requester, and a link opened in a new window, may hand only `https`, `http`, `mailto`, `tel`, `sip`, `msteams` and `web+msteams` URLs to the operating system (`app/helpers/externalUrl.js`); other schemes are refused and logged by scheme only
 - **Embedded frames keep only policy-gated permissions**: a cross-origin frame inside a trusted page (Whiteboard, Loop, SharePoint) may use media, display capture, clipboard and fullscreen, which Chromium already gates per frame with Permissions Policy, and nothing else
 - **Other pages may only open mail and phone links**: any other permission from a popup, an in-app link or a page navigated to is denied
 - **Denials logged once** per permission and origin, without the URL path

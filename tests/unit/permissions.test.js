@@ -88,10 +88,17 @@ describe('isPermissionAllowed', () => {
 		);
 	});
 
-	it('lets Teams open any external app, other main frames only mail and phone links', () => {
+	it('lets Teams open only the allowed external schemes, other main frames only mail and phone links', () => {
 		const teams = { permission: 'openExternal', isMainFrame: true, topLevelUrl: 'https://teams.microsoft.com/', requestingUrl: 'https://teams.microsoft.com/' };
 		assert.strictEqual(allowed({ ...teams, externalURL: 'msteams:/l/meetup-join/x' }), true);
 		assert.strictEqual(allowed({ ...teams, externalURL: 'sip:user@example.com' }), true);
+		assert.strictEqual(allowed({ ...teams, externalURL: 'mailto:help@example.com' }), true);
+		assert.strictEqual(allowed({ ...teams, externalURL: 'smb://host/share/x.exe' }), false);
+		assert.strictEqual(allowed({ ...teams, externalURL: 'search-ms:query=x' }), false);
+		assert.strictEqual(allowed({ ...teams, externalURL: 'foo-custom://payload' }), false);
+		assert.strictEqual(allowed({ ...teams }), false);
+		// Other permissions are unaffected for a trusted requester.
+		assert.strictEqual(allowed({ ...teams, permission: 'notifications' }), true);
 
 		const other = { permission: 'openExternal', isMainFrame: true, topLevelUrl: 'https://idp.example/', requestingUrl: 'https://idp.example/' };
 		assert.strictEqual(allowed({ ...other, externalURL: 'mailto:help@example.com' }), true);
@@ -193,6 +200,27 @@ describe('installPermissionHandlers', () => {
 		assert.strictEqual(warnings.length, 1);
 		assert.ok(!warnings[0].includes('contoso'), warnings[0]);
 		assert.ok(warnings[0].includes('"scheme":"https"'), warnings[0]);
+	});
+
+	it('logs a refused link by its own scheme, once per scheme, without the URL', (t) => {
+		const warnings = [];
+		t.mock.method(console, 'warn', (...args) => warnings.push(JSON.stringify(args)));
+		const s = fakeSession();
+		installPermissionHandlers({ url: 'https://teams.cloud.microsoft' }, { on() {} }, s);
+		const teams = { isMainFrame: true, requestingUrl: 'https://teams.cloud.microsoft/' };
+		const open = (externalURL) => {
+			let granted;
+			s.request(page('https://teams.cloud.microsoft/'), 'openExternal', (v) => { granted = v; }, { ...teams, externalURL });
+			return granted;
+		};
+
+		assert.strictEqual(open('smb://fileserver.contoso.example/share'), false);
+		assert.strictEqual(open('smb://fileserver.contoso.example/other'), false);
+		assert.strictEqual(open('web+msteams:/l/meetup-join/x'), true);
+		assert.strictEqual(warnings.length, 1);
+		assert.ok(warnings[0].includes('Refused to open an external link'), warnings[0]);
+		assert.ok(warnings[0].includes('"scheme":"smb"'), warnings[0]);
+		assert.ok(!warnings[0].includes('contoso'), warnings[0]);
 	});
 
 	it('prefers securityOrigin over requestingUrl for the PiP window', () => {

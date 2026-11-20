@@ -28,7 +28,9 @@ const os = require("node:os");
 const path = require("node:path");
 const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
 const { reloadIfSignedOut } = require("./signOutReload");
+const { isSafeExternalUrl, schemeOf } = require("../helpers/externalUrl");
 const { keepMsalEncryptionCookiePersistent } = require("./msalCookiePersistence");
+const { isUrlPreviewRequest } = require("./urlPreviewBlock");
 const {
   isDocumentPictureInPictureRequest,
   documentPictureInPictureResponse,
@@ -833,7 +835,12 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     maybeScheduleAuthRecovery(event.message, event.sourceId);
   });
 
-  login.handleLoginDialogTry(window, config.ssoBasicAuthUser, config.ssoBasicAuthPasswordCommand);
+  login.handleLoginDialogTry(
+    window,
+    config.ssoBasicAuthUser,
+    config.ssoBasicAuthPasswordCommand,
+    config.auth?.basic?.hosts,
+  );
 
   const url = processArgs(process.argv);
   connectionManager.start(url, {
@@ -1162,7 +1169,8 @@ function isMicrosoftTelemetryHost(url) {
 }
 
 function onBeforeRequestHandler(details, callback) {
-  if (isMicrosoftTelemetryHost(details.url)) {
+  if (isMicrosoftTelemetryHost(details.url)
+    || (config.platform?.disableUrlPreviews && isUrlPreviewRequest(details.url))) {
     callback({ cancel: true });
     return;
   }
@@ -1548,17 +1556,18 @@ function secureOpenLink(details) {
 }
 
 function openInBrowser(details) {
+  // The page chooses this URL, and the OS runs whatever is registered for its
+  // scheme, so only the schemes in helpers/externalUrl.js leave the app.
+  const scheme = schemeOf(details.url) ?? "unparseable";
+  if (!isSafeExternalUrl(details.url)) {
+    console.warn("[LINK] Refused to open a link with an unsupported scheme", { scheme });
+    return;
+  }
   if (config.defaultURLHandler.trim() === "") {
     // A scheme with no handling app rejects; uncaught, that reaches the
     // process-wide unhandledRejection handler and exits the app.
     // Only the scheme is logged: the OS error message can echo the URL.
     shell.openExternal(details.url).catch(() => {
-      let scheme = "unparseable";
-      try {
-        scheme = new URL(details.url).protocol;
-      } catch {
-        // keep "unparseable"
-      }
       console.error("[LINK] Could not open link externally", { scheme });
     });
   } else {

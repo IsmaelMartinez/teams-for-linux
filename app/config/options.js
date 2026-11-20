@@ -548,7 +548,7 @@ module.exports = {
       disableGlobalShortcuts: {
         default: [],
         describe:
-          "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use",
+          "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/tutorial/keyboard-shortcuts#accelerators for available accelerators to use",
         type: "array",
         applyMode: "restart",
         deprecated: "use shortcuts.disableWhileFocused instead",
@@ -1184,6 +1184,7 @@ module.exports = {
           basic: {
             user: "",
             passwordCommand: "",
+            hosts: [],
           },
           customCACertificateFingerprints: [],
           webLogin: {
@@ -1253,6 +1254,11 @@ module.exports = {
           "basic.passwordCommand": {
             type: "string",
             describe: "Command to execute to retrieve password for SSO basic auth.",
+          },
+          "basic.hosts": {
+            type: "array",
+            describe:
+              "Hostnames (or parent domains) allowed to receive the basic auth credentials or the login dialog, for example your ADFS host. Empty answers any HTTPS server that asks. Proxy challenges are always answered, and cleartext HTTP servers never are.",
           },
           "customCACertificateFingerprints": {
             type: "array",
@@ -1345,7 +1351,7 @@ module.exports = {
           "disableWhileFocused": {
             type: "array",
             describe:
-              "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/api/accelerator for available accelerators to use",
+              "Array of global shortcuts to disable while the app is in focus. See https://www.electronjs.org/docs/latest/tutorial/keyboard-shortcuts#accelerators for available accelerators to use",
           },
         },
         applyMode: "restart",
@@ -1484,6 +1490,7 @@ module.exports = {
           emulateWindowsChromium: false,
           spellCheckerLanguages: [],
           disableTimestampOnCopy: false,
+          disableUrlPreviews: false,
         },
         describe:
           "Platform emulation and OS integration configuration. Replaces the deprecated chromeUserAgent, emulateWinChromiumPlatform, spellCheckerLanguages and disableTimestampOnCopy options.",
@@ -1504,6 +1511,10 @@ module.exports = {
           "disableTimestampOnCopy": {
             type: "boolean",
             describe: "Controls whether timestamps are included when copying messages in chats",
+          },
+          "disableUrlPreviews": {
+            type: "boolean",
+            describe: "Keep pasted links as plain URLs: block the Teams URL preview lookup that replaces them with the page title and adds a preview card",
           },
         },
         applyMode: "restart",
