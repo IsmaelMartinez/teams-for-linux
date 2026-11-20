@@ -37,6 +37,7 @@ class TeamsControlService extends EventEmitter {
       presenceStatus: "unknown", presenceStatusCode: -1, inCall: false, incomingCall: false,
       incomingCallCaller: null, cameraEnabled: false, microphoneState: "unknown",
       microphoneControlState: "unknown", screenSharing: false, meetingStarted: false,
+      callParticipants: null,
     };
   }
 
