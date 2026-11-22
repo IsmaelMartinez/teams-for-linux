@@ -510,6 +510,7 @@ document.addEventListener('DOMContentLoaded', async (event) => {
       { name: "integratedTitleBar", path: "./tools/integratedTitleBar", ipc: true },
       { name: "customStickers", path: "./tools/customStickers", ipc: true },
       { name: "dockIconRenderer", path: "./tools/dockIconRenderer", ipc: true },
+      { name: "windowIconRenderer", path: "./tools/windowIconRenderer", ipc: true },
       { name: "preventDeviceSwitching", path: "./tools/preventDeviceSwitching", ipc: false },
       { name: "documentPictureInPicture", path: "./tools/documentPictureInPicture", ipc: false }
     ];

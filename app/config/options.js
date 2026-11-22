@@ -1554,9 +1554,10 @@ module.exports = {
           minimizeOnClose: false,
           alwaysOnTop: true,
           class: null,
+          showStatus: false,
         },
         describe:
-          "Main window geometry, decoration and close behaviour. Replaces the deprecated frame, menubar, minimized, closeAppOnCross, minimizeOnClose, alwaysOnTop and class options.",
+          "Main window geometry, decoration, close behaviour and icon. Replaces the deprecated frame, menubar, minimized, closeAppOnCross, minimizeOnClose, alwaysOnTop and class options.",
         type: "object",
         fields: {
           "frame": {
@@ -1592,6 +1593,10 @@ module.exports = {
           "class": {
             type: "string",
             describe: "A custom value for the WM_CLASS property",
+          },
+          "showStatus": {
+            type: "boolean",
+            describe: "Overlay the user presence status on the main window icon, which is what the taskbar or panel entry shows on Linux and Windows (ignored on macOS, see media.showStatusOnDockIcon). The dot goes in the bottom-right corner, matching the tray overlay. On a native Wayland session the desktop must support window icons (xdg-toplevel-icon, e.g. KDE Plasma 6); elsewhere run under XWayland",
           },
         },
         applyMode: "restart",

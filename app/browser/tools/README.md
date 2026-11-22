@@ -138,6 +138,9 @@ Enhances timestamp copying functionality in Teams messages.
 #### [trayIconChooser.js](trayIconChooser.js) & [trayIconRenderer.js](trayIconRenderer.js)
 Handle tray icon selection, rendering, and badge count display based on Teams activity.
 
+#### [windowIconRenderer.js](windowIconRenderer.js)
+The renderer side of `window.showStatus`. It composites the presence dot onto the window icon on a canvas, which main does not have, using the same drawing helper and colours as the tray overlay ([presenceColors.js](presenceColors.js)), and sends the result to main on `window-icon-update`. It sends `null`, so main restores the plain icon, once at every page load (a reload or the sign-in page must not keep the previous dot) and whenever the status is unknown. It sends the dot again on each App Icon change, because the menu resets the window to the plain icon. Needs `ipcRenderer`. The main-process half is `app/windowStatusIcon/`.
+
 #### [zoom.js](zoom.js)
 Manages zoom level controls and persistence across sessions.
 
