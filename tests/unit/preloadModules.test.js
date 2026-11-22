@@ -21,7 +21,7 @@ const { join } = require('node:path');
 // as text keeps the test fast, deterministic, and free of mocks.
 
 const PRELOAD_PATH = join(__dirname, '..', '..', 'app', 'browser', 'preload.js');
-const REQUIRED_MODULES = ['settings', 'theme', 'trayIconRenderer', 'mqttStatusMonitor', 'meetingStartDetector', 'webauthnOverride'];
+const REQUIRED_MODULES = ['settings', 'theme', 'trayIconRenderer', 'mqttStatusMonitor', 'meetingStartDetector', 'webauthnOverride', 'callParticipants'];
 
 describe('preload.js modules passing ipcRenderer', () => {
 	const source = readFileSync(PRELOAD_PATH, 'utf8');
