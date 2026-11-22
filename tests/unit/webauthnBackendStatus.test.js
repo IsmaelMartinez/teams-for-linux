@@ -119,3 +119,25 @@ describe('neutralizeIfNoBackend', () => {
     assert.strictEqual(invoked, false);
   });
 });
+
+describe('fido2Backend.isAvailable', () => {
+  const { isAvailable } = require('../../app/webauthn/fido2Backend');
+
+  it('agrees with the renderer gate, with and without the binaries on PATH', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 't4l-fido2-'));
+    const savedPath = process.env.PATH;
+    try {
+      process.env.PATH = dir;
+      assert.strictEqual(await isAvailable(), false);
+      assert.strictEqual(hasFido2Tools(), false);
+      for (const tool of ['fido2-cred', 'fido2-assert', 'fido2-token']) {
+        fs.writeFileSync(path.join(dir, tool), '#!/bin/sh\n', { mode: 0o755 });
+      }
+      assert.strictEqual(await isAvailable(), true);
+      assert.strictEqual(hasFido2Tools(), true);
+    } finally {
+      process.env.PATH = savedPath;
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});

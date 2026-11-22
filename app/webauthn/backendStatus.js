@@ -26,12 +26,13 @@ const path = require("node:path");
 
 const NO_BACKEND_ARG = "--webauthn-no-backend";
 
-// The same three binaries fido2Backend.isAvailable() requires.
+// The three binaries the fido2-tools backend runs.
 const FIDO2_TOOLS = ["fido2-cred", "fido2-assert", "fido2-token"];
 
 /**
- * Synchronous counterpart of fido2Backend.isAvailable(): window creation
- * cannot await, and `which` is only a PATH lookup.
+ * The one availability check: the renderer gate here and
+ * fido2Backend.isAvailable() both use it, so they cannot disagree.
+ * Synchronous because window creation cannot await.
  * @param {string} [pathEnv] - PATH to search
  * @returns {boolean}
  */
