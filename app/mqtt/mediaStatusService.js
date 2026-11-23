@@ -170,7 +170,7 @@ class MQTTMediaStatusService {
 	}
 
 	async #handleCameraChanged(event, enabled) {
-		await this.#publishBoolean(this.#mediaTopics.camera, String(enabled), `Camera state changed to ${enabled}`);
+		await this.#publishBoolean(this.#mediaTopics.camera, String(enabled), 'Camera state changed');
 	}
 
 	async #handleMicrophoneChanged(event, state) {
