@@ -22,10 +22,6 @@ class ScreenSharingService {
     ipcMain.on("screen-sharing-stopped", this.#handleScreenSharingStopped.bind(this));
     // Get current screen sharing status
     ipcMain.handle("get-screen-sharing-status", this.#handleGetScreenSharingStatus.bind(this));
-    // Get screen share stream for thumbnail preview
-    ipcMain.handle("get-screen-share-stream", this.#handleGetScreenShareStream.bind(this));
-    // Get screen share screen details
-    ipcMain.handle("get-screen-share-screen", this.#handleGetScreenShareScreen.bind(this));
     // Resize screen sharing preview window
     ipcMain.on("resize-preview-window", this.#handleResizePreviewWindow.bind(this));
     // Stop screen sharing from thumbnail preview
@@ -156,31 +152,6 @@ class ScreenSharingService {
 
   #handleGetScreenSharingStatus() {
     return this.#isSharing;
-  }
-
-  #handleGetScreenShareStream() {
-    if (typeof this.#selectedScreenShareSource === "string") {
-      return this.#selectedScreenShareSource;
-    } else if (this.#selectedScreenShareSource?.id) {
-      return this.#selectedScreenShareSource.id;
-    }
-    return null;
-  }
-
-  #handleGetScreenShareScreen() {
-    if (
-      this.#selectedScreenShareSource &&
-      typeof this.#selectedScreenShareSource === "object"
-    ) {
-      const displays = screen.getAllDisplays();
-
-      if (this.#selectedScreenShareSource?.id?.startsWith("screen:")) {
-        const display = displays[0] || { size: { width: 1920, height: 1080 } };
-        return { width: display.size.width, height: display.size.height };
-      }
-    }
-
-    return { width: 1920, height: 1080 };
   }
 
   #handleResizePreviewWindow(_event, { width, height }) {
