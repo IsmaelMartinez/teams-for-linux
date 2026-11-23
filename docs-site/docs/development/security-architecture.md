@@ -41,27 +41,18 @@ webPreferences: {
 }
 ```
 
-**Key Security Decision**: `nodeIntegration` remains `false` to prevent Node.js access in renderer processes, maintaining a critical security boundary.
+**Key Security Decision**: `nodeIntegration` remains `false`, so page script has no `require`. The preload itself is not sandboxed and shares the page's JavaScript world, which is why the controls below exist; they compensate for a missing boundary rather than restore it ([ADR-035](adr/035-renderer-trust-boundary.md)). Profile views use the same settings.
 
 ### Compensating Security Controls
 
-#### 1. Content Security Policy (CSP) Headers
+#### 1. Content Security Policy
 
-**Implementation**: `app/mainAppWindow/browserWindowManager.js:59-102`
+The application sets no Content Security Policy of its own for the Teams window. An earlier custom policy was never active and was removed. The page is governed by the policy Microsoft serves with Teams, and the application changes response headers in two cases only (`app/mainAppWindow/index.js`, `app/customBackground/index.js`):
 
-```javascript
-const responseHeaders = {
-  'Content-Security-Policy': [
-    "default-src 'self' https://teams.cloud.microsoft https://teams.microsoft.com https://teams.live.com ...",
-    "script-src 'self' https://teams.cloud.microsoft https://teams.microsoft.com ...",
-    "object-src 'none';",
-    "base-uri 'self';",
-    "frame-ancestors 'none';"
-  ]
-};
-```
+- Report-only CSP headers are stripped from pages on non-Teams hosts, such as federated sign-in pages
+- When custom backgrounds are configured, the configured service origin is added to `img-src` and `connect-src`
 
-**Protection**: Prevents malicious script injection and restricts resource loading to trusted domains.
+Treat Teams' own CSP as outside the application's control: it limits what injected script can load, but it is not a control this project maintains.
 
 #### 2. IPC Channel Validation
 
@@ -69,10 +60,9 @@ const responseHeaders = {
 
 **Features**:
 - **Channel Allowlisting**: Only legitimate IPC channels are permitted
-- **Recursive Payload Sanitization**: Removes dangerous properties (`__proto__`, `constructor`, `prototype`) from payloads at all nesting depths
-- **Prototype Pollution Protection**: Guards against object prototype manipulation with depth-limited recursion (max 10 levels)
-- **Request Validation**: Validates all IPC requests before processing
-- **Sender Pinning**: Channels only the screen-share picker uses (`desktop-capturer-get-sources`, `get-screen-sharing-displays`, `selected-source`, `close-view`, and the legacy picker's `source-selected`) are answered only when the sending frame shows a file inside the app directory (`isSenderAllowed`), so page script cannot capture the screen or pick a source on its own
+- **Payload Sanitization**: Removes the `__proto__`, `constructor` and `prototype` properties from the first argument of each message, recursing up to 10 levels deep; anything nested deeper, and any further arguments, are passed through as sent, so handlers still validate what they use
+- **Request Validation**: Every `ipcMain.handle`, `on` and `once` registration is wrapped, so the allowlist and sender checks run before the handler
+- **Sender Pinning**: The channels in `appPageOnlyChannels` (the screen-share picker, the profile channels and the Graph channels that act as the user) are answered only when the sending frame shows a file inside the app directory (`isSenderAllowed`), so page script cannot capture the screen, pick a source or switch profiles on its own. Channels outside that list answer any frame
 - **No Raw `ipcRenderer` in the Page**: With `contextIsolation: false`, anything `electronAPI` returns is usable by page script, so its listener helpers return nothing and strip Electron's IPC event (whose `sender` is the raw `ipcRenderer`) before calling back
 - **Listener Errors Contained**: an exception or rejected promise from an `ipcMain.on` or `once` listener is logged and dropped by the wrapper in `app/security/ipcSecurity.js`, so a message with an unexpected shape cannot reach the process-wide error handlers that exit the app
 
@@ -89,34 +79,15 @@ function validateIpcChannel(channel, payload = null) {
 
 #### 3. Domain Validation
 
-**Implementation**: `app/browser/tools/reactHandler.js:142-157`
+**Implementation**: `_isAllowedTeamsDomain` in `app/browser/tools/reactHandler.js`, and `isTeamsHost` in `app/helpers/teamsHosts.js`
 
-```javascript
-_isAllowedTeamsDomain(hostname) {
-  const allowedDomains = [
-    'teams.cloud.microsoft',
-    'teams.microsoft.com',
-    'teams.live.com'
-  ];
-  
-  // Prevents subdomain hijacking attacks
-  for (const domain of allowedDomains) {
-    if (hostname === domain) return true;
-    if (hostname.endsWith('.' + domain)) return true;
-  }
-  return false;
-}
-```
+The React handler acts only when the page's host is `teams.cloud.microsoft`, `teams.microsoft.com` or `teams.live.com`, an immediate subdomain of one of them, or its `.mcas.ms` (Defender for Cloud Apps) proxy name.
 
-**Protection**: Restricts DOM access to legitimate Teams domains only, preventing access from malicious sites.
+**Protection**: Keeps the handler from reading React internals on a page that is not Teams. The check runs inside the page's own JavaScript world, so it guards against acting on the wrong page, not against script already running in the Teams page.
 
 #### 4. Screen Sharing Isolation
 
-**Security Model**: Screen sharing windows maintain full security isolation:
-- `contextIsolation: true`
-- `sandbox: true` 
-- No DOM access requirements
-- Separate security context
+**Security Model**: The screen-sharing picker and preview windows set only a preload, so they keep Electron's defaults: context isolation on, sandbox on, no Node.js integration. They have no DOM access requirement.
 
 #### 5. Process Error Handlers
 
@@ -161,7 +132,7 @@ _isAllowedTeamsDomain(hostname) {
 - **No generic `electronAPI.send`**: the page gets named methods bound to fixed channels; the profile channels and the two Graph channels that act as the user (`graph-api-search-people`, `graph-api-send-chat-message`) are pinned to the app page, while the other Graph channels, including `graph-api-create-calendar-event` which writes to the calendar, remain callable from the Teams page, and profile URLs must be `https`
 - **Credential-free renderer config**: `get-config` returns `toRendererConfig(config)`, without MQTT, basic-auth or client-certificate secrets
 
-**Protection**: Script in the Teams window cannot recover `ipcRenderer`, so it is bounded to the allowlisted channels with the preload's argument shaping, and it cannot read credentials (GHSA-58j7-22f8-6xqp).
+**Protection**: These rules are what keep script in the Teams window from recovering `ipcRenderer`, so it stays bounded to the named `electronAPI` methods with the preload's argument shaping, and it cannot read credentials (GHSA-58j7-22f8-6xqp). The world is still shared, so a preload change that breaks one of the rules can reopen a path; the two tests above exist to catch that.
 
 #### 9. Session Permission Handlers
 
@@ -180,157 +151,74 @@ _isAllowedTeamsDomain(hostname) {
 
 ### System-Level Sandboxing
 
-Instead of relying solely on Electron security features, users should adopt **system-level sandboxing**:
+The Teams window cannot use Electron's own isolation, so operating-system confinement is the layer that limits what a compromised renderer can reach. How much there is depends on the package:
 
-#### Available Options
+| Package | Confinement | What it still grants |
+|---------|-------------|----------------------|
+| Flatpak (Flathub) | Flatpak sandbox | The home directory (`--filesystem=home`), all devices (`--device=all`) and the network, which file sharing, calls and screen sharing rely on. Flatseal or `flatpak override` can narrow this |
+| Snap | Strict confinement | The home directory, removable media, camera, audio recording and the network, through the declared interfaces |
+| deb, rpm, AppImage, tarball | None | Everything the user account can reach |
+| macOS and Windows builds | None from this project | Everything the user account can reach |
 
-**Flatpak**
-- Built-in application isolation
-- Available via Flathub
-- Automatic permission management
-- Filesystem access restrictions
+For the unconfined packages, `firejail`, `bubblewrap` or an AppArmor or SELinux profile can add confinement. The project ships and tests none of these, so treat them as your own configuration.
 
-**Snap Packages**
-- Application confinement system
-- Auto-updates with security patches
-- Interface-based permission system
+## Local Control Surfaces
 
-**AppArmor/SELinux**
-- Available by default on most Linux distributions
-- Kernel-level security enforcement
-- Fine-grained access control policies
+Some opt-in features let other software on the machine, or on the network, drive the application. They are off by default and worth understanding before enabling:
 
-**Manual Sandboxing Tools**
-- `firejail`: User-space sandboxing
-- `bubblewrap`: Container-based isolation
-- Custom chroot environments
+- **D-Bus control** (`dbusControl.enabled`, Linux): the service lives on the session bus with no per-caller access control, so any process in the user's session can call its methods (answer or decline a call, mute, leave, set presence) and read its signals (presence, call state, and the caller's identity when that is opted in). See [ADR-033](adr/033-dbus-control-api.md)
+- **MQTT** (`mqtt.enabled`): anyone who can publish to the command topic can toggle the microphone, camera and raised hand, leave a call and, when the Graph API integration is enabled, request calendar data, which is then published to the broker. A `mqtt://` broker URL is cleartext, so use `mqtts://` for anything beyond localhost
+- **Configured commands**: `auth.basic.passwordCommand`, `auth.webLogin.passwordCommand`, `incomingCallCommand` and `defaultURLHandler` run with the user's permissions
 
-#### Why System-Level > Application-Level
+## Configuration Is Trusted
 
-1. **Preserves Functionality**: DOM access remains intact
-2. **Better Security**: OS-level controls more robust than Electron sandbox
-3. **User Choice**: Flexible security levels based on individual needs
-4. **Future-Proof**: Works regardless of Teams/React changes
-5. **Defense in Depth**: Additional security layer independent of application
+Configuration decides which commands run and which servers are trusted, so anyone who can change it can act as the user. It is read from the user's `config.json`, the system-wide `/etc/teams-for-linux/config.json` (defaults that the user file overrides), environment variables named after options, command-line flags, and `electronCLIFlags`, which passes arbitrary switches to Chromium. None of these is a policy-enforcement mechanism: a system-wide file sets defaults, it cannot lock a setting.
 
-## Security Monitoring & Maintenance
+## Token Storage
 
-### React Version Monitoring
+Teams keeps its authentication tokens in the page's own storage (`localStorage` and IndexedDB) and in cookies, all inside the application's profile directory. The token cache bridge (`app/browser/tools/tokenCache.js`, [Token Cache Architecture](token-cache-architecture.md)) gives Teams the storage interface it expects and passes values through to `localStorage`; it does not encrypt them. Packaged builds enable Electron's cookie encryption, which covers the cookie store only.
 
-**Implementation**: Automatic React version detection in `app/browser/tools/reactHandler.js`
+Tokens in the profile directory are therefore readable by any process running as the user. Disk encryption and the security of the user account are what protect them at rest.
 
-```javascript
-_detectAndLogReactVersion() {
-  const { version, method } = this._detectReactVersion();
-  console.debug(`ReactHandler: React version detected: ${version} (via ${method})`);
-}
-```
-
-**Purpose**: Monitor Teams React version updates that could break DOM access functionality.
-
-## Future Security Enhancements
-
-### Token Storage Security (Implemented v2.5.9)
-
-**Token Cache Secure Storage Implementation**:
-- **OS-Level Encryption**: Authentication tokens encrypted using Electron `safeStorage` API
-- **Platform-Native Security**: Leverages Keychain (macOS), DPAPI (Windows), kwallet/gnome (Linux)
-- **Graceful Fallback**: Automatic fallback to localStorage if secure storage unavailable
-- **Migration Safety**: One-time migration from localStorage to secure storage with no data loss
-- **PII Protection**: All logging sanitizes personally identifiable information
-
-**Security Benefits**:
-```mermaid
-graph TB
-    A[Teams Authentication Tokens] --> B[Secure Storage Layer]
-    
-    subgraph "Platform Security"
-        B --> C[macOS Keychain<br/>High Security]
-        B --> D[Windows DPAPI<br/>Medium Security]
-        B --> E[Linux kwallet/gnome<br/>Variable Security]
-    end
-    
-    subgraph "Fallback Chain"
-        B --> F[localStorage Fallback]
-        F --> G[Memory Emergency Fallback]
-    end
-```
-
-**Risk Mitigation**:
-- ✅ Tokens encrypted at rest using OS cryptographic APIs
-- ✅ Application-specific access control
-- ✅ No plain text token storage (when secure storage available)
-- ✅ Automatic migration preserves existing authentication
-- ⚠️ Variable security on Linux (depends on desktop environment)
-- ⚠️ Fallback to localStorage when secure storage unavailable
-
-### Phase 2: API Integration Security
-
-**Future Planned Security Improvements**:
-- **OAuth 2.0 Integration**: Secure Microsoft Graph authentication
-- **Permission Scoping**: Minimal required API permissions  
-- **Rate Limiting**: API abuse prevention
-
-**Timeline**: Future consideration based on user needs
-
-### Long-term Security Goals
-
-1. **Progressive Hardening**: Gradual restoration of Electron security features as API migration completes
-2. **Zero-Trust Architecture**: Assume all external inputs are malicious  
-3. **Automated Security Testing**: Integration of security tests in CI/CD
-4. **Security Documentation**: Comprehensive security guide for developers
+The opt-in Graph API integration reuses the Teams session token rather than a separate app registration ([ADR-030](adr/030-graph-api-teams-session-token.md)), and its requests are made from the main process.
 
 ## Risk Assessment
 
-### Current Risk Level: LOW
+### Residual Risk
 
-**Real-World Security Assessment**:
+The application's exposure is concentrated in one place: script running in the Teams window, through a script-injection flaw in Teams web or a page loaded in that window. Context isolation is off there, so what stands between such script and the rest of the system is the set of compensating controls above, not a process boundary. Three security advisories in October and November 2026 ([GHSA-3vg9-cwq9-p773](https://github.com/IsmaelMartinez/teams-for-linux/security/advisories/GHSA-3vg9-cwq9-p773), [GHSA-6xpg-fhf9-chcr](https://github.com/IsmaelMartinez/teams-for-linux/security/advisories/GHSA-6xpg-fhf9-chcr), [GHSA-58j7-22f8-6xqp](https://github.com/IsmaelMartinez/teams-for-linux/security/advisories/GHSA-58j7-22f8-6xqp)) were all in this area, and each led to one of those controls.
 
-**Effective Security Controls**:
-- ✅ **System-Level Sandboxing**: Modern OS distributions enforce application sandboxing by default (Flatpak, Snap, AppArmor, SELinux)
-- ✅ **Microsoft's Infrastructure Security**: Teams web app runs on Microsoft's secured infrastructure with their security controls
-- ✅ **Domain Restrictions**: Application limited to Teams domains only, not arbitrary web content
-- ✅ **Node.js Access Prevented**: `nodeIntegration: false` maintains critical security boundary
-- ✅ **Comprehensive IPC Validation**: Channel allowlisting, payload sanitization and sender pinning for privileged channels
-- ✅ **Preload Trust Boundary**: `ipcRenderer` never reachable from page script, renderer config without credentials
-- ✅ **Session Permission Policy**: device permissions granted only to trusted requesters
-- ✅ **Token Encryption**: Authentication tokens encrypted at rest using OS-level security
+What the controls bound today:
 
-**Technical Trade-offs** (Mitigated by Above):
-- ⚠️ Electron context isolation disabled for DOM access functionality
-- ⚠️ Electron sandbox disabled for system integration features
+- Page script reaches only the named `electronAPI` methods and the IPC channels behind them, with privileged channels answered only for the app's own pages
+- It cannot load a `<webview>`, read credentials from the configuration, or obtain device permissions for a page outside the trusted set
+- Links it hands to the operating system are limited to web, mail, phone, SIP and Teams schemes
 
-**Assessment**: The combination of modern OS-level sandboxing, Microsoft's web app security controls, comprehensive compensating measures, and proven operational history results in a low-risk security posture. The disabled Electron features are effectively compensated by system-level protections that are now standard across all major platforms.
+What remains open:
+
+- A top-level navigation away from Teams keeps the preload attached to the new page. [ADR-035](adr/035-renderer-trust-boundary.md) records this as the outstanding item
+- The controls depend on rules that every browser tool must keep following, so a regression is possible; the unit tests named above guard the known cases
+- Everything depends on Teams web staying free of script injection, which this project does not control
+
+On the local side, any process running as the user can read the profile directory, and the opt-in control surfaces above accept commands from other local software. Operating-system confinement varies by package, as the table above shows.
+
+Taken together this is a moderate residual risk, accepted because the alternative (enabling context isolation) removes the features the application exists to provide.
 
 ### Continued Security Best Practices
 
 **For Users**:
 - Use official package repositories (Flatpak, Snap, distribution packages) when available
 - Keep the application updated through your package manager
-- Follow your distribution's security recommendations
+- Enable the D-Bus, MQTT and command options only when you use them
 
 **For Developers**:
 - Continue monitoring Teams web app changes that could affect security
 - Maintain IPC channel validation and domain restrictions
 - Follow the renderer rules in [ADR-035](adr/035-renderer-trust-boundary.md) for every new browser tool: strict mode, `ipcRenderer` in a private field, no Electron objects returned to the page, sender checks on new privileged channels
+- Validate arguments in the main process, not only in the preload
 - Keep dependencies updated and monitor security advisories
-
-### Security Architecture Benefits
-
-**Why This Approach Works**:
-- **Layered Security**: System-level sandboxing + application controls + Microsoft's security
-- **Transparent Trade-offs**: Clear documentation of technical decisions and mitigations
-- **Future-Compatible**: Architecture supports progressive enhancement as APIs become available
-
-The current security posture represents an acceptable risk because:
-
-1. **Compensating Controls**: Multiple security layers implemented
-2. **User Choice**: System-level sandboxing available
-3. **Community Benefit**: Preserves functionality for thousands of users
-4. **Open Source**: Transparent implementation for security review
 
 ## Security Contact & Reporting
 
-**Security Issues**: Report via GitHub Security Advisories  
-**Security Questions**: GitHub Discussions security category  
-**Emergency Contact**: Project maintainer via GitHub
+**Security Issues**: Report privately through [GitHub's private vulnerability reporting](https://github.com/IsmaelMartinez/teams-for-linux/security/advisories/new), as described in the repository's `SECURITY.md`
+**Security Questions**: Open a GitHub issue

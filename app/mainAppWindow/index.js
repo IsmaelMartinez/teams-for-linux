@@ -297,7 +297,6 @@ const AUTH_LOCAL_STORAGE_PATTERNS = [
   'tmp.auth.v1.', 'refresh_token', 'msal.token', 'msal.',
   'EncryptionKey', 'authSessionId', 'LogoutState',
   'accessToken', 'idtoken', 'Account', 'Authority', 'ClientInfo',
-  'secure_teams_'
 ];
 
 /**

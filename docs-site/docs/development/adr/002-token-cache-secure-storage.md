@@ -6,7 +6,9 @@ id: 002-token-cache-secure-storage
 
 ## Status
 
-**Implemented** - Completed as of v2.5.9
+**Partly implemented** - Phase 1 (the localStorage-compatible token cache bridge) shipped in v2.5.9 and is in use. Phase 2 (encryption with Electron `safeStorage`) never took effect and its code was removed in November 2026.
+
+`safeStorage` is a main-process module, and the token cache runs in the renderer's preload script, where `require('electron').safeStorage` is `undefined`. The availability check therefore always came back false and every value went to plain `localStorage`. Moving the encryption to the main process would not have helped: Teams keeps the same tokens in its own `localStorage`, IndexedDB and cookies, so an encrypted copy protects nothing while the plain ones exist. The sections below describe the original decision and are kept as the record of it; where they describe encryption, read them as what was intended, not what the application does. Current behaviour is in the [Security Architecture](../security-architecture.md#token-storage).
 
 ## Context
 
