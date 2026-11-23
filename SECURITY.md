@@ -26,4 +26,4 @@ For what personal data the application does and does not handle — and why the 
 
 ## Security Architecture
 
-For details on the application's security controls (IPC validation, CSP headers, PII log sanitization, token encryption), see the [Security Architecture](docs-site/docs/development/security-architecture.md) documentation.
+For details on the application's security controls (IPC validation, the preload trust boundary, session permission handlers, PII log sanitization) and the risk that remains, see the [Security Architecture](docs-site/docs/development/security-architecture.md) documentation.

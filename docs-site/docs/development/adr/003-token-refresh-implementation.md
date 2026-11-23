@@ -62,7 +62,7 @@ Through systematic testing, we identified the **minimal required parameters** fo
 - **Frequent Refresh** (1 hour default): More proactive, prevents authentication interruptions
 - **Less Frequent** (4-6 hours): Reduces API calls, closer to native Teams behavior  
 - **User Choice**: Configurable interval allows users to balance security vs. resource usage
-- **Mitigation**: Risk is acceptable due to secure storage implementation (ADR-001) using Electron safeStorage API
+- **Mitigation**: At the time of this decision the risk was judged acceptable because of the secure storage planned in [ADR-002](002-token-cache-secure-storage.md). That encryption never took effect (see ADR-002's status), so tokens are stored as Teams itself stores them
 
 **Validation Bounds:**
 - **Minimum**: 1 hour (prevent Microsoft API spam)

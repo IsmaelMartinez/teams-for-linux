@@ -24,7 +24,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | ADR | Title | Status | Date | Version |
 |-----|-------|--------|------|---------|
 | [001](001-desktopcapturer-source-id-format.md) | DesktopCapturer Source ID Format | ✅ Implemented | 2025-09-15 | v2.3.0+ |
-| [002](002-token-cache-secure-storage.md) | Token Cache Secure Storage | ✅ Implemented | 2025-09-08 | v2.5.9 |
+| [002](002-token-cache-secure-storage.md) | Token Cache Secure Storage | ✅ Implemented (cache bridge only; the encryption phase never took effect) | 2025-09-08 | v2.5.9 |
 | [003](003-token-refresh-implementation.md) | Token Refresh Implementation | ✅ Implemented | 2025-09-22 | v2.6.0 |
 | [004](004-agents-md-standard-investigation.md) | agents.md Standard Investigation | 🔄 Superseded by [036](036-agents-md-adoption.md) | 2025-11-16 | N/A |
 | [005](005-ai-powered-changelog-generation.md) | AI-Powered Changelog Generation | 🔄 Superseded by [023](023-release-automation-tooling.md) | 2025-11-17 | v2.6.15 |
@@ -72,7 +72,7 @@ Architecture Decision Records capture important architectural decisions along wi
 
 | ADR | Title | Summary |
 |-----|-------|---------|
-| [002](002-token-cache-secure-storage.md) | Token Cache Secure Storage | Secure token storage using Electron safeStorage with OS-level encryption to prevent daily re-authentication |
+| [002](002-token-cache-secure-storage.md) | Token Cache Secure Storage | Token cache bridge that prevents daily re-authentication; the planned safeStorage encryption never took effect and was removed |
 | [003](003-token-refresh-implementation.md) | Token Refresh Implementation | Configurable token refresh mechanism to proactively renew authentication before expiry |
 | [012](012-intune-sso-broker-compatibility.md) | Intune SSO Broker Compatibility | Direct D-Bus invocation for Microsoft Identity Broker version compatibility |
 | [013](013-pii-log-sanitization.md) | PII Log Sanitization | Custom regex sanitizer to redact sensitive data from logs |
@@ -84,8 +84,7 @@ Architecture Decision Records capture important architectural decisions along wi
 
 **Key Outcomes:**
 - Eliminated daily re-authentication issues
-- Platform-native secure storage (Keychain/DPAPI/kwallet)
-- Graceful fallback for unsupported platforms
+- Token cache bridge that passes values to `localStorage`, with an in-memory fallback when storage is full
 - Configurable refresh intervals
 - Support for Microsoft Identity Broker versions ≤ 2.0.1 and > 2.0.1
 - PII sanitization with zero dependencies, UUIDs correlatable for debugging

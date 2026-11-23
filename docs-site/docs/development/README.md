@@ -5,7 +5,7 @@ This directory contains technical documentation for Teams for Linux developers a
 ## Structure
 
 ### Active Development Docs
-- **[token-cache-architecture.md](token-cache-architecture.md)** - Token cache implementation, secure storage architecture, and authentication persistence
+- **[token-cache-architecture.md](token-cache-architecture.md)** - Token cache implementation and authentication persistence
 - **[security-architecture.md](security-architecture.md)** - Security architecture, threat model, and compensating controls
 - **[ADR-002: Token Cache Secure Storage](adr/002-token-cache-secure-storage.md)** - Architecture decision for secure token storage implementation
 - **[ADR-003: Token Refresh Implementation](adr/003-token-refresh-implementation.md)** - Architecture decision for authentication persistence
