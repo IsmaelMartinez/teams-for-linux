@@ -25,9 +25,6 @@ class QuickChatManager {
 
     this.#modal = new QuickChatModal(this.#mainWindow);
 
-    // Show the Quick Chat modal
-    ipcMain.on('quick-chat:show', () => this.show());
-
     // Hide the Quick Chat modal
     ipcMain.on('quick-chat:hide', () => this.hide());
 

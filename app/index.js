@@ -307,11 +307,6 @@ if (gotTheLock) {
       }
     }
   });
-  // Get application version number
-  ipcMain.handle("get-app-version", async () => {
-    return config.appVersion;
-  });
-
   // Navigate back in browser history
   ipcMain.on("navigate-back", (event) => {
     const webContents = event.sender;

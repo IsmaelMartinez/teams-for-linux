@@ -184,7 +184,10 @@ describe('isSenderAllowed (GHSA-3vg9-cwq9-p773)', () => {
 			'add-profile-submit', 'add-profile-cancel',
 			'manage-profile-rename', 'manage-profile-pin', 'manage-profile-notifications',
 			'manage-profile-remove', 'manage-profile-close',
-			'graph-api-search-people', 'graph-api-send-chat-message',
+			'graph-api-get-user-profile', 'graph-api-get-calendar-events',
+				'graph-api-get-calendar-view', 'graph-api-create-calendar-event',
+				'graph-api-get-mail-messages',
+				'graph-api-search-people', 'graph-api-send-chat-message',
 		];
 		for (const channel of pinned) {
 			assert.ok(appPageOnlyChannels.has(channel), `${channel} must be app-page only`);

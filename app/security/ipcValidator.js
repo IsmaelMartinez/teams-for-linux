@@ -15,8 +15,7 @@ const allowedChannels = new Set([
   'config-changed',
   'get-config',
   'get-system-idle-state',
-  'get-app-version',
-  
+
   // Zoom and display controls
   'get-zoom-level',
   'save-zoom-level',
@@ -28,8 +27,6 @@ const allowedChannels = new Set([
   'choose-desktop-media',
   'close-view',
   'desktop-capturer-get-sources',
-  'get-screen-share-screen',
-  'get-screen-share-stream',
   'get-screen-sharing-displays',
   'get-screen-sharing-status',
   'resize-preview-window',
@@ -89,17 +86,11 @@ const allowedChannels = new Set([
   'get-teams-settings',
   'set-teams-settings',
   
-  // Custom backgrounds
-  'get-custom-bg-list',
-
   // Custom stickers
   'get-sticker-list',
   'import-sticker-url',
   'delete-sticker',
   
-  // Connection management
-  'offline-retry',
-
   // Navigation controls
   'navigate-back',
   'navigate-forward',
@@ -120,7 +111,6 @@ const allowedChannels = new Set([
   'join-meeting-cancel',
 
   // Quick Chat modal
-  'quick-chat:show',
   'quick-chat:hide',
 
   // Renderer-side error forwarding (registered in app/browser/preload.js)
@@ -276,6 +266,11 @@ const appPageOnlyChannels = new Set([
   'manage-profile-notifications',
   'manage-profile-remove',
   'manage-profile-close',
+  'graph-api-get-user-profile',
+  'graph-api-get-calendar-events',
+  'graph-api-get-calendar-view',
+  'graph-api-create-calendar-event',
+  'graph-api-get-mail-messages',
   'graph-api-search-people',
   'graph-api-send-chat-message',
 ]);
