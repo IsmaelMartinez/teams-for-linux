@@ -4,13 +4,41 @@ function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-// `shape` is the default for the same position in the config. A key is named
-// only when the default has it too, so the names in the log are always ones
-// the application declares; anything else in the file is counted, not shown.
+// The names an option declares: the keys of its default, plus every dot-path
+// in its `fields` metadata. Some supported settings exist only in `fields`
+// (their default leaves the parent empty or null), so the default alone would
+// hide them. The result is a tree whose keys are declared names; leaves are
+// irrelevant, only which keys exist matters.
+function declaredShape(definition) {
+  const fromDefault = (value) => {
+    if (!isPlainObject(value)) return null;
+    const shape = {};
+    for (const key of Object.keys(value)) shape[key] = fromDefault(value[key]);
+    return shape;
+  };
+
+  let shape = fromDefault(definition?.default);
+  if (!isPlainObject(definition?.fields)) return shape;
+
+  shape ??= {};
+  for (const fieldPath of Object.keys(definition.fields)) {
+    let node = shape;
+    for (const part of fieldPath.split(".")) {
+      if (!isPlainObject(node[part])) node[part] = {};
+      node = node[part];
+    }
+  }
+  return shape;
+}
+
+// A key is named only when `shape` has it too, so the names in the log are
+// always ones the application declares; anything else in the file is counted,
+// not shown. A declared leaf has an empty shape, so an object placed there is
+// reported by type rather than walked.
 function summarize(value, shape) {
   if (Array.isArray(value)) return `[array of ${value.length}]`;
   if (isPlainObject(value)) {
-    if (!isPlainObject(shape)) return "[object]";
+    if (!isPlainObject(shape) || Object.keys(shape).length === 0) return "[object]";
     const summary = {};
     let others = 0;
     for (const key of Object.keys(value)) {
@@ -43,15 +71,22 @@ function summarize(value, shape) {
  * and which options it sets.
  *
  * @param {unknown} configFile - the parsed config file
- * @param {Record<string, { default?: unknown }>} options - option definitions (./options.js)
+ * @param {Record<string, { default?: unknown, fields?: object }>} options - option definitions (./options.js)
  * @returns {unknown}
  */
 function summarizeConfigForLog(configFile, options) {
-  const shape = {};
-  for (const name of Object.keys(options ?? {})) {
-    shape[name] = options[name]?.default;
+  if (!isPlainObject(configFile)) return summarize(configFile, null);
+  const summary = {};
+  let others = 0;
+  for (const name of Object.keys(configFile)) {
+    if (isPlainObject(options) && Object.hasOwn(options, name)) {
+      summary[name] = summarize(configFile[name], declaredShape(options[name]));
+    } else {
+      others += 1;
+    }
   }
-  return summarize(configFile, shape);
+  if (others > 0) summary[OTHER_KEYS] = others;
+  return summary;
 }
 
 module.exports = { summarizeConfigForLog };

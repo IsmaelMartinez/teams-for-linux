@@ -66,10 +66,43 @@ describe('summarizeConfigForLog', () => {
 
 		assert.deepStrictEqual(summary, {
 			auth: { basic: { user: '[object]' } },
-			freeForm: { '[other keys]': 2 },
+			freeForm: '[object]',
 			'[other keys]': 1,
 		});
 		assert.ok(!JSON.stringify(summary).includes('corp.example'));
+	});
+
+	it('counts an undeclared key beside declared ones', () => {
+		const summary = summarizeConfigForLog({ mqtt: { enabled: true, 'dave@corp.example': 'x' } }, options);
+		assert.deepStrictEqual(summary, { mqtt: { enabled: true, '[other keys]': 1 } });
+	});
+
+	it('names settings that are declared only in an option\'s fields', () => {
+		const withFields = {
+			media: {
+				default: { microphone: { disableAutogain: false, overrideConstraints: null } },
+				fields: {
+					'microphone.disableAutogain': { type: 'boolean' },
+					'microphone.overrideConstraints.echoCancellation': { type: 'boolean' },
+					'microphone.overrideConstraints.sampleRate': { type: 'number' },
+				},
+			},
+		};
+		const summary = summarizeConfigForLog({
+			media: { microphone: { overrideConstraints: { echoCancellation: false, sampleRate: 48000, madeUp: 'x' } } },
+		}, withFields);
+		assert.deepStrictEqual(summary, {
+			media: { microphone: { overrideConstraints: { echoCancellation: false, sampleRate: '[number]', '[other keys]': 1 } } },
+		});
+	});
+
+	it('shows the real microphone constraint overrides', () => {
+		const summary = summarizeConfigForLog({
+			media: { microphone: { overrideConstraints: { echoCancellation: false, noiseSuppression: true } } },
+		}, realOptions);
+		assert.deepStrictEqual(summary, {
+			media: { microphone: { overrideConstraints: { echoCancellation: false, noiseSuppression: true } } },
+		});
 	});
 
 	it('names real options from the option definitions', () => {
