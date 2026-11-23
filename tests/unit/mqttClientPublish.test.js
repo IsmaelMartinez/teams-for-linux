@@ -28,24 +28,39 @@ describe('MQTTClient.publish logging', () => {
 		console.error = original.error;
 	});
 
-	it('logs neither topic nor payload when redactLog is set', async () => {
-		await connectedClient().publish('teams/secret-topic', '{"name":"Pat Example"}', { redactLog: true });
+	it('logs neither topic nor payload', async () => {
+		await connectedClient().publish('teams/secret-topic', '{"name":"Pat Example"}');
 		assert.ok(logged.length > 0);
 		assert.ok(logged.every((line) => !line.includes('secret-topic') && !line.includes('Pat Example')));
 	});
 
-	it('keeps them out of a failure too', async () => {
+	it('logs only the error code of a failure, never the topic, payload or message', async () => {
 		const client = connectedClient();
 		client.client.publish = async () => {
-			throw new Error('broker gone');
+			const error = new Error('getaddrinfo ENOTFOUND mqtt.corp.example');
+			error.code = 'ENOTFOUND';
+			throw error;
 		};
-		await client.publish('teams/secret-topic', '{"name":"Pat Example"}', { redactLog: true });
-		assert.ok(logged.some((line) => line.includes('broker gone')));
-		assert.ok(logged.every((line) => !line.includes('secret-topic') && !line.includes('Pat Example')));
+		await client.publish('teams/secret-topic', '{"name":"Pat Example"}');
+		assert.ok(logged.some((line) => line.includes('ENOTFOUND')));
+		assert.ok(logged.every((line) => !line.includes('secret-topic') && !line.includes('Pat Example') && !line.includes('corp.example')));
 	});
 
-	it('still logs the topic for an ordinary publish', async () => {
-		await connectedClient().publish('teams/in-call', 'true');
-		assert.ok(logged.some((line) => line.includes('teams/in-call')));
+	it('keeps the topic out of status and custom-topic publishes', async () => {
+		const client = new MQTTClient({ mqtt: { topicPrefix: 'teams', statusTopic: 'secret-status' } });
+		client.isConnected = true;
+		client.client = { publish: async () => {} };
+		await client.publishStatus(2);
+		await client.publishToTopic('secret-custom', { a: 1 });
+		assert.ok(logged.length >= 2);
+		assert.ok(logged.every((line) => !line.includes('secret-status') && !line.includes('secret-custom') && !line.includes('teams/')));
+	});
+
+	it('does not echo an unknown command action', (t) => {
+		const warnings = [];
+		t.mock.method(console, 'warn', (...args) => warnings.push(args.join(' ')));
+		connectedClient().handleCommand(JSON.stringify({ action: 'not-a-real-action\nforged line' }));
+		assert.strictEqual(warnings.length, 1);
+		assert.ok(!warnings[0].includes('not-a-real-action'), warnings[0]);
 	});
 });

@@ -70,7 +70,7 @@ class MQTTMediaStatusService {
 		try {
 			const topic = `${this.#topicPrefix}/${subtopic}`;
 			await this.#mqttClient.publish(topic, value, { retain: true });
-			console.debug(`[MQTTMediaStatusService] ${label}, published to`, topic);
+			console.debug(`[MQTTMediaStatusService] ${label}, published`);
 		} catch (error) {
 			console.error(`[MQTTMediaStatusService] Failed to publish ${subtopic}:`, { message: error.message });
 		}
@@ -122,7 +122,7 @@ class MQTTMediaStatusService {
 		caller.clientId = this.#clientId;
 		try {
 			const topic = `${this.#topicPrefix}/${this.#mediaTopics.incomingCallCaller}`;
-			await this.#mqttClient.publish(topic, JSON.stringify(caller), { retain: false, redactLog: true });
+			await this.#mqttClient.publish(topic, JSON.stringify(caller), { retain: false });
 			console.debug('[MQTTMediaStatusService] Incoming call caller published');
 		} catch (error) {
 			console.error('[MQTTMediaStatusService] Failed to publish the incoming call caller:', { message: error.message });
@@ -170,7 +170,7 @@ class MQTTMediaStatusService {
 	}
 
 	async #handleCameraChanged(event, enabled) {
-		await this.#publishBoolean(this.#mediaTopics.camera, String(enabled), `Camera state changed to ${enabled}`);
+		await this.#publishBoolean(this.#mediaTopics.camera, String(enabled), 'Camera state changed');
 	}
 
 	async #handleMicrophoneChanged(event, state) {
@@ -195,7 +195,7 @@ class MQTTMediaStatusService {
 		this.#lastMicrophoneState = state;
 		const topic = `${this.#topicPrefix}/${this.#mediaTopics.microphone}`;
 		await this.#mqttClient.publish(topic, state, { retain: true });
-		console.debug('[MQTTMediaStatusService] Microphone state changed to', state, 'published to', topic);
+		console.debug('[MQTTMediaStatusService] Microphone state changed and published');
 	}
 
 	async #publishMicrophoneControlState(controlState) {
@@ -206,7 +206,7 @@ class MQTTMediaStatusService {
 		this.#lastMicrophoneControlState = controlState;
 		const topic = `${this.#topicPrefix}/${this.#mediaTopics.microphoneControl}`;
 		await this.#mqttClient.publish(topic, controlState, { retain: true });
-		console.debug('[MQTTMediaStatusService] Microphone control state changed to', controlState, 'published to', topic);
+		console.debug('[MQTTMediaStatusService] Microphone control state changed and published');
 		app.emit('teams-microphone-control-changed', controlState);
 	}
 

@@ -1,6 +1,13 @@
 const mqtt = require('mqtt');
 const { EventEmitter } = require('node:events');
 
+// What an error may contribute to a log line. Its message is left out: for a
+// connection failure it carries the broker's host name, and topics and broker
+// URLs must stay out of the logs (ADR-013).
+function errorCode(error) {
+	return { code: error?.code ?? error?.name ?? 'unknown' };
+}
+
 /**
  * MQTT Client for Teams Status Publishing and Command Reception
  * Manages connection, publishing of Teams status updates, and receiving action commands from an MQTT broker
@@ -77,9 +84,9 @@ class MQTTClient extends EventEmitter {
 					const commandTopic = `${this.config.topicPrefix}/${this.config.commandTopic}`;
 					this.client.subscribe(commandTopic, (err) => {
 						if (err) {
-							console.error(`[MQTT] Failed to subscribe to command topic ${commandTopic}:`, err);
+							console.error('[MQTT] Failed to subscribe to the command topic:', errorCode(err));
 						} else {
-							console.info(`[MQTT] Subscribed to command topic: ${commandTopic}`);
+							console.info('[MQTT] Subscribed to the command topic');
 						}
 					});
 				} else {
@@ -90,7 +97,7 @@ class MQTTClient extends EventEmitter {
 			});
 
 			this.client.on('error', (error) => {
-				console.error('[MQTT] Connection error:', error);
+				console.error('[MQTT] Connection error:', errorCode(error));
 				this.isConnected = false;
 			});
 
@@ -113,7 +120,7 @@ class MQTTClient extends EventEmitter {
 			});
 
 		} catch (error) {
-			console.error('[MQTT] Failed to initialize client:', error);
+			console.error('[MQTT] Failed to initialize client:', errorCode(error));
 		}
 	}
 
@@ -123,8 +130,8 @@ class MQTTClient extends EventEmitter {
 	 * @param {object} options - MQTT publish options
 	 * @param {boolean} options.retain - Whether to retain the message (default: true)
 	 * @param {number} options.qos - Quality of Service level (default: 0)
-	 * @param {boolean} options.redactLog - Leave the topic and payload out of the
-	 *   log, for messages that carry personal details (default: false)
+	 *
+	 * The topic and payload are never logged, whatever the message.
 	 */
 	async publish(topic, payload, options = {}) {
 		if (!this.isConnected || !this.client) {
@@ -142,17 +149,9 @@ class MQTTClient extends EventEmitter {
 				qos: options.qos ?? 0
 			});
 
-			if (options.redactLog) {
-				console.debug('[MQTT] Published a redacted message');
-			} else {
-				console.debug(`[MQTT] Published to ${topic}: ${payloadString.substring(0, 100)}`);
-			}
+			console.debug('[MQTT] Published a message');
 		} catch (error) {
-			if (options.redactLog) {
-				console.error('[MQTT] Failed to publish a redacted message:', { message: error.message });
-			} else {
-				console.error(`[MQTT] Failed to publish to ${topic}:`, error);
-			}
+			console.error('[MQTT] Failed to publish a message:', errorCode(error));
 		}
 	}
 
@@ -181,10 +180,10 @@ class MQTTClient extends EventEmitter {
 			await this.client.publish(topic, payload, { retain: true });
 
 			this.lastPublishedStatus = statusString;
-			console.debug(`[MQTT] Published status: ${statusString} (${status}) on topic: ${topic}`);
+			console.debug(`[MQTT] Published status: ${statusString}`);
 
 		} catch (error) {
-			console.error('[MQTT] Failed to publish status:', error);
+			console.error('[MQTT] Failed to publish status:', errorCode(error));
 		}
 	}
 
@@ -205,9 +204,9 @@ class MQTTClient extends EventEmitter {
 
 		try {
 			await this.client.publish(fullTopic, message, options);
-			console.debug(`[MQTT] Published to topic: ${fullTopic}`);
+			console.debug('[MQTT] Published to a custom topic');
 		} catch (error) {
-			console.error('[MQTT] Failed to publish:', error);
+			console.error('[MQTT] Failed to publish:', errorCode(error));
 		}
 	}
 
@@ -238,7 +237,8 @@ class MQTTClient extends EventEmitter {
 			}
 
 			if (!this.allowedActions.includes(command.action)) {
-				console.warn(`[MQTT] Invalid command: action '${command.action}' not in whitelist`);
+				// The action is whatever the publisher sent, so it is not echoed.
+				console.warn('[MQTT] Invalid command: action not in whitelist');
 				return;
 			}
 
@@ -248,7 +248,7 @@ class MQTTClient extends EventEmitter {
 			this.emit('command', { ...command, shortcut });
 
 		} catch (error) {
-			console.error('[MQTT] Failed to handle command:', error.message);
+			console.error('[MQTT] Failed to handle command:', errorCode(error));
 		}
 	}
 
@@ -260,7 +260,7 @@ class MQTTClient extends EventEmitter {
 				await this.client.publish(connectionTopic, 'false', { retain: true });
 				await this.client.end(false);
 			} catch (error) {
-				console.error('[MQTT] Error disconnecting:', error);
+				console.error('[MQTT] Error disconnecting:', errorCode(error));
 			}
 			this.client = null;
 			this.isConnected = false;

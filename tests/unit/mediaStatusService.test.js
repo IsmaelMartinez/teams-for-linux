@@ -120,7 +120,7 @@ describe('MQTTMediaStatusService', () => {
 				callId: 'call-1',
 			});
 			assert.strictEqual(new Date(timestamp).toISOString(), timestamp);
-			assert.deepStrictEqual(published[0].opts, { retain: false, redactLog: true });
+			assert.deepStrictEqual(published[0].opts, { retain: false });
 			assert.strictEqual(published[1].payload, 'true');
 		});
 
