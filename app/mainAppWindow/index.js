@@ -1280,13 +1280,8 @@ function stripCspForAuthPages(responseHeaders, url) {
 
   for (const key of Object.keys(responseHeaders)) {
     if (key.toLowerCase() === 'content-security-policy-report-only') {
-      let hostname;
-      try {
-        hostname = new URL(url).hostname;
-      } catch {
-        hostname = 'unknown';
-      }
-      console.debug(`[CSP] Stripping report-only header from: ${hostname}`);
+      // The host is not logged: it can name a tenant's identity provider.
+      console.debug('[CSP] Stripping report-only header from a non-Teams page');
       delete responseHeaders[key];
     }
   }
@@ -1579,9 +1574,11 @@ function openInBrowser(details) {
   }
 }
 
+// execFile puts the whole command line, link included, in error.message, so
+// only the exit code (or a code such as ENOENT) is logged.
 function openInBrowserErrorHandler(error) {
   if (error) {
-    console.error(`openInBrowserErrorHandler ${error.message}`);
+    console.error("[LINK] The configured URL handler failed", { code: error.code ?? "unknown" });
   }
 }
 

@@ -5,6 +5,7 @@ const { ipcMain } = require("electron");
 const logger = require("./logger");
 const configOptions = require("./options");
 const { validateConfigFile } = require("./validator");
+const { summarizeConfigForLog } = require("./configLogSummary");
 const {
   buildDeprecationWarning,
   migrationMenuLocation,
@@ -218,7 +219,9 @@ function argv(configPath, appVersion) {
   }
 
   console.info("configPath:", configPath);
-  console.debug("configFile:", configObject.configFile);
+  // Names and on/off values only: the file's strings can hold broker URLs,
+  // user names and commands, and this log is what users paste into issues.
+  console.debug("configFile:", summarizeConfigForLog(configObject.configFile));
 
   return config;
 }
