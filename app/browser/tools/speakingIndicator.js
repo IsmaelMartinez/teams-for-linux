@@ -81,7 +81,7 @@ class SpeakingIndicator {
 		const overlayEnabled = config.media?.microphone?.speakingIndicator === true;
 		const mqttEnabled = config.mqtt?.enabled === true || (process.platform === 'linux' && config.dbusControl?.enabled === true);
 
-		this.#stickersEnabled = config.customStickers?.enabled === true || false;
+		this.#stickersEnabled = config.customStickers?.enabled === true;
 
 		if (!overlayEnabled && !mqttEnabled) {
 			return;
@@ -516,10 +516,8 @@ class SpeakingIndicator {
 
 		// If both Custom Stickers and the speaking Indicator are enabled the Sticker Button sits on top of the Indicator
 		// Move the Indicator up by 50px so both can be displayed at the same time
-		let bottom = 20;
-		if(this.#stickersEnabled) {
-			bottom = 70;
-		}
+		// 70 is calculated by the 20px standard offset + the 40px sticker button + a 10px gap between the button and the indicator
+		const bottom = this.#stickersEnabled ? 70 : 20;
 
 		style.textContent = `
 			#${OVERLAY_ID} {

@@ -264,6 +264,29 @@ describe('SpeakingIndicator', () => {
 		);
 	});
 
+	for (const [label, customStickers, bottom] of [
+		['enabled', { enabled: true }, '70px'],
+		['disabled', { enabled: false }, '20px'],
+		['not configured', undefined, '20px'],
+	]) {
+		it(`places the overlay at bottom ${bottom} when custom stickers are ${label}`, async () => {
+			setupGlobals();
+			getStatsFn = async () => makeStatsReport(0.05);
+
+			const { instance } = loadSpeakingIndicator();
+			instance.init({ media: { microphone: { speakingIndicator: true } }, customStickers });
+
+			openPeerConnection();
+			await wait(200);
+
+			const style = globalThis.document.head.appendChild.mock.calls
+				.map(c => c.arguments[0])
+				.find(el => el.tagName === 'style');
+			assert.ok(style, 'overlay styles should be injected');
+			assert.match(style.textContent, new RegExp(`bottom:\\s*${bottom};`));
+		});
+	}
+
 	it('emits call-connected via activityHub when audio stats first detected (#2358)', async () => {
 		setupGlobals();
 		getStatsFn = async () => makeStatsReport(0.05);
