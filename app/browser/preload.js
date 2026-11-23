@@ -169,19 +169,6 @@ globalThis.electronAPI = {
     return ipcRenderer.invoke("user-status-changed", data);
   },
 
-  getZoomLevel: (partition) => {
-    if (typeof partition !== 'string' || partition.length > 100) {
-      return Promise.reject(new Error('Invalid partition'));
-    }
-    return ipcRenderer.invoke("get-zoom-level", partition);
-  },
-  saveZoomLevel: (data) => {
-    if (!data || typeof data !== 'object' || typeof data.level !== 'number') {
-      return Promise.reject(new Error('Invalid zoom data'));
-    }
-    return ipcRenderer.invoke("save-zoom-level", data);
-  },
-
   navigateBack: () => ipcRenderer.send("navigate-back"),
   navigateForward: () => ipcRenderer.send("navigate-forward"),
   getNavigationState: () => ipcRenderer.invoke("get-navigation-state"),
@@ -191,14 +178,6 @@ globalThis.electronAPI = {
       return;
     }
     ipcRenderer.on("navigation-state-changed", (_event, ...args) => callback(...args));
-  },
-
-  graphApi: {
-    getUserProfile: () => ipcRenderer.invoke("graph-api-get-user-profile"),
-    getCalendarEvents: (options) => ipcRenderer.invoke("graph-api-get-calendar-events", options),
-    getCalendarView: (start, end, options) => ipcRenderer.invoke("graph-api-get-calendar-view", start, end, options),
-    createCalendarEvent: (event) => ipcRenderer.invoke("graph-api-create-calendar-event", event),
-    getMailMessages: (options) => ipcRenderer.invoke("graph-api-get-mail-messages", options),
   },
 
   openChatWithUser: (email) => {

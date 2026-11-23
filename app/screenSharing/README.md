@@ -25,8 +25,6 @@ Manages screen sharing IPC handlers and state.
 - `screen-sharing-started` - Session started event
 - `screen-sharing-stopped` - Session stopped event
 - `get-screen-sharing-status` - Check if sharing active
-- `get-screen-share-stream` - Get active source ID
-- `get-screen-share-screen` - Get screen dimensions
 - `resize-preview-window` - Resize preview
 - `stop-screen-sharing-from-thumbnail` - Stop from preview
 

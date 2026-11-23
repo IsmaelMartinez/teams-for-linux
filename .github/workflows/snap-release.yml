@@ -18,7 +18,6 @@ jobs:
       contents: read
 
     env:
-      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
       SNAPCRAFT_BUILD_ENVIRONMENT: lxd
 
     steps:
@@ -50,6 +49,11 @@ jobs:
         run: npm run dist:linux:snap -- --publish never
 
       - name: Publish to candidate channel
+        # The store credential is set on this step only, the one that
+        # uploads, so the setup actions, the dependency install and the build
+        # never see it. Keep in step with snap.yml.
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
         run: |
           SNAP_FILE=$(ls dist/*.snap)
           echo "Uploading ${SNAP_FILE} to candidate channel"
@@ -61,7 +65,6 @@ jobs:
       contents: read
 
     env:
-      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
       SNAPCRAFT_BUILD_ENVIRONMENT: lxd
 
     steps:
@@ -103,6 +106,9 @@ jobs:
         run: npm run dist:linux:snap:arm64 -- --publish never
 
       - name: Publish to candidate channel
+        # Store credential on the uploading step only; see the snap-candidate job.
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
         run: |
           SNAP_FILE=$(ls dist/*.snap)
           echo "Uploading ${SNAP_FILE} to candidate channel"

@@ -1,5 +1,4 @@
 const httpHelper = require("../helpers");
-const { ipcMain } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 
@@ -12,10 +11,6 @@ class CustomBackground {
   constructor(app, config) {
     this.app = app;
     this.config = config;
-    if (this.isCustomBackgroundEnabled()) {
-      // Get list of custom background images for Teams meetings
-      ipcMain.handle("get-custom-bg-list", this.handleGetCustomBGList);
-    }
   }
 
   initialize() {
@@ -52,18 +47,6 @@ class CustomBackground {
         () => this.downloadCustomBGServiceRemoteConfig(),
         this.config.customBGServiceConfigFetchInterval * 1000,
       );
-    }
-  }
-
-  async handleGetCustomBGList() {
-    const file = path.join(
-      this.app.getPath("userData"),
-      "custom_bg_remote.json",
-    );
-    if (fs.existsSync(file)) {
-      return JSON.parse(fs.readFileSync(file));
-    } else {
-      return [];
     }
   }
 

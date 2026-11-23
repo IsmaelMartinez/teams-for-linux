@@ -1,4 +1,4 @@
-const { ipcMain, net, powerMonitor } = require("electron");
+const { net, powerMonitor } = require("electron");
 
 // Debounce window for rapid network change events before refreshing
 const REFRESH_DEBOUNCE_MS = 1000;
@@ -52,8 +52,6 @@ class ConnectionManager {
     _ConnectionManager_boundRefresh.set(this, boundRefresh);
     _ConnectionManager_boundDidFailLoad.set(this, boundDidFailLoad);
 
-    // Retry connection when user clicks retry button on offline page
-    ipcMain.on("offline-retry", boundRefresh);
     powerMonitor.on("resume", boundRefresh);
     this.window.webContents.on("did-fail-load", boundDidFailLoad);
 
@@ -65,7 +63,6 @@ class ConnectionManager {
     const boundDidFailLoad = _ConnectionManager_boundDidFailLoad.get(this);
 
     if (boundRefresh) {
-      ipcMain.removeListener("offline-retry", boundRefresh);
       powerMonitor.removeListener("resume", boundRefresh);
     }
 

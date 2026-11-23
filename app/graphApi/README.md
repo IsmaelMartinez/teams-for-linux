@@ -39,7 +39,9 @@ renderer-facing IPC responses, which carry only `{ success, data }`.
 ## IPC Channels
 
 All seven channels below are the complete Graph API allowlist entries in
-`app/security/ipcValidator.js`.
+`app/security/ipcValidator.js`, and each is listed in `appPageOnlyChannels`, so only the app's own
+pages can call them. Nothing in the app currently invokes the first five over IPC; the MQTT
+`get-calendar` command uses `GraphApiClient` directly in the main process.
 
 | Channel | Type | Purpose |
 |---------|------|---------|
@@ -80,15 +82,13 @@ this stays a manual check.
 
 1. Set `graphApi.enabled: true` in `config.json`.
 2. Launch the app and wait for Teams to load fully authenticated.
-3. Open DevTools on the main window and invoke a handler directly, e.g.
-   `await window.electronAPI.graphApi.getUserProfile()`. The main window's preload
-   (`app/browser/preload.js`) exposes `getUserProfile`, `getCalendarEvents`, `getCalendarView`,
-   `createCalendarEvent` and `getMailMessages` this way. `require('electron')` is not available in
-   that DevTools console: the window runs with `nodeIntegration: false`
-   (`app/mainAppWindow/browserWindowManager.js`). `graph-api-search-people` and
-   `graph-api-send-chat-message` aren't exposed there either; they're only reachable through the
-   Quick Chat modal's own preload (`app/quickChat/quickChatModalPreload.js`) as
-   `window.quickChatApi`, so test those by opening Quick Chat and searching for a contact.
+3. The main window's preload (`app/browser/preload.js`) does not expose the Graph channels, and all
+   seven answer only the app's own pages (`appPageOnlyChannels` in
+   `app/security/ipcValidator.js`), so they cannot be invoked from the Teams page's DevTools
+   console. Test the calendar path by sending the MQTT `get-calendar` command, and test
+   `graph-api-search-people` and `graph-api-send-chat-message` by opening Quick Chat (its own
+   preload, `app/quickChat/quickChatModalPreload.js`, exposes them as `window.quickChatApi`) and
+   searching for a contact.
 4. Confirm the response and check the application logs for `[GRAPH_API]` lines.
 
 ## Limitations

@@ -21,7 +21,6 @@ jobs:
       contents: read
 
     env:
-      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
       SNAPCRAFT_BUILD_ENVIRONMENT: lxd
 
     steps:
@@ -61,6 +60,11 @@ jobs:
 
       - name: Build for Release
         if: github.ref == 'refs/heads/main'
+        # The store credential is set on this step only, the one that
+        # publishes, so the setup actions and the dependency install above
+        # never see it. Keep in step with snap-release.yml.
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
         run: npm run dist:linux:snap -- --publish always
 
       - name: Build for PR
@@ -82,7 +86,6 @@ jobs:
       contents: read
 
     env:
-      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
       SNAPCRAFT_BUILD_ENVIRONMENT: lxd
 
     steps:
@@ -132,6 +135,9 @@ jobs:
 
       - name: Build for Release
         if: github.ref == 'refs/heads/main'
+        # Store credential on the publishing step only; see the snap job.
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
         run: npm run dist:linux:snap:arm64 -- --publish always
 
       - name: Build for PR
