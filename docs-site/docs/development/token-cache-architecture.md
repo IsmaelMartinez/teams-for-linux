@@ -6,7 +6,7 @@
 
 The token cache gives Microsoft Teams' authentication provider the `_tokenCache` storage interface it looks for. The decision behind it is recorded in [ADR-002](adr/002-token-cache-secure-storage.md), which was written to stop the re-authentication prompts users reported roughly every 24 hours, after sleep and after restarts.
 
-The cache is a bridge, not a store of its own: values go to the page's `localStorage`, where Teams already keeps its tokens. It does not encrypt anything.
+The cache is a bridge, not a store of its own: values go to the page's `localStorage`, where Teams already keeps its tokens. It adds no encryption of its own.
 
 ## How It Works
 
@@ -41,13 +41,15 @@ authProvider._tokenCache = TokenCache;
 
 ## Security
 
-Tokens are stored as Teams itself stores them: in `localStorage`, unencrypted, inside the application's profile directory. Any process running as the user can read them, so disk encryption and the security of the user account are what protect them at rest. See [Token Storage](security-architecture.md#token-storage) in the security architecture.
+Tokens are stored as Teams itself stores them, in `localStorage` inside the application's profile directory. The bridge passes values through unchanged, so any protection is Teams' own: its sign-in library (MSAL) encrypts some of the token entries with a key held in the `msal.cache.encryption` cookie, which the application keeps across restarts (`app/mainAppWindow/msalCookiePersistence.js`).
+
+The encrypted entries and their key both live in the profile directory, so this guards against casual reading of the files, not against a process running as the user. Disk encryption and the security of the user account are what protect them at rest. See [Token Storage](security-architecture.md#token-storage) in the security architecture.
 
 The cache object is assigned onto an object that page script can reach, which gives the page nothing it did not already have, since the page owns its `localStorage`.
 
 ### Why There Is No Encryption
 
-An earlier version tried to encrypt values with Electron's `safeStorage`. That module exists only in the main process, and the cache runs in the renderer's preload script, so the encrypted path never ran and has been removed. Encrypting in the main process instead would not help: Teams writes the same tokens to its own storage, so an encrypted copy protects nothing while the plain ones exist.
+An earlier version tried to encrypt values with Electron's `safeStorage`. That module exists only in the main process, and the cache runs in the renderer's preload script, so the encrypted path never ran and has been removed. Encrypting in the main process instead would add nothing: the values the bridge handles are the ones Teams already keeps in its own storage, protected as Teams decides, so a second, separately encrypted copy would not change who can read them.
 
 ## Logging
 

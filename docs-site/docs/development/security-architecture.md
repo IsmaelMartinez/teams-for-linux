@@ -176,9 +176,11 @@ Configuration decides which commands run and which servers are trusted, so anyon
 
 ## Token Storage
 
-Teams keeps its authentication tokens in the page's own storage (`localStorage` and IndexedDB) and in cookies, all inside the application's profile directory. The token cache bridge (`app/browser/tools/tokenCache.js`, [Token Cache Architecture](token-cache-architecture.md)) gives Teams the storage interface it expects and passes values through to `localStorage`; it does not encrypt them. Packaged builds enable Electron's cookie encryption, which covers the cookie store only.
+Teams keeps its authentication tokens in the page's own storage (`localStorage` and IndexedDB) and in cookies, all inside the application's profile directory. The token cache bridge (`app/browser/tools/tokenCache.js`, [Token Cache Architecture](token-cache-architecture.md)) gives Teams the storage interface it expects and passes values through to `localStorage`; it adds no encryption of its own.
 
-Tokens in the profile directory are therefore readable by any process running as the user. Disk encryption and the security of the user account are what protect them at rest.
+Two layers of encryption do apply, neither of them the bridge's. Teams' sign-in library (MSAL) encrypts some of its token entries in `localStorage` with a key held in the `msal.cache.encryption` cookie, which the application keeps across restarts (`app/mainAppWindow/msalCookiePersistence.js`). Packaged builds also enable Electron's cookie encryption, which protects the cookie store with a key from the operating system's keyring where one is available.
+
+The entries and the means to decrypt them all belong to the same user account, so this guards against casual reading of the files, not against a process running as the user. Disk encryption and the security of the user account are what protect the tokens at rest.
 
 The opt-in Graph API integration reuses the Teams session token rather than a separate app registration ([ADR-030](adr/030-graph-api-teams-session-token.md)), and its requests are made from the main process.
 
