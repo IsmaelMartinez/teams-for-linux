@@ -5,7 +5,13 @@ const assert = require('node:assert');
 const { summarizeConfigForLog } = require('../../app/config/configLogSummary');
 
 describe('summarizeConfigForLog', () => {
-	it('keeps option names, booleans and numbers, and hides strings and arrays', () => {
+	it('hides a credential written as a number', () => {
+		const summary = summarizeConfigForLog({ auth: { clientCertificate: { password: 123456 }, basic: { user: 4242 } } });
+		assert.deepStrictEqual(summary, { auth: { clientCertificate: { password: '[number]' }, basic: { user: '[number]' } } });
+		assert.ok(!JSON.stringify(summary).includes('123456'));
+	});
+
+	it('keeps option names and booleans, and hides strings, numbers and arrays', () => {
 		const summary = summarizeConfigForLog({
 			trayIconEnabled: false,
 			defaultURLHandler: '/usr/bin/firefox',
@@ -30,7 +36,7 @@ describe('summarizeConfigForLog', () => {
 				brokerUrl: '[string]',
 				username: '[string]',
 				topicPrefix: '[string]',
-				reconnectPeriod: 5000,
+				reconnectPeriod: '[number]',
 			},
 			auth: { basic: { user: '[string]', hosts: '[array of 2]' } },
 			nothing: null,
