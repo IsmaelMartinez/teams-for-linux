@@ -35,24 +35,49 @@ function isDocumentPictureInPictureRequest(details, config) {
 
 // Upper bound for the PiP window. The page picks the size through the popup's
 // `features`, so the cap is enforced here rather than trusted from the
-// renderer: an always-on-top window must never be able to cover the screen.
-// Must match MAX_WIDTH / MAX_HEIGHT in the browser tool.
+// renderer: an always-on-top window must never be able to cover the screen
+// unless the user asks for it. The defaults keep it small; users who read
+// shared content in the compact view can raise them with
+// media.documentPictureInPictureMaxWidth / MaxHeight. The browser tool applies
+// the same defaults and keys (MAX_WIDTH / MAX_HEIGHT there).
 const PIP_MAX_WIDTH = 800;
 const PIP_MAX_HEIGHT = 600;
+// Matches MIN_SIZE in the browser tool: a smaller cap would be below the
+// smallest window the page can ask for.
+const PIP_MIN_SIZE = 100;
+
+function capOrDefault(value, fallback) {
+  const number = Math.round(Number(value));
+  return Number.isFinite(number) && number >= PIP_MIN_SIZE ? number : fallback;
+}
+
+/**
+ * The PiP window cap from the config, falling back to the defaults for a
+ * missing or invalid value.
+ * @param {object} config - app configuration
+ * @returns {{ width: number, height: number }}
+ */
+function documentPictureInPictureMaxSize(config) {
+  return {
+    width: capOrDefault(config?.media?.documentPictureInPictureMaxWidth, PIP_MAX_WIDTH),
+    height: capOrDefault(config?.media?.documentPictureInPictureMaxHeight, PIP_MAX_HEIGHT),
+  };
+}
 
 // Width and height come from the popup's `features` string, which Electron
 // applies on its own; only the window behaviour and the cap are set here.
 // alwaysOnTop is a request to the window manager: GNOME and KDE on Wayland
 // may not keep the window above others.
-function documentPictureInPictureResponse() {
+function documentPictureInPictureResponse(config) {
+  const max = documentPictureInPictureMaxSize(config);
   return {
     action: "allow",
     overrideBrowserWindowOptions: {
       alwaysOnTop: true,
       autoHideMenuBar: true,
       fullscreenable: false,
-      maxWidth: PIP_MAX_WIDTH,
-      maxHeight: PIP_MAX_HEIGHT,
+      maxWidth: max.width,
+      maxHeight: max.height,
     },
   };
 }
@@ -61,6 +86,7 @@ module.exports = {
   PIP_FRAME_NAME,
   PIP_MAX_WIDTH,
   PIP_MAX_HEIGHT,
+  documentPictureInPictureMaxSize,
   isDocumentPictureInPictureRequest,
   documentPictureInPictureResponse,
 };

@@ -1319,7 +1319,7 @@ function onNewWindow(details) {
   // the Document PiP replacement opens an about:blank popup that Teams renders
   // its call controls into.
   if (isDocumentPictureInPictureRequest(details, config)) {
-    return documentPictureInPictureResponse();
+    return documentPictureInPictureResponse(config);
   }
 
   // Breadcrumb for diagnosing which shape of popup the "sign in again"
