@@ -221,7 +221,7 @@ function argv(configPath, appVersion) {
   console.info("configPath:", configPath);
   // Names and on/off values only: the file's other values can hold broker
   // URLs, user names and commands, and this log is what users paste into issues.
-  console.debug("configFile:", summarizeConfigForLog(configObject.configFile));
+  console.debug("configFile:", summarizeConfigForLog(configObject.configFile, configOptions));
 
   return config;
 }
