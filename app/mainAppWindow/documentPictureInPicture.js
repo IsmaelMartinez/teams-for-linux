@@ -71,6 +71,9 @@ function clampDimension(value, fallback, max) {
   return Math.min(max, Math.max(PIP_MIN_SIZE, number));
 }
 
+const sizeOf = ({ width, height }) => ({ width, height });
+const sameSize = (a, b) => a?.width === b?.width && a?.height === b?.height;
+
 function requestedSize(features) {
   const values = new Map();
   for (const entry of String(features ?? "").split(",")) {
@@ -123,34 +126,45 @@ class DocumentPictureInPictureWindows {
   }
 
   #watchWindow(window) {
-    const opened = window.getBounds();
+    let pageSize = sizeOf(window.getBounds());
+    let pendingPageSize = null;
+    let userSize = null;
 
-    // Fired only for page-initiated moves and resizes, never the user's. A
-    // window the user made larger keeps its size when the page moves it.
+    // Fired only for page-initiated moves and resizes, never the user's, before
+    // Electron applies the bounds as window bounds: the "resize" that follows
+    // is told apart from the user's by its size. Window bounds throughout, as
+    // getContentSize() is stale inside "resize" on Wayland. A window the user
+    // made larger keeps its size when the page moves it.
     window.webContents.on("content-bounds-updated", (event, bounds) => {
-      const [width, height] = window.getContentSize();
-      const maxWidth = Math.max(PIP_MAX_WIDTH, width);
-      const maxHeight = Math.max(PIP_MAX_HEIGHT, height);
-      if (bounds.width > maxWidth || bounds.height > maxHeight) {
+      const current = sizeOf(window.getBounds());
+      const target = {
+        width: Math.min(bounds.width, Math.max(PIP_MAX_WIDTH, current.width)),
+        height: Math.min(bounds.height, Math.max(PIP_MAX_HEIGHT, current.height)),
+      };
+      if (!sameSize(target, current)) {
+        pendingPageSize = target;
+      }
+      if (!sameSize(target, bounds)) {
         event.preventDefault();
-        window.setContentBounds({
-          ...bounds,
-          width: Math.min(bounds.width, maxWidth),
-          height: Math.min(bounds.height, maxHeight),
-        });
+        window.setBounds({ ...bounds, ...target });
+      }
+    });
+
+    window.on("resize", () => {
+      const normal = sizeOf(window.getNormalBounds());
+      if (sameSize(pendingPageSize, window.getBounds())) {
+        pendingPageSize = null;
+        pageSize = normal;
+      } else {
+        userSize = sameSize(normal, pageSize) ? null : normal;
       }
     });
 
     // Teams closes the window from the page, which skips the "close" event and
     // leaves nothing to read the size from on "closed".
-    let latest = null;
-    window.on("resize", () => {
-      const { width, height } = window.getNormalBounds();
-      latest = { width, height };
-    });
     window.once("closed", () => {
-      if (latest && (latest.width !== opened.width || latest.height !== opened.height)) {
-        this.#userSize = latest;
+      if (userSize) {
+        this.#userSize = userSize;
       }
     });
   }

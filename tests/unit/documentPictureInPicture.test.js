@@ -285,7 +285,7 @@ describe('documentPictureInPicture window-open decision', () => {
 });
 
 // BrowserWindow stand-in: emits resize/closed like Electron and applies
-// setContentBounds; its webContents emits content-bounds-updated.
+// setBounds; its webContents emits content-bounds-updated.
 class FakeBrowserWindow extends EventEmitter {
   constructor(width, height) {
     super();
@@ -298,19 +298,20 @@ class FakeBrowserWindow extends EventEmitter {
   getNormalBounds() {
     return { ...this.bounds };
   }
-  getContentSize() {
-    return [this.bounds.width, this.bounds.height];
-  }
-  setContentBounds(bounds) {
+  setBounds(bounds) {
+    const resized = bounds.width !== this.bounds.width || bounds.height !== this.bounds.height;
     this.bounds = { ...bounds };
+    if (resized) this.emit('resize');
   }
   userResize(width, height) {
     this.bounds = { ...this.bounds, width, height };
     this.emit('resize');
   }
+  // As Electron does, applies the request unless a listener prevents it.
   pageRequests(bounds) {
     let prevented = false;
     this.webContents.emit('content-bounds-updated', { preventDefault: () => { prevented = true; } }, bounds);
+    if (!prevented) this.setBounds(bounds);
     return prevented;
   }
 }
@@ -365,6 +366,35 @@ describe('documentPictureInPicture window watch', () => {
     const pip = open(500, 350);
     pip.userResize(900, 700);
     pip.userResize(500, 350);
+    pip.emit('closed');
+    assert.deepStrictEqual(nextSize(), { width: 400, height: 300 });
+  });
+
+  it('does not remember a size the page set', () => {
+    const { open, nextSize } = setup();
+    const pip = open(400, 300);
+    pip.pageRequests({ x: 0, y: 0, width: 600, height: 400 });
+    pip.pageRequests({ x: 0, y: 0, width: 2400, height: 1300 });
+    assert.deepStrictEqual(pip.bounds, { x: 0, y: 0, width: main.PIP_MAX_WIDTH, height: main.PIP_MAX_HEIGHT });
+    pip.emit('closed');
+    assert.deepStrictEqual(nextSize(), { width: 400, height: 300 });
+  });
+
+  it("keeps the user's size when the page resizes the window afterwards", () => {
+    const { open, nextSize } = setup();
+    const pip = open(400, 300);
+    pip.userResize(1600, 1000);
+    pip.pageRequests({ x: 0, y: 0, width: 600, height: 400 });
+    assert.deepStrictEqual(pip.bounds, { x: 0, y: 0, width: 600, height: 400 });
+    pip.emit('closed');
+    assert.deepStrictEqual(nextSize(), { width: 1600, height: 1000 });
+  });
+
+  it('does not remember a maximize the user did not follow with a resize', () => {
+    const { open, nextSize } = setup();
+    const pip = open(400, 300);
+    pip.getNormalBounds = () => ({ x: 0, y: 0, width: 400, height: 300 });
+    pip.userResize(2560, 1368);
     pip.emit('closed');
     assert.deepStrictEqual(nextSize(), { width: 400, height: 300 });
   });
