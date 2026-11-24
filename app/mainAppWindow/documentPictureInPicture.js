@@ -5,7 +5,7 @@
  * The browser tool opens its PiP window as an `about:blank` popup named
  * PIP_FRAME_NAME. The root window's `onNewWindow` denies every other
  * `about:blank` popup (they belong to the silent SSO flow), so this request
- * has to be recognised first and allowed as a small, always-on-top window.
+ * has to be recognised first and allowed as an always-on-top window.
  * Profile views allow `about:blank` already but get the same window options
  * so the call monitor looks and stacks the same in every profile.
  *
@@ -33,12 +33,17 @@ function isDocumentPictureInPictureRequest(details, config) {
   );
 }
 
-// Upper bound for the PiP window. The page picks the size through the popup's
-// `features`, so the cap is enforced here rather than trusted from the
-// renderer: an always-on-top window must never be able to cover the screen.
-// Must match MAX_WIDTH / MAX_HEIGHT in the browser tool.
+// Largest size the page can give the PiP window, on open or later through
+// window.resizeTo(): page script must never be able to cover the screen with an
+// always-on-top window it draws into, for example with a fake sign-in prompt.
+// It is not set as max size hints (maxWidth / maxHeight), because those also
+// stop the user resizing and maximizing it. Must match MAX_WIDTH / MAX_HEIGHT
+// in the browser tool.
 const PIP_MAX_WIDTH = 800;
 const PIP_MAX_HEIGHT = 600;
+const PIP_DEFAULT_WIDTH = 400;
+const PIP_DEFAULT_HEIGHT = 300;
+const PIP_MIN_SIZE = 100;
 
 // The popup must be sandboxed exactly like its opener. Teams windows and
 // profile views run with `sandbox: false`, while a popup created through
@@ -58,22 +63,97 @@ const PIP_WEB_PREFERENCES = Object.freeze({
   nodeIntegration: false,
 });
 
-// Width and height come from the popup's `features` string, which Electron
-// applies on its own; only the window behaviour and the cap are set here.
-// alwaysOnTop is a request to the window manager: GNOME and KDE on Wayland
-// may not keep the window above others.
-function documentPictureInPictureResponse() {
+function clampDimension(value, fallback, max) {
+  const number = Math.round(Number(value));
+  if (!Number.isFinite(number) || number <= 0) {
+    return fallback;
+  }
+  return Math.min(max, Math.max(PIP_MIN_SIZE, number));
+}
+
+function requestedSize(features) {
+  const values = new Map();
+  for (const entry of String(features ?? "").split(",")) {
+    const [key, value] = entry.split("=");
+    values.set(key.trim().toLowerCase(), value?.trim());
+  }
   return {
-    action: "allow",
-    overrideBrowserWindowOptions: {
-      alwaysOnTop: true,
-      autoHideMenuBar: true,
-      fullscreenable: false,
-      maxWidth: PIP_MAX_WIDTH,
-      maxHeight: PIP_MAX_HEIGHT,
-      webPreferences: { ...PIP_WEB_PREFERENCES },
-    },
+    width: clampDimension(values.get("width"), PIP_DEFAULT_WIDTH, PIP_MAX_WIDTH),
+    height: clampDimension(values.get("height"), PIP_DEFAULT_HEIGHT, PIP_MAX_HEIGHT),
   };
+}
+
+class DocumentPictureInPictureWindows {
+  // Size the user last resized the window to, reused for the rest of the
+  // launch: Teams opens a new window every time the meeting view is left.
+  #userSize = null;
+
+  /**
+   * Window-open response for a request isDocumentPictureInPictureRequest
+   * accepted. The size is always set here, overriding the popup's `features`,
+   * so the page's request is clamped rather than trusted.
+   * alwaysOnTop is a request to the window manager: GNOME and KDE on Wayland
+   * may not keep the window above others.
+   * @param {{ features?: string }} details - window-open details
+   */
+  windowOpenResponse(details) {
+    return {
+      action: "allow",
+      overrideBrowserWindowOptions: {
+        ...(this.#userSize ?? requestedSize(details?.features)),
+        alwaysOnTop: true,
+        autoHideMenuBar: true,
+        fullscreenable: false,
+        webPreferences: { ...PIP_WEB_PREFERENCES },
+      },
+    };
+  }
+
+  /**
+   * Apply the page size cap to every PiP window `webContents` opens.
+   * @param {Electron.WebContents} webContents - a webContents that may open the PiP window
+   * @param {object} config - app configuration
+   */
+  watchOpener(webContents, config) {
+    webContents.on("did-create-window", (window, details) => {
+      if (isDocumentPictureInPictureRequest(details, config)) {
+        this.#watchWindow(window);
+      }
+    });
+  }
+
+  #watchWindow(window) {
+    const opened = window.getBounds();
+
+    // Fired only for page-initiated moves and resizes, never the user's. A
+    // window the user made larger keeps its size when the page moves it.
+    window.webContents.on("content-bounds-updated", (event, bounds) => {
+      const [width, height] = window.getContentSize();
+      const maxWidth = Math.max(PIP_MAX_WIDTH, width);
+      const maxHeight = Math.max(PIP_MAX_HEIGHT, height);
+      if (bounds.width > maxWidth || bounds.height > maxHeight) {
+        event.preventDefault();
+        window.setContentBounds({
+          ...bounds,
+          width: Math.min(bounds.width, maxWidth),
+          height: Math.min(bounds.height, maxHeight),
+        });
+      }
+    });
+
+    // Teams closes the window from the page, which skips the "close" event and
+    // leaves nothing to read the size from on "closed".
+    let latest = null;
+    window.on("resize", () => {
+      const { width, height } = window.getNormalBounds();
+      latest = { width, height };
+    });
+    window.once("closed", () => {
+      if (latest && (latest.width !== opened.width || latest.height !== opened.height)) {
+        this.#userSize = latest;
+      }
+    });
+  }
 }
 
 // The PiP window runs unsandboxed to keep its opener link, so it must never
@@ -92,6 +172,7 @@ module.exports = {
   PIP_MAX_WIDTH,
   PIP_MAX_HEIGHT,
   isDocumentPictureInPictureRequest,
-  documentPictureInPictureResponse,
   lockDocumentPictureInPictureWindow,
+  DocumentPictureInPictureWindows,
+  documentPictureInPictureWindows: new DocumentPictureInPictureWindows(),
 };

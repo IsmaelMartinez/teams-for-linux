@@ -96,6 +96,7 @@ describe('installProfileWindowOpenHandler', () => {
       setWindowOpenHandler(fn) {
         this.handler = fn;
       },
+      on() {},
       loadURL(url, opts) {
         this.loads.push({ url, opts });
         return Promise.resolve(); // real Electron loadURL returns a promise

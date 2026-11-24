@@ -34,7 +34,7 @@
  */
 const {
   isDocumentPictureInPictureRequest,
-  documentPictureInPictureResponse,
+  documentPictureInPictureWindows,
 } = require("./documentPictureInPicture");
 
 function createProfileWindowOpenHandler({ config, loadInView }) {
@@ -55,7 +55,7 @@ function createProfileWindowOpenHandler({ config, loadInView }) {
   }
   return (details) => {
     if (isDocumentPictureInPictureRequest(details, config)) {
-      return documentPictureInPictureResponse();
+      return documentPictureInPictureWindows.windowOpenResponse(details);
     }
     const url = typeof details?.url === "string" ? details.url : "";
     if (deepLinkRe?.test(url)) {
@@ -113,6 +113,7 @@ function installProfileWindowOpenHandler(
       },
     })
   );
+  documentPictureInPictureWindows.watchOpener(targetWebContents, config);
 }
 
 module.exports = {

@@ -39,7 +39,7 @@ const { keepMsalEncryptionCookiePersistent } = require("./msalCookiePersistence"
 const { isUrlPreviewRequest } = require("./urlPreviewBlock");
 const {
   isDocumentPictureInPictureRequest,
-  documentPictureInPictureResponse,
+  documentPictureInPictureWindows,
   lockDocumentPictureInPictureWindow,
 } = require("./documentPictureInPicture");
 
@@ -1308,7 +1308,7 @@ function onNewWindow(details) {
   // the Document PiP replacement opens an about:blank popup that Teams renders
   // its call controls into.
   if (isDocumentPictureInPictureRequest(details, config)) {
-    return documentPictureInPictureResponse();
+    return documentPictureInPictureWindows.windowOpenResponse(details);
   }
 
   // Breadcrumb for diagnosing which shape of popup the "sign in again"
@@ -1448,6 +1448,7 @@ function addEventHandlers() {
       lockDocumentPictureInPictureWindow(child.webContents);
     }
   });
+  documentPictureInPictureWindows.watchOpener(window.webContents, config);
   window.webContents.session.webRequest.onBeforeRequest(
     { urls: ["https://*/*"] },
     onBeforeRequestHandler
