@@ -1,4 +1,5 @@
 const TokenCache = require('./tokenCache');
+const { isTeamsHost } = require('../../helpers/teamsHosts');
 
 class ReactHandler {
   _validationEnabled = true;
@@ -274,36 +275,15 @@ class ReactHandler {
   /**
    * Returns true if hostname is exactly allowed, or an immediate subdomain.
    * Prevents subdomain hijacking attacks by validating domain endings properly.
+   * Teams domains and MCAS Proxy suffixes are validated and maintained under
+   * the isTeamsHost() helper function within ../../helpers/teamsHosts.js.
+   * This removes duplicated domain list and .mcas.ms proxy logic.
+   *
    * @param {string} hostname - The hostname to validate
    * @returns {boolean} - True if hostname is a legitimate Teams domain
    */
   _isAllowedTeamsDomain(hostname) {
-    // List of valid Teams domains
-    const allowedDomains = [
-      'teams.cloud.microsoft',
-      'teams.microsoft.com',
-      'teams.live.com'
-    ];
-
-    // Handle Microsoft Cloud App Security (MCAS) suffix. eg: teams.cloud.microsoft.mcas.ms
-    const MCAS_SUFFIX = '.mcas.ms';
-    if (hostname.endsWith(MCAS_SUFFIX)) {
-      hostname = hostname.slice(0, -MCAS_SUFFIX.length);
-    }
-    
-    for (const domain of allowedDomains) {
-      // Exact match
-      if (hostname === domain) return true;
-      // Immediate subdomain match (prevents evil.com.teams.cloud.microsoft / evil.com.teams.microsoft.com attacks)
-      if (hostname.endsWith('.' + domain)) {
-        const subdomainPart = hostname.substring(0, hostname.length - (domain.length + 1));
-        if (!subdomainPart.includes('.')) {
-          return true;
-        }
-      }
-    }
-    
-    return false;
+    return isTeamsHost(hostname);
   }
 
   _getTeams2ReactElement() {

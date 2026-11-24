@@ -29,6 +29,12 @@ const path = require("node:path");
 const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
 const { reloadIfSignedOut } = require("./signOutReload");
 const { isSafeExternalUrl, schemeOf } = require("../helpers/externalUrl");
+// Microsoft Cloud App Security proxy suffixes. Tenants that route Teams
+// through Defender for Cloud Apps (MCAS) load and store cookies on
+// MCAS-proxied domains rather than the underlying Microsoft domain.
+// Strip recognized suffixes before matching against AUTH_DOMAINS /
+// TEAMS_DOMAINS so proxied hosts are treated like canonical hosts.
+const { stripMcasSuffix } = require("../helpers/teamsHosts");
 const { keepMsalEncryptionCookiePersistent } = require("./msalCookiePersistence");
 const { isUrlPreviewRequest } = require("./urlPreviewBlock");
 const {
@@ -244,18 +250,6 @@ function createScreenSharePreviewWindow() {
     screenSharingService.setPreviewWindow(null);
     screenSharingService.setSelectedSource(null);
   });
-}
-
-// Microsoft Cloud App Security proxy suffix. Tenants that route Teams
-// through Defender for Cloud Apps (MCAS) load and store cookies at
-// `*.mcas.ms` rather than the underlying Microsoft domain. Strip the
-// suffix before matching against AUTH_DOMAINS / TEAMS_DOMAINS so the
-// proxied flavour is treated the same as the canonical hostname.
-const MCAS_SUFFIX = '.mcas.ms';
-function stripMcasSuffix(hostname) {
-  return hostname.endsWith(MCAS_SUFFIX)
-    ? hostname.slice(0, -MCAS_SUFFIX.length)
-    : hostname;
 }
 
 // Microsoft auth domains whose cookies should be checked/cleaned
