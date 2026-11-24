@@ -392,6 +392,8 @@ Since v2.7.13, report-only CSP headers are automatically stripped for all non-Te
 
 **Cause:** Electron on Linux has no WebAuthn user interface (tracked upstream in [electron/electron#24573](https://github.com/electron/electron/issues/24573)). When Teams for Linux does not handle the request itself, Electron waits silently for the page's own timeout, with no dialog and no way to cancel. Microsoft's sign-in page has been seen asking for ten minutes. Phone and QR passkeys do not work either, because Electron never starts that flow on Linux.
 
+Teams for Linux now hides WebAuthn from the page whenever no `fido2-tools` backend will answer: with `auth.webauthn.enabled` off (the default), or on but with `fido2-tools` missing. A top-level sign-in page then sees no passkey support and offers its other methods straight away. A sign-in page embedded in a frame is not covered and can still wait.
+
 **Solutions/Workarounds:**
 
 1. Wait for the timeout, then choose another sign-in method.

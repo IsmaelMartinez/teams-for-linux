@@ -16,10 +16,48 @@
 // ceremony relayed out of a login iframe is not blocked here after the main
 // process would have allowed it (#2931).
 const { buildAllowedOrigins } = require("../../webauthn/originAllowlist");
+const { NO_BACKEND_ARG } = require("../../webauthn/backendStatus");
+
+let neutralized = false;
+
+/**
+ * Hide WebAuthn from the page when the main process reports that no
+ * security-key backend will answer (see app/webauthn/backendStatus.js).
+ * Without it Microsoft's sign-in offers a security key and
+ * navigator.credentials.get({ publicKey }) never settles. Called from the top
+ * of preload.js, before any page script runs. Only public-key requests are
+ * refused, so password credentials keep working. Same approach as
+ * ms-wrappers' page-neutralize.js (MIT, 0xfcmartins/ms-wrappers).
+ * @param {string[]} [argv] - renderer command line
+ */
+function neutralizeIfNoBackend(argv = process.argv) {
+  if (neutralized || !argv.includes(NO_BACKEND_ARG)) return;
+  const credentials = navigator.credentials;
+  if (credentials?.get && credentials?.create) {
+    const originalGet = credentials.get.bind(credentials);
+    const originalCreate = credentials.create.bind(credentials);
+    const notSupported = () =>
+      Promise.reject(new DOMException("No security key backend in this app", "NotSupportedError"));
+    credentials.get = (options) => (options?.publicKey ? notSupported() : originalGet(options));
+    credentials.create = (options) => (options?.publicKey ? notSupported() : originalCreate(options));
+  }
+  delete globalThis.PublicKeyCredential;
+  delete globalThis.AuthenticatorAssertionResponse;
+  delete globalThis.AuthenticatorAttestationResponse;
+  neutralized = true;
+  console.info("[WEBAUTHN] No security key backend: WebAuthn hidden so sign-in offers another method");
+}
 
 function init(config, ipcRenderer) {
   if (process.platform !== "linux") {
     console.debug("[WEBAUTHN] Skipping: not Linux");
+    return;
+  }
+
+  // fido2-tools missing: routing to IPC would fail anyway, and the page
+  // should not be offered a key at all.
+  if (neutralized) {
+    console.debug("[WEBAUTHN] Skipping: no security key backend");
     return;
   }
 
@@ -347,4 +385,4 @@ function mapError(errorMessage) {
   return new DOMException(errorMessage, "NotAllowedError");
 }
 
-module.exports = { init };
+module.exports = { init, neutralizeIfNoBackend };

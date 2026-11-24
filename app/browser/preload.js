@@ -7,6 +7,16 @@
 
 const { ipcRenderer } = require("electron");
 
+// Must run before any page script probes window.PublicKeyCredential: with no
+// security-key backend, Microsoft's sign-in would offer a key and then hang
+// (see app/webauthn/backendStatus.js). A no-op unless the main process set
+// the flag.
+try {
+  require("./tools/webauthnOverride").neutralizeIfNoBackend();
+} catch (err) {
+  console.error("[WEBAUTHN] Could not hide WebAuthn from the page", { errClass: err?.name });
+}
+
 // #2677: Electron removed the non-standard `File.path` from dropped files, so
 // Teams (which uploads by native path) rejects them as "File is missing data".
 // Restore it via webUtils.getPathForFile before Teams's drop handler reads it,

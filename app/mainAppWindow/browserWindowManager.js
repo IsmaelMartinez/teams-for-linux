@@ -8,6 +8,7 @@ const {
 } = require("electron");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
+const webauthnBackend = require("../webauthn/backendStatus");
 const windowStateKeeper = require("electron-window-state");
 const { StreamSelector } = require("../screenSharing");
 const TrayIconChooser = require("../browser/tools/trayIconChooser");
@@ -129,6 +130,9 @@ class BrowserWindowManager {
         contextIsolation: false,  // Required for ReactHandler DOM access
         nodeIntegration: false,   // Secure: preload scripts don't need this
         sandbox: false,           // Required for system API access
+        // Read synchronously by the preload to hide WebAuthn from the page
+        // when no security-key backend will answer (backendStatus.js).
+        additionalArguments: webauthnBackend.rendererArguments(this.config),
       },
     });
   }
