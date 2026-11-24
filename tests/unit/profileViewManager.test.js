@@ -421,6 +421,33 @@ describe('ProfileViewManager sender attribution wiring', () => {
     ]);
   });
 
+  it('locks the Document PiP window instead of giving it the profile policy', () => {
+    const { PIP_FRAME_NAME } = require('../../app/mainAppWindow/documentPictureInPicture');
+    const bound = [];
+    const win = fakeWindow();
+    const pvm = new ProfileViewManager(
+      win,
+      fakeProfilesManager([LEGACY, PROFILE_A]),
+      { url: 'https://teams.cloud.microsoft', media: { documentPictureInPicture: true } },
+      () => {},
+      (target) => bound.push(target)
+    );
+    pvm.initialize();
+    const view = createdViews[0];
+    const pip = { webContents: new FakeWebContents() };
+    pip.webContents.setWindowOpenHandler = (fn) => { pip.openHandler = fn; };
+    view.webContents.emit('did-create-window', pip, { url: 'about:blank', frameName: PIP_FRAME_NAME });
+    assert.ok(!bound.includes(pip.webContents), 'PiP window must not get the profile policy');
+    assert.deepStrictEqual(pip.openHandler({ url: 'https://example.com/' }), { action: 'deny' });
+    assert.strictEqual(pip.webContents._on['will-navigate'].length, 1);
+    // Still attributed to its profile.
+    assert.strictEqual(pvm.resolveProfileId(pip.webContents), 'profile-a');
+    // Any other popup keeps the profile policy.
+    const other = { webContents: new FakeWebContents() };
+    view.webContents.emit('did-create-window', other, { url: 'about:blank', frameName: '' });
+    assert.ok(bound.includes(other.webContents));
+  });
+
   it('a deep link loaded from a background profile activates that profile', () => {
     let activateFn = null;
     const { pm } = build([LEGACY, PROFILE_A], (_t, _l, activate) => {

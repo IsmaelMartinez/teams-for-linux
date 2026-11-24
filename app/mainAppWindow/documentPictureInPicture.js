@@ -40,6 +40,24 @@ function isDocumentPictureInPictureRequest(details, config) {
 const PIP_MAX_WIDTH = 800;
 const PIP_MAX_HEIGHT = 600;
 
+// The popup must be sandboxed exactly like its opener. Teams windows and
+// profile views run with `sandbox: false`, while a popup created through
+// `overrideBrowserWindowOptions` otherwise gets Electron's default of
+// `sandbox: true`. With the two differing, Chromium has to start the popup in
+// a new renderer process and in a new browsing context group, so the opener
+// link is dropped: `window.open()` returns `null` and Teams, which renders its
+// call controls into the returned window, leaves an empty window behind
+// (Electron 45; earlier versions kept the opener). Only `sandbox` has to
+// match; context isolation and node integration are pinned to their secure
+// values so a changed default can never hand the popup more, and no preload is
+// set. `sandbox: false` belongs to the window, not to the blank document, so
+// lockDocumentPictureInPictureWindow keeps the window on about:blank.
+const PIP_WEB_PREFERENCES = Object.freeze({
+  sandbox: false,
+  contextIsolation: true,
+  nodeIntegration: false,
+});
+
 // Width and height come from the popup's `features` string, which Electron
 // applies on its own; only the window behaviour and the cap are set here.
 // alwaysOnTop is a request to the window manager: GNOME and KDE on Wayland
@@ -53,8 +71,20 @@ function documentPictureInPictureResponse() {
       fullscreenable: false,
       maxWidth: PIP_MAX_WIDTH,
       maxHeight: PIP_MAX_HEIGHT,
+      webPreferences: { ...PIP_WEB_PREFERENCES },
     },
   };
+}
+
+// The PiP window runs unsandboxed to keep its opener link, so it must never
+// leave about:blank: navigated to a URL it would become an unsandboxed renderer
+// for that site with a live `window.opener` back to Teams. Teams only renders
+// into the blank document, so blocking every navigation and popup costs
+// nothing. Call it from `did-create-window` for PiP requests, after (or
+// instead of) any other window-open policy, since the last handler set wins.
+function lockDocumentPictureInPictureWindow(webContents) {
+  webContents.on("will-navigate", (event) => event.preventDefault());
+  webContents.setWindowOpenHandler(() => ({ action: "deny" }));
 }
 
 module.exports = {
@@ -63,4 +93,5 @@ module.exports = {
   PIP_MAX_HEIGHT,
   isDocumentPictureInPictureRequest,
   documentPictureInPictureResponse,
+  lockDocumentPictureInPictureWindow,
 };

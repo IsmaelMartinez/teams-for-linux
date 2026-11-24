@@ -227,8 +227,33 @@ describe('documentPictureInPicture window-open decision', () => {
         fullscreenable: false,
         maxWidth: main.PIP_MAX_WIDTH,
         maxHeight: main.PIP_MAX_HEIGHT,
+        // Must match the opener's sandbox setting or window.open() returns null.
+        // The rest is pinned to the secure values, and no preload is given.
+        webPreferences: { sandbox: false, contextIsolation: true, nodeIntegration: false },
       },
     });
+  });
+
+  it('locks the PiP window on about:blank: no navigation, no popups', () => {
+    const listeners = {};
+    let openHandler;
+    main.lockDocumentPictureInPictureWindow({
+      on: (name, fn) => { listeners[name] = fn; },
+      setWindowOpenHandler: (fn) => { openHandler = fn; },
+    });
+    let prevented = false;
+    listeners['will-navigate']({ preventDefault: () => { prevented = true; } }, 'https://example.com/');
+    assert.strictEqual(prevented, true);
+    assert.deepStrictEqual(openHandler({ url: 'https://example.com/' }), { action: 'deny' });
+  });
+
+  it('hands out a fresh webPreferences object each time', () => {
+    const first = main.documentPictureInPictureResponse();
+    first.overrideBrowserWindowOptions.webPreferences.sandbox = true;
+    assert.strictEqual(
+      main.documentPictureInPictureResponse().overrideBrowserWindowOptions.webPreferences.sandbox,
+      false,
+    );
   });
 
   it('profile views give the PiP popup the same window options', () => {
