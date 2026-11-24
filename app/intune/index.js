@@ -10,6 +10,20 @@ const PROTOCOL_VERSION = "0.0";
 
 const sessionBus = dbus.sessionBus();
 
+// dbus-native waits for a reply forever, and nothing above it may: startup
+// awaits initSso before the window is created, and addSsoCookie holds a
+// sign-in request until it calls back. A call the broker never answers (or one
+// queued on a bus connection that never completes, as behind a Flatpak D-Bus
+// proxy) gives up after libdbus's own default reply timeout.
+const BROKER_TIMEOUT_MS = 25000;
+
+class BrokerTimeoutError extends Error {
+  constructor(methodName) {
+    super(`Broker did not answer ${methodName} within ${BROKER_TIMEOUT_MS} ms`);
+    this.name = "BrokerTimeoutError";
+  }
+}
+
 /**
  * Invoke a D-Bus method directly without relying on introspection.
  * This is required for Microsoft Identity Broker versions > 2.0.1
@@ -22,6 +36,7 @@ const sessionBus = dbus.sessionBus();
  */
 function invokeBrokerMethod(methodName, request, correlationId = "") {
   return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new BrokerTimeoutError(methodName)), BROKER_TIMEOUT_MS);
     sessionBus.invoke({
       destination: BROKER_SERVICE,
       path: BROKER_PATH,
@@ -30,6 +45,7 @@ function invokeBrokerMethod(methodName, request, correlationId = "") {
       signature: "sss",
       body: [PROTOCOL_VERSION, correlationId, JSON.stringify(request)]
     }, (err, result) => {
+      clearTimeout(timer);
       if (err) {
         reject(err);
       } else {
@@ -150,6 +166,10 @@ async function waitForBrokerReady(retries, delay) {
     } catch (error) {
       if (error?.name === "org.freedesktop.DBus.Error.ServiceUnknown") {
         throw new Error("Broker not found, ensure it's installed", { cause: error });
+      }
+      // A broker that let one call time out will not answer the next either.
+      if (error instanceof BrokerTimeoutError) {
+        throw error;
       }
 
       if (attempt < retries) {
