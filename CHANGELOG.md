@@ -1,5 +1,52 @@
 # Changelog
 
+## [2.33.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.32.1...v2.33.0) (2026-11-24)
+
+
+### Features
+
+* **auth:** add auth.basic.hosts to choose which servers receive basic auth credentials ([#3242](https://github.com/IsmaelMartinez/teams-for-linux/issues/3242)) ([f818dbc](https://github.com/IsmaelMartinez/teams-for-linux/commit/f818dbc6e19c74842be02e4ab5e8b26d96b1fde6))
+* **config:** add platform.disableUrlPreviews to keep pasted links as plain URLs ([#3234](https://github.com/IsmaelMartinez/teams-for-linux/issues/3234)) ([16002bf](https://github.com/IsmaelMartinez/teams-for-linux/commit/16002bf66a0ae7eeb58b8250a6c8846c1d461e88))
+* **dbus:** publish call participants and who is speaking ([#3214](https://github.com/IsmaelMartinez/teams-for-linux/issues/3214)) ([cf56d16](https://github.com/IsmaelMartinez/teams-for-linux/commit/cf56d165eacf3828f4cfb47fa72c79e1f104994c))
+
+
+### Bug Fixes
+
+* **intune:** stop waiting on a broker that never answers ([#3255](https://github.com/IsmaelMartinez/teams-for-linux/issues/3255)) ([a98209a](https://github.com/IsmaelMartinez/teams-for-linux/commit/a98209a69043c3093f0257ee5e9834e4489acae8))
+* **ipc:** contain errors thrown by IPC event listeners ([#3241](https://github.com/IsmaelMartinez/teams-for-linux/issues/3241)) ([76b032c](https://github.com/IsmaelMartinez/teams-for-linux/commit/76b032cbeee8fce0a34b2cd7838c14625c28086d))
+* **links:** limit links opened outside the app to web, mail, phone and Teams schemes ([#3240](https://github.com/IsmaelMartinez/teams-for-linux/issues/3240)) ([2104f88](https://github.com/IsmaelMartinez/teams-for-linux/commit/2104f88a3621bb89c7523549378ed9295dc2a77f))
+* **logging:** keep config strings, MQTT topics and link URLs out of the logs ([#3249](https://github.com/IsmaelMartinez/teams-for-linux/issues/3249)) ([f16cf32](https://github.com/IsmaelMartinez/teams-for-linux/commit/f16cf328b64ed4a5e9f1c4770300eb53873d54c8))
+* **media:** match the PiP popup's sandbox to its opener and keep it on about:blank ([#3254](https://github.com/IsmaelMartinez/teams-for-linux/issues/3254)) ([a5cd536](https://github.com/IsmaelMartinez/teams-for-linux/commit/a5cd536202a3edfdc4fa2f09d94e183ebe52bf9e))
+* **security:** recognize MCAS-proxied Teams origins ([#3237](https://github.com/IsmaelMartinez/teams-for-linux/issues/3237)) ([f77a44f](https://github.com/IsmaelMartinez/teams-for-linux/commit/f77a44f90eb824b847fed99d26fbd88d38672ab6))
+* **speakingindicator:** move the indicator above the sticker button ([#3211](https://github.com/IsmaelMartinez/teams-for-linux/issues/3211)) ([b1f84e0](https://github.com/IsmaelMartinez/teams-for-linux/commit/b1f84e05217d0c46cccf660ede102c62b593776d))
+* **webauthn:** hide webauthn from the page when no key backend will answer ([#3245](https://github.com/IsmaelMartinez/teams-for-linux/issues/3245)) ([b96ecaa](https://github.com/IsmaelMartinez/teams-for-linux/commit/b96ecaa31b2bf9b130f238e884d08ed924f5afc2))
+
+
+### Code Improvements
+
+* **ipc:** remove IPC handlers and page methods that nothing calls ([#3247](https://github.com/IsmaelMartinez/teams-for-linux/issues/3247)) ([8f398f9](https://github.com/IsmaelMartinez/teams-for-linux/commit/8f398f9899e2ed696deb93ae7d5926ccd88da56c))
+
+
+### Documentation
+
+* **adr:** add the unsandboxed popup rule to ADR-035 ([#3244](https://github.com/IsmaelMartinez/teams-for-linux/issues/3244)) ([7ee17b0](https://github.com/IsmaelMartinez/teams-for-linux/commit/7ee17b0193db3dae585d43b2d967a5f7190fd04c))
+* **adr:** record why the flat-name removal moved to 2.36.0 ([#3222](https://github.com/IsmaelMartinez/teams-for-linux/issues/3222)) ([ec48f6c](https://github.com/IsmaelMartinez/teams-for-linux/commit/ec48f6c3ba9f1950618fd159321fe207294d8086))
+* fix dead Electron accelerator links ([#3228](https://github.com/IsmaelMartinez/teams-for-linux/issues/3228)) ([ca40170](https://github.com/IsmaelMartinez/teams-for-linux/commit/ca4017031150ec99a1cdadd07472b1ce272ddb5e))
+* **flatpak:** document the TimeoutStopSec workaround for the slow shutdown ([#3223](https://github.com/IsmaelMartinez/teams-for-linux/issues/3223)) ([2b4119a](https://github.com/IsmaelMartinez/teams-for-linux/commit/2b4119a36d0ecf40a133d572b6b55ebe28ce64cb))
+* **security:** align the security docs with the code and drop the unused token encryption path ([#3248](https://github.com/IsmaelMartinez/teams-for-linux/issues/3248)) ([cbb439d](https://github.com/IsmaelMartinez/teams-for-linux/commit/cbb439de1e1c9a68df2214488cc47dced3ac01ec))
+* **troubleshooting:** describe the insert-key prompt on the stuck passkey screen ([#3227](https://github.com/IsmaelMartinez/teams-for-linux/issues/3227)) ([34e8734](https://github.com/IsmaelMartinez/teams-for-linux/commit/34e8734e5668ce081765a5f73dbcb1a4c5e84a70))
+
+
+### CI/CD
+
+* **snap:** set the store credential only on the steps that publish ([#3246](https://github.com/IsmaelMartinez/teams-for-linux/issues/3246)) ([5e2cf1f](https://github.com/IsmaelMartinez/teams-for-linux/commit/5e2cf1ff89e72a0c6bce7b3dd8aac32e8cd46824))
+
+
+### Maintenance
+
+* **deps-dev:** bump the minor-and-patch group with 3 updates ([#3250](https://github.com/IsmaelMartinez/teams-for-linux/issues/3250)) ([a9bbc5d](https://github.com/IsmaelMartinez/teams-for-linux/commit/a9bbc5d71df08cbf518ca64cdffd9070c92ae14b))
+* **deps:** bump katex and mermaid in /docs-site ([#3224](https://github.com/IsmaelMartinez/teams-for-linux/issues/3224)) ([da7b77c](https://github.com/IsmaelMartinez/teams-for-linux/commit/da7b77cf8db4de802b1a2884815c19979bf2f7b5))
+
 ## [2.32.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.32.0...v2.32.1) (2026-11-15)
 
 
