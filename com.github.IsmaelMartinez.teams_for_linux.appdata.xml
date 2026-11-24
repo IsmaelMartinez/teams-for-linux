@@ -14,6 +14,33 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.33.0" date="2026-11-24">
+      <description>
+        <ul>
+          <li>auth: add auth.basic.hosts to choose which servers receive basic auth credentials (#3242)</li>
+          <li>config: add platform.disableUrlPreviews to keep pasted links as plain URLs (#3234)</li>
+          <li>dbus: publish call participants and who is speaking (#3214)</li>
+          <li>intune: stop waiting on a broker that never answers (#3255)</li>
+          <li>ipc: contain errors thrown by IPC event listeners (#3241)</li>
+          <li>links: limit links opened outside the app to web, mail, phone and Teams schemes (#3240)</li>
+          <li>logging: keep config strings, MQTT topics and link URLs out of the logs (#3249)</li>
+          <li>media: match the PiP popup's sandbox to its opener and keep it on about:blank (#3254)</li>
+          <li>security: recognize MCAS-proxied Teams origins (#3237)</li>
+          <li>speakingindicator: move the indicator above the sticker button (#3211)</li>
+          <li>webauthn: hide webauthn from the page when no key backend will answer (#3245)</li>
+          <li>ipc: remove IPC handlers and page methods that nothing calls (#3247)</li>
+          <li>adr: add the unsandboxed popup rule to ADR-035 (#3244)</li>
+          <li>adr: record why the flat-name removal moved to 2.36.0 (#3222)</li>
+          <li>fix dead Electron accelerator links (#3228)</li>
+          <li>flatpak: document the TimeoutStopSec workaround for the slow shutdown (#3223)</li>
+          <li>security: align the security docs with the code and drop the unused token encryption path (#3248)</li>
+          <li>troubleshooting: describe the insert-key prompt on the stuck passkey screen (#3227)</li>
+          <li>snap: set the store credential only on the steps that publish (#3246)</li>
+          <li>deps-dev: bump the minor-and-patch group with 3 updates (#3250)</li>
+          <li>deps: bump katex and mermaid in /docs-site (#3224)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.32.1" date="2026-11-15">
       <description>
         <ul>
