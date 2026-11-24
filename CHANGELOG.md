@@ -47,6 +47,10 @@
 * **deps-dev:** bump the minor-and-patch group with 3 updates ([#3250](https://github.com/IsmaelMartinez/teams-for-linux/issues/3250)) ([a9bbc5d](https://github.com/IsmaelMartinez/teams-for-linux/commit/a9bbc5d71df08cbf518ca64cdffd9070c92ae14b))
 * **deps:** bump katex and mermaid in /docs-site ([#3224](https://github.com/IsmaelMartinez/teams-for-linux/issues/3224)) ([da7b77c](https://github.com/IsmaelMartinez/teams-for-linux/commit/da7b77cf8db4de802b1a2884815c19979bf2f7b5))
 
+### Thanks
+
+Big thanks to @app/dependabot, @estrella159, @farisbasha, @FriedrichVoelker, @KimP0ssible-no, @kougyokugentou, @pedr0vict0r for contributing to this release.
+
 ## [2.32.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.32.0...v2.32.1) (2026-11-15)
 
 
