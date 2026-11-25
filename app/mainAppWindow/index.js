@@ -865,10 +865,12 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   );
 
   let url = processArgs(process.argv);
-  if (launchLinkHold.offer(url)) {
+  if (launchLinkHold.offerOlder(url)) {
     // The link belongs in the active profile's view, which does not exist
-    // yet: it was held for the view manager's first load of that view, and the
-    // root window (Profile 0, hidden behind the view) starts on its usual page.
+    // yet: it is held for the view manager's first load of that view (unless a
+    // second instance delivered a newer one during the awaits above, which
+    // stays), and the root window (Profile 0, hidden behind the view) starts
+    // on its usual page.
     url = null;
   }
   connectionManager.start(url, {

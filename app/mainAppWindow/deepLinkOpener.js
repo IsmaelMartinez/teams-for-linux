@@ -20,9 +20,9 @@ const isGone = (target) => !target || target.isDestroyed();
  * @param {() => boolean} deps.isCallActive
  * @param {number} deps.deferDelayMs - Wait after a call ends before a held link opens
  * @param {() => (((webContents: object) => unknown)|null)} [deps.getActivator] -
- *   Multi-account only: brings a webContents' profile to the front. A link held
- *   through a call is released after the user may have switched away, so its
- *   view is brought forward and focused first; an immediate link already is.
+ *   Multi-account only: brings a webContents' profile to the front. The user
+ *   can switch profile while a link waits for a call or for the in-page probe,
+ *   so its view is brought forward and focused right before the link is shown.
  * @returns {{open: (url: string, target?: Electron.WebContents) => Promise<void>,
  *   deferred: DeferredDeepLink}}
  */
@@ -38,16 +38,8 @@ function createDeepLinkOpener({
   let generation = 0;
 
   const deferred = new DeferredDeepLink(
-    (url, target) => {
-      const activate = getActivator();
-      if (activate && !isGone(target)) {
-        activate(target);
-        target.focus();
-      }
-      return open(url, target).catch(() =>
-        console.debug("[DEEPLINK] deferred navigation failed")
-      );
-    },
+    (url, target) =>
+      open(url, target).catch(() => console.debug("[DEEPLINK] deferred navigation failed")),
     deferDelayMs
   );
 
@@ -70,24 +62,37 @@ function createDeepLinkOpener({
     }
     const config = getConfig();
 
+    // The user can switch profile while the SPA is probed (up to ~750 ms), which
+    // hides `target`. Bring it forward again right before anything the user is
+    // meant to see: activating the active profile is a no-op, and with the flag
+    // off there is no activator.
+    const bringForward = () => {
+      const activate = getActivator();
+      if (activate) {
+        activate(target);
+        target.focus();
+      }
+    };
+
     const routed = await router.navigateInPage(target, url, config.url);
+
+    // A released link is not held off by the second-instance cooldown, so a
+    // newer one can arrive during the wait above; it owns the link then.
+    if (mine !== generation) {
+      console.debug("[DEEPLINK] superseded by a newer link, skipped");
+      return;
+    }
+    if (isGone(target)) {
+      console.debug("[DEEPLINK] target closed before the link could open, dropped");
+      return;
+    }
+
     if (routed) {
       console.debug("[DEEPLINK] routed in page");
+      bringForward();
       const { focused, afterMs } = await router.focusCompose(target, url, config.url);
       const outcome = focused ? `focused after ${afterMs} ms` : "not found";
       console.debug(`[DEEPLINK] compose box ${outcome}`);
-      return;
-    }
-
-    // A released link is not held off by the second-instance cooldown, so a
-    // newer one can arrive during the wait above; it owns the fallback then.
-    if (mine !== generation) {
-      console.debug("[DEEPLINK] superseded by a newer link, fallback skipped");
-      return;
-    }
-
-    if (isGone(target)) {
-      console.debug("[DEEPLINK] target closed before the link could open, dropped");
       return;
     }
 
@@ -101,6 +106,7 @@ function createDeepLinkOpener({
     }
 
     console.debug("[DEEPLINK] in-page routing unavailable, reloading");
+    bringForward();
     await target.loadURL(url, { userAgent: config.chromeUserAgent });
   }
 

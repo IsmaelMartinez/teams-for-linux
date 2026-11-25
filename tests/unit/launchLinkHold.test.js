@@ -39,3 +39,25 @@ test("the newest link wins, and readiness is asked at each offer", () => {
   assert.strictEqual(hold.offer("https://teams.cloud.microsoft/l/chat/0/0?users=late@b.com"), false);
   assert.strictEqual(hold.take(), LINK);
 });
+
+test("an older link (the launch argument) never replaces a newer held one", () => {
+  const hold = createLaunchLinkHold({ shouldHold: () => true, isHttpsUrl });
+  const second = "https://teams.cloud.microsoft/l/chat/0/0?users=second@b.com";
+
+  hold.offer(second); // a second instance during the startup awaits
+  assert.strictEqual(hold.offerOlder(LINK), true, "still belongs to the view, not the root window");
+
+  assert.strictEqual(hold.take(), second);
+});
+
+test("an older link is held when nothing newer is, and ignored when the view is ready", () => {
+  let ready = false;
+  const hold = createLaunchLinkHold({ shouldHold: () => !ready, isHttpsUrl });
+
+  assert.strictEqual(hold.offerOlder(LINK), true);
+  assert.strictEqual(hold.take(), LINK);
+  ready = true;
+  assert.strictEqual(hold.offerOlder(LINK), false);
+  assert.strictEqual(hold.offerOlder("http://evil.example/"), false);
+  assert.strictEqual(hold.take(), null);
+});

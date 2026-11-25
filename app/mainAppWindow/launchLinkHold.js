@@ -14,7 +14,8 @@
  *   active profile is a view, and that view is not wired up yet
  * @param {(url: string) => boolean} deps.isHttpsUrl - A view runs with the
  *   full preload, so only https links go there
- * @returns {{offer: (url: string) => boolean, take: () => string|null}}
+ * @returns {{offer: (url: string) => boolean, offerOlder: (url: string) => boolean,
+ *   take: () => string|null}}
  */
 function createLaunchLinkHold({ shouldHold, isHttpsUrl }) {
   let held = null;
@@ -24,6 +25,19 @@ function createLaunchLinkHold({ shouldHold, isHttpsUrl }) {
     offer(url) {
       if (!isHttpsUrl(url) || !shouldHold()) return false;
       held = url;
+      return true;
+    },
+
+    /**
+     * Like `offer`, for a link older than anything already held (the launch
+     * argument, processed after startup awaits during which a second instance
+     * may have delivered a newer one): it never replaces a held link. True
+     * when the link belongs to the not-yet-ready view, held or dropped as
+     * older; false when it is for the root window as usual.
+     */
+    offerOlder(url) {
+      if (!isHttpsUrl(url) || !shouldHold()) return false;
+      held ??= url;
       return true;
     },
 

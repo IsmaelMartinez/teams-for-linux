@@ -281,7 +281,7 @@ test("a link released after a call brings its profile forward and focuses it bef
   assert.deepStrictEqual(events, ["activate profile-a", "focus profile-a", "load profile-a"]);
 });
 
-test("an immediate link does not activate: its target is already the active profile", async (t) => {
+test("an immediate link activates too, which is a no-op for the already-active profile", async (t) => {
   const events = [];
   const { targets, opener } = build(t, {
     activator: (webContents) => events.push(`activate ${webContents.name}`),
@@ -292,7 +292,7 @@ test("an immediate link does not activate: its target is already the active prof
 
   await opener.open(LINK);
 
-  assert.deepStrictEqual(events, ["load profile-a"]);
+  assert.deepStrictEqual(events, ["activate profile-a", "focus profile-a", "load profile-a"]);
 });
 
 test("without an activator (multi-account off) a released link neither switches nor focuses", async (t) => {
@@ -325,6 +325,97 @@ test("a released link whose target is gone is not activated", async (t) => {
   opener.deferred.release();
   tick(DELAY);
   await settle();
+
+  assert.deepStrictEqual(events, []);
+});
+
+// The in-page probe can take ~750 ms; a profile switch in that window hides the
+// pinned target, so it is brought forward again right before the link is shown.
+test("a profile switch during the routing probe: the fallback brings the pinned target forward before loading", async (t) => {
+  const events = [];
+  let active = "A";
+  const viewA = new FakeWebContents("profile-a");
+  viewA.events = events;
+  const { targets, opener } = build(t, {
+    routedBy: () => {
+      active = "B"; // the user switches while the probe runs
+      return false;
+    },
+    activator: (webContents) => {
+      events.push(`activate ${webContents.name} (active was ${active})`);
+      active = "A";
+    },
+  });
+  targets.set(() => viewA);
+
+  await opener.open(LINK);
+
+  assert.deepStrictEqual(events, [
+    "activate profile-a (active was B)",
+    "focus profile-a",
+    "load profile-a",
+  ]);
+});
+
+test("a profile switch during the probe of a link that routes in page: the target is brought forward before compose focus", async (t) => {
+  const events = [];
+  const view = new FakeWebContents("profile-a");
+  view.events = events;
+  const { targets, opener } = build(t, {
+    routedBy: () => true,
+    activator: (webContents) => events.push(`activate ${webContents.name}`),
+  });
+  targets.set(() => view);
+
+  await opener.open(LINK);
+
+  assert.deepStrictEqual(events, ["activate profile-a", "focus profile-a"]);
+  assert.deepStrictEqual(view.loads, []);
+});
+
+async function supersededDuringProbe(t, routes) {
+  const events = [];
+  const view = new FakeWebContents("profile-a");
+  view.events = events;
+  let opener;
+  const built = build(t, {
+    routedBy: (_webContents, url) => {
+      if (url !== LINK) return false; // the newer link declines and, in a call, defers
+      opener.open("https://teams.cloud.microsoft/l/chat/0/0?users=new@b.com"); // arrives mid-probe
+      return routes;
+    },
+    activator: (webContents) => events.push(`activate ${webContents.name}`),
+  });
+  opener = built.opener;
+  built.targets.set(() => view);
+  built.state.callActive = true; // the newer link defers, so only the first link's path is observed
+
+  await opener.open(LINK);
+  await settle();
+
+  assert.deepStrictEqual(events, [], `routes=${routes}`);
+  assert.deepStrictEqual(view.loads, []);
+}
+
+test("a link superseded during the probe does not activate or load when it declined", (t) =>
+  supersededDuringProbe(t, false));
+
+test("a link superseded during the probe does not activate or focus when it routed", (t) =>
+  supersededDuringProbe(t, true));
+
+test("a target destroyed during the probe is not activated even when the link routed", async (t) => {
+  const events = [];
+  const view = new FakeWebContents("profile-a");
+  const { targets, opener } = build(t, {
+    routedBy: (webContents) => {
+      webContents.destroy();
+      return true;
+    },
+    activator: (webContents) => events.push(`activate ${webContents.name}`),
+  });
+  targets.set(() => view);
+
+  await opener.open(LINK);
 
   assert.deepStrictEqual(events, []);
 });

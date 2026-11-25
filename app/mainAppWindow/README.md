@@ -68,9 +68,12 @@ launch link at cold start.
   link while another is still in a call. A `did-navigate` in the link's own
   target cancels the held link; the root window's `did-navigate` cancels it
   only if it is held for the root (and clears the root's call entry).
-- A link released after a call may find the user on another profile, so its
-  view is brought forward (`setDeepLinkActivator`, the notification-click
-  activator) and focused before it loads.
+- The user can switch profile while a link waits for a call or for the in-page
+  probe (up to ~750 ms), so after the probe the opener rechecks that the link
+  is still the newest and its target alive, then brings the target forward
+  (`setDeepLinkActivator`, the notification-click activator; a no-op for the
+  already-active profile) and focuses it right before the fallback load or the
+  compose focus.
 - Cold start and startup: while multi-account is on, the stored active profile
   lives in a view and that view is not wired up yet, an https link (the launch
   argument, or a second instance during startup) is held by `launchLinkHold`
