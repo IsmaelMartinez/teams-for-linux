@@ -122,23 +122,28 @@ class StreamSelector {
       this.#closeHandler = null;
     }
 
-    // Execute callback with stored source (prioritizes user selection over cancellation)
-    if (this.#callback) {
-      this.#callback(this.#selectedSource);
-      this.#callback = null;
-    }
-
-    // Cleanup view
+    // Cleanup view. Electron does not destroy a child view's webContents when
+    // the parent closes, so only the detach depends on the parent being alive.
     if (this.#view) {
-      // A destroyed parent has already torn its child views down.
+      const { webContents } = this.#view;
       if (!this.#parent.isDestroyed()) {
         this.#parent.contentView.removeChildView(this.#view);
-        this.#view.webContents.destroy();
       }
+      if (!webContents.isDestroyed()) webContents.destroy();
       this.#view = null;
     }
 
+    // Execute callback with stored source (prioritizes user selection over
+    // cancellation). Last, so a throwing callback cannot skip the teardown.
+    const callback = this.#callback;
+    this.#callback = null;
+    const source = this.#selectedSource;
     this.#selectedSource = null;
+    try {
+      callback?.(source);
+    } catch (err) {
+      console.warn("[StreamSelector] Selection callback failed", { error: err.message });
+    }
 
     // Reset closing flag to allow reopening
     this.#isClosing = false;

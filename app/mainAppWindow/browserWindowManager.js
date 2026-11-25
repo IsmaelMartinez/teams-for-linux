@@ -225,6 +225,8 @@ class BrowserWindowManager {
     return (event) => {
       const streamSelector = new StreamSelector(this.window);
       streamSelector.show((source) => {
+        // On window close the sender is already gone when the picker cancels.
+        if (event.sender.isDestroyed()) return;
         event.reply("select-source", source);
       });
     };

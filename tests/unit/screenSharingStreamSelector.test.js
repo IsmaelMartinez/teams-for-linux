@@ -13,7 +13,16 @@ let ipcOnce;
 
 class FakeView {
 	constructor() {
-		this.webContents = { loadFile() {}, destroy() {} };
+		this.webContents = {
+			destroyed: false,
+			loadFile() {},
+			isDestroyed() {
+				return this.destroyed;
+			},
+			destroy() {
+				this.destroyed = true;
+			},
+		};
 		views.push(this);
 	}
 	setBounds(bounds) {
@@ -128,6 +137,28 @@ describe('StreamSelector bounds and teardown (#2947)', () => {
 		assert.strictEqual(result(), null);
 		assert.deepStrictEqual(parent.contentView.removed, []);
 		assert.strictEqual((parent.listeners.resize || []).length, 0);
+		assert.strictEqual((parent.contentView.listeners['bounds-changed'] || []).length, 0);
+	});
+
+	it('destroys the picker webContents when the parent closes', async () => {
+		const { parent } = await shown();
+		parent.destroyed = true;
+		parent.emit('closed');
+		assert.strictEqual(views[0].webContents.destroyed, true);
+	});
+
+	it('finishes teardown even when the selection callback throws', async () => {
+		const { StreamSelector } = require(selectorPath);
+		const parent = fakeParent();
+		new StreamSelector(parent).show(() => {
+			throw new Error('Object has been destroyed');
+		});
+		await nextTick();
+		assert.doesNotThrow(() => ipcOnce['close-view']());
+		assert.strictEqual(views[0].webContents.destroyed, true);
+		assert.deepStrictEqual(parent.contentView.removed, [views[0]]);
+		assert.strictEqual((parent.listeners.resize || []).length, 0);
+		assert.strictEqual((parent.listeners.closed || []).length, 0);
 		assert.strictEqual((parent.contentView.listeners['bounds-changed'] || []).length, 0);
 	});
 
