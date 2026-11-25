@@ -22,7 +22,7 @@ URIs: https://repo.teamsforlinux.de/debian/
 Suites: stable
 Components: main
 Signed-By: /etc/apt/keyrings/teams-for-linux.asc
-Architectures: amd64" | sudo tee /etc/apt/sources.list.d/teams-for-linux-packages.sources'
+Architectures: amd64" | sudo tee /etc/apt/sources.list.d/teams-for-linux.sources'
 sudo apt update && sudo apt install teams-for-linux
 ```
 
@@ -49,7 +49,7 @@ URIs: https://repo.teamsforlinux.de/debian/
 Suites: beta
 Components: main
 Signed-By: /etc/apt/keyrings/teams-for-linux.asc
-Architectures: amd64" | sudo tee /etc/apt/sources.list.d/teams-for-linux-packages.sources'
+Architectures: amd64" | sudo tee /etc/apt/sources.list.d/teams-for-linux.sources'
 sudo apt update && sudo apt install teams-for-linux
 ```
 
