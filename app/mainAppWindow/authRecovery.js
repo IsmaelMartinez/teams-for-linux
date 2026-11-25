@@ -87,6 +87,15 @@ const AUTH_LOCAL_STORAGE_PATTERNS = [
   'accessToken', 'idtoken', 'Account', 'Authority', 'ClientInfo',
 ];
 
+// What started a recovery, which decides what a call that began in the
+// meantime does to it (see deferToCall).
+const RECOVERY_ORIGIN = Object.freeze({
+  SIGNAL: 'signal', // automatic, after a reliable failure signal
+  POPUP: 'popup', // an intercepted login popup (banner click)
+  QUEUED: 'queued', // "After the call", at the end of that call
+  USER: 'user', // "Sign in now": goes ahead even mid-call
+});
+
 /** The root window's surface key; every other surface is a profile id. */
 const ROOT_SURFACE = Symbol('root');
 
@@ -290,13 +299,31 @@ function createAuthRecovery({
   function scheduleRecovery(surface, state) {
     state.lastRecoveryAt = now();
     console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery', ...logContext(surface));
-    setTimer(() => void runRecovery(surface), AUTH_RECOVERY_DELAY_MS);
+    setTimer(() => void runRecovery(surface, RECOVERY_ORIGIN.SIGNAL), AUTH_RECOVERY_DELAY_MS);
   }
 
-  function runRecovery(surface) {
-    return recover(surface).catch((err) => {
+  function runRecovery(surface, origin) {
+    return recover(surface, origin).catch((err) => {
       console.error('[AUTH_RECOVERY] Failed to trigger auth recovery:', err);
     });
+  }
+
+  // Every recovery but the user's own "Sign in now" was decided while the
+  // surface had no call, and runs later (a timer, setImmediate, the async
+  // clean). A call that started in between must not be ended by a silent
+  // reload: the user is asked instead, or a recovery already queued for "after
+  // the call" waits for this call too. Returns true when it deferred.
+  function deferToCall(surface, origin) {
+    if (origin === RECOVERY_ORIGIN.USER || !isInCall(surface)) return false;
+    if (origin === RECOVERY_ORIGIN.QUEUED) {
+      console.info('[AUTH_RECOVERY] A call started before the queued recovery ran, waiting for it to end');
+      stateOf(surface).recoveryQueuedForCallEnd = true;
+    } else {
+      console.info('[AUTH_RECOVERY] A call started before the recovery ran, asking user');
+      // The call is new, so its prompt has not been shown yet.
+      void promptMidCallReauth(surface, false);
+    }
+    return true;
   }
 
   // ── Mid-call handling ──────────────────────────────────────────────────
@@ -350,7 +377,7 @@ function createAuthRecovery({
       });
       if (response === 0) {
         console.info('[AUTH_RECOVERY] User chose to reauthenticate during call');
-        await recover(surface);
+        await recover(surface, RECOVERY_ORIGIN.USER);
       } else if (response === 1) {
         console.info('[AUTH_RECOVERY] Recovery queued until the call ends');
         state.recoveryQueuedForCallEnd = true;
@@ -366,15 +393,18 @@ function createAuthRecovery({
 
   /**
    * Clears the surface's stale auth state (localStorage tokens + cookies) and
-   * reloads it on its start page to force a fresh interactive login.
+   * reloads it on its start page to force a fresh interactive login. Unless
+   * the user asked for it (`origin` USER), a call in the surface defers it,
+   * checked both before the clean and right before the reload.
    */
-  async function recover(surface) {
+  async function recover(surface, origin) {
     const target = webContentsOf(surface);
     const url = startUrlOf(surface);
     if (!target || target.isDestroyed() || !url) {
       console.info('[AUTH_RECOVERY] Recovery target is gone, skipped', ...logContext(surface));
       return;
     }
+    if (deferToCall(surface, origin)) return;
     console.info('[AUTH_RECOVERY] Clearing auth state and reloading...', ...logContext(surface));
 
     // Clear localStorage auth tokens via renderer
@@ -404,9 +434,20 @@ function createAuthRecovery({
     await cleanAuthCookies(target.session, true);
     // The profile can be removed while its cookies were being cleaned.
     if (target.isDestroyed()) return;
+    // A call can start during the clean; the reload would end it.
+    if (deferToCall(surface, origin)) return;
 
     console.info('[AUTH_RECOVERY] Reloading for fresh auth...');
-    target.loadURL(url, { userAgent: getConfig().chromeUserAgent });
+    // Awaited and caught: a superseding navigation rejects with ERR_ABORTED,
+    // and the process-wide unhandledRejection handler exits the app (ending
+    // calls in other profiles). Only the code is logged, never the URL.
+    try {
+      await target.loadURL(url, { userAgent: getConfig().chromeUserAgent });
+    } catch (error) {
+      console.debug('[AUTH_RECOVERY] Recovery reload interrupted', {
+        code: error?.code ?? error?.errno,
+      });
+    }
   }
 
   /** Clears the surface's mid-call state after it navigated (see below). */
@@ -520,7 +561,7 @@ function createAuthRecovery({
         return;
       }
       console.info(`[AUTH_RECOVERY] ${context}, triggering in-app recovery`, ...logContext(surface));
-      runSoon(() => void runRecovery(surface));
+      runSoon(() => void runRecovery(surface, RECOVERY_ORIGIN.POPUP));
     },
 
     /**
@@ -551,7 +592,7 @@ function createAuthRecovery({
       state.recoveryQueuedForCallEnd = false;
       console.info('[AUTH_RECOVERY] Call ended, running queued recovery');
       // Short delay so the call teardown finishes before the reload
-      setTimer(() => void runRecovery(surface), AUTH_RECOVERY_DELAY_MS);
+      setTimer(() => void runRecovery(surface, RECOVERY_ORIGIN.QUEUED), AUTH_RECOVERY_DELAY_MS);
       return webContentsOf(surface);
     },
 

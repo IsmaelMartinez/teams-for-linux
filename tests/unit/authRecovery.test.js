@@ -105,6 +105,7 @@ function build({ reauth = true } = {}) {
     getRootWebContents: () => h.root,
     cleanAuthCookies: async (session, force = false) => {
       h.cleaned.push({ session, force });
+      if (force) h.onForceClean?.(session);
       return { cleaned: 0, total: 0, expired: 0 };
     },
     showMessageBox: async (options) => {
@@ -613,5 +614,125 @@ describe('auth recovery with multi-account', () => {
       { session: a.session, force: false },
       { session: b.session, force: false },
     ]);
+  });
+});
+
+// A recovery decided while the surface had no call runs later (a 5 s timer,
+// setImmediate, the async clean). A call that started in between must never be
+// ended by a silent reload; only the user's own "Sign in now" goes ahead.
+describe('auth recovery when a call starts before the recovery runs', () => {
+  it('a call that starts after the automatic recovery is scheduled gets the prompt, not a reload', async () => {
+    const h = withProfiles(build());
+    const b = h.addView('pb');
+    h.recovery.onRendererError(RELIABLE, undefined, b);
+    assert.strictEqual(h.timers.length, 1);
+    h.callStart(b);
+    await h.runPending();
+    assert.ok(untouched(b), 'not cleared and not reloaded');
+    assert.ok(!h.cleaned.some((c) => c.force), 'no cookies force-cleaned');
+    assert.strictEqual(h.prompts.length, 1);
+    assert.strictEqual(h.prompts[0].message, 'Teams needs you to sign in again to Client B.');
+  });
+
+  it('a call that starts during the clean stops the reload and asks', async () => {
+    const h = withProfiles(build());
+    const b = h.addView('pb');
+    h.onForceClean = (session) => {
+      if (session === b.session) h.callStart(b);
+    };
+    h.recovery.onRendererError(RELIABLE, undefined, b);
+    await h.runPending();
+    assert.strictEqual(b.executed.length, 1, 'the clean had already started');
+    assert.deepStrictEqual(b.loads, [], 'but the reload that would end the call is skipped');
+    assert.strictEqual(h.prompts.length, 1);
+  });
+
+  it('"Sign in now" still reloads although the call is on', async () => {
+    const h = withProfiles(build());
+    const b = h.addView('pb');
+    h.onForceClean = () => h.callStart(b);
+    h.callStart(b);
+    h.promptResponse = 0;
+    h.recovery.onRendererError(RELIABLE, undefined, b);
+    for (let i = 0; i < 5; i++) await flush();
+    assertRecovered(h, b, `${TEAMS_URL}/?start=pb`);
+  });
+
+  it('a recovery queued for the end of a call waits for a call that starts in the teardown delay', async () => {
+    const h = build();
+    h.callStart(h.root);
+    h.promptResponse = 1;
+    h.recovery.onSurfaceMessage(ROOT_SURFACE, RELIABLE, '');
+    await flush();
+    assert.strictEqual(h.callEnd(h.root), h.root);
+    h.callStart(h.root);
+    await h.runPending();
+    assert.ok(untouched(h.root));
+    assert.strictEqual(h.prompts.length, 1, 'the user already chose; no second prompt');
+    assert.strictEqual(h.callEnd(h.root), h.root, 'still queued for the new call\'s end');
+    await h.runPending();
+    assertRecovered(h, h.root, TEAMS_URL);
+  });
+
+  it('a queued recovery whose new call starts during the clean waits again', async () => {
+    const h = build();
+    h.callStart(h.root);
+    h.promptResponse = 1;
+    h.recovery.onSurfaceMessage(ROOT_SURFACE, RELIABLE, '');
+    await flush();
+    h.callEnd(h.root);
+    h.onForceClean = () => h.callStart(h.root);
+    await h.runPending();
+    assert.deepStrictEqual(h.root.loads, []);
+    h.onForceClean = null;
+    assert.strictEqual(h.callEnd(h.root), h.root);
+    await h.runPending();
+    assert.strictEqual(h.root.loads.length, 1);
+  });
+
+  it('a banner-click recovery whose call starts before it runs asks instead of reloading', async () => {
+    const h = withProfiles(build());
+    const b = h.addView('pb');
+    h.callStart(b);
+    h.recovery.onRendererError(RELIABLE, undefined, b);
+    await flush();
+    assert.strictEqual(h.prompts.length, 1, 'first prompt answered "Not now"');
+    h.callEnd(b);
+    h.recovery.triggerPopupRecovery('pb', 'Direct login popup intercepted');
+    h.callStart(b);
+    await h.runPending();
+    assert.ok(untouched(b));
+    assert.strictEqual(h.prompts.length, 2);
+  });
+});
+
+describe('auth recovery reload failures', () => {
+  it('an aborted reload is absorbed and logs neither the URL nor the error', async (t) => {
+    const unhandled = [];
+    const onUnhandled = (reason) => unhandled.push(reason);
+    process.on('unhandledRejection', onUnhandled);
+    t.after(() => process.off('unhandledRejection', onUnhandled));
+    // As the console prints them: an Error's message and stack included.
+    const { inspect } = require('node:util');
+    const lines = [];
+    const sink = (...args) => lines.push(args.map((a) => inspect(a)).join(' '));
+    for (const level of ['debug', 'info', 'warn', 'error']) t.mock.method(console, level, sink);
+
+    const h = withProfiles(build());
+    const b = h.addView('pb');
+    b.loadURL = (url) => {
+      const error = new Error(`ERR_ABORTED (-3) loading '${url}'`);
+      error.code = 'ERR_ABORTED';
+      return Promise.reject(error);
+    };
+    h.recovery.onRendererError(RELIABLE, undefined, b);
+    await h.runPending();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    assert.deepStrictEqual(unhandled, []);
+    assert.ok(lines.some((line) => line.includes('ERR_ABORTED')), 'the code is noted');
+    for (const line of lines) {
+      assert.ok(!line.includes('start=pb') && !line.includes("loading '"), line);
+    }
   });
 });

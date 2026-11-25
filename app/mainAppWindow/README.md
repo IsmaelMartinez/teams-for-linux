@@ -115,6 +115,14 @@ surface's webContents and session.
   own reload clears its call and its queued recovery. When it runs, it cancels
   a deep link held for the same surface (`cancelIfFor`); a link held for
   another profile still opens once no call is left.
+- **A call that starts before a recovery runs.** Recovery runs after a delay
+  (5 s after a signal or a call's end, the next tick after a banner click) and
+  after an async clean, so the surface's call state is checked again before
+  the clean and right before the reload. A new call gets the mid-call prompt
+  instead, and a recovery already queued for "after the call" waits for that
+  call too. Only "Sign in now" reloads during a call. The reload is awaited:
+  an aborted navigation (ERR_ABORTED) is logged by code only and never reaches
+  the process-wide unhandled-rejection handler.
 - **Login popups.** The root window's about:blank and direct login popups
   (`onBeforeRequestHandler`, `onNewWindow`) correlate with and recover the
   root window. A profile view's direct login popup goes through
