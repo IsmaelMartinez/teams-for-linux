@@ -109,6 +109,9 @@ class ProfileViewManager {
   #descendants = new Map();
   #handlers = null;
   #resizeHandler = null;
+  // Held so dispose() (which runs on `closed`) can detach without touching the
+  // destroyed window's `contentView` accessor.
+  #boundsSource = null;
   #focusHandler = null;
   #navigationHandler = null;
   #bootstrapInFlight = false;
@@ -199,6 +202,13 @@ class ProfileViewManager {
 
     this.#resizeHandler = () => this.#applyBoundsToAll();
     this.#window.on("resize", this.#resizeHandler);
+
+    // Maximize/restore/fullscreen change the content size without a `resize`
+    // the views reliably act on under X11 (#2947), and the window-state events
+    // themselves still report the old content size. The contentView's
+    // `bounds-changed` fires once the new size is in effect.
+    this.#boundsSource = this.#window.contentView;
+    this.#boundsSource.on("bounds-changed", this.#resizeHandler);
 
     // When the window regains focus (e.g. after a keyboard layout switch on
     // X11), keyboard focus otherwise falls back to the root webContents,
@@ -385,6 +395,8 @@ class ProfileViewManager {
     }
     if (this.#resizeHandler) {
       this.#window.removeListener("resize", this.#resizeHandler);
+      this.#boundsSource.removeListener("bounds-changed", this.#resizeHandler);
+      this.#boundsSource = null;
       this.#resizeHandler = null;
     }
     if (this.#focusHandler) {
