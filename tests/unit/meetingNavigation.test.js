@@ -97,18 +97,21 @@ test("Return to Teams goes back to the surface that joined, after a profile swit
   assert.deepStrictEqual(viewB.loads, []);
 });
 
-test("Return to Teams uses the active surface when the one that joined is gone", async (t) => {
+test("Return to Teams does not apply a removed profile's snapshot to the active one", async (t) => {
   const viewA = new FakeWebContents("https://teams.cloud.microsoft/a");
   const viewB = new FakeWebContents("https://teams.cloud.microsoft/b");
   const { nav, state } = build(t, viewA);
 
   await nav.join(MEETING);
-  viewA.destroyed = true;
+  viewA.destroyed = true; // profile A was removed
   state.target = viewB;
   await nav.returnToTeams();
 
-  assert.strictEqual(viewB.loads.length, 1);
-  assert.strictEqual(viewB.loads[0].url, "https://teams.cloud.microsoft/a", "snapshot URL still applies");
+  assert.deepStrictEqual(viewB.loads, [{ url: CONFIG.url, options: { userAgent: "UA" } }]);
+  assert.ok(!viewB.loads.some((load) => load.url.endsWith("/a")), "A's page never reaches B");
+
+  await nav.returnToTeams();
+  assert.strictEqual(viewB.loads[1].url, CONFIG.url, "the discarded snapshot stays gone");
 });
 
 test("a second join from a meeting page keeps the first snapshot, as before", async (t) => {

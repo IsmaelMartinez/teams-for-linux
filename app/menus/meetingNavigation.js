@@ -80,11 +80,16 @@ class MeetingNavigation {
       ? this.#preJoinUrl
       : config.url;
     try {
-      // The surface that joined, if it is still there; else the active one.
+      // The surface that joined, if it is still there. If it is gone (its
+      // profile was removed) the snapshot belongs to that account and is
+      // ignored: the active surface goes to the configured Teams URL rather
+      // than to another account's page.
       const joined = this.#preJoinTarget;
-      const target = joined && !joined.isDestroyed() ? joined : this.#getTarget();
+      const joinedGone = Boolean(joined) && joined.isDestroyed();
+      const target = joined && !joinedGone ? joined : this.#getTarget();
+      const url = joinedGone ? config.url : destination;
       this.#showWindow();
-      await target.loadURL(destination, { userAgent: config.chromeUserAgent });
+      await target.loadURL(url, { userAgent: config.chromeUserAgent });
     } catch {
       console.error("[RETURN_TO_TEAMS] Navigation failed");
       this.#showError("Error", "Failed to return to Teams.");

@@ -657,9 +657,23 @@ class ProfileViewManager {
       }
     });
 
-    view.webContents.loadURL(this.#firstLoadUrl(profile), {
-      userAgent: this.#config.chromeUserAgent,
-    });
+    this.#loadFirstPage(view.webContents, this.#firstLoadUrl(profile));
+  }
+
+  // Fire-and-forget first load. Teams' launcher page (msteams: links) redirects
+  // in the page, which rejects loadURL with ERR_ABORTED although the new page
+  // is loading, and the process-wide unhandledRejection handler exits on
+  // anything it cannot classify. So the failure is handled here: nothing is
+  // retried (a reload would drop the redirect) and only the error code is
+  // logged, never the error or the URL, which carries the recipient or meeting.
+  async #loadFirstPage(webContents, url) {
+    try {
+      await webContents.loadURL(url, { userAgent: this.#config.chromeUserAgent });
+    } catch (error) {
+      console.debug("[ProfileViewManager] First load interrupted", {
+        code: error?.code ?? error?.errno,
+      });
+    }
   }
 
   /**

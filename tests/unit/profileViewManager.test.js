@@ -949,3 +949,57 @@ describe('ProfileViewManager launch link', () => {
     assert.strictEqual(createdViews.at(-1).webContents.loads[0][0], 'https://teams.cloud.microsoft');
   });
 });
+
+// Teams' launcher redirects reject loadURL with ERR_ABORTED; an unhandled
+// rejection exits the app and logs the URL-bearing error.
+describe('ProfileViewManager first load rejection', () => {
+  const LINK = 'https://teams.cloud.microsoft/l/chat/0/0?users=a@b.com';
+
+  async function startWithRejectingLoads(t, launchLink) {
+    const unhandled = [];
+    const onUnhandled = (reason) => unhandled.push(reason);
+    process.on('unhandledRejection', onUnhandled);
+    t.after(() => process.off('unhandledRejection', onUnhandled));
+    const lines = [];
+    const sink = (...args) => lines.push(JSON.stringify(args));
+    for (const level of ['debug', 'info', 'warn', 'error']) t.mock.method(console, level, sink);
+    const originalLoad = FakeWebContents.prototype.loadURL;
+    FakeWebContents.prototype.loadURL = function loadURL(url) {
+      const error = new Error(`ERR_ABORTED (-3) loading '${url}'`);
+      error.code = 'ERR_ABORTED';
+      return Promise.reject(error);
+    };
+    t.after(() => {
+      FakeWebContents.prototype.loadURL = originalLoad;
+    });
+    const pm = fakeProfilesManager([LEGACY, PROFILE_A]);
+    pm.activeId = 'profile-a';
+    const pvm = new ProfileViewManager(
+      fakeWindow(),
+      pm,
+      { url: 'https://teams.cloud.microsoft', chromeUserAgent: 'UA' },
+      () => {},
+      () => {}
+    );
+    if (launchLink) pvm.setLaunchUrl(launchLink);
+    pvm.initialize();
+    await new Promise((resolve) => setImmediate(resolve));
+    return { unhandled, lines };
+  }
+
+  it('absorbs an aborted launch-link load without logging the link or the error', async (t) => {
+    const { unhandled, lines } = await startWithRejectingLoads(t, LINK);
+
+    assert.deepStrictEqual(unhandled, []);
+    assert.ok(lines.length > 0, 'the interruption is noted');
+    for (const line of lines) {
+      assert.ok(!line.includes('a@b.com') && !line.includes('/l/chat'), line);
+    }
+  });
+
+  it('absorbs a failed ordinary profile first load too', async (t) => {
+    const { unhandled } = await startWithRejectingLoads(t, null);
+
+    assert.deepStrictEqual(unhandled, []);
+  });
+});
