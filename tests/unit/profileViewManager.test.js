@@ -83,7 +83,9 @@ class FakeWebContentsView {
     this.webContents = new FakeWebContents();
     createdViews.push(this);
   }
-  setBounds() {}
+  setBounds(bounds) {
+    this.bounds = bounds;
+  }
   setBackgroundColor() {}
   setVisible(visible) {
     this.visible = visible;
@@ -149,8 +151,22 @@ function fakeWindow() {
     isFocused() {
       return this.focused;
     },
-    getContentSize: () => [1200, 800],
+    contentSize: [1200, 800],
+    getContentSize() {
+      return this.contentSize;
+    },
+    isDestroyed: () => false,
     contentView: {
+      listeners: {},
+      on(event, cb) {
+        (this.listeners[event] ||= []).push(cb);
+      },
+      removeListener(event, cb) {
+        this.listeners[event] = (this.listeners[event] || []).filter((l) => l !== cb);
+      },
+      emit(event) {
+        for (const cb of this.listeners[event] || []) cb();
+      },
       attached: new Set(),
       removed: [],
       addChildView(view) {
@@ -224,6 +240,46 @@ function build(profiles, bindWindowOpenHandler) {
   pvm.initialize();
   return { win, pm, pvm };
 }
+
+describe('ProfileViewManager window-state bounds (#2947)', () => {
+  const nextTick = () => new Promise((resolve) => setTimeout(resolve, 10));
+
+  function pillOf(win) {
+    return createdViews.find((v) => v !== createdViews[0] && win.contentView.attached.has(v));
+  }
+
+  it('re-lays-out profile views and the pill when the contentView bounds change', () => {
+    const { win, pm } = build([LEGACY, PROFILE_A]);
+    pm.switch(PROFILE_A.id);
+    const view = createdViews[0];
+    const pill = pillOf(win);
+    win.contentSize = [1920, 1080];
+    win.contentView.emit('bounds-changed');
+    assert.deepStrictEqual(view.bounds, { x: 0, y: 0, width: 1920, height: 1080 });
+    assert.deepStrictEqual(pill.bounds, { x: 0, y: 1024, width: 56, height: 56 });
+  });
+
+  // X11: the maximize event and any zero-delay tick still see the old size and
+  // no `resize` follows; only the contentView's bounds-changed carries the new one.
+  it('picks up a content size that only changes after the state event and a tick', async () => {
+    const { win, pm } = build([LEGACY, PROFILE_A]);
+    pm.switch(PROFILE_A.id);
+    const view = createdViews[0];
+    win.emit('maximize');
+    await nextTick();
+    win.contentSize = [1920, 1080];
+    win.contentView.emit('bounds-changed');
+    assert.deepStrictEqual(view.bounds, { x: 0, y: 0, width: 1920, height: 1080 });
+  });
+
+  it('dispose removes the resize and bounds-changed listeners', () => {
+    const { win, pm, pvm } = build([LEGACY, PROFILE_A]);
+    pm.switch(PROFILE_A.id);
+    pvm.dispose();
+    assert.strictEqual((win.listeners.resize || []).length, 0);
+    assert.strictEqual((win.contentView.listeners['bounds-changed'] || []).length, 0);
+  });
+});
 
 describe('ProfileViewManager sender attribution wiring', () => {
   it('returns root contents for legacy and active view contents for another profile', () => {
