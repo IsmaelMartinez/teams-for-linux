@@ -229,7 +229,7 @@ if (os.platform() === "linux") {
 const downloadManager = new DownloadManager(config, mainAppWindow, jobEmitter, launcherEmitter);
 
 if (isMac) {
-  requestMediaAccess();
+  void requestMediaAccess();
 }
 
 for (const protocolClient of PROTOCOL_SCHEMES) {

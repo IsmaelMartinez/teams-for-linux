@@ -552,7 +552,7 @@ function handleMidCallAuthSignal(source) {
     if (now - firstMidCallWorkerSignalAt < MIDCALL_WORKER_SIGNAL_CONFIRM_MS) return;
   }
 
-  promptMidCallReauth(false);
+  void promptMidCallReauth(false);
 }
 
 /**
@@ -622,7 +622,7 @@ function triggerPopupRecovery(context) {
     // Recovery would end the active call — let the user decide. force=true:
     // an explicit click re-prompts even after an earlier "Not now".
     console.info(`[AUTH_RECOVERY] ${context} during an active call, asking user`);
-    promptMidCallReauth(true);
+    void promptMidCallReauth(true);
     return;
   }
   console.info(`[AUTH_RECOVERY] ${context}, triggering in-app recovery`);
@@ -1593,7 +1593,7 @@ function secureOpenLink(details) {
       : { action: "deny" };
 
   if (action === 1) {
-    removePopupWindowMenu();
+    void removePopupWindowMenu();
   }
 
   return returnValue;

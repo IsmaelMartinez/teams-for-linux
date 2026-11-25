@@ -657,7 +657,7 @@ class ProfileViewManager {
       }
     });
 
-    this.#loadFirstPage(view.webContents, this.#firstLoadUrl(profile));
+    void this.#loadFirstPage(view.webContents, this.#firstLoadUrl(profile));
   }
 
   // Fire-and-forget first load. Teams' launcher page (msteams: links) redirects
