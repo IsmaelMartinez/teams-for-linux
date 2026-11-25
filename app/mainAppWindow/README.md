@@ -5,6 +5,7 @@ Manages the primary BrowserWindow that hosts the Teams web interface.
 ## Components
 
 - **[index.js](index.js)**: Entry point and window lifecycle management
+- **[authRecovery.js](authRecovery.js)**: In-app auth recovery (`auth.reauthRecovery.enabled`): detection, per-surface state (root window or one profile view), the mid-call prompt and the clear-and-reload. See [Auth Recovery](#auth-recovery)
 - **[browserWindowManager.js](browserWindowManager.js)**: Window creation, configuration, and event handling
 - **[deepLinkRouter.js](deepLinkRouter.js)**: In-page routing for Teams deep links, on whichever webContents it is given
 - **[deepLinkOpener.js](deepLinkOpener.js)**: Opens one deep link on one webContents: in-page route, else full navigation, else deferred while a call is active
@@ -83,3 +84,54 @@ launch link at cold start.
   off, or Profile 0 active, nothing is held.
 - After a second-instance link the target's webContents is focused as well as
   the window, so typing after the link lands in the active profile.
+
+## Auth Recovery
+
+`authRecovery.js` holds the opt-in in-app recovery (`auth.reauthRecovery.enabled`):
+a trusted MSAL `InteractionRequired` signal clears the session's auth
+localStorage keys and auth cookies and reloads it; a worker `UPR:` error only
+feeds the login-popup correlation; during a call the user is asked instead
+(sign in now, after the call, not now). `index.js` only wires it.
+
+State is kept per **surface**: the root window (Profile 0, and the only
+surface without multi-account) or one multi-account profile view. Cooldown,
+failure-signal timestamp, popup dedupe, the mid-call prompt and the queued
+recovery all belong to one surface, and recovery clears and reloads only that
+surface's webContents and session.
+
+- **Attribution.** The root window's and every profile view's
+  `console-message` feed detection directly. The `window-error` and
+  `unhandled-rejection` IPC handlers in `app/index.js` pass `event.sender`
+  through `notifyRendererError`, mapped with `ProfileViewManager.resolveProfileId`.
+  A popup belongs to the profile that opened it (it shares that profile's
+  partition). A sender no profile owns (the switcher pill, a dialog, a popup
+  of the root window before Profile 0 exists) is dropped, never credited to
+  another profile. Without multi-account every renderer belongs to the root
+  window, as before.
+- **Calls.** `callRegistry.js` keeps the in-call senders; a surface is in a call
+  when one of them (`activeIds()`) resolves to it. A call in profile A neither blocks profile
+  B's silent recovery nor is ended by it; a recovery queued for "after the
+  call" runs once no renderer of that surface is in a call, and a profile's
+  own reload clears its call and its queued recovery. When it runs, it cancels
+  a deep link held for the same surface (`cancelIfFor`); a link held for
+  another profile still opens once no call is left.
+- **Login popups.** The root window's about:blank and direct login popups
+  (`onBeforeRequestHandler`, `onNewWindow`) correlate with and recover the
+  root window. A profile view's direct login popup goes through
+  `profileWindowOpenPolicy.js` and is taken only when that profile has a
+  recent failure signal; it recovers that profile. A profile view's
+  about:blank login popup is left alone: it opens as a real window the user
+  can sign in from.
+- **Persisted signal.** Only the root window persists its failure signal
+  (`authRecovery.lastFailureSignalAt` in the settings store, unchanged).
+  Profile views keep theirs in memory, since a popup they do not intercept
+  still signs in inside the app. A removed profile, or a view that destroyed
+  its own webContents, takes its state with it.
+- **Mid-call prompt.** Parented to the root window; with multi-account it
+  names the profile ("Teams needs you to sign in again to Work."). Profile
+  names and ids are never logged; logs only carry `{ isRoot }` with
+  multi-account on, and are unchanged without it.
+- **Cookie hygiene (always on, #2296).** Expired auth cookies are cleaned from
+  the root window's session before Teams loads, from each profile view's
+  session before its first load (`ProfileViewManager`'s view-created hook), and
+  from every live session after a resume from sleep.

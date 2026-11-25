@@ -32,6 +32,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
 const { reloadIfSignedOut } = require("./signOutReload");
+const { createAuthRecovery } = require("./authRecovery");
 const { isSafeExternalUrl, schemeOf } = require("../helpers/externalUrl");
 // Microsoft Cloud App Security proxy suffixes. Tenants that route Teams
 // through Defender for Cloud Apps (MCAS) load and store cookies on
@@ -93,7 +94,21 @@ function bindWindowOpenHandler(targetWebContents, loadTargetWebContents, activat
     config,
     loadTargetWebContents,
     activate,
+    interceptAuthPopup: (url) => interceptProfileAuthPopup(loadTargetWebContents, url),
   });
+}
+
+// A direct Microsoft login popup from a profile whose session recently
+// failed (the same correlation as the root window's onNewWindow) recovers
+// THAT profile in-app and is denied. `owner` is the profile view the popup
+// came from, or one it was opened from. Anything else keeps the policy's
+// default.
+function interceptProfileAuthPopup(owner, url) {
+  if (!isAuthLoginUrl(url)) return false;
+  const surface = authRecovery.resolveSurface(owner);
+  if (!authRecovery.shouldInterceptPopup(surface)) return false;
+  authRecovery.triggerPopupRecovery(surface, "Direct login popup intercepted");
+  return true;
 }
 
 // Register the in-app screen-share picker on a given session. `setDisplayMediaRequestHandler`
@@ -291,13 +306,6 @@ const AUTH_COOKIE_NAMES = new Set([
 // account chooser stays prefilled after session expiry (issue #2364).
 const PRESERVE_ON_RECOVERY = new Set(['ESTSAUTHPERSISTENT']);
 
-// localStorage key patterns for MSAL/Teams auth tokens
-const AUTH_LOCAL_STORAGE_PATTERNS = [
-  'tmp.auth.v1.', 'refresh_token', 'msal.token', 'msal.',
-  'EncryptionKey', 'authSessionId', 'LogoutState',
-  'accessToken', 'idtoken', 'Account', 'Authority', 'ClientInfo',
-];
-
 /**
  * Checks session cookies for Microsoft auth domains and removes expired
  * or removable auth cookies. When forceCleanAll is true, removes all auth
@@ -354,37 +362,12 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
   }
 }
 
-// Always-on auth-failure signatures. MSAL reports an interaction-required error
-// only when a silent token refresh genuinely fails, so it is a reliable signal to
-// recover on. It surfaces in two spellings: the MSAL class name
-// `InteractionRequired` (console) and the OAuth error code `interaction_required`
-// (the lowercase form thrown by token warming as an unhandled rejection — wired
-// into detection by the unhandled-rejection handler in app/index.js).
-const AUTH_FAILURE_PATTERNS = ['InteractionRequired', 'interaction_required'];
-// Opt-in, correlation-only auth-failure signature. The Teams worker can die with
-// an uncaught "UPR: <reason>" error, and a genuinely stale session emits these
-// (sometimes without ever logging InteractionRequired, #2480). But the worker
-// emits the same "UPR:" shape for routine transient failures (pinned channels,
-// presence, "Invalid id undefined", and an empty reason) on perfectly healthy
-// sessions, and UPR-heavy tenants fire them constantly (#2629) — far too noisy to
-// drive an automatic reload. So when auth.reauthRecovery.enabled is set, a UPR
-// only records a failure signal for login-popup correlation (so the banner-click
-// in-app recovery can recognise a broken session); it never schedules the silent
-// clear-and-reload on its own. Recovery from a UPR happens only through an
-// explicit user action (the banner click, or the mid-call prompt).
-const OPT_IN_AUTH_FAILURE_PATTERNS = ['Uncaught Error: UPR:'];
-// Only trust auth failure signals from Teams/Microsoft origins
-const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com'];
-// Loop guard for the automatic clear-and-reload. A cooldown rather than a
-// single-shot flag: a long-running app can hit a second stale session hours
-// after the first recovery (observed in the field: recovery at 10:55, the
-// session went stale again at 12:11 and the old once-per-process flag
-// silently swallowed it), while the cooldown still prevents rapid
-// reload loops if a recovery fails to fix the session.
-let lastAuthRecoveryAt = 0;
-const AUTH_RECOVERY_COOLDOWN_MS = 30 * 60 * 1000;
-// Worker UPRs are transient during active calls (#2428); suppress them only while
-// a call is in progress so startup recovery still works for stale-token loops (#2480).
+// In-app auth recovery (#2622, opt-in): detection, per-surface state and the
+// clear-and-reload live in authRecovery.js. Without multi-account the only
+// surface is the root window; with it, each profile view is its own surface
+// and recovery only ever acts on the one whose session failed (ADR-020).
+
+// Which renderers are in a call (the root window, a profile view, a popup).
 // A registry rather than a flag: with profiles, one hang-up must not clear
 // another profile's call. `callRegistry.active` is the old boolean.
 const callRegistry = createCallRegistry({
@@ -394,115 +377,26 @@ const callRegistry = createCallRegistry({
     if (deferredDeepLink.pending) deferredDeepLink.release();
   },
 });
-// Timestamp of the last trusted auth-failure signal. Used to correlate login
-// popups with an actually-broken session: while the stale "sign in again"
-// banner is up the renderer keeps emitting failure signatures every few
-// minutes (observed gaps up to ~40 min), whereas healthy-session login popups
-// (initial sign-in, consent, step-up MFA, adding an account) appear without
-// any preceding failure signal.
-let lastAuthFailureSignalAt = 0;
-const AUTH_FAILURE_SIGNAL_WINDOW_MS = 60 * 60 * 1000;
-// The broken session survives an app restart, so the signal timestamp must
-// too (observed in the field: app restarted while stale, the in-memory
-// timestamp reset, and the banner's Sign In click fell through unintercepted).
-// Persisted via the settings store; restored in onAppReady. Writes are
-// throttled because failure signatures can repeat at sub-minute rates.
-// Deliberately only feeds popup correlation — automatic recovery stays
-// driven by live signals so a stale persisted value can never wipe a
-// session that a previous run already fixed.
-const AUTH_SIGNAL_STORE_KEY = 'authRecovery.lastFailureSignalAt';
-const AUTH_SIGNAL_PERSIST_INTERVAL_MS = 5 * 60 * 1000;
-let lastAuthSignalPersistAt = 0;
+const authRecovery = createAuthRecovery({
+  getConfig: () => config,
+  getSettingsStore: () => appConfig?.settingsStore,
+  getRootWebContents: () => window?.webContents ?? null,
+  cleanAuthCookies: cleanExpiredAuthCookies,
+  showMessageBox: (options) => dialog.showMessageBox(window, options),
+  getActiveCallSenderIds: () => callRegistry.activeIds(),
+});
 
-function recordAuthFailureSignal() {
-  lastAuthFailureSignalAt = Date.now();
-  if (lastAuthFailureSignalAt - lastAuthSignalPersistAt < AUTH_SIGNAL_PERSIST_INTERVAL_MS) return;
-  lastAuthSignalPersistAt = lastAuthFailureSignalAt;
-  try {
-    appConfig?.settingsStore?.set(AUTH_SIGNAL_STORE_KEY, lastAuthFailureSignalAt);
-  } catch (err) {
-    console.warn('[AUTH_RECOVERY] Failed to persist failure signal timestamp:', err.message);
-  }
+// The root window's login popups (onBeforeRequestHandler, onNewWindow) run
+// on its session, so they correlate with and recover the root window only.
+// Profile views have their own in bindWindowOpenHandler.
+function shouldInterceptAuthPopup() {
+  return authRecovery.shouldInterceptPopup(authRecovery.ROOT_SURFACE);
 }
 
-/**
- * Checks a renderer-originated message (console output or forwarded window
- * error) for auth-failure signatures and schedules recovery on a match.
- * `sourceId` is the script URL the message came from (console-message
- * sourceId or window-error filename).
- */
-function maybeScheduleAuthRecovery(message, sourceId) {
-  // The whole in-app auth-recovery feature (#2622) is opt-in while it
-  // stabilises: with auth.reauthRecovery.enabled off, renderer auth-failure
-  // signals are ignored entirely and the app keeps its pre-#2622 behaviour
-  // (Teams' own stale "sign in again" banner stays up; the user relaunches to
-  // re-authenticate). The separate #2296 startup/after-sleep cookie cleaning is
-  // unaffected and stays always-on.
-  if (!config?.auth?.reauthRecovery?.enabled) return;
-
-  const text = message || '';
-  // Classify a worker UPR by its shape first, independent of payload contents: a
-  // UPR can embed "...code:InteractionRequired..." (StartUpJob/CalendarSyncJob),
-  // and matching that as the reliable signal would auto-reload on a UPR despite
-  // the correlation-only intent (#2629). So a UPR is never treated as reliable;
-  // it only records a correlation signal for the banner interception (the flag is
-  // already gated above, so the opt-in worker signal needs no extra flag check).
-  const isWorkerUpr = OPT_IN_AUTH_FAILURE_PATTERNS.some(p => text.includes(p));
-  const isReliableSignal = !isWorkerUpr && AUTH_FAILURE_PATTERNS.some(p => text.includes(p));
-  const isOptInWorkerSignal = isWorkerUpr;
-  if (!isReliableSignal && !isOptInWorkerSignal) return;
-
-  // Verify the message originates from a trusted Microsoft source
-  const source = sourceId || '';
-  if (source && !TRUSTED_AUTH_SOURCES.some(s => source.includes(s))) return;
-
-  // Record the signal even while recovery is cooling down or a call is
-  // active, so the login-popup interception can still correlate against a
-  // session that stays broken. For a worker UPR this is the only thing it
-  // drives automatically — see the silent-reload guard below.
-  recordAuthFailureSignal();
-
-  if (Date.now() - lastAuthRecoveryAt < AUTH_RECOVERY_COOLDOWN_MS) return;
-
-  if (callRegistry.active) {
-    handleMidCallAuthSignal(source);
-    return;
-  }
-
-  // Outside a call, only the reliable interaction-required signal triggers the
-  // silent clear-and-reload. A worker UPR is too noisy to auto-recover on
-  // (healthy sessions emit them ~hourly, UPR-heavy tenants constantly — #2629);
-  // it has already fed popup correlation above, so it can still drive an in-app
-  // recovery via the banner-click intercept, just never silently on its own.
-  if (!isReliableSignal) return;
-
-  scheduleAuthRecovery();
+function triggerPopupRecovery(context) {
+  authRecovery.triggerPopupRecovery(authRecovery.ROOT_SURFACE, context);
 }
 
-function scheduleAuthRecovery() {
-  lastAuthRecoveryAt = Date.now();
-  console.info('[AUTH_RECOVERY] Auth failure detected, scheduling recovery');
-
-  // Delay to let Teams' own retry mechanism attempt recovery first
-  setTimeout(
-    () =>
-      triggerAuthRecovery().catch((err) => {
-        console.error('[AUTH_RECOVERY] Failed to trigger auth recovery:', err);
-      }),
-    5000
-  );
-}
-
-// ── Mid-call handling ──────────────────────────────────────────────────────
-// Recovery reloads the page, which ends an active call. Auth can genuinely
-// fail mid-call (the call media keeps flowing but chat stops updating), yet
-// worker UPRs during calls are often transient noise (#2428) — reloading on
-// them mid-presentation was the original bug. So mid-call the user gets a
-// choice (sign in now / after the call / not now) instead of a silent reload.
-let firstMidCallWorkerSignalAt = 0;
-let reauthPromptShownForCall = false;
-let reauthPromptOpen = false;
-let recoveryQueuedForCallEnd = false;
 // A deep link the SPA declined during a call: the fallback reload would end
 // the call, so the link waits for the call to end, as auth recovery does.
 // Same teardown delay as the queued recovery.
@@ -522,153 +416,10 @@ const { open: openDeepLink, deferred: deferredDeepLink } = createDeepLinkOpener(
   getActivator: getDeepLinkActivator,
   resolveTarget: resolveDeepLinkTarget,
   getConfig: () => config,
+  // Any call in any profile holds the link: deliberately conservative.
   isCallActive: () => callRegistry.active,
   deferDelayMs: CALL_TEARDOWN_DELAY_MS,
 });
-// A single transient worker UPR must not prompt (#2428); require the worker
-// signals to persist this long into the same call before treating them as a
-// genuine mid-call auth failure.
-const MIDCALL_WORKER_SIGNAL_CONFIRM_MS = 3 * 60 * 1000;
-
-function resetMidCallAuthState() {
-  firstMidCallWorkerSignalAt = 0;
-  reauthPromptShownForCall = false;
-}
-
-function handleMidCallAuthSignal(source) {
-  // Only reached with auth.reauthRecovery.enabled on (maybeScheduleAuthRecovery
-  // gates the whole feature), so the user always gets the mid-call prompt rather
-  // than a silent reload that would end the call.
-  const isWorker = source.includes('/worker/');
-
-  if (recoveryQueuedForCallEnd) return;
-
-  if (isWorker) {
-    const now = Date.now();
-    if (!firstMidCallWorkerSignalAt) {
-      firstMidCallWorkerSignalAt = now;
-      return;
-    }
-    if (now - firstMidCallWorkerSignalAt < MIDCALL_WORKER_SIGNAL_CONFIRM_MS) return;
-  }
-
-  void promptMidCallReauth(false);
-}
-
-/**
- * Asks the user whether to reauthenticate during an active call. Shown at
- * most once per call for automatic signals; an explicit banner click
- * (force=true) re-prompts even after a "Not now".
- */
-async function promptMidCallReauth(force) {
-  if (reauthPromptOpen) return;
-  if (!force && reauthPromptShownForCall) return;
-  reauthPromptOpen = true;
-  reauthPromptShownForCall = true;
-  try {
-    const { response } = await dialog.showMessageBox(window, {
-      type: 'warning',
-      title: 'Sign-in required',
-      message: 'Teams needs you to sign in again.',
-      detail:
-        'Chat and other features may stop updating until you sign in again. ' +
-        'Signing in now reloads the app and ends your current call.',
-      buttons: ['Sign in now', 'After the call', 'Not now'],
-      defaultId: 1,
-      cancelId: 2,
-    });
-    if (response === 0) {
-      console.info('[AUTH_RECOVERY] User chose to reauthenticate during call');
-      await triggerAuthRecovery();
-    } else if (response === 1) {
-      console.info('[AUTH_RECOVERY] Recovery queued until the call ends');
-      recoveryQueuedForCallEnd = true;
-    } else {
-      console.info('[AUTH_RECOVERY] Mid-call reauth declined');
-    }
-  } catch (err) {
-    console.error('[AUTH_RECOVERY] Mid-call reauth prompt failed:', err);
-  } finally {
-    reauthPromptOpen = false;
-  }
-}
-
-/**
- * Decides whether an outgoing Microsoft login popup should be intercepted
- * for in-app auth recovery. Requires both the auth.reauthRecovery.enabled
- * opt-in and a trusted auth-failure signal within the correlation window,
- * so login popups from healthy-session flows (initial sign-in, consent,
- * step-up MFA, adding an account) are never diverted — they fall through
- * to the default link handling.
- */
-function shouldInterceptAuthPopup() {
-  if (!config.auth?.reauthRecovery?.enabled) return false;
-  return Date.now() - lastAuthFailureSignalAt < AUTH_FAILURE_SIGNAL_WINDOW_MS;
-}
-
-// A single banner click can surface as several requests in quick succession
-// (and a broken session's own silent-refresh retries produce more), so
-// popup-triggered recovery is deduped over a short window. Unlike the
-// automatic path's 30-minute cooldown, a deliberate retry a minute later
-// should still work.
-let lastPopupRecoveryAt = 0;
-const POPUP_RECOVERY_DEDUPE_MS = 10 * 1000;
-
-function triggerPopupRecovery(context) {
-  const now = Date.now();
-  if (now - lastPopupRecoveryAt < POPUP_RECOVERY_DEDUPE_MS) return;
-  lastPopupRecoveryAt = now;
-  if (callRegistry.active) {
-    // Recovery would end the active call — let the user decide. force=true:
-    // an explicit click re-prompts even after an earlier "Not now".
-    console.info(`[AUTH_RECOVERY] ${context} during an active call, asking user`);
-    void promptMidCallReauth(true);
-    return;
-  }
-  console.info(`[AUTH_RECOVERY] ${context}, triggering in-app recovery`);
-  setImmediate(() =>
-    triggerAuthRecovery().catch((err) => {
-      console.error('[AUTH_RECOVERY] Failed to trigger auth recovery:', err);
-    })
-  );
-}
-
-/**
- * Clears stale auth state (localStorage tokens + cookies) and reloads
- * the page to force a fresh interactive login.
- */
-async function triggerAuthRecovery() {
-  console.info('[AUTH_RECOVERY] Clearing auth state and reloading...');
-
-  // Clear localStorage auth tokens via renderer
-  try {
-    const patternsJson = JSON.stringify(AUTH_LOCAL_STORAGE_PATTERNS);
-    const cleared = await window.webContents.executeJavaScript(`
-      (function() {
-        const patterns = ${patternsJson};
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && patterns.some(p => key.includes(p))) {
-            keysToRemove.push(key);
-          }
-        }
-        for (const key of keysToRemove) {
-          localStorage.removeItem(key);
-        }
-        return keysToRemove.length;
-      })()
-    `);
-    console.info('[AUTH_RECOVERY] Cleared localStorage auth entries', { count: cleared });
-  } catch (err) {
-    console.warn('[AUTH_RECOVERY] Failed to clear localStorage:', err.message);
-  }
-
-  await cleanExpiredAuthCookies(window.webContents.session, true);
-
-  console.info('[AUTH_RECOVERY] Reloading for fresh auth...');
-  window.loadURL(config.url, { userAgent: config.chromeUserAgent });
-}
 
 exports.onAppReady = async function onAppReady(configGroup, customBackground, sharingService, profilesManager = null) {
   appConfig = configGroup;
@@ -802,51 +553,43 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
 
   // Restore the last persisted auth-failure signal so login-popup
   // correlation survives app restarts (the broken session does).
-  lastAuthFailureSignalAt = Number(appConfig.settingsStore.get(AUTH_SIGNAL_STORE_KEY)) || 0;
+  authRecovery.restoreFailureSignal();
 
   // Monitor renderer auth-failure signals. When Teams can't refresh tokens
   // silently (e.g., after overnight idle), it logs InteractionRequired. We
   // detect this, clear stale auth state, and reload to force a clean
-  // interactive login. Detection itself lives in maybeScheduleAuthRecovery
-  // so the forwarded window-error path can reuse it.
+  // interactive login. Call state is tracked per renderer (the sender), so a
+  // call in one profile never holds back another profile's recovery.
   app.on('teams-call-connected', (sender) => {
-    callRegistry.connected(sender ?? window.webContents);
-    resetMidCallAuthState();
+    const caller = sender ?? window.webContents;
+    callRegistry.connected(caller);
+    authRecovery.onCallConnected(caller);
   });
   app.on('teams-call-disconnected', (sender) => {
-    callRegistry.disconnected(sender ?? window.webContents);
-    resetMidCallAuthState();
-    if (recoveryQueuedForCallEnd) {
-      // Recovery clears the session and reloads at the same deadline; a link
-      // opened alongside it would be replaced mid-load, so recovery wins.
-      deferredDeepLink.cancel();
-    } else if (deferredDeepLink.pending && !callRegistry.active) {
+    const caller = sender ?? window.webContents;
+    callRegistry.disconnected(caller);
+    const recovering = authRecovery.onCallDisconnected(caller);
+    if (recovering) {
+      // Recovery clears that surface's session and reloads it at the same
+      // deadline; a link held for it would be replaced mid-load, so recovery
+      // wins. A link held for another profile is unaffected.
+      deferredDeepLink.cancelIfFor(recovering);
+    }
+    if (deferredDeepLink.pending && !callRegistry.active) {
       // Only when no renderer is still in a call: a link held for a profile
       // that is still mid-call keeps waiting for that call.
       console.info('[DEEPLINK] Call ended, opening the deferred link');
       deferredDeepLink.release();
     }
-    if (recoveryQueuedForCallEnd) {
-      recoveryQueuedForCallEnd = false;
-      console.info('[AUTH_RECOVERY] Call ended, running queued recovery');
-      // Short delay so the call teardown finishes before the reload
-      setTimeout(
-        () =>
-          triggerAuthRecovery().catch((err) => {
-            console.error('[AUTH_RECOVERY] Failed to trigger auth recovery:', err);
-          }),
-        5000
-      );
-    }
   });
-  // Page reload (including renderer crash recovery) resets renderer-side call state,
-  // so the registry drops the root's entry (on the root's own did-navigate) to avoid
-  // getting stuck if 'teams-call-disconnected' was missed.
-  // A reload also moots any queued recovery: if the session is still broken,
-  // fresh signals will re-trigger detection.
+  // Page reload (including renderer crash recovery) resets renderer-side call
+  // state: the registry drops the root's entry on the root's own did-navigate,
+  // so a missed 'teams-call-disconnected' cannot leave it stuck, and
+  // authRecovery.onNavigated drops the root's mid-call state and any queued
+  // recovery. Each profile view does the same for itself
+  // (authRecovery.addProfileView).
   window.webContents.on('did-navigate', () => {
-    resetMidCallAuthState();
-    recoveryQueuedForCallEnd = false;
+    authRecovery.onNavigated(authRecovery.ROOT_SURFACE);
     // The root window moved on: a link still waiting, or released and not yet
     // opened, for the root would land on top of wherever this navigation went.
     // One held for a profile's view is unaffected (and that profile's call
@@ -854,7 +597,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     deferredDeepLink.cancelIfFor(window.webContents);
   });
   window.webContents.on('console-message', (event) => {
-    maybeScheduleAuthRecovery(event.message, event.sourceId);
+    authRecovery.onSurfaceMessage(authRecovery.ROOT_SURFACE, event.message, event.sourceId);
   });
 
   login.handleLoginDialogTry(
@@ -933,9 +676,32 @@ let allowFurtherRequests = true;
 // Feed forwarded renderer window errors into auth-failure detection. Worker
 // uncaught errors (e.g. "Uncaught Error: UPR:") arrive via the window-error
 // IPC channel rather than console-message, so app/index.js calls this from
-// that handler. `filename` is the originating script URL.
-exports.notifyRendererError = function (message, filename) {
-  maybeScheduleAuthRecovery(message, filename);
+// that handler. `filename` is the originating script URL. `sender` is the
+// IPC sender's webContents: with multi-account it decides which profile the
+// signal belongs to, and a signal no profile owns is dropped.
+exports.notifyRendererError = function (message, filename, sender) {
+  authRecovery.onRendererError(message, filename, sender);
+};
+
+/**
+ * Multi-account: attributes auth-recovery signals to profiles from here on.
+ * Called once the ProfileViewManager exists, before it creates any view.
+ *
+ * @param {{resolveProfileId: Function, getStartUrl: Function, getProfileName: Function}} hooks
+ */
+exports.setAuthRecoveryProfiles = authRecovery.setProfiles;
+
+/**
+ * Multi-account: ProfileViewManager calls this for every profile view it
+ * creates. Wires the view into auth recovery and returns the cleaning of its
+ * session's expired auth cookies, which the view's first load waits for.
+ *
+ * @param {Electron.WebContents} webContents
+ * @param {string} profileId
+ * @returns {Promise<object>}
+ */
+exports.onProfileViewCreated = function (webContents, profileId) {
+  return authRecovery.addProfileView(profileId, webContents);
 };
 
 exports.show = function () {
@@ -1475,17 +1241,11 @@ function addEventHandlers() {
   // Electron on Linux lacks OS-level auth brokers (WAM/Keychain) that browsers
   // use to transparently refresh tokens, so we handle expiry ourselves.
   const { powerMonitor } = require("electron");
+  // Every live session: the root window's and, with multi-account, each
+  // profile view's.
   powerMonitor.on("resume", async () => {
     console.debug('[AUTH_RECOVERY] System resumed, checking auth cookies');
-    const result = await cleanExpiredAuthCookies(window.webContents.session);
-    if (result.expired > 0) {
-      console.info('[AUTH_RECOVERY] Cleaned expired cookies after resume', {
-        cleaned: result.cleaned,
-        expired: result.expired,
-      });
-      // Let Teams' own MSAL retry handle re-authentication rather than
-      // triggering full recovery which clears all auth state (issue #2364)
-    }
+    await authRecovery.cleanAfterResume();
   });
 
   window.on("page-title-updated", onPageTitleUpdated);

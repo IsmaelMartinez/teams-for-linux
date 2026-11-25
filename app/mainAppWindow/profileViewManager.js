@@ -94,6 +94,7 @@ class ProfileViewManager {
   #bindWindowOpenHandler;
   #onViewDidFinishLoad;
   #setTitleOverride;
+  #onViewCreated;
   #views = new Map();
   // Phase 2 foundation: webContents → profile attribution for main-process
   // IPC handlers (tray/badge/notification aggregation consumes this next).
@@ -150,6 +151,11 @@ class ProfileViewManager {
    *   Sets the window title from the active profile view's page title, or
    *   hands it back to the root window (Profile 0) with null. Electron only
    *   mirrors the root webContents' title onto the window (#3068).
+   * @param {(webContents: Electron.WebContents, profileId: string) => (Promise<unknown>|void)} [onViewCreated]
+   *   Called once per profile view, before its first load. Main wires the
+   *   view into auth recovery there and cleans the session's expired auth
+   *   cookies; a returned promise holds the first load until it settles, as
+   *   the root window's startup waits for its own clean (#2296).
    */
   constructor(
     window,
@@ -158,7 +164,8 @@ class ProfileViewManager {
     bindDisplayMediaHandler,
     bindWindowOpenHandler = () => {},
     onViewDidFinishLoad = () => {},
-    setTitleOverride = () => {}
+    setTitleOverride = () => {},
+    onViewCreated = () => {}
   ) {
     this.#window = window;
     this.#profilesManager = profilesManager;
@@ -167,6 +174,7 @@ class ProfileViewManager {
     this.#bindWindowOpenHandler = bindWindowOpenHandler;
     this.#onViewDidFinishLoad = onViewDidFinishLoad;
     this.#setTitleOverride = setTitleOverride;
+    this.#onViewCreated = onViewCreated;
     this.#registry = new SenderProfileMap(profilesManager);
   }
 
@@ -657,7 +665,32 @@ class ProfileViewManager {
       }
     });
 
-    void this.#loadFirstPage(view.webContents, this.#firstLoadUrl(profile));
+    // Resolved now: the launch link is only offered while initialize() runs.
+    const firstLoadUrl = this.#firstLoadUrl(profile);
+    const load = () => {
+      const wc = view.webContents;
+      if (!wc || wc.isDestroyed()) return;
+      void this.#loadFirstPage(wc, firstLoadUrl);
+    };
+    const ready = this.#onViewCreated(view.webContents, profileId);
+    if (typeof ready?.then === "function") {
+      void ready.then(load, load);
+    } else {
+      load();
+    }
+  }
+
+  /**
+   * The page a profile's view starts on, and is reloaded on by auth
+   * recovery: its stored https URL, else the Teams URL. Null when the
+   * profile no longer exists. Never logged: a custom URL can name a tenant.
+   *
+   * @param {string} profileId
+   * @returns {string|null}
+   */
+  getStartUrl(profileId) {
+    const profile = this.#profilesManager.list().find((p) => p.id === profileId);
+    return profile ? this.#urlFor(profile) : null;
   }
 
   // Fire-and-forget first load. Teams' launcher page (msteams: links) redirects

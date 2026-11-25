@@ -12,7 +12,8 @@
  * @param {() => void} [options.onIdle] - Called when the last entry leaves
  *   through a navigation or a destroy, which no disconnect handler follows
  * @returns {{connected: (sender: object) => void,
- *   disconnected: (sender: object) => void, readonly active: boolean}}
+ *   disconnected: (sender: object) => void, readonly active: boolean,
+ *   activeIds: () => number[]}}
  */
 function createCallRegistry({ onIdle } = {}) {
   // id -> detaches the sender's listeners
@@ -48,6 +49,14 @@ function createCallRegistry({ onIdle } = {}) {
 
     get active() {
       return entries.size > 0;
+    },
+
+    /**
+     * The ids of the webContents in a call. Auth recovery maps them to
+     * profiles to learn whether the profile it would reload has a call.
+     */
+    activeIds() {
+      return [...entries.keys()];
     },
   };
 }

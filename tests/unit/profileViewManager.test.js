@@ -1003,3 +1003,88 @@ describe('ProfileViewManager first load rejection', () => {
     assert.deepStrictEqual(unhandled, []);
   });
 });
+
+// Per-profile auth recovery: main wires each view in as it is created and
+// cleans its session's expired auth cookies before the first load (#2296),
+// as the root window's startup does.
+describe('ProfileViewManager view-created hook (auth recovery)', () => {
+  function buildWithHook(profiles, onViewCreated, launchUrl) {
+    const pm = fakeProfilesManager(profiles);
+    pm.activeId = profiles.at(-1).id;
+    const pvm = new ProfileViewManager(
+      fakeWindow(),
+      pm,
+      { url: 'https://teams.cloud.microsoft', chromeUserAgent: 'UA' },
+      () => {},
+      () => {},
+      () => {},
+      () => {},
+      onViewCreated
+    );
+    if (launchUrl) pvm.setLaunchUrl(launchUrl);
+    pvm.initialize();
+    return { pm, pvm };
+  }
+
+  it('is called once per profile view with its webContents and profile id, never for the pill', () => {
+    const calls = [];
+    buildWithHook([LEGACY, PROFILE_A, PROFILE_B], (wc, id) => {
+      calls.push([wc, id]);
+    });
+    const [viewA, viewB] = createdViews;
+    assert.deepStrictEqual(calls, [
+      [viewA.webContents, 'profile-a'],
+      [viewB.webContents, 'profile-b'],
+    ]);
+  });
+
+  it('holds the first load until the returned promise settles, then loads the same URL', async () => {
+    const LINK = 'https://teams.cloud.microsoft/l/chat/0/0?users=a@b.com';
+    let finish;
+    buildWithHook(
+      [LEGACY, PROFILE_A],
+      () => new Promise((resolve) => {
+        finish = resolve;
+      }),
+      LINK
+    );
+    const [viewA] = createdViews;
+    assert.strictEqual(viewA.webContents.loads, undefined, 'not loaded while cleaning');
+    finish({ cleaned: 0 });
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.deepStrictEqual(viewA.webContents.loads, [[LINK, { userAgent: 'UA' }]]);
+  });
+
+  it('still loads when the hook rejects, and skips a view destroyed meanwhile', async () => {
+    let fail;
+    let finishB;
+    let n = 0;
+    buildWithHook([LEGACY, PROFILE_A, PROFILE_B], () => {
+      n += 1;
+      return n === 1
+        ? new Promise((_resolve, reject) => {
+          fail = reject;
+        })
+        : new Promise((resolve) => {
+          finishB = resolve;
+        });
+    });
+    const [viewA, viewB] = createdViews;
+    // Electron keeps the accessor on a destroyed webContents.
+    viewB.webContents.emitOnce('destroyed');
+    fail(new Error('cookie store unavailable'));
+    finishB();
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.deepStrictEqual(viewA.webContents.loads, [['https://teams.cloud.microsoft', { userAgent: 'UA' }]]);
+    assert.strictEqual(viewB.webContents.loads, undefined);
+  });
+
+  it('getStartUrl gives the page a view starts on, and null for a profile that is gone', () => {
+    const custom = { ...PROFILE_B, url: 'https://tenant.example/' };
+    const stale = { ...PROFILE_A, url: 'http://evil.example/' };
+    const { pvm } = buildWithHook([LEGACY, stale, custom], () => {});
+    assert.strictEqual(pvm.getStartUrl('profile-b'), 'https://tenant.example/');
+    assert.strictEqual(pvm.getStartUrl('profile-a'), 'https://teams.cloud.microsoft');
+    assert.strictEqual(pvm.getStartUrl('missing'), null);
+  });
+});

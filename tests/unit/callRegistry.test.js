@@ -92,3 +92,21 @@ test("listeners are detached on disconnect and never stack on a repeated connect
   assert.strictEqual(a.listenerCount("did-navigate"), 0);
   assert.strictEqual(a.listenerCount("destroyed"), 0);
 });
+
+test("activeIds lists the senders in a call, in connect order, until each leaves", () => {
+  const registry = createCallRegistry();
+  const a = sender(1);
+  const b = sender(2);
+  const c = sender(3);
+  assert.deepStrictEqual(registry.activeIds(), []);
+  registry.connected(a);
+  registry.connected(b);
+  registry.connected(c);
+  assert.deepStrictEqual(registry.activeIds(), [1, 2, 3]);
+
+  registry.disconnected(a);
+  b.emit("did-navigate");
+  assert.deepStrictEqual(registry.activeIds(), [3]);
+  c.emit("destroyed");
+  assert.deepStrictEqual(registry.activeIds(), []);
+});
