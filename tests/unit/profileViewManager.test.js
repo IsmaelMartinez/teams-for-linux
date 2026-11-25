@@ -157,6 +157,16 @@ function fakeWindow() {
     },
     isDestroyed: () => false,
     contentView: {
+      listeners: {},
+      on(event, cb) {
+        (this.listeners[event] ||= []).push(cb);
+      },
+      removeListener(event, cb) {
+        this.listeners[event] = (this.listeners[event] || []).filter((l) => l !== cb);
+      },
+      emit(event) {
+        for (const cb of this.listeners[event] || []) cb();
+      },
       attached: new Set(),
       removed: [],
       addChildView(view) {
@@ -232,48 +242,42 @@ function build(profiles, bindWindowOpenHandler) {
 }
 
 describe('ProfileViewManager window-state bounds (#2947)', () => {
-  const STATE_EVENTS = ['maximize', 'unmaximize', 'restore', 'enter-full-screen', 'leave-full-screen'];
-  const nextTick = () => new Promise((resolve) => setTimeout(resolve, 0));
+  const nextTick = () => new Promise((resolve) => setTimeout(resolve, 10));
 
   function pillOf(win) {
     return createdViews.find((v) => v !== createdViews[0] && win.contentView.attached.has(v));
   }
 
-  for (const event of STATE_EVENTS) {
-    it(`re-lays-out profile views and the pill on ${event}`, () => {
-      const { win, pm } = build([LEGACY, PROFILE_A]);
-      pm.switch(PROFILE_A.id);
-      const view = createdViews[0];
-      const pill = pillOf(win);
-      win.contentSize = [1920, 1080];
-      win.emit(event);
-      assert.deepStrictEqual(view.bounds, { x: 0, y: 0, width: 1920, height: 1080 });
-      assert.deepStrictEqual(pill.bounds, { x: 0, y: 1024, width: 56, height: 56 });
-    });
-  }
-
-  it('lays out again on the next tick in case X11 reported the old size at event time', async () => {
+  it('re-lays-out profile views and the pill when the contentView bounds change', () => {
     const { win, pm } = build([LEGACY, PROFILE_A]);
     pm.switch(PROFILE_A.id);
     const view = createdViews[0];
-    win.emit('unmaximize');
-    win.contentSize = [900, 600];
-    await nextTick();
-    assert.deepStrictEqual(view.bounds, { x: 0, y: 0, width: 900, height: 600 });
+    const pill = pillOf(win);
+    win.contentSize = [1920, 1080];
+    win.contentView.emit('bounds-changed');
+    assert.deepStrictEqual(view.bounds, { x: 0, y: 0, width: 1920, height: 1080 });
+    assert.deepStrictEqual(pill.bounds, { x: 0, y: 1024, width: 56, height: 56 });
   });
 
-  it('dispose removes every window-state listener and cancels the pending re-layout', async () => {
-    const { win, pm, pvm } = build([LEGACY, PROFILE_A]);
+  // X11: the maximize event and any zero-delay tick still see the old size and
+  // no `resize` follows; only the contentView's bounds-changed carries the new one.
+  it('picks up a content size that only changes after the state event and a tick', async () => {
+    const { win, pm } = build([LEGACY, PROFILE_A]);
     pm.switch(PROFILE_A.id);
     const view = createdViews[0];
     win.emit('maximize');
-    pvm.dispose();
-    for (const event of ['resize', ...STATE_EVENTS]) {
-      assert.strictEqual((win.listeners[event] || []).length, 0, event);
-    }
-    view.bounds = null;
     await nextTick();
-    assert.strictEqual(view.bounds, null);
+    win.contentSize = [1920, 1080];
+    win.contentView.emit('bounds-changed');
+    assert.deepStrictEqual(view.bounds, { x: 0, y: 0, width: 1920, height: 1080 });
+  });
+
+  it('dispose removes the resize and bounds-changed listeners', () => {
+    const { win, pm, pvm } = build([LEGACY, PROFILE_A]);
+    pm.switch(PROFILE_A.id);
+    pvm.dispose();
+    assert.strictEqual((win.listeners.resize || []).length, 0);
+    assert.strictEqual((win.contentView.listeners['bounds-changed'] || []).length, 0);
   });
 });
 

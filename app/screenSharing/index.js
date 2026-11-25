@@ -1,6 +1,5 @@
 const { ipcMain, WebContentsView } = require("electron");
 const path = require("node:path");
-const { WINDOW_STATE_EVENTS } = require("../utils/windowStateEvents");
 
 class StreamSelector {
   #parent;
@@ -11,6 +10,10 @@ class StreamSelector {
   #closeHandler = null;
   #selectedSource = null;
   #resizeHandler = null;
+  #parentClosedHandler = null;
+  #resizeTimer = null;
+  // See ProfileViewManager: `closed` teardown must not touch a destroyed window.
+  #boundsSource = null;
 
   /**
    * @param {BrowserWindow} parent
@@ -59,11 +62,14 @@ class StreamSelector {
     };
 
     this.#parent.on("resize", this.#resizeHandler);
-    // #resizeView already defers a tick, which also covers X11 reporting the
-    // pre-maximize size while the event is delivered.
-    for (const event of WINDOW_STATE_EVENTS) {
-      this.#parent.on(event, this.#resizeHandler);
-    }
+    // Maximize/restore under X11 reports the old size on the window-state
+    // events and may skip `resize` (#2947); the contentView's `bounds-changed`
+    // fires once the new size is in effect.
+    this.#boundsSource = this.#parent.contentView;
+    this.#boundsSource.on("bounds-changed", this.#resizeHandler);
+    // Closing the parent never reaches #close() through the picker's own IPC.
+    this.#parentClosedHandler = () => this.#close();
+    this.#parent.once("closed", this.#parentClosedHandler);
     // Receive user's screen sharing source selection from picker UI
     ipcMain.once("selected-source", this.#sourceHandler);
     // Close the stream selector view without selection
@@ -73,8 +79,10 @@ class StreamSelector {
   #resizeView() {
     if (!this.#view) return;
 
-    setTimeout(() => {
-      if (!this.#view) return;
+    clearTimeout(this.#resizeTimer);
+    this.#resizeTimer = setTimeout(() => {
+      this.#resizeTimer = null;
+      if (!this.#view || this.#parent.isDestroyed()) return;
       const pbounds = this.#parent.getBounds();
       this.#view.setBounds({
         x: 0,
@@ -93,11 +101,16 @@ class StreamSelector {
     // Cleanup resize listener
     if (this.#resizeHandler) {
       this.#parent.removeListener("resize", this.#resizeHandler);
-      for (const event of WINDOW_STATE_EVENTS) {
-        this.#parent.removeListener(event, this.#resizeHandler);
-      }
+      this.#boundsSource?.removeListener("bounds-changed", this.#resizeHandler);
+      this.#boundsSource = null;
       this.#resizeHandler = null;
     }
+    if (this.#parentClosedHandler) {
+      this.#parent.removeListener("closed", this.#parentClosedHandler);
+      this.#parentClosedHandler = null;
+    }
+    clearTimeout(this.#resizeTimer);
+    this.#resizeTimer = null;
 
     // Cleanup IPC listeners - remove only this instance's handlers
     if (this.#sourceHandler) {
@@ -117,8 +130,11 @@ class StreamSelector {
 
     // Cleanup view
     if (this.#view) {
-      this.#parent.contentView.removeChildView(this.#view);
-      this.#view.webContents.destroy();
+      // A destroyed parent has already torn its child views down.
+      if (!this.#parent.isDestroyed()) {
+        this.#parent.contentView.removeChildView(this.#view);
+        this.#view.webContents.destroy();
+      }
       this.#view = null;
     }
 
