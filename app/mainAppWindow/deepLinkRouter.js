@@ -11,13 +11,23 @@
  */
 
 // Any `/l/<segment>/...` launcher route, such as `/l/chat/...`,
-// `/l/meetup-join/...` or `/l/channel/...`. The set is deliberately open: the
-// SPA decides which routes it resolves, and whatever it declines reaches the
-// target through the full navigation instead.
+// `/l/meetup-join/...` or `/l/channel/...`, and the `/meet/<id>` meeting
+// links. The set is deliberately open: the SPA decides which routes it
+// resolves, and whatever it declines reaches the target through the full
+// navigation instead.
+//
+// `/meet/<id>?p=<passcode>`: Teams' own launcher carries it as
+// `url=/_#/meet/<id>?p=…` (302 from teams.microsoft.com/meet/…, observed
+// 2026-11-24). Assigning `#/meet/<id>?p=…` to a loaded v2 client was consumed
+// in page: the SPA cleared the fragment 17 ms after the assignment and retitled
+// the document to "Meeting join | …" (DevTools on the main window,
+// 2026-11-24). The full navigation it replaces opened the join screen for the
+// first such link and aborted with ERR_ABORTED for the next two (main.log,
+// 2026-11-24).
 const { isTeamsHost } = require("../helpers/teamsHosts");
 const { COMPOSE_SELECTORS, findCompose } = require("../helpers/composeBox");
 
-const LAUNCHER_ROUTE = /^(\/l\/[^/?#]+\/[^?#]+?)\/?(\?.*)?$/;
+const LAUNCHER_ROUTE = /^(\/l\/[^/?#]+\/[^?#]+?|\/meet\/[^/?#]+)\/?(\?.*)?$/;
 
 // A chat launcher naming neither a thread nor recipients has nothing to
 // resolve, and the SPA lands on an empty chat surface rather than declining

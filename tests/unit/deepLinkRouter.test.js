@@ -58,6 +58,20 @@ test("toHashRoute routes a channel link", () => {
   );
 });
 
+test("toHashRoute routes a /meet/ link with its passcode", () => {
+  assert.strictEqual(
+    toHashRoute("https://teams.microsoft.com/meet/241?p=secret"),
+    "#/meet/241?p=secret"
+  );
+});
+
+test("toHashRoute accepts the /meet/ fragment form the launcher carries", () => {
+  assert.strictEqual(
+    toHashRoute("https://teams.microsoft.com/#/meet/241?p=secret&anon=true"),
+    "#/meet/241?p=secret&anon=true"
+  );
+});
+
 test("toHashRoute keeps a chat link that names its thread", () => {
   // The widget/launcher form for a conversation without a message to land on;
   // declining it made the client reload, which drops an active call.
@@ -73,7 +87,8 @@ test("toHashRoute declines links the SPA route cannot resolve", () => {
     "https://teams.cloud.microsoft/l/chat/0/0",
     "https://teams.cloud.microsoft/l/chat/0/0?users=",
     "https://teams.cloud.microsoft/l/chat/0/0?topicName=x",
-    "https://teams.microsoft.com/meet/241?p=secret",
+    "https://teams.microsoft.com/meet/",
+    "https://teams.microsoft.com/meet/241/extra?p=secret",
     "https://teams.cloud.microsoft/l/meetup-join/",
     "https://teams.cloud.microsoft/",
     "not-a-url",
@@ -152,6 +167,20 @@ test("navigateInPage hands a meeting route to the loaded SPA", async () => {
 
   assert.strictEqual(await navigateInPage(win, MEETING_LINK, TEAMS_URL), true);
   assert.match(script, /const target = "#\/l\/meetup-join\//);
+});
+
+test("navigateInPage hands a /meet/ route to the loaded SPA", async () => {
+  let script = null;
+  const win = windowWith("https://teams.microsoft.com/v2/", async (source) => {
+    script = source;
+    return true;
+  });
+
+  assert.strictEqual(
+    await navigateInPage(win, "https://teams.microsoft.com/meet/241?p=secret", TEAMS_URL),
+    true
+  );
+  assert.match(script, /const target = "#\/meet\/241\?p=secret"/);
 });
 
 test("navigateInPage short-circuits when the fragment already holds the route", async () => {
@@ -268,7 +297,7 @@ test("navigateInPage declines unsupported link shapes without touching the frame
   });
 
   assert.strictEqual(
-    await navigateInPage(win, "https://teams.microsoft.com/meet/241", TEAMS_URL),
+    await navigateInPage(win, "https://teams.microsoft.com/meet/", TEAMS_URL),
     false
   );
   assert.strictEqual(ran, 0, "an unsupported shape never reaches the frame");
