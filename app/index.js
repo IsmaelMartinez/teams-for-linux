@@ -834,6 +834,7 @@ async function handleAppReady() {
           profilesManager,
         });
         mainAppWindow.setDeepLinkActivator(activateProfile);
+        mainAppWindow.setDeepLinkUrlResolver((wc) => profileViewManager.getStartUrl(wc));
         notificationService.setProfileActivator(activateProfile);
         customNotificationManager.setProfileActivator(activateProfile);
         registerWebNotificationClick({ ipcMain, activate: activateProfile });

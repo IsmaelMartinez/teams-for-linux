@@ -110,6 +110,8 @@ function installElectronMock() {
     loaded: true,
     exports: {
       WebContentsView: FakeWebContentsView,
+      powerMonitor: { on() {}, removeListener() {} },
+      net: {},
       session: {
         fromPartition: (partition) => {
           const entry = (partitionSessions[partition] ||= { clearCalls: 0 });
@@ -890,116 +892,207 @@ describe('ProfileViewManager window title follows the active profile (#3068)', (
 });
 
 // A link the app was launched with belongs to the active profile (ADR-020):
-// its view takes the link as its first load instead of the root window.
+// its view takes the link as its first load instead of the root window, through
+// the same ConnectionManager the root window uses, so it waits for the network,
+// tolerates the launcher's redirect and retries a real failure.
+const settle = () => new Promise((resolve) => setImmediate(resolve));
+
 describe('ProfileViewManager launch link', () => {
   const LINK = 'https://teams.cloud.microsoft/l/chat/0/0?users=a@b.com';
+  let managers;
 
-  function buildWithLaunch(profiles, activeId, link) {
-    const pm = fakeProfilesManager(profiles);
+  // The real ConnectionManager, with only the connectivity sweep answered.
+  const onlineManager = () => {
+    const ConnectionManager = require('../../app/connectionManager');
+    const manager = new ConnectionManager();
+    manager.isOnline = async () => true;
+    managers.push(manager);
+    return manager;
+  };
+
+  // Electron: a view has no URL until it navigates, then reports the page it is
+  // on or, after a failed load, the one that failed; reload() repeats that URL.
+  const originalGetURL = FakeWebContents.prototype.getURL;
+  const originalReload = FakeWebContents.prototype.reload;
+  beforeEach(() => {
+    managers = [];
+    FakeWebContents.prototype.getURL = function getURL() {
+      return this.loads?.at(-1)?.[0] ?? '';
+    };
+    FakeWebContents.prototype.reload = function reload() {
+      (this.loads ||= []).push([this.getURL()]);
+    };
+  });
+  afterEach(() => {
+    for (const manager of managers) manager.cleanup();
+    FakeWebContents.prototype.getURL = originalGetURL;
+    FakeWebContents.prototype.reload = originalReload;
+  });
+
+  function buildWithLaunch(profiles, activeId, link, profilesList = profiles) {
+    const pm = fakeProfilesManager(profilesList);
     pm.activeId = activeId;
     const pvm = new ProfileViewManager(
       fakeWindow(),
       pm,
       { url: 'https://teams.cloud.microsoft', chromeUserAgent: 'UA' },
       () => {},
-      () => {}
+      () => {},
+      () => {},
+      () => {},
+      onlineManager
     );
     pvm.setLaunchUrl(link);
     pvm.initialize();
-    return pvm;
+    return { pvm, pm };
   }
 
-  it('loads the link in the active profile view and the profile page in the others', () => {
+  it('loads the link in the active profile view and the profile page in the others', async () => {
     buildWithLaunch([LEGACY, PROFILE_A, PROFILE_B], 'profile-b', LINK);
+    await settle();
     const [viewA, viewB] = createdViews;
 
     assert.strictEqual(viewB.webContents.loads[0][0], LINK);
     assert.strictEqual(viewA.webContents.loads[0][0], 'https://teams.cloud.microsoft');
   });
 
-  it('does not take the link for a background profile when the active one is Profile 0', () => {
+  it('does not take the link for a background profile when the active one is Profile 0', async () => {
     buildWithLaunch([LEGACY, PROFILE_A], 'profile-0', LINK);
+    await settle();
 
     assert.strictEqual(createdViews[0].webContents.loads[0][0], 'https://teams.cloud.microsoft');
   });
 
-  it('ignores a link that is not https, which a view with the full preload must not load', () => {
+  it('ignores a link that is not https, which a view with the full preload must not load', async () => {
     buildWithLaunch([LEGACY, PROFILE_A], 'profile-a', 'http://evil.example/');
+    await settle();
 
     assert.strictEqual(createdViews[0].webContents.loads[0][0], 'https://teams.cloud.microsoft');
   });
 
-  it('drops a link the active view did not take, so a later profile does not inherit it', () => {
+  it('drops a link the active view did not take, so a later profile does not inherit it', async () => {
     const profiles = [LEGACY];
-    const pm = fakeProfilesManager(profiles);
-    const pvm = new ProfileViewManager(
-      fakeWindow(),
-      pm,
-      { url: 'https://teams.cloud.microsoft', chromeUserAgent: 'UA' },
-      () => {},
-      () => {}
-    );
-    pvm.setLaunchUrl(LINK);
-    pvm.initialize();
+    const { pm } = buildWithLaunch(profiles, 'profile-0', LINK);
 
     profiles.push(PROFILE_A);
     pm.activeId = 'profile-a';
     pm.emit('add', PROFILE_A);
+    await settle();
 
     assert.strictEqual(createdViews.at(-1).webContents.loads[0][0], 'https://teams.cloud.microsoft');
   });
+
+  describe('failure handling', () => {
+    let unhandled;
+    let lines;
+
+    beforeEach((t) => {
+      unhandled = [];
+      const onUnhandled = (reason) => unhandled.push(reason);
+      process.on('unhandledRejection', onUnhandled);
+      t.after(() => process.off('unhandledRejection', onUnhandled));
+      lines = [];
+      const sink = (...args) => lines.push(JSON.stringify(args));
+      for (const level of ['debug', 'info', 'warn', 'error']) t.mock.method(console, level, sink);
+      t.mock.timers.enable({ apis: ['setTimeout'] });
+    });
+
+    // Rejects the first `failures` loads with `code`, then lets loads succeed.
+    function failFirstLoads(t, code, failures = 1) {
+      const original = FakeWebContents.prototype.loadURL;
+      let calls = 0;
+      FakeWebContents.prototype.loadURL = function loadURL(...args) {
+        (this.loads ||= []).push(args);
+        calls += 1;
+        if (calls > failures) return Promise.resolve();
+        const error = new Error(`${code} loading '${args[0]}'`);
+        error.code = code;
+        return Promise.reject(error);
+      };
+      t.after(() => {
+        FakeWebContents.prototype.loadURL = original;
+      });
+    }
+
+    it('treats the launcher redirect (ERR_ABORTED) as success: no retry, no unhandled rejection', async (t) => {
+      failFirstLoads(t, 'ERR_ABORTED');
+      buildWithLaunch([LEGACY, PROFILE_A], 'profile-a', LINK);
+      await settle();
+      t.mock.timers.tick(60000);
+      await settle();
+
+      assert.deepStrictEqual(unhandled, []);
+      assert.strictEqual(createdViews[0].webContents.loads.length, 1);
+    });
+
+    it('retries a real network failure with the same link once the network is back', async (t) => {
+      failFirstLoads(t, 'ERR_INTERNET_DISCONNECTED');
+      buildWithLaunch([LEGACY, PROFILE_A], 'profile-a', LINK);
+      await settle();
+      assert.strictEqual(createdViews[0].webContents.loads.length, 1);
+
+      t.mock.timers.tick(1000); // the manager's debounced refresh
+      await settle();
+
+      assert.deepStrictEqual(unhandled, []);
+      const { loads } = createdViews[0].webContents;
+      assert.strictEqual(loads.length, 2);
+      assert.strictEqual(loads[1][0], LINK, 'the retry opens the link, not the profile page');
+    });
+
+    it('stops retrying when the view is destroyed', async (t) => {
+      failFirstLoads(t, 'ERR_INTERNET_DISCONNECTED', 5);
+      buildWithLaunch([LEGACY, PROFILE_A], 'profile-a', LINK);
+      await settle();
+
+      const [manager] = managers;
+      const cleanup = t.mock.method(manager, 'cleanup');
+      createdViews[0].webContents.emitOnce('destroyed');
+      t.mock.timers.tick(60000);
+      await settle();
+
+      assert.strictEqual(cleanup.mock.callCount(), 1, 'the manager is stopped, not left to notice');
+      assert.strictEqual(createdViews[0].webContents.loads.length, 1);
+    });
+
+    it('does not stack retries: one manager per launch link, none for an ordinary first load', async (t) => {
+      failFirstLoads(t, 'ERR_INTERNET_DISCONNECTED', 1);
+      buildWithLaunch([LEGACY, PROFILE_A, PROFILE_B], 'profile-a', LINK);
+      await settle();
+
+      assert.strictEqual(managers.length, 1);
+    });
+
+    it('absorbs a failed ordinary profile first load without logging it or retrying', async (t) => {
+      failFirstLoads(t, 'ERR_ABORTED');
+      buildWithLaunch([LEGACY, PROFILE_A], 'profile-a', null);
+      await settle();
+      t.mock.timers.tick(60000);
+      await settle();
+
+      assert.deepStrictEqual(unhandled, []);
+      assert.strictEqual(createdViews[0].webContents.loads.length, 1);
+      for (const line of lines) {
+        assert.ok(!line.includes('a@b.com') && !line.includes('/l/chat'), line);
+      }
+    });
+  });
 });
 
-// Teams' launcher redirects reject loadURL with ERR_ABORTED; an unhandled
-// rejection exits the app and logs the URL-bearing error.
-describe('ProfileViewManager first load rejection', () => {
-  const LINK = 'https://teams.cloud.microsoft/l/chat/0/0?users=a@b.com';
+describe('ProfileViewManager.getStartUrl', () => {
+  const GOV = { ...PROFILE_A, url: 'https://gov.teams.microsoft.us' };
 
-  async function startWithRejectingLoads(t, launchLink) {
-    const unhandled = [];
-    const onUnhandled = (reason) => unhandled.push(reason);
-    process.on('unhandledRejection', onUnhandled);
-    t.after(() => process.off('unhandledRejection', onUnhandled));
-    const lines = [];
-    const sink = (...args) => lines.push(JSON.stringify(args));
-    for (const level of ['debug', 'info', 'warn', 'error']) t.mock.method(console, level, sink);
-    const originalLoad = FakeWebContents.prototype.loadURL;
-    FakeWebContents.prototype.loadURL = function loadURL(url) {
-      const error = new Error(`ERR_ABORTED (-3) loading '${url}'`);
-      error.code = 'ERR_ABORTED';
-      return Promise.reject(error);
-    };
-    t.after(() => {
-      FakeWebContents.prototype.loadURL = originalLoad;
-    });
-    const pm = fakeProfilesManager([LEGACY, PROFILE_A]);
-    pm.activeId = 'profile-a';
-    const pvm = new ProfileViewManager(
-      fakeWindow(),
-      pm,
-      { url: 'https://teams.cloud.microsoft', chromeUserAgent: 'UA' },
-      () => {},
-      () => {}
-    );
-    if (launchLink) pvm.setLaunchUrl(launchLink);
-    pvm.initialize();
-    await new Promise((resolve) => setImmediate(resolve));
-    return { unhandled, lines };
-  }
+  it('answers the profile\'s own https URL, else the global one, and the global one for the root window', () => {
+    const stale = { ...PROFILE_B, url: 'http://evil.example/' };
+    // The root window always loads the global URL, whatever Profile 0 stores.
+    const legacy = { ...LEGACY, url: 'https://tenant.example/' };
+    const { win, pvm } = build([legacy, GOV, stale]);
+    const [govView, staleView] = createdViews;
 
-  it('absorbs an aborted launch-link load without logging the link or the error', async (t) => {
-    const { unhandled, lines } = await startWithRejectingLoads(t, LINK);
-
-    assert.deepStrictEqual(unhandled, []);
-    assert.ok(lines.length > 0, 'the interruption is noted');
-    for (const line of lines) {
-      assert.ok(!line.includes('a@b.com') && !line.includes('/l/chat'), line);
-    }
-  });
-
-  it('absorbs a failed ordinary profile first load too', async (t) => {
-    const { unhandled } = await startWithRejectingLoads(t, null);
-
-    assert.deepStrictEqual(unhandled, []);
+    assert.strictEqual(pvm.getStartUrl(govView.webContents), 'https://gov.teams.microsoft.us');
+    assert.strictEqual(pvm.getStartUrl(staleView.webContents), 'https://teams.cloud.microsoft');
+    assert.strictEqual(pvm.getStartUrl(win.webContents), 'https://teams.cloud.microsoft');
+    assert.strictEqual(pvm.getStartUrl({ id: 99999 }), 'https://teams.cloud.microsoft');
+    assert.strictEqual(pvm.getStartUrl(null), 'https://teams.cloud.microsoft');
   });
 });

@@ -68,6 +68,10 @@ launch link at cold start.
   link while another is still in a call. A `did-navigate` in the link's own
   target cancels the held link; the root window's `did-navigate` cancels it
   only if it is held for the root (and clears the root's call entry).
+- The router's host check uses the Teams URL configured for the *target's*
+  profile (`ProfileViewManager.getStartUrl`, via `setDeepLinkUrlResolver`), so a
+  profile on another host (such as GovCloud) still routes in page. Without
+  multi-account it is the global `url`.
 - The user can switch profile while a link waits for a call or for the in-page
   probe (up to ~750 ms), so after the probe the opener rechecks that the link
   is still the newest and its target alive, then brings the target forward
@@ -78,7 +82,11 @@ launch link at cold start.
   lives in a view and that view is not wired up yet, an https link (the launch
   argument, or a second instance during startup) is held by `launchLinkHold`
   rather than sent to the root window, and handed to
-  `ProfileViewManager.setLaunchUrl` as that view's first load. The root window
+  `ProfileViewManager.setLaunchUrl` as that view's first load. That load goes
+  through a per-view `ConnectionManager` (the root window's mechanism: waits for
+  the network, treats the launcher's `ERR_ABORTED` redirect as success, retries
+  a real failure on resume or `did-fail-load`, stopped when the view is
+  destroyed); an ordinary profile start page is loaded once, without retry. The root window
   (Profile 0, hidden behind the view) starts on its usual page. With the flag
   off, or Profile 0 active, nothing is held.
 - After a second-instance link the target's webContents is focused as well as

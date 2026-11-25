@@ -31,6 +31,6 @@ profile's** view. `MeetingNavigation` snapshots that surface's current page for
 **Return to Teams** and remembers which surface it was, so Return loads the
 snapshot back into the same profile even after a profile switch (if that view
 is gone its snapshot is dropped and the active one goes to the configured Teams
-URL). A snapshot is never reused across surfaces. Join and Return focus the
+URL). A snapshot is never reused across surfaces. Return's fallback and the "is this a Teams page" check use the target profile's own Teams URL, so a profile on another host works. Join and Return focus the
 target view (the window's own focus lands on the root behind it), and Return
 brings the joining profile forward first.

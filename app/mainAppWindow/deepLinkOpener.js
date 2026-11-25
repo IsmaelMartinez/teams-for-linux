@@ -19,6 +19,9 @@ const isGone = (target) => !target || target.isDestroyed();
  * @param {() => {url: string, chromeUserAgent: string}} deps.getConfig
  * @param {() => boolean} deps.isCallActive
  * @param {number} deps.deferDelayMs - Wait after a call ends before a held link opens
+ * @param {(webContents: object) => string} [deps.getTeamsUrl] - The Teams URL
+ *   configured for a webContents' profile (profiles can name their own host);
+ *   the router accepts its origin. Defaults to the global `url`.
  * @param {() => (((webContents: object) => unknown)|null)} [deps.getActivator] -
  *   Multi-account only: brings a webContents' profile to the front. The user
  *   can switch profile while a link waits for a call or for the in-page probe,
@@ -33,6 +36,7 @@ function createDeepLinkOpener({
   isCallActive,
   deferDelayMs,
   getActivator = () => null,
+  getTeamsUrl = () => getConfig().url,
 }) {
   // Bumped per `open` call: after its await, only the newest call may fall back.
   let generation = 0;
@@ -61,6 +65,7 @@ function createDeepLinkOpener({
       return;
     }
     const config = getConfig();
+    const teamsUrl = getTeamsUrl(target);
 
     // The user can switch profile while the SPA is probed (up to ~750 ms), which
     // hides `target`. Bring it forward again right before anything the user is
@@ -74,7 +79,7 @@ function createDeepLinkOpener({
       }
     };
 
-    const routed = await router.navigateInPage(target, url, config.url);
+    const routed = await router.navigateInPage(target, url, teamsUrl);
 
     // A released link is not held off by the second-instance cooldown, so a
     // newer one can arrive during the wait above; it owns the link then.
@@ -90,7 +95,7 @@ function createDeepLinkOpener({
     if (routed) {
       console.debug("[DEEPLINK] routed in page");
       bringForward();
-      const { focused, afterMs } = await router.focusCompose(target, url, config.url);
+      const { focused, afterMs } = await router.focusCompose(target, url, teamsUrl);
       const outcome = focused ? `focused after ${afterMs} ms` : "not found";
       console.debug(`[DEEPLINK] compose box ${outcome}`);
       return;

@@ -34,7 +34,7 @@ class FakeWebContents extends EventEmitter {
 
 // Mirrors how app wires it: the root window's webContents unless multi-account
 // injected a getter for the active profile.
-function build(t, { routedBy = () => false, activator = null } = {}) {
+function build(t, { routedBy = () => false, activator = null, getTeamsUrl } = {}) {
   t.mock.timers.enable({ apis: ["setTimeout"] });
   t.mock.method(console, "debug", () => {});
   t.mock.method(console, "info", () => {});
@@ -42,12 +42,17 @@ function build(t, { routedBy = () => false, activator = null } = {}) {
   const targets = createDeepLinkTarget(() => root);
   const state = { callActive: false };
   const routed = [];
+  const teamsUrls = [];
   const router = {
-    navigateInPage: async (webContents, url) => {
+    navigateInPage: async (webContents, url, teamsUrl) => {
       routed.push(webContents);
+      teamsUrls.push(["navigate", teamsUrl]);
       return routedBy(webContents, url);
     },
-    focusCompose: async () => ({ focused: true, afterMs: 0 }),
+    focusCompose: async (_webContents, _url, teamsUrl) => {
+      teamsUrls.push(["compose", teamsUrl]);
+      return { focused: true, afterMs: 0 };
+    },
   };
   const opener = createDeepLinkOpener({
     router,
@@ -56,8 +61,9 @@ function build(t, { routedBy = () => false, activator = null } = {}) {
     isCallActive: () => state.callActive,
     deferDelayMs: DELAY,
     getActivator: () => activator,
+    ...(getTeamsUrl ? { getTeamsUrl } : {}),
   });
-  return { root, targets, state, routed, opener, tick: (ms) => t.mock.timers.tick(ms) };
+  return { root, targets, state, routed, teamsUrls, opener, tick: (ms) => t.mock.timers.tick(ms) };
 }
 
 const settle = () => new Promise((resolve) => setImmediate(resolve));
@@ -418,4 +424,49 @@ test("a target destroyed during the probe is not activated even when the link ro
   await opener.open(LINK);
 
   assert.deepStrictEqual(events, []);
+});
+
+const GOV_URL = "https://gov.teams.microsoft.us";
+
+test("the router is given the target profile's own Teams URL, so a profile on another host routes in page", async (t) => {
+  const { targets, teamsUrls, opener } = build(t, {
+    routedBy: () => true,
+    getTeamsUrl: (webContents) => (webContents.name === "gov" ? GOV_URL : CONFIG.url),
+  });
+  targets.set(() => new FakeWebContents("gov"));
+
+  await opener.open(LINK);
+
+  assert.deepStrictEqual(teamsUrls, [
+    ["navigate", GOV_URL],
+    ["compose", GOV_URL],
+  ]);
+});
+
+test("each link is probed with the URL of the profile it is aimed at, not the global one", async (t) => {
+  const { targets, teamsUrls, opener } = build(t, {
+    getTeamsUrl: (webContents) => `https://${webContents.name}.example`,
+  });
+  let active = new FakeWebContents("a");
+  targets.set(() => active);
+
+  await opener.open(LINK);
+  active = new FakeWebContents("b");
+  await opener.open(LINK);
+
+  assert.deepStrictEqual(teamsUrls, [
+    ["navigate", "https://a.example"],
+    ["navigate", "https://b.example"],
+  ]);
+});
+
+test("without a per-profile lookup (multi-account off) the router gets the global URL", async (t) => {
+  const { teamsUrls, opener } = build(t, { routedBy: () => true });
+
+  await opener.open(LINK);
+
+  assert.deepStrictEqual(teamsUrls, [
+    ["navigate", CONFIG.url],
+    ["compose", CONFIG.url],
+  ]);
 });

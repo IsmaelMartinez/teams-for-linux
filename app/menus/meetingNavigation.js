@@ -12,6 +12,7 @@ class MeetingNavigation {
   #getTarget;
   #getConfig;
   #getActivator;
+  #getTeamsUrl;
   #showWindow;
   #showError;
   #preJoinUrl = null;
@@ -23,13 +24,24 @@ class MeetingNavigation {
    * @param {() => {url: string, chromeUserAgent: string, meetupJoinRegEx: string}} deps.getConfig
    * @param {() => (((webContents: object) => unknown)|null)} [deps.getActivator] -
    *   Multi-account only: brings a webContents' profile to the front
+   * @param {(webContents: object) => string} [deps.getTeamsUrl] - The Teams URL
+   *   configured for a surface's profile (profiles can name their own host);
+   *   defaults to the global `url`
    * @param {() => void} deps.showWindow - Brings the app window to the front
    * @param {(title: string, message: string) => void} deps.showError
    */
-  constructor({ getTarget, getConfig, getActivator = () => null, showWindow, showError }) {
+  constructor({
+    getTarget,
+    getConfig,
+    getActivator = () => null,
+    getTeamsUrl = () => getConfig().url,
+    showWindow,
+    showError,
+  }) {
     this.#getTarget = getTarget;
     this.#getConfig = getConfig;
     this.#getActivator = getActivator;
+    this.#getTeamsUrl = getTeamsUrl;
     this.#showWindow = showWindow;
     this.#showError = showError;
   }
@@ -65,7 +77,7 @@ class MeetingNavigation {
       // is preserved when the org allows authenticated join. Only rewrite
       // to the current origin when the current page is actually on a Teams
       // host; otherwise (login page, error page) navigate to the URL as-is.
-      const destination = this.#isValidTeamsUrl(currentUrl)
+      const destination = this.#isValidTeamsUrl(currentUrl, this.#getTeamsUrl(target))
         ? new URL(currentUrl).origin + parsed.pathname + parsed.search + parsed.hash
         : parsed.href;
       const script = `window.location.assign(${JSON.stringify(destination)});`;
@@ -83,9 +95,6 @@ class MeetingNavigation {
 
   async returnToTeams() {
     const config = this.#getConfig();
-    const destination = this.#isValidTeamsUrl(this.#preJoinUrl)
-      ? this.#preJoinUrl
-      : config.url;
     try {
       // The surface that joined, if it is still there. If it is gone (its
       // profile was removed) the snapshot belongs to that account and is
@@ -94,7 +103,13 @@ class MeetingNavigation {
       const joined = this.#preJoinTarget;
       const joinedGone = Boolean(joined) && joined.isDestroyed();
       const target = joined && !joinedGone ? joined : this.#getTarget();
-      const url = joinedGone ? config.url : destination;
+      // The target profile's own Teams URL, which can be another host than the
+      // global one; its origin is also what makes a snapshot a Teams page.
+      const teamsUrl = this.#getTeamsUrl(target);
+      const url =
+        !joinedGone && this.#isValidTeamsUrl(this.#preJoinUrl, teamsUrl)
+          ? this.#preJoinUrl
+          : teamsUrl;
       // The profile may have been switched away from since joining: bring it
       // back so the navigation is visible.
       this.#getActivator()?.(target);
@@ -118,13 +133,16 @@ class MeetingNavigation {
     }
   }
 
-  #isValidTeamsUrl(url) {
+  // A Teams page: a known Teams host, or the origin of the profile's own
+  // configured URL (a profile can sit on another host, such as GovCloud).
+  #isValidTeamsUrl(url, teamsUrl) {
     if (!url || typeof url !== "string") return false;
     try {
-      const { protocol, hostname } = new URL(url);
+      const { protocol, hostname, origin } = new URL(url);
+      if (protocol !== "https:") return false;
       return (
-        protocol === "https:" &&
-        /(^|\.)teams\.(microsoft\.com|live\.com|cloud\.microsoft)$/.test(hostname)
+        /(^|\.)teams\.(microsoft\.com|live\.com|cloud\.microsoft)$/.test(hostname) ||
+        (typeof teamsUrl === "string" && origin === new URL(teamsUrl).origin)
       );
     } catch {
       return false;

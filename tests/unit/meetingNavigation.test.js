@@ -35,13 +35,14 @@ class FakeWebContents {
   }
 }
 
-function build(t, initialTarget, getActivator = () => null) {
+function build(t, initialTarget, getActivator = () => null, getTeamsUrl) {
   t.mock.method(console, "error", () => {});
   const state = { target: initialTarget, shown: 0, errors: [] };
   const nav = new MeetingNavigation({
     getTarget: () => state.target,
     getConfig: () => CONFIG,
     getActivator,
+    ...(getTeamsUrl ? { getTeamsUrl } : {}),
     showWindow: () => {
       state.shown += 1;
     },
@@ -206,4 +207,58 @@ test("Return to Teams without an activator (multi-account off) just focuses and 
   await nav.returnToTeams();
 
   assert.deepStrictEqual(events, ["focus", "load"]);
+});
+
+const GOV = "https://gov.teams.microsoft.us";
+const govUrl = (webContents) => (webContents.url.startsWith(GOV) ? GOV : CONFIG.url);
+
+test("Return to Teams without a snapshot loads the target profile's own Teams URL", async (t) => {
+  const view = new FakeWebContents(`${GOV}/v2/`);
+  const { nav } = build(t, view, () => null, govUrl);
+
+  await nav.returnToTeams();
+
+  assert.strictEqual(view.loads[0].url, GOV);
+});
+
+test("a snapshot on the profile's own host counts as a Teams page, so Return restores it", async (t) => {
+  const view = new FakeWebContents(`${GOV}/v2/chat-page`);
+  const { nav } = build(t, view, () => null, govUrl);
+
+  await nav.join(MEETING);
+  await nav.returnToTeams();
+
+  assert.strictEqual(view.loads[0].url, `${GOV}/v2/chat-page`);
+});
+
+test("Join Meeting rewrites onto the profile's own host", async (t) => {
+  const view = new FakeWebContents(`${GOV}/v2/`);
+  const { nav } = build(t, view, () => null, govUrl);
+
+  await nav.join(MEETING);
+
+  assert.match(view.scripts[0], /gov\.teams\.microsoft\.us\/l\/meetup-join/);
+});
+
+test("a snapshot from another host is not a Teams page for this profile and falls back to its URL", async (t) => {
+  const view = new FakeWebContents("https://login.microsoftonline.com/common");
+  const { nav } = build(t, view, () => null, govUrl);
+
+  await nav.join(MEETING);
+  await nav.returnToTeams();
+
+  assert.strictEqual(view.loads[0].url, CONFIG.url);
+});
+
+test("a removed profile's Return falls back to the active profile's own URL", async (t) => {
+  const viewA = new FakeWebContents("https://teams.cloud.microsoft/a");
+  const gov = new FakeWebContents(`${GOV}/v2/`);
+  const { nav, state } = build(t, viewA, () => null, govUrl);
+
+  await nav.join(MEETING);
+  viewA.destroyed = true;
+  state.target = gov;
+  await nav.returnToTeams();
+
+  assert.strictEqual(gov.loads[0].url, GOV);
 });

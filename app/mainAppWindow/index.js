@@ -517,9 +517,22 @@ const resolveDeepLinkTarget = deepLinkTarget.resolve;
 let deepLinkActivator = null;
 const getDeepLinkActivator = () => deepLinkActivator;
 
+// The Teams URL a webContents' profile is configured with (multi-account only;
+// profiles can name their own host). Falls back to the global `url`.
+let deepLinkUrlResolver = null;
+function getDeepLinkTeamsUrl(webContents) {
+  try {
+    return deepLinkUrlResolver?.(webContents) || config.url;
+  } catch {
+    console.debug('[DEEPLINK] profile URL lookup failed, using the configured URL');
+    return config.url;
+  }
+}
+
 const { open: openDeepLink, deferred: deferredDeepLink } = createDeepLinkOpener({
   router: deepLinkRouter,
   getActivator: getDeepLinkActivator,
+  getTeamsUrl: getDeepLinkTeamsUrl,
   resolveTarget: resolveDeepLinkTarget,
   getConfig: () => config,
   isCallActive: () => callRegistry.active,
@@ -786,7 +799,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   connectionManager = new ConnectionManager();
 
   if (iconChooser) {
-    menus = new Menus(window, configGroup, iconChooser.getFile(), connectionManager, profilesManagerRef, resolveDeepLinkTarget, getDeepLinkActivator);
+    menus = new Menus(window, configGroup, iconChooser.getFile(), connectionManager, profilesManagerRef, resolveDeepLinkTarget, getDeepLinkActivator, getDeepLinkTeamsUrl);
     menus.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
   }
 
@@ -912,6 +925,16 @@ exports.takeColdStartLink = launchLinkHold.take;
  * @param {() => Electron.WebContents|null} getter
  */
 exports.setDeepLinkTarget = deepLinkTarget.set;
+
+/**
+ * Multi-account: the Teams URL configured for a webContents' profile, which can
+ * name its own host. The router accepts that origin when routing a link in page.
+ *
+ * @param {(webContents: Electron.WebContents) => string} resolve
+ */
+exports.setDeepLinkUrlResolver = function setDeepLinkUrlResolver(resolve) {
+  deepLinkUrlResolver = typeof resolve === 'function' ? resolve : null;
+};
 
 /**
  * Multi-account: how to bring a webContents' profile to the front, used before
