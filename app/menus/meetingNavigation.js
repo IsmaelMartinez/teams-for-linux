@@ -11,6 +11,7 @@
 class MeetingNavigation {
   #getTarget;
   #getConfig;
+  #getActivator;
   #showWindow;
   #showError;
   #preJoinUrl = null;
@@ -20,12 +21,15 @@ class MeetingNavigation {
    * @param {object} deps
    * @param {() => Electron.WebContents} deps.getTarget - Surface to navigate
    * @param {() => {url: string, chromeUserAgent: string, meetupJoinRegEx: string}} deps.getConfig
+   * @param {() => (((webContents: object) => unknown)|null)} [deps.getActivator] -
+   *   Multi-account only: brings a webContents' profile to the front
    * @param {() => void} deps.showWindow - Brings the app window to the front
    * @param {(title: string, message: string) => void} deps.showError
    */
-  constructor({ getTarget, getConfig, showWindow, showError }) {
+  constructor({ getTarget, getConfig, getActivator = () => null, showWindow, showError }) {
     this.#getTarget = getTarget;
     this.#getConfig = getConfig;
+    this.#getActivator = getActivator;
     this.#showWindow = showWindow;
     this.#showError = showError;
   }
@@ -66,6 +70,9 @@ class MeetingNavigation {
         : parsed.href;
       const script = `window.location.assign(${JSON.stringify(destination)});`;
       this.#showWindow();
+      // The window's own focus lands on the root webContents, which sits
+      // behind a profile's view.
+      target.focus();
       await target.executeJavaScript(script, true);
     } catch {
       // Avoid logging the error object: URL query parameters may contain tokens.
@@ -88,7 +95,11 @@ class MeetingNavigation {
       const joinedGone = Boolean(joined) && joined.isDestroyed();
       const target = joined && !joinedGone ? joined : this.#getTarget();
       const url = joinedGone ? config.url : destination;
+      // The profile may have been switched away from since joining: bring it
+      // back so the navigation is visible.
+      this.#getActivator()?.(target);
       this.#showWindow();
+      target.focus();
       await target.loadURL(url, { userAgent: config.chromeUserAgent });
     } catch {
       console.error("[RETURN_TO_TEAMS] Navigation failed");

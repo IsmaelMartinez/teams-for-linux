@@ -54,7 +54,8 @@ class Menus {
     iconPath,
     connectionManager,
     profilesManager = null,
-    getTeamsWebContents = () => window.webContents
+    getTeamsWebContents = () => window.webContents,
+    getActivator = () => null
   ) {
     this.window = window;
     // Join Meeting and Return to Teams act on the surface this returns: the
@@ -65,6 +66,7 @@ class Menus {
         return target && !target.isDestroyed() ? target : window.webContents;
       },
       getConfig: () => this.configGroup.startupConfig,
+      getActivator,
       showWindow: () => {
         this.window.show();
         this.window.focus();

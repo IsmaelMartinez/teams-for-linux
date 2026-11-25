@@ -136,3 +136,26 @@ test("a navigation of the held surface cancels the link; cancel and replace drop
   t.mock.timers.tick(DELAY);
   assert.deepStrictEqual(opened, []);
 });
+
+test("cancelIfFor drops a link held for that surface or for none, and keeps another's", () => {
+  const { EventEmitter } = require("node:events");
+  const link = new DeferredDeepLink(() => {}, DELAY);
+  const root = new EventEmitter();
+  const view = new EventEmitter();
+
+  link.defer("https://teams.cloud.microsoft/l/a", view);
+  link.cancelIfFor(root);
+  assert.strictEqual(link.pending, true, "a root navigation leaves a link held for a view");
+  assert.strictEqual(link.target, view);
+
+  link.cancelIfFor(view);
+  assert.strictEqual(link.pending, false);
+
+  link.defer("https://teams.cloud.microsoft/l/b", root);
+  link.cancelIfFor(root);
+  assert.strictEqual(link.pending, false);
+
+  link.defer("https://teams.cloud.microsoft/l/c");
+  link.cancelIfFor(root);
+  assert.strictEqual(link.pending, false, "a link with no surface is the single window's");
+});

@@ -20,17 +20,21 @@ class FakeWebContents extends EventEmitter {
     return this.destroyed;
   }
   loadURL(url, options) {
+    this.events?.push(`load ${this.name}`);
     this.loads.push({ url, options });
     return Promise.resolve();
   }
   destroy() {
     this.destroyed = true;
   }
+  focus() {
+    this.events?.push(`focus ${this.name}`);
+  }
 }
 
 // Mirrors how app wires it: the root window's webContents unless multi-account
 // injected a getter for the active profile.
-function build(t, { routedBy = () => false } = {}) {
+function build(t, { routedBy = () => false, activator = null } = {}) {
   t.mock.timers.enable({ apis: ["setTimeout"] });
   t.mock.method(console, "debug", () => {});
   t.mock.method(console, "info", () => {});
@@ -51,6 +55,7 @@ function build(t, { routedBy = () => false } = {}) {
     getConfig: () => CONFIG,
     isCallActive: () => state.callActive,
     deferDelayMs: DELAY,
+    getActivator: () => activator,
   });
   return { root, targets, state, routed, opener, tick: (ms) => t.mock.timers.tick(ms) };
 }
@@ -255,4 +260,71 @@ test("no debug line carries the link", async (t) => {
   for (const line of lines) {
     assert.ok(!line.includes("a@b.com") && !line.includes("teams.cloud"), line);
   }
+});
+
+test("a link released after a call brings its profile forward and focuses it before loading", async (t) => {
+  const events = [];
+  const { targets, state, opener, tick } = build(t, {
+    activator: (webContents) => events.push(`activate ${webContents.name}`),
+  });
+  const view = new FakeWebContents("profile-a");
+  view.events = events;
+  targets.set(() => view);
+  state.callActive = true;
+  await opener.open(LINK);
+
+  state.callActive = false;
+  opener.deferred.release();
+  tick(DELAY);
+  await settle();
+
+  assert.deepStrictEqual(events, ["activate profile-a", "focus profile-a", "load profile-a"]);
+});
+
+test("an immediate link does not activate: its target is already the active profile", async (t) => {
+  const events = [];
+  const { targets, opener } = build(t, {
+    activator: (webContents) => events.push(`activate ${webContents.name}`),
+  });
+  const view = new FakeWebContents("profile-a");
+  view.events = events;
+  targets.set(() => view);
+
+  await opener.open(LINK);
+
+  assert.deepStrictEqual(events, ["load profile-a"]);
+});
+
+test("without an activator (multi-account off) a released link neither switches nor focuses", async (t) => {
+  const events = [];
+  const { root, state, opener, tick } = build(t);
+  root.events = events;
+  state.callActive = true;
+  await opener.open(LINK);
+
+  state.callActive = false;
+  opener.deferred.release();
+  tick(DELAY);
+  await settle();
+
+  assert.deepStrictEqual(events, ["load root"]);
+});
+
+test("a released link whose target is gone is not activated", async (t) => {
+  const events = [];
+  const { targets, state, opener, tick } = build(t, {
+    activator: (webContents) => events.push(`activate ${webContents.name}`),
+  });
+  const view = new FakeWebContents("profile-a");
+  targets.set(() => view);
+  state.callActive = true;
+  await opener.open(LINK);
+
+  view.destroy();
+  state.callActive = false;
+  opener.deferred.release();
+  tick(DELAY);
+  await settle();
+
+  assert.deepStrictEqual(events, []);
 });

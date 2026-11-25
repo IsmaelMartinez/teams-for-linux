@@ -833,6 +833,7 @@ async function handleAppReady() {
           viewManager: profileViewManager,
           profilesManager,
         });
+        mainAppWindow.setDeepLinkActivator(activateProfile);
         notificationService.setProfileActivator(activateProfile);
         customNotificationManager.setProfileActivator(activateProfile);
         registerWebNotificationClick({ ipcMain, activate: activateProfile });

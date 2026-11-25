@@ -9,6 +9,7 @@
  *
  * @param {() => Electron.WebContents} getRootWebContents
  * @returns {{set: (getter: (() => Electron.WebContents|null)|null) => void,
+ *   isInstalled: () => boolean,
  *   resolve: () => Electron.WebContents}}
  */
 function createDeepLinkTarget(getRootWebContents) {
@@ -17,6 +18,11 @@ function createDeepLinkTarget(getRootWebContents) {
   return {
     set(newGetter) {
       getter = typeof newGetter === "function" ? newGetter : null;
+    },
+
+    /** True once a getter is in place, i.e. multi-account has wired its views. */
+    isInstalled() {
+      return getter !== null;
     },
 
     resolve() {

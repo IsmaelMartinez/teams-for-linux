@@ -19,16 +19,35 @@ const isGone = (target) => !target || target.isDestroyed();
  * @param {() => {url: string, chromeUserAgent: string}} deps.getConfig
  * @param {() => boolean} deps.isCallActive
  * @param {number} deps.deferDelayMs - Wait after a call ends before a held link opens
+ * @param {() => (((webContents: object) => unknown)|null)} [deps.getActivator] -
+ *   Multi-account only: brings a webContents' profile to the front. A link held
+ *   through a call is released after the user may have switched away, so its
+ *   view is brought forward and focused first; an immediate link already is.
  * @returns {{open: (url: string, target?: Electron.WebContents) => Promise<void>,
  *   deferred: DeferredDeepLink}}
  */
-function createDeepLinkOpener({ router, resolveTarget, getConfig, isCallActive, deferDelayMs }) {
+function createDeepLinkOpener({
+  router,
+  resolveTarget,
+  getConfig,
+  isCallActive,
+  deferDelayMs,
+  getActivator = () => null,
+}) {
   // Bumped per `open` call: after its await, only the newest call may fall back.
   let generation = 0;
 
   const deferred = new DeferredDeepLink(
-    (url, target) =>
-      open(url, target).catch(() => console.debug("[DEEPLINK] deferred navigation failed")),
+    (url, target) => {
+      const activate = getActivator();
+      if (activate && !isGone(target)) {
+        activate(target);
+        target.focus();
+      }
+      return open(url, target).catch(() =>
+        console.debug("[DEEPLINK] deferred navigation failed")
+      );
+    },
     deferDelayMs
   );
 

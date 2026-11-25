@@ -27,16 +27,21 @@ class FakeWebContents {
     this.scripts.push(script);
   }
   async loadURL(url, options) {
+    this.events?.push("load");
     this.loads.push({ url, options });
+  }
+  focus() {
+    this.events?.push("focus");
   }
 }
 
-function build(t, initialTarget) {
+function build(t, initialTarget, getActivator = () => null) {
   t.mock.method(console, "error", () => {});
   const state = { target: initialTarget, shown: 0, errors: [] };
   const nav = new MeetingNavigation({
     getTarget: () => state.target,
     getConfig: () => CONFIG,
+    getActivator,
     showWindow: () => {
       state.shown += 1;
     },
@@ -157,4 +162,48 @@ test("Return to Teams without a snapshot loads the configured URL", async (t) =>
   await nav.returnToTeams();
 
   assert.deepStrictEqual(view.loads, [{ url: CONFIG.url, options: { userAgent: "UA" } }]);
+});
+
+test("Join Meeting focuses the target, since the window's own focus lands on the root behind it", async (t) => {
+  const events = [];
+  const view = new FakeWebContents("https://teams.cloud.microsoft/v2/");
+  view.events = events;
+  const { nav } = build(t, view);
+  const execute = view.executeJavaScript.bind(view);
+  view.executeJavaScript = async (script) => {
+    events.push("navigate");
+    return execute(script);
+  };
+
+  await nav.join(MEETING);
+
+  assert.deepStrictEqual(events, ["focus", "navigate"]);
+});
+
+test("Return to Teams brings the joined profile forward, then focuses and loads it", async (t) => {
+  const events = [];
+  const viewA = new FakeWebContents("https://teams.cloud.microsoft/a");
+  viewA.events = events;
+  const viewB = new FakeWebContents("https://teams.cloud.microsoft/b");
+  const { nav, state } = build(t, viewA, () => (webContents) =>
+    events.push(webContents === viewA ? "activate A" : "activate other")
+  );
+
+  await nav.join(MEETING);
+  events.length = 0;
+  state.target = viewB; // the user switched to B after joining
+  await nav.returnToTeams();
+
+  assert.deepStrictEqual(events, ["activate A", "focus", "load"]);
+});
+
+test("Return to Teams without an activator (multi-account off) just focuses and loads", async (t) => {
+  const events = [];
+  const view = new FakeWebContents("https://teams.cloud.microsoft/a");
+  view.events = events;
+  const { nav } = build(t, view);
+
+  await nav.returnToTeams();
+
+  assert.deepStrictEqual(events, ["focus", "load"]);
 });

@@ -34,6 +34,11 @@ class DeferredDeepLink {
     return this.#url !== null;
   }
 
+  /** The surface the held link is for, or null when none is held (or none was given). */
+  get target() {
+    return this.#target;
+  }
+
   /**
    * Holds `url`, replacing any link already waiting.
    *
@@ -63,6 +68,16 @@ class DeferredDeepLink {
       this.#clearHold();
       this.#open(url, target);
     }, this.#delayMs);
+  }
+
+  /**
+   * Drops the held link when it is for `surface`, or for no particular surface
+   * (single window). A link held for another profile's view stays.
+   */
+  cancelIfFor(surface) {
+    if (this.#target === null || this.#target === surface) {
+      this.cancel();
+    }
   }
 
   /** Drops the held link, whether it is still waiting or already released. */

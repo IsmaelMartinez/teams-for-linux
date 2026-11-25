@@ -69,3 +69,13 @@ test("clearing the getter returns links to the root window", () => {
 
   assert.strictEqual(target.resolve(), root);
 });
+
+test("isInstalled is false until a getter is set, and false again once cleared", () => {
+  const target = createDeepLinkTarget(() => wc("root"));
+
+  assert.strictEqual(target.isInstalled(), false);
+  target.set(() => wc("view"));
+  assert.strictEqual(target.isInstalled(), true);
+  target.set(null);
+  assert.strictEqual(target.isInstalled(), false);
+});

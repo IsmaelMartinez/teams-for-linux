@@ -9,6 +9,8 @@ Manages the primary BrowserWindow that hosts the Teams web interface.
 - **[deepLinkRouter.js](deepLinkRouter.js)**: In-page routing for Teams deep links, on whichever webContents it is given
 - **[deepLinkOpener.js](deepLinkOpener.js)**: Opens one deep link on one webContents: in-page route, else full navigation, else deferred while a call is active
 - **[deepLinkTarget.js](deepLinkTarget.js)**: Which webContents external links open in: the root window, or the active profile's view when multi-account injects a getter
+- **[callRegistry.js](callRegistry.js)**: Which renderers are in a call (a set of webContents ids; "a call is active" means non-empty)
+- **[launchLinkHold.js](launchLinkHold.js)**: Holds a link that arrives before the active profile's view is ready, for that view's first load
 - **[deferredDeepLink.js](deferredDeepLink.js)**: The one-slot holder for a link waiting out a call
 - **[msalCookiePersistence.js](msalCookiePersistence.js)**: Promotes the `msal.cache.encryption` session cookie to a persistent one so sign-in survives restarts. Installed once per session on the root window and on every multi-account profile view (#3183)
 - **[protocolLink.js](protocolLink.js)**: Protocol schemes the app registers, `web+msteams:` normalisation and resolving launch arguments to the URL to open
@@ -59,14 +61,22 @@ launch link at cold start.
   waits does not move it. If that webContents is destroyed by release time
   (the profile was removed) the link is dropped and a debug line (no URL) says
   so; it never falls back to another profile.
-- The call deferral stays global (`callActive`): any active call holds a
-  full-navigation fallback, even one in another profile. That is deliberately
-  conservative, and what a single window always did. A `did-navigate` in the
-  link's own target cancels the held link (the root window's `did-navigate`
-  still does too, and also resets `callActive`).
-- Cold start: when the stored active profile lives in a view, `onAppReady`
-  keeps the https launch link out of the root window and hands it to
-  `ProfileViewManager.setLaunchUrl`, which uses it as that view's first load.
-  The root window (Profile 0, hidden behind the view) starts on its usual page.
+- The call deferral stays global: any active call holds a full-navigation
+  fallback, even one in another profile. "Active" is `callRegistry`: each
+  profile's call is its own entry, removed on that sender's disconnect, its own
+  `did-navigate` or its destroy, so one profile hanging up does not release a
+  link while another is still in a call. A `did-navigate` in the link's own
+  target cancels the held link; the root window's `did-navigate` cancels it
+  only if it is held for the root (and clears the root's call entry).
+- A link released after a call may find the user on another profile, so its
+  view is brought forward (`setDeepLinkActivator`, the notification-click
+  activator) and focused before it loads.
+- Cold start and startup: while multi-account is on, the stored active profile
+  lives in a view and that view is not wired up yet, an https link (the launch
+  argument, or a second instance during startup) is held by `launchLinkHold`
+  rather than sent to the root window, and handed to
+  `ProfileViewManager.setLaunchUrl` as that view's first load. The root window
+  (Profile 0, hidden behind the view) starts on its usual page. With the flag
+  off, or Profile 0 active, nothing is held.
 - After a second-instance link the target's webContents is focused as well as
   the window, so typing after the link lands in the active profile.
