@@ -94,6 +94,7 @@ class ProfileViewManager {
   #bindWindowOpenHandler;
   #onViewDidFinishLoad;
   #setTitleOverride;
+  #onViewCreated;
   #views = new Map();
   // Phase 2 foundation: webContents → profile attribution for main-process
   // IPC handlers (tray/badge/notification aggregation consumes this next).
@@ -115,6 +116,7 @@ class ProfileViewManager {
   #focusHandler = null;
   #navigationHandler = null;
   #bootstrapInFlight = false;
+  #launchUrl = null;
   #initialized = false;
   // The switcher pill (a single persistent WebContentsView held separately from
   // #views so #hideAllOverlays never detaches it).
@@ -149,6 +151,11 @@ class ProfileViewManager {
    *   Sets the window title from the active profile view's page title, or
    *   hands it back to the root window (Profile 0) with null. Electron only
    *   mirrors the root webContents' title onto the window (#3068).
+   * @param {(webContents: Electron.WebContents, profileId: string) => (Promise<unknown>|void)} [onViewCreated]
+   *   Called once per profile view, before its first load. Main wires the
+   *   view into auth recovery there and cleans the session's expired auth
+   *   cookies; a returned promise holds the first load until it settles, as
+   *   the root window's startup waits for its own clean (#2296).
    */
   constructor(
     window,
@@ -157,7 +164,8 @@ class ProfileViewManager {
     bindDisplayMediaHandler,
     bindWindowOpenHandler = () => {},
     onViewDidFinishLoad = () => {},
-    setTitleOverride = () => {}
+    setTitleOverride = () => {},
+    onViewCreated = () => {}
   ) {
     this.#window = window;
     this.#profilesManager = profilesManager;
@@ -166,6 +174,7 @@ class ProfileViewManager {
     this.#bindWindowOpenHandler = bindWindowOpenHandler;
     this.#onViewDidFinishLoad = onViewDidFinishLoad;
     this.#setTitleOverride = setTitleOverride;
+    this.#onViewCreated = onViewCreated;
     this.#registry = new SenderProfileMap(profilesManager);
   }
 
@@ -291,6 +300,8 @@ class ProfileViewManager {
     // From here on, every #showActive re-raises it (adding a profile view
     // would otherwise paint over it).
     this.#createChromeView();
+    // Whatever the active profile's view did not take is stale now.
+    this.#launchUrl = null;
   }
 
   /** Return the live WebContents for the currently selected Teams profile. */
@@ -654,9 +665,71 @@ class ProfileViewManager {
       }
     });
 
-    view.webContents.loadURL(this.#urlFor(profile), {
-      userAgent: this.#config.chromeUserAgent,
-    });
+    // Resolved now: the launch link is only offered while initialize() runs.
+    const firstLoadUrl = this.#firstLoadUrl(profile);
+    const load = () => {
+      const wc = view.webContents;
+      if (!wc || wc.isDestroyed()) return;
+      void this.#loadFirstPage(wc, firstLoadUrl);
+    };
+    const ready = this.#onViewCreated(view.webContents, profileId);
+    if (typeof ready?.then === "function") {
+      void ready.then(load, load);
+    } else {
+      load();
+    }
+  }
+
+  /**
+   * The page a profile's view starts on, and is reloaded on by auth
+   * recovery: its stored https URL, else the Teams URL. Null when the
+   * profile no longer exists. Never logged: a custom URL can name a tenant.
+   *
+   * @param {string} profileId
+   * @returns {string|null}
+   */
+  getStartUrl(profileId) {
+    const profile = this.#profilesManager.list().find((p) => p.id === profileId);
+    return profile ? this.#urlFor(profile) : null;
+  }
+
+  // Fire-and-forget first load. Teams' launcher page (msteams: links) redirects
+  // in the page, which rejects loadURL with ERR_ABORTED although the new page
+  // is loading, and the process-wide unhandledRejection handler exits on
+  // anything it cannot classify. So the failure is handled here: nothing is
+  // retried (a reload would drop the redirect) and only the error code is
+  // logged, never the error or the URL, which carries the recipient or meeting.
+  async #loadFirstPage(webContents, url) {
+    try {
+      await webContents.loadURL(url, { userAgent: this.#config.chromeUserAgent });
+    } catch (error) {
+      console.debug("[ProfileViewManager] First load interrupted", {
+        code: error?.code ?? error?.errno,
+      });
+    }
+  }
+
+  /**
+   * Holds a launch link for the active profile's first load, so an app
+   * started with a link opens it in that profile rather than on the root
+   * window behind it. Must be called before `initialize()`; the link is
+   * spent by the active profile's view, or dropped when `initialize()` ends.
+   *
+   * @param {string} url - An https URL
+   */
+  setLaunchUrl(url) {
+    this.#launchUrl = isHttpsUrl(url) ? url : null;
+  }
+
+  // The profile's own page, or the launch link when this is the active
+  // profile's view and one is waiting. Never logged: it carries the target.
+  #firstLoadUrl(profile) {
+    const launchUrl = this.#launchUrl;
+    if (launchUrl && this.#profilesManager.getActive()?.id === profile.id) {
+      this.#launchUrl = null;
+      return launchUrl;
+    }
+    return this.#urlFor(profile);
   }
 
   // A URL saved before https was enforced would otherwise load with the full

@@ -24,6 +24,7 @@ const { SpellCheckProvider } = require("../spellCheckProvider");
 const DocumentationWindow = require("../documentationWindow");
 const GpuInfoWindow = require("../gpuInfoWindow");
 const JoinMeetingDialog = require("../joinMeetingDialog");
+const MeetingNavigation = require("./meetingNavigation");
 const AddProfileDialog = require("../profileDialogs/addProfile");
 const ManageProfileDialog = require("../profileDialogs/manageProfile");
 const autoUpdaterModule = require("../autoUpdater");
@@ -35,7 +36,7 @@ const { writeStoredOption } = require("../config/renames");
 
 let _Menus_onSpellCheckerLanguageChanged = new WeakMap();
 class Menus {
-  #preJoinUrl = null;
+  #meetingNavigation;
   #profileChangeHandler = null;
   #switcherOpenAddHandler = null;
   #switcherOpenManageHandler = null;
@@ -47,8 +48,31 @@ class Menus {
     );
   }
 
-  constructor(window, configGroup, iconPath, connectionManager, profilesManager = null) {
+  constructor(
+    window,
+    configGroup,
+    iconPath,
+    connectionManager,
+    profilesManager = null,
+    getTeamsWebContents = () => window.webContents,
+    getActivator = () => null
+  ) {
     this.window = window;
+    // Join Meeting and Return to Teams act on the surface this returns: the
+    // root window by default, the active profile's view with multi-account.
+    this.#meetingNavigation = new MeetingNavigation({
+      getTarget: () => {
+        const target = getTeamsWebContents();
+        return target && !target.isDestroyed() ? target : window.webContents;
+      },
+      getConfig: () => this.configGroup.startupConfig,
+      getActivator,
+      showWindow: () => {
+        this.window.show();
+        this.window.focus();
+      },
+      showError: (title, message) => dialog.showErrorBox(title, message),
+    });
     this.iconPath = iconPath;
     this.configGroup = configGroup;
     this.connectionManager = connectionManager;
@@ -751,82 +775,12 @@ class Menus {
     });
   }
 
-  async joinMeetingWithUrl(meetingUrl) {
-    try {
-      // Validate the incoming URL up front so a parse failure or a
-      // non-matching URL falls through to the outer catch rather than
-      // ending up assigned raw inside the Teams window.
-      const parsed = new URL(meetingUrl);
-      if (!this.#isMeetingUrl(meetingUrl)) {
-        throw new Error('Not a recognised meeting URL');
-      }
-
-      // Snapshot the current Teams URL so the user can jump back after the
-      // meeting ends (see #2322). Skip the snapshot if we're already on a
-      // meeting URL (e.g. a prior takeover page) so repeat joins don't
-      // overwrite the last known good Teams location.
-      const currentUrl = this.window.webContents.getURL();
-      if (!this.#isMeetingUrl(currentUrl)) {
-        this.#preJoinUrl = currentUrl;
-      }
-
-      // Navigate inside the loaded Teams SPA (same-origin) so the app shell
-      // is preserved when the org allows authenticated join. Only rewrite
-      // to the current origin when the current page is actually on a Teams
-      // host; otherwise (login page, error page) navigate to the URL as-is.
-      const target = this.#isValidTeamsUrl(currentUrl)
-        ? new URL(currentUrl).origin + parsed.pathname + parsed.search + parsed.hash
-        : parsed.href;
-      const script = `window.location.assign(${JSON.stringify(target)});`;
-      this.window.show();
-      this.window.focus();
-      await this.window.webContents.executeJavaScript(script, true);
-    } catch {
-      // Avoid logging the error object: URL query parameters may contain tokens.
-      console.error('[JOIN_MEETING] Failed to navigate to meeting URL');
-      dialog.showErrorBox('Error', 'Failed to join meeting. Please check the URL.');
-    }
+  joinMeetingWithUrl(meetingUrl) {
+    return this.#meetingNavigation.join(meetingUrl);
   }
 
-  async returnToTeams() {
-    const fallbackUrl = this.configGroup.startupConfig.url;
-    const target = this.#isValidTeamsUrl(this.#preJoinUrl)
-      ? this.#preJoinUrl
-      : fallbackUrl;
-    try {
-      this.window.show();
-      this.window.focus();
-      await this.window.webContents.loadURL(target, {
-        userAgent: this.configGroup.startupConfig.chromeUserAgent,
-      });
-    } catch {
-      console.error('[RETURN_TO_TEAMS] Navigation failed');
-      dialog.showErrorBox('Error', 'Failed to return to Teams.');
-    }
-  }
-
-  #isMeetingUrl(url) {
-    if (!url || typeof url !== 'string') return false;
-    const pattern = this.configGroup.startupConfig.meetupJoinRegEx;
-    if (!pattern) return false;
-    try {
-      return new RegExp(pattern).test(url);
-    } catch {
-      return false;
-    }
-  }
-
-  #isValidTeamsUrl(url) {
-    if (!url || typeof url !== 'string') return false;
-    try {
-      const { protocol, hostname } = new URL(url);
-      return (
-        protocol === 'https:' &&
-        /(^|\.)teams\.(microsoft\.com|live\.com|cloud\.microsoft)$/.test(hostname)
-      );
-    } catch {
-      return false;
-    }
+  returnToTeams() {
+    return this.#meetingNavigation.returnToTeams();
   }
 
   showDocumentation() {

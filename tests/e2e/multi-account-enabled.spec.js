@@ -165,10 +165,10 @@ test('pinning caps at 5 and maps Ctrl+Alt accelerators onto pinned profiles', as
 // Two profiles through the real ProfilesManager → ProfileViewManager event
 // path, switched to the second (mirrors the Add dialog, which adds then
 // switches). Leaves the window as [A (hidden), B (active), pill].
-async function startWithTwoProfiles(prefix) {
+async function startWithTwoProfiles(prefix, extraConfig = {}) {
   const ctx = await startApp({
     prefix,
-    config: { multiAccount: { enabled: true } },
+    config: { multiAccount: { enabled: true }, ...extraConfig },
     allowEval: true,
   });
   // Callers enter their try/finally only after this returns, so a setup
@@ -545,6 +545,134 @@ test('a notification click switches to the profile that raised it', async () => 
       ipcMain.emit('notification-web-clicked', { sender: background.webContents });
     });
     await expect.poll(activeId).toBe(a.result.id);
+  } finally {
+    await closeAndCleanup(ctx);
+  }
+});
+
+// A link from outside the app (a second instance: the msteams: handler or a
+// browser redirector) opens in the ACTIVE profile's view, not on the root
+// window behind it (Profile 0).
+test('a second-instance link navigates the active profile view, not the root window', async () => {
+  const { ctx } = await startWithTwoProfiles('teams-e2e-deeplink-');
+
+  try {
+    const link = 'https://teams.microsoft.com/l/chat/0/0?users=e2e@example.invalid';
+    // Record every main-frame navigation start per surface, then emit the
+    // event Electron raises when a second copy of the app is launched.
+    const result = await ctx.electronApp.evaluate(async ({ app, BrowserWindow }, link) => {
+      const win = BrowserWindow.getAllWindows().find(
+        (w) => w.contentView.children.length === 3
+      );
+      const active = win.contentView.children.find((c) => c.getVisible() && c !== win.contentView.children.at(-1));
+      const surfaces = {
+        root: win.webContents,
+        active: active.webContents,
+        background: win.contentView.children[0].webContents,
+      };
+      const started = { root: [], active: [], background: [] };
+      for (const [name, wc] of Object.entries(surfaces)) {
+        wc.on('did-start-navigation', (details) => {
+          if (details.isMainFrame) started[name].push(details.url);
+        });
+      }
+      globalThis.__deepLinkStarted = started;
+      app.emit('second-instance', { preventDefault() {} }, ['teams-for-linux', link], process.cwd());
+      return { activeIsBackground: surfaces.active === surfaces.background };
+    }, link);
+    expect(result.activeIsBackground).toBe(false);
+
+    await expect
+      .poll(
+        () => ctx.electronApp.evaluate(() => globalThis.__deepLinkStarted.active),
+        { timeout: 15000 }
+      )
+      .toContain(link);
+    const started = await ctx.electronApp.evaluate(() => globalThis.__deepLinkStarted);
+    expect(started.root.filter((url) => url.includes('/l/chat/'))).toEqual([]);
+    expect(started.background.filter((url) => url.includes('/l/chat/'))).toEqual([]);
+  } finally {
+    await closeAndCleanup(ctx);
+  }
+});
+
+// Per-profile auth recovery: an auth failure raised by a BACKGROUND profile's
+// renderer clears and reloads that profile only. Before, every forwarded
+// renderer error was credited to the root window, so Profile 0's tokens were
+// wiped and the broken profile stayed broken. A sentinel in each surface's
+// localStorage (named like an MSAL key, so recovery clears it) shows which
+// one was cleared.
+test('an auth failure in a background profile recovers that profile, not the root window', async () => {
+  const { ctx } = await startWithTwoProfiles('teams-e2e-auth-recovery-', {
+    auth: { reauthRecovery: { enabled: true } },
+  });
+  const SENTINEL = 'msal.e2e.sentinel';
+
+  try {
+    const setup = await ctx.electronApp.evaluate(async ({ BrowserWindow }, key) => {
+      const win = BrowserWindow.getAllWindows().find(
+        (w) => w.contentView.children.length === 3
+      );
+      const surfaces = {
+        root: win.webContents,
+        active: win.contentView.children[1].webContents,
+        background: win.contentView.children[0].webContents,
+      };
+      // The views were just added: let every surface finish its redirect to
+      // the sign-in page first, so only recovery navigates afterwards.
+      const settled = (wc) =>
+        !wc.isLoading() && wc.getURL().startsWith('https://login.microsoftonline.com/');
+      for (let i = 0; i < 200 && !Object.values(surfaces).every(settled); i++) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const started = { root: [], active: [], background: [] };
+      for (const [name, wc] of Object.entries(surfaces)) {
+        await wc.executeJavaScript(`localStorage.setItem(${JSON.stringify(key)}, '1')`);
+        wc.on('did-start-navigation', (details) => {
+          if (details.isMainFrame) started[name].push(details.url);
+        });
+      }
+      globalThis.__authSurfaces = surfaces;
+      globalThis.__authStarted = started;
+      return {
+        backgroundHidden: !win.contentView.children[0].getVisible(),
+        settled: Object.values(surfaces).every(settled),
+      };
+    }, SENTINEL);
+    expect(setup).toEqual({ backgroundHidden: true, settled: true });
+
+    // The window-error IPC the preload forwards for an uncaught error, sent
+    // by the background profile's renderer.
+    await ctx.electronApp.evaluate(({ ipcMain }) => {
+      ipcMain.emit(
+        'window-error',
+        { sender: globalThis.__authSurfaces.background },
+        { message: 'InteractionRequired: e2e silent token refresh failed', filename: '' }
+      );
+    });
+
+    // Recovery runs 5 s later and reloads the background profile on its
+    // start page (the Teams URL).
+    const toTeams = (urls) => urls.filter((url) => new URL(url).hostname.startsWith('teams.'));
+    await expect
+      .poll(
+        async () => toTeams(await ctx.electronApp.evaluate(() => globalThis.__authStarted.background)).length,
+        { timeout: 20000 }
+      )
+      .toBeGreaterThan(0);
+    const started = await ctx.electronApp.evaluate(() => globalThis.__authStarted);
+    expect(started.root).toEqual([]);
+    expect(started.active).toEqual([]);
+
+    const sentinels = await ctx.electronApp.evaluate(async (_electron, key) => {
+      const read = (wc) => wc.executeJavaScript(`localStorage.getItem(${JSON.stringify(key)})`);
+      return {
+        root: await read(globalThis.__authSurfaces.root),
+        active: await read(globalThis.__authSurfaces.active),
+      };
+    }, SENTINEL);
+    expect(sentinels).toEqual({ root: '1', active: '1' });
   } finally {
     await closeAndCleanup(ctx);
   }

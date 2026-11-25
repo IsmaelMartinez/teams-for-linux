@@ -888,3 +888,203 @@ describe('ProfileViewManager window title follows the active profile (#3068)', (
     assert.deepStrictEqual(titles, [null]);
   });
 });
+
+// A link the app was launched with belongs to the active profile (ADR-020):
+// its view takes the link as its first load instead of the root window.
+describe('ProfileViewManager launch link', () => {
+  const LINK = 'https://teams.cloud.microsoft/l/chat/0/0?users=a@b.com';
+
+  function buildWithLaunch(profiles, activeId, link) {
+    const pm = fakeProfilesManager(profiles);
+    pm.activeId = activeId;
+    const pvm = new ProfileViewManager(
+      fakeWindow(),
+      pm,
+      { url: 'https://teams.cloud.microsoft', chromeUserAgent: 'UA' },
+      () => {},
+      () => {}
+    );
+    pvm.setLaunchUrl(link);
+    pvm.initialize();
+    return pvm;
+  }
+
+  it('loads the link in the active profile view and the profile page in the others', () => {
+    buildWithLaunch([LEGACY, PROFILE_A, PROFILE_B], 'profile-b', LINK);
+    const [viewA, viewB] = createdViews;
+
+    assert.strictEqual(viewB.webContents.loads[0][0], LINK);
+    assert.strictEqual(viewA.webContents.loads[0][0], 'https://teams.cloud.microsoft');
+  });
+
+  it('does not take the link for a background profile when the active one is Profile 0', () => {
+    buildWithLaunch([LEGACY, PROFILE_A], 'profile-0', LINK);
+
+    assert.strictEqual(createdViews[0].webContents.loads[0][0], 'https://teams.cloud.microsoft');
+  });
+
+  it('ignores a link that is not https, which a view with the full preload must not load', () => {
+    buildWithLaunch([LEGACY, PROFILE_A], 'profile-a', 'http://evil.example/');
+
+    assert.strictEqual(createdViews[0].webContents.loads[0][0], 'https://teams.cloud.microsoft');
+  });
+
+  it('drops a link the active view did not take, so a later profile does not inherit it', () => {
+    const profiles = [LEGACY];
+    const pm = fakeProfilesManager(profiles);
+    const pvm = new ProfileViewManager(
+      fakeWindow(),
+      pm,
+      { url: 'https://teams.cloud.microsoft', chromeUserAgent: 'UA' },
+      () => {},
+      () => {}
+    );
+    pvm.setLaunchUrl(LINK);
+    pvm.initialize();
+
+    profiles.push(PROFILE_A);
+    pm.activeId = 'profile-a';
+    pm.emit('add', PROFILE_A);
+
+    assert.strictEqual(createdViews.at(-1).webContents.loads[0][0], 'https://teams.cloud.microsoft');
+  });
+});
+
+// Teams' launcher redirects reject loadURL with ERR_ABORTED; an unhandled
+// rejection exits the app and logs the URL-bearing error.
+describe('ProfileViewManager first load rejection', () => {
+  const LINK = 'https://teams.cloud.microsoft/l/chat/0/0?users=a@b.com';
+
+  async function startWithRejectingLoads(t, launchLink) {
+    const unhandled = [];
+    const onUnhandled = (reason) => unhandled.push(reason);
+    process.on('unhandledRejection', onUnhandled);
+    t.after(() => process.off('unhandledRejection', onUnhandled));
+    const lines = [];
+    const sink = (...args) => lines.push(JSON.stringify(args));
+    for (const level of ['debug', 'info', 'warn', 'error']) t.mock.method(console, level, sink);
+    const originalLoad = FakeWebContents.prototype.loadURL;
+    FakeWebContents.prototype.loadURL = function loadURL(url) {
+      const error = new Error(`ERR_ABORTED (-3) loading '${url}'`);
+      error.code = 'ERR_ABORTED';
+      return Promise.reject(error);
+    };
+    t.after(() => {
+      FakeWebContents.prototype.loadURL = originalLoad;
+    });
+    const pm = fakeProfilesManager([LEGACY, PROFILE_A]);
+    pm.activeId = 'profile-a';
+    const pvm = new ProfileViewManager(
+      fakeWindow(),
+      pm,
+      { url: 'https://teams.cloud.microsoft', chromeUserAgent: 'UA' },
+      () => {},
+      () => {}
+    );
+    if (launchLink) pvm.setLaunchUrl(launchLink);
+    pvm.initialize();
+    await new Promise((resolve) => setImmediate(resolve));
+    return { unhandled, lines };
+  }
+
+  it('absorbs an aborted launch-link load without logging the link or the error', async (t) => {
+    const { unhandled, lines } = await startWithRejectingLoads(t, LINK);
+
+    assert.deepStrictEqual(unhandled, []);
+    assert.ok(lines.length > 0, 'the interruption is noted');
+    for (const line of lines) {
+      assert.ok(!line.includes('a@b.com') && !line.includes('/l/chat'), line);
+    }
+  });
+
+  it('absorbs a failed ordinary profile first load too', async (t) => {
+    const { unhandled } = await startWithRejectingLoads(t, null);
+
+    assert.deepStrictEqual(unhandled, []);
+  });
+});
+
+// Per-profile auth recovery: main wires each view in as it is created and
+// cleans its session's expired auth cookies before the first load (#2296),
+// as the root window's startup does.
+describe('ProfileViewManager view-created hook (auth recovery)', () => {
+  function buildWithHook(profiles, onViewCreated, launchUrl) {
+    const pm = fakeProfilesManager(profiles);
+    pm.activeId = profiles.at(-1).id;
+    const pvm = new ProfileViewManager(
+      fakeWindow(),
+      pm,
+      { url: 'https://teams.cloud.microsoft', chromeUserAgent: 'UA' },
+      () => {},
+      () => {},
+      () => {},
+      () => {},
+      onViewCreated
+    );
+    if (launchUrl) pvm.setLaunchUrl(launchUrl);
+    pvm.initialize();
+    return { pm, pvm };
+  }
+
+  it('is called once per profile view with its webContents and profile id, never for the pill', () => {
+    const calls = [];
+    buildWithHook([LEGACY, PROFILE_A, PROFILE_B], (wc, id) => {
+      calls.push([wc, id]);
+    });
+    const [viewA, viewB] = createdViews;
+    assert.deepStrictEqual(calls, [
+      [viewA.webContents, 'profile-a'],
+      [viewB.webContents, 'profile-b'],
+    ]);
+  });
+
+  it('holds the first load until the returned promise settles, then loads the same URL', async () => {
+    const LINK = 'https://teams.cloud.microsoft/l/chat/0/0?users=a@b.com';
+    let finish;
+    buildWithHook(
+      [LEGACY, PROFILE_A],
+      () => new Promise((resolve) => {
+        finish = resolve;
+      }),
+      LINK
+    );
+    const [viewA] = createdViews;
+    assert.strictEqual(viewA.webContents.loads, undefined, 'not loaded while cleaning');
+    finish({ cleaned: 0 });
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.deepStrictEqual(viewA.webContents.loads, [[LINK, { userAgent: 'UA' }]]);
+  });
+
+  it('still loads when the hook rejects, and skips a view destroyed meanwhile', async () => {
+    let fail;
+    let finishB;
+    let n = 0;
+    buildWithHook([LEGACY, PROFILE_A, PROFILE_B], () => {
+      n += 1;
+      return n === 1
+        ? new Promise((_resolve, reject) => {
+          fail = reject;
+        })
+        : new Promise((resolve) => {
+          finishB = resolve;
+        });
+    });
+    const [viewA, viewB] = createdViews;
+    // Electron keeps the accessor on a destroyed webContents.
+    viewB.webContents.emitOnce('destroyed');
+    fail(new Error('cookie store unavailable'));
+    finishB();
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.deepStrictEqual(viewA.webContents.loads, [['https://teams.cloud.microsoft', { userAgent: 'UA' }]]);
+    assert.strictEqual(viewB.webContents.loads, undefined);
+  });
+
+  it('getStartUrl gives the page a view starts on, and null for a profile that is gone', () => {
+    const custom = { ...PROFILE_B, url: 'https://tenant.example/' };
+    const stale = { ...PROFILE_A, url: 'http://evil.example/' };
+    const { pvm } = buildWithHook([LEGACY, stale, custom], () => {});
+    assert.strictEqual(pvm.getStartUrl('profile-b'), 'https://tenant.example/');
+    assert.strictEqual(pvm.getStartUrl('profile-a'), 'https://teams.cloud.microsoft');
+    assert.strictEqual(pvm.getStartUrl('missing'), null);
+  });
+});

@@ -87,6 +87,57 @@ describe('createProfileWindowOpenHandler', () => {
   });
 });
 
+describe('createProfileWindowOpenHandler auth-popup interception', () => {
+  const LOGIN = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?x=1';
+
+  it('denies a popup the interceptor takes and allows one it declines', () => {
+    const asked = [];
+    let take = true;
+    const handler = createProfileWindowOpenHandler({
+      config: { meetupJoinRegEx: MEETUP_RE, onNewWindowOpenMeetupJoinUrlInApp: true },
+      loadInView: () => {},
+      interceptAuthPopup: (url) => {
+        asked.push(url);
+        return take;
+      },
+    });
+    assert.deepStrictEqual(handler({ url: LOGIN }), { action: 'deny' });
+    take = false;
+    assert.deepStrictEqual(handler({ url: LOGIN }), { action: 'allow' });
+    assert.deepStrictEqual(asked, [LOGIN, LOGIN]);
+  });
+
+  it('never asks about a deep link, which keeps its own handling', () => {
+    const asked = [];
+    const loads = [];
+    const handler = createProfileWindowOpenHandler({
+      config: { meetupJoinRegEx: MEETUP_RE, onNewWindowOpenMeetupJoinUrlInApp: true },
+      loadInView: (url) => loads.push(url),
+      interceptAuthPopup: (url) => asked.push(url) > 0,
+    });
+    const url = 'https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc';
+    assert.deepStrictEqual(handler({ url }), { action: 'deny' });
+    assert.deepStrictEqual(loads, [url]);
+    assert.deepStrictEqual(asked, []);
+  });
+
+  it('installProfileWindowOpenHandler passes the interceptor through', () => {
+    let installed;
+    const target = {
+      setWindowOpenHandler: (h) => {
+        installed = h;
+      },
+      on: () => {},
+      isDestroyed: () => false,
+    };
+    installProfileWindowOpenHandler(target, {
+      config: { meetupJoinRegEx: MEETUP_RE },
+      interceptAuthPopup: () => true,
+    });
+    assert.deepStrictEqual(installed({ url: LOGIN }), { action: 'deny' });
+  });
+});
+
 describe('installProfileWindowOpenHandler', () => {
   function fakeWc() {
     return {

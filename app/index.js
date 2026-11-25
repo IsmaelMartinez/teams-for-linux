@@ -229,7 +229,7 @@ if (os.platform() === "linux") {
 const downloadManager = new DownloadManager(config, mainAppWindow, jobEmitter, launcherEmitter);
 
 if (isMac) {
-  requestMediaAccess();
+  void requestMediaAccess();
 }
 
 for (const protocolClient of PROTOCOL_SCHEMES) {
@@ -335,7 +335,7 @@ if (gotTheLock) {
   });
 
   // Log renderer-side unhandled promise rejections
-  ipcMain.on("unhandled-rejection", (_event, errorData) => {
+  ipcMain.on("unhandled-rejection", (event, errorData) => {
     // Payload is constructed and length-capped in app/browser/preload.js;
     // prior to this handler + the ipcValidator allowlist entry these
     // messages were silently dropped. Fields are run through
@@ -359,17 +359,18 @@ if (gotTheLock) {
       // source URL, so detection's trusted-source check is skipped (empty source).
       // The pre-login-noise check above only down-levels the LOG; it must not
       // gate detection: the reliable "InteractionRequired" signal arrives inside
-      // these noise-matched messages, so always forward. maybeScheduleAuthRecovery
-      // does its own filtering and only acts on InteractionRequired /
+      // these noise-matched messages, so always forward. Auth recovery
+      // (mainAppWindow/authRecovery.js) does its own filtering and only acts on InteractionRequired /
       // interaction_required (login_required and AuthFailed are logged, not acted on).
-      mainAppWindow.notifyRendererError(errorData?.message, undefined);
+      // The sender attributes the signal to its profile (multi-account).
+      mainAppWindow.notifyRendererError(errorData?.message, undefined, event.sender);
     } catch (err) {
       console.error("[Renderer] Failed to log unhandled-rejection:", err);
     }
   });
 
   // Log renderer-side uncaught window errors
-  ipcMain.on("window-error", (_event, errorData) => {
+  ipcMain.on("window-error", (event, errorData) => {
     try {
       const chunk = parseChunkLoadFailure(errorData?.message);
       if (chunk) console.warn(formatChunkLoadWarning(chunk));
@@ -388,7 +389,7 @@ if (gotTheLock) {
       // feed the raw (unsanitized) message to auth-failure detection. As with
       // the unhandled-rejection handler, pre-login-noise down-levelling controls
       // only the log level, never whether detection sees the signal.
-      mainAppWindow.notifyRendererError(errorData?.message, errorData?.filename);
+      mainAppWindow.notifyRendererError(errorData?.message, errorData?.filename, event.sender);
     } catch (err) {
       console.error("[Renderer] Failed to log window-error:", err);
     }
@@ -806,8 +807,24 @@ async function handleAppReady() {
           mainAppWindow.bindDisplayMediaHandler,
           mainAppWindow.bindWindowOpenHandler,
           mainAppWindow.injectScreenSharingLogic,
-          mainAppWindow.setTitleOverride
+          mainAppWindow.setTitleOverride,
+          mainAppWindow.onProfileViewCreated
         );
+        // Auth recovery acts on the profile whose session failed, never on
+        // another one; set before initialize() creates the views.
+        mainAppWindow.setAuthRecoveryProfiles({
+          resolveProfileId: (webContents) => profileViewManager.resolveProfileId(webContents),
+          getStartUrl: (profileId) => profileViewManager.getStartUrl(profileId),
+          getProfileName: (profileId) =>
+            profilesManager.list().find((p) => p.id === profileId)?.name ?? null,
+        });
+        // A link the app was launched with belongs to the active profile:
+        // hand it over as that view's first load (before initialize creates
+        // the views), and aim external links and Join Meeting at the active
+        // profile from here on.
+        const coldStartLink = mainAppWindow.takeColdStartLink();
+        if (coldStartLink) profileViewManager.setLaunchUrl(coldStartLink);
+        mainAppWindow.setDeepLinkTarget(getControlWebContents);
         profileViewManager.initialize();
         const {
           registerProfileNotificationFlags,
@@ -826,6 +843,7 @@ async function handleAppReady() {
           viewManager: profileViewManager,
           profilesManager,
         });
+        mainAppWindow.setDeepLinkActivator(activateProfile);
         notificationService.setProfileActivator(activateProfile);
         customNotificationManager.setProfileActivator(activateProfile);
         registerWebNotificationClick({ ipcMain, activate: activateProfile });

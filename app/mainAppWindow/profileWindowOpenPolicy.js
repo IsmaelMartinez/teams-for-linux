@@ -17,16 +17,22 @@
  *   - The Document Picture-in-Picture popup (documentPictureInPicture.js):
  *     allowed with the same always-on-top window options as the root window.
  *
+ *   - A direct Microsoft login popup, only when `interceptAuthPopup` takes it:
+ *     auth recovery (authRecovery.js) does so when the originating profile's
+ *     own session recently reported an auth failure, recovers THAT profile
+ *     and the popup is denied. Healthy-session login popups are not taken,
+ *     and neither is a login host the recovery list does not know (sovereign
+ *     clouds, federated IdPs): those keep the default below.
+ *
  * Everything else stays on Electron's default `allow` — i.e. exactly what
  * profile views do today. The root window's remaining handling (ordinary
- * links → external browser with a Ctrl+click in-app override, auth popups →
- * deny + recovery) is NOT ported yet, deliberately: the Ctrl override reads
- * input state tracked only on the root window, the auth classifier is a
- * 3-host recovery-intercept list that misses sovereign clouds and federated
- * IdPs, and the deny path is coupled to root-only auth recovery. Porting any
- * of that piecemeal regresses profile views (links that open in-app today
- * would go external with no in-app escape hatch, stranding sign-in). It lands
- * together with per-profile auth recovery (tracked on #2495 with #2867).
+ * links → external browser with a Ctrl+click in-app override) is NOT ported,
+ * deliberately: the Ctrl override reads input state tracked only on the root
+ * window, and porting it piecemeal regresses profile views (links that open
+ * in-app today would go external with no in-app escape hatch, stranding
+ * sign-in). An about:blank login popup is not intercepted either: in a
+ * profile view it opens as a real window the user can sign in from, unlike
+ * the root window's, which dies in a hidden window.
  *
  * Pure (no Electron imports): `loadInView` is injected so the branch is
  * unit-testable; `installProfileWindowOpenHandler` is the thin binder that
@@ -37,7 +43,7 @@ const {
   documentPictureInPictureWindows,
 } = require("./documentPictureInPicture");
 
-function createProfileWindowOpenHandler({ config, loadInView }) {
+function createProfileWindowOpenHandler({ config, loadInView, interceptAuthPopup }) {
   // Compiled once, not per window.open. `meetupJoinRegEx` is user-configurable
   // and the config validator only checks it is a string — a malformed pattern
   // must degrade to "no deep-link interception" (the pre-policy default),
@@ -64,6 +70,9 @@ function createProfileWindowOpenHandler({ config, loadInView }) {
       }
       return { action: "deny" };
     }
+    if (interceptAuthPopup?.(url)) {
+      return { action: "deny" };
+    }
     return { action: "allow" };
   };
 }
@@ -79,7 +88,8 @@ function createProfileWindowOpenHandler({ config, loadInView }) {
  *
  * @param {Electron.WebContents} targetWebContents
  * @param {{ config: object, loadTargetWebContents?: Electron.WebContents,
- *           activate?: () => void }} deps
+ *           activate?: () => void,
+ *           interceptAuthPopup?: (url: string) => boolean }} deps
  */
 // Fire-and-forget navigation into the originating profile view. The SPA
 // taking over the route rejects the load with ERR_ABORTED in normal use
@@ -99,11 +109,12 @@ async function navigateDeepLink(webContents, url, userAgent) {
 
 function installProfileWindowOpenHandler(
   targetWebContents,
-  { config, loadTargetWebContents = targetWebContents, activate }
+  { config, loadTargetWebContents = targetWebContents, activate, interceptAuthPopup }
 ) {
   targetWebContents.setWindowOpenHandler(
     createProfileWindowOpenHandler({
       config,
+      interceptAuthPopup,
       loadInView: (url) => {
         if (loadTargetWebContents.isDestroyed?.()) return;
         // Deliberately not awaited: the window-open handler is synchronous,
