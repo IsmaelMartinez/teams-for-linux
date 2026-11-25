@@ -546,6 +546,8 @@ Requires the `fido2-tools` system package: `sudo apt install fido2-tools` (Debia
 | `auth.webauthn.enabled` | `boolean` | `false` | Enable FIDO2 hardware security key support for WebAuthn authentication on Linux |
 | `auth.webauthn.debug` | `boolean` | `false` | Enable verbose WebAuthn diagnostic logging (useful for beta testers troubleshooting key registration) |
 | `auth.webauthn.extraOrigins` | `array` | `[]` | Extra sign-in origins allowed to use hardware keys, in addition to the built-in Microsoft login origins |
+| `auth.webauthn.backend` | `string` | `"fido2"` | `fido2` (USB keys through `fido2-tools`) or `browser` (experimental: a Chrome, Edge or Chromium window answers, which reaches a passkey on a phone) |
+| `auth.webauthn.browserPath` | `string` | `""` | Browser for the `browser` backend: an absolute path or a command on `PATH`; empty = the first of Chrome, Edge, Chromium, Brave found |
 
 Interception is limited to the Microsoft login origins (`https://login.microsoftonline.com`, `https://login.microsoft.com`, `https://login.live.com`). If your tenant is federated and the key prompt is served by your own identity provider, the ceremony is blocked and the log shows `[WEBAUTHN] Blocked request { reason: 'origin-not-allowed' }`, or, when the identity provider runs in an embedded frame, `[WEBAUTHN] Skipped a subframe outside the login allowlist` and no key prompt at all. The log never names the origin, since it identifies your tenant. To find it, sign in at teams.microsoft.com in a regular browser with its developer tools open, and note the scheme and host of the request that loads the page asking for your key (the address bar shows only the outer page when that step is embedded). Add that origin to `auth.webauthn.extraOrigins` and restart:
 
@@ -561,6 +563,24 @@ Interception is limited to the Microsoft login origins (`https://login.microsoft
 ```
 
 Entries are exact `https` origins: scheme, host and, where the identity provider is not on 443, its port (`https://sso.example.com:8443`). Wildcards, paths and `http` entries are ignored, so a subdomain of a listed origin is not covered and has to be listed in its own right.
+
+##### Passkey on a phone (experimental)
+
+Electron on Linux cannot show the QR code that lets a phone answer a passkey request, so a tenant that accepts only passkeys or security keys cannot be signed in to with a phone passkey. With `"backend": "browser"`, the request is handed to a real Chrome, Edge or Chromium: a small browser window opens with an empty throwaway profile, shows the browser's own passkey dialog and QR code, and closes once the phone has answered. `fido2-tools` is not needed for this backend. Closing the window cancels. Passkeys are not registered this way; add them in a browser, on your account's Security info page.
+
+```json
+{
+  "auth": {
+    "webauthn": {
+      "enabled": true,
+      "backend": "browser",
+      "browserPath": "microsoft-edge-stable"
+    }
+  }
+}
+```
+
+Leave `browserPath` empty to use the first browser found. The phone needs Bluetooth on both sides, as in a browser sign-in. See the [module README](https://github.com/IsmaelMartinez/teams-for-linux/blob/main/app/webauthn/README.md#browser-backend-phone-passkeys) for how it works.
 
 #### Certificates
 
