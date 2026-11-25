@@ -1,5 +1,6 @@
 const { ipcMain, WebContentsView } = require("electron");
 const path = require("node:path");
+const { WINDOW_STATE_EVENTS } = require("../utils/windowStateEvents");
 
 class StreamSelector {
   #parent;
@@ -58,6 +59,11 @@ class StreamSelector {
     };
 
     this.#parent.on("resize", this.#resizeHandler);
+    // #resizeView already defers a tick, which also covers X11 reporting the
+    // pre-maximize size while the event is delivered.
+    for (const event of WINDOW_STATE_EVENTS) {
+      this.#parent.on(event, this.#resizeHandler);
+    }
     // Receive user's screen sharing source selection from picker UI
     ipcMain.once("selected-source", this.#sourceHandler);
     // Close the stream selector view without selection
@@ -87,6 +93,9 @@ class StreamSelector {
     // Cleanup resize listener
     if (this.#resizeHandler) {
       this.#parent.removeListener("resize", this.#resizeHandler);
+      for (const event of WINDOW_STATE_EVENTS) {
+        this.#parent.removeListener(event, this.#resizeHandler);
+      }
       this.#resizeHandler = null;
     }
 

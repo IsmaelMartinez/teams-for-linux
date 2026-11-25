@@ -83,7 +83,9 @@ class FakeWebContentsView {
     this.webContents = new FakeWebContents();
     createdViews.push(this);
   }
-  setBounds() {}
+  setBounds(bounds) {
+    this.bounds = bounds;
+  }
   setBackgroundColor() {}
   setVisible(visible) {
     this.visible = visible;
@@ -149,7 +151,11 @@ function fakeWindow() {
     isFocused() {
       return this.focused;
     },
-    getContentSize: () => [1200, 800],
+    contentSize: [1200, 800],
+    getContentSize() {
+      return this.contentSize;
+    },
+    isDestroyed: () => false,
     contentView: {
       attached: new Set(),
       removed: [],
@@ -224,6 +230,52 @@ function build(profiles, bindWindowOpenHandler) {
   pvm.initialize();
   return { win, pm, pvm };
 }
+
+describe('ProfileViewManager window-state bounds (#2947)', () => {
+  const STATE_EVENTS = ['maximize', 'unmaximize', 'restore', 'enter-full-screen', 'leave-full-screen'];
+  const nextTick = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+  function pillOf(win) {
+    return createdViews.find((v) => v !== createdViews[0] && win.contentView.attached.has(v));
+  }
+
+  for (const event of STATE_EVENTS) {
+    it(`re-lays-out profile views and the pill on ${event}`, () => {
+      const { win, pm } = build([LEGACY, PROFILE_A]);
+      pm.switch(PROFILE_A.id);
+      const view = createdViews[0];
+      const pill = pillOf(win);
+      win.contentSize = [1920, 1080];
+      win.emit(event);
+      assert.deepStrictEqual(view.bounds, { x: 0, y: 0, width: 1920, height: 1080 });
+      assert.deepStrictEqual(pill.bounds, { x: 0, y: 1024, width: 56, height: 56 });
+    });
+  }
+
+  it('lays out again on the next tick in case X11 reported the old size at event time', async () => {
+    const { win, pm } = build([LEGACY, PROFILE_A]);
+    pm.switch(PROFILE_A.id);
+    const view = createdViews[0];
+    win.emit('unmaximize');
+    win.contentSize = [900, 600];
+    await nextTick();
+    assert.deepStrictEqual(view.bounds, { x: 0, y: 0, width: 900, height: 600 });
+  });
+
+  it('dispose removes every window-state listener and cancels the pending re-layout', async () => {
+    const { win, pm, pvm } = build([LEGACY, PROFILE_A]);
+    pm.switch(PROFILE_A.id);
+    const view = createdViews[0];
+    win.emit('maximize');
+    pvm.dispose();
+    for (const event of ['resize', ...STATE_EVENTS]) {
+      assert.strictEqual((win.listeners[event] || []).length, 0, event);
+    }
+    view.bounds = null;
+    await nextTick();
+    assert.strictEqual(view.bounds, null);
+  });
+});
 
 describe('ProfileViewManager sender attribution wiring', () => {
   it('returns root contents for legacy and active view contents for another profile', () => {

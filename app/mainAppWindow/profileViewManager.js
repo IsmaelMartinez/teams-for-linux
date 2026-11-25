@@ -6,6 +6,7 @@ const { isHttpsUrl } = require("../profilesManager");
 const { keepMsalEncryptionCookiePersistent } = require("./msalCookiePersistence");
 const { blockUrlPreviews } = require("./urlPreviewBlock");
 const webauthnBackend = require("../webauthn/backendStatus");
+const { WINDOW_STATE_EVENTS } = require("../utils/windowStateEvents");
 const {
   isDocumentPictureInPictureRequest,
   lockDocumentPictureInPictureWindow,
@@ -109,6 +110,8 @@ class ProfileViewManager {
   #descendants = new Map();
   #handlers = null;
   #resizeHandler = null;
+  #windowStateHandler = null;
+  #windowStateTimer = null;
   #focusHandler = null;
   #navigationHandler = null;
   #bootstrapInFlight = false;
@@ -199,6 +202,23 @@ class ProfileViewManager {
 
     this.#resizeHandler = () => this.#applyBoundsToAll();
     this.#window.on("resize", this.#resizeHandler);
+
+    // Maximize/restore/fullscreen change the content size without a `resize`
+    // the views reliably act on under X11 (#2947). Lay out now, then once more
+    // on the next tick: X11 can still report the old content size while the
+    // event is being delivered.
+    this.#windowStateHandler = () => {
+      this.#applyBoundsToAll();
+      clearTimeout(this.#windowStateTimer);
+      this.#windowStateTimer = setTimeout(() => {
+        this.#windowStateTimer = null;
+        if (this.#window.isDestroyed()) return;
+        this.#applyBoundsToAll();
+      }, 0);
+    };
+    for (const event of WINDOW_STATE_EVENTS) {
+      this.#window.on(event, this.#windowStateHandler);
+    }
 
     // When the window regains focus (e.g. after a keyboard layout switch on
     // X11), keyboard focus otherwise falls back to the root webContents,
@@ -387,6 +407,14 @@ class ProfileViewManager {
       this.#window.removeListener("resize", this.#resizeHandler);
       this.#resizeHandler = null;
     }
+    if (this.#windowStateHandler) {
+      for (const event of WINDOW_STATE_EVENTS) {
+        this.#window.removeListener(event, this.#windowStateHandler);
+      }
+      this.#windowStateHandler = null;
+    }
+    clearTimeout(this.#windowStateTimer);
+    this.#windowStateTimer = null;
     if (this.#focusHandler) {
       this.#window.removeListener("focus", this.#focusHandler);
       this.#focusHandler = null;

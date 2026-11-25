@@ -5,7 +5,7 @@ Provides native screen/window selection and preview window management for Teams 
 ## Components
 
 - **service.js** - ScreenSharingService class for IPC handlers and state management
-- **index.js** - StreamSelector for source selection UI
+- **index.js** - StreamSelector for source selection UI; the picker view re-fits the parent window on `resize` and on window-state changes (`maximize`, `unmaximize`, `restore`, `enter-full-screen`, `leave-full-screen`, see `app/utils/windowStateEvents.js`), because X11 does not reliably emit a usable `resize` for those (#2947)
 - **browser.js** - Renderer process UI logic
 - **preload.js** - Context bridge for IPC
 - **injectedScreenSharing.js** - Client-side Teams DOM integration, executed by `mainAppWindow` into the root window and into every multi-account profile view on `did-finish-load` (#2979)
