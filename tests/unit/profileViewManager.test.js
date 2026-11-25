@@ -1051,6 +1051,22 @@ describe('ProfileViewManager launch link', () => {
       }
     });
 
+    it('keeps recovering after a newer link: its failed load is retried by a reload, manager intact', async (t) => {
+      const { pvm } = buildWithLaunch([LEGACY, PROFILE_A], 'profile-a', LINK);
+      const [viewA] = createdViews;
+      await settle();
+      assert.strictEqual(viewA.webContents.loads.length, 1, 'the launch link loaded');
+      const cleanup = t.mock.method(managers[0], 'cleanup');
+
+      pvm.noteDeepLink(viewA.webContents); // a later external link takes the view
+      viewA.webContents.emit('did-fail-load', {}, -106, 'ERR_INTERNET_DISCONNECTED', 'x', true);
+      t.mock.timers.tick(1000); // the manager's debounced refresh
+      await settle();
+
+      assert.strictEqual(viewA.webContents.loads.length, 2, 'the page is reloaded');
+      assert.strictEqual(cleanup.mock.callCount(), 0, 'the manager is not retired');
+    });
+
     describe('a newer link during the connectivity sweep', () => {
       // The sweep is held open so a newer link can arrive while it waits.
       function buildWithSlowSweep() {

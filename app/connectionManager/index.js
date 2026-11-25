@@ -16,7 +16,7 @@ let _ConnectionManager_boundDidFailLoad = new WeakMap();
 // no longer replaces a healthy page with a blank one (#2611).
 let _ConnectionManager_needsReload = new WeakMap();
 // Optional `start()` hook: true when something newer than the URL being started
-// has taken over the page, so the load must not go ahead (see refresh()).
+// has taken over the page, so its initial load must not go ahead (see refresh()).
 let _ConnectionManager_isStale = new WeakMap();
 
 class ConnectionManager {
@@ -147,8 +147,11 @@ class ConnectionManager {
       }
 
       // The connectivity sweep can take a while; a newer link may have opened in
-      // this page meanwhile, and loading the older URL now would undo it.
-      if (_ConnectionManager_isStale.get(this)?.()) {
+      // this page meanwhile, and loading the older URL now would undo it. Only
+      // the initial load of the URL started here is at stake: with a page
+      // already loaded (`hasUrl`) the retry is a reload of whatever is current,
+      // newer link included, which is what recovery should do.
+      if (!hasUrl && _ConnectionManager_isStale.get(this)?.()) {
         console.debug("[CONNECTION] Superseded by a newer link, load skipped");
         this.cleanup();
         return;
