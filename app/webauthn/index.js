@@ -19,6 +19,8 @@
 const { BrowserWindow, ipcMain, webFrameMain } = require("electron");
 const { setTimeout: sleep } = require("node:timers/promises");
 const fido2Backend = require("./fido2Backend");
+const browserBackend = require("./browserBackend");
+const { backendName, findBrowser } = require("./backendStatus");
 const { requestPinPreCollect, requestPinModal } = require("./pinDialog");
 const { showTouchPrompt } = require("./touchPrompt");
 const { DEFAULT_ORIGINS, buildAllowedOrigins } = require("./originAllowlist");
@@ -39,6 +41,44 @@ let allowedOrigins = new Set(DEFAULT_ORIGINS);
 // it lines up with the sign-in step it explains. The origin itself stays in
 // memory: an IdP host identifies the tenant, and debug logs get shared.
 const skippedOrigins = new Set();
+
+// auth.webauthn.backend: "fido2" (USB keys through fido2-tools, the default) or
+// "browser" (a real Chrome/Edge/Chromium answers, which reaches a phone
+// passkey over QR). Set once at initialize().
+let backend = "fido2";
+let browserPath = "";
+
+/**
+ * The browser backend's half of handleWebauthnRequest. The browser shows its
+ * own dialog and QR code, so there is no device wait, PIN or touch prompt
+ * here; closing the browser window cancels.
+ * @param {string} operation
+ * @param {string} origin - already checked against the allowlist
+ * @param {object} options
+ * @param {number} startedAt
+ */
+async function handleBrowserRequest(operation, origin, options, startedAt) {
+  if (operation === "create") {
+    log.warn("[WEBAUTHN] Blocked request", { op: operation, reason: "browser-backend-get-only" });
+    return {
+      success: false,
+      error: "NotSupportedError: the browser passkey backend does not register credentials. Add the passkey in a browser, on the account's Security info page.",
+    };
+  }
+  try {
+    const data = await browserBackend.getAssertion({ ...options, origin }, { browserPath });
+    log.info("[WEBAUTHN] Succeeded", { op: operation, backend, totalMs: Date.now() - startedAt });
+    return { success: true, data };
+  } catch (err) {
+    const totalMs = Date.now() - startedAt;
+    if (err.message === fido2Backend.CANCELLED_MESSAGE) {
+      log.info("[WEBAUTHN] Cancelled by user", { op: operation, backend, totalMs });
+    } else {
+      log.error("[WEBAUTHN] Failed", { op: operation, backend, errClass: log.classifyError(err), totalMs });
+    }
+    return { success: false, error: err.message };
+  }
+}
 
 let initialized = false;
 
@@ -134,6 +174,8 @@ async function handleWebauthnRequest(operation, event, options) {
   // contains "key", which would blank the one number this logging exists for.
   let pinMs = null;
   let touchMs = null;
+
+  if (backend === "browser") return handleBrowserRequest(operation, origin, options, startedAt);
 
   try {
     // Determine if UV is required (PIN will be needed). A get with no
@@ -389,14 +431,25 @@ async function initialize(mainWindow, config) {
   log.setDebug(config?.auth?.webauthn?.debug);
   allowedOrigins = buildAllowedOrigins(config?.auth?.webauthn?.extraOrigins);
 
-  const available = await fido2Backend.isAvailable();
-  if (!available) {
-    log.warn("[WEBAUTHN] fido2-tools not found. Install with: sudo apt install fido2-tools");
-    log.warn("[WEBAUTHN] Hardware key support will not be available");
-    return;
-  }
+  backend = backendName(config);
+  browserPath = config?.auth?.webauthn?.browserPath || "";
+  if (backend === "browser") {
+    if (!findBrowser(browserPath)) {
+      log.warn("[WEBAUTHN] Browser backend: no Chrome, Chromium or Edge found (set auth.webauthn.browserPath)");
+      log.warn("[WEBAUTHN] Passkey support will not be available");
+      return;
+    }
+    log.info("[WEBAUTHN] Browser backend: browser found, registering IPC handlers");
+  } else {
+    const available = await fido2Backend.isAvailable();
+    if (!available) {
+      log.warn("[WEBAUTHN] fido2-tools not found. Install with: sudo apt install fido2-tools");
+      log.warn("[WEBAUTHN] Hardware key support will not be available");
+      return;
+    }
 
-  log.info("[WEBAUTHN] fido2-tools detected, registering IPC handlers");
+    log.info("[WEBAUTHN] fido2-tools detected, registering IPC handlers");
+  }
 
   // Handle credential creation requests from renderer
   ipcMain.handle("webauthn:create", (event, options) => handleWebauthnRequest("create", event, options));
@@ -424,6 +477,7 @@ async function initialize(mainWindow, config) {
 
   initialized = true;
   log.info("[WEBAUTHN] Hardware security key support initialized", {
+    backend,
     extraOrigins: allowedOrigins.size - DEFAULT_ORIGINS.length,
   });
 }
