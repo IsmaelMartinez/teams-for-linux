@@ -210,7 +210,7 @@ test("Return to Teams without an activator (multi-account off) just focuses and 
 });
 
 const GOV = "https://gov.teams.microsoft.us";
-const govUrl = (webContents) => (webContents.url.startsWith(GOV) ? GOV : CONFIG.url);
+const govUrl = (webContents) => (new URL(webContents.url).origin === GOV ? GOV : CONFIG.url);
 
 test("Return to Teams without a snapshot loads the target profile's own Teams URL", async (t) => {
   const view = new FakeWebContents(`${GOV}/v2/`);
@@ -261,4 +261,43 @@ test("a removed profile's Return falls back to the active profile's own URL", as
   await nav.returnToTeams();
 
   assert.strictEqual(gov.loads[0].url, GOV);
+});
+
+test("a second join on a custom-host profile keeps the first snapshot, so Return goes to the pre-join page", async (t) => {
+  const view = new FakeWebContents(`${GOV}/v2/chat-page`);
+  const { nav } = build(t, view, () => null, govUrl);
+
+  await nav.join(MEETING);
+  // Join rewrote the meeting onto the profile's own host and the page followed.
+  view.url = `${GOV}/l/meetup-join/19%3ameeting_abc/0?context=%7B%7D`;
+  await nav.join(MEETING);
+  await nav.returnToTeams();
+
+  assert.strictEqual(view.loads[0].url, `${GOV}/v2/chat-page`, "never the meeting page");
+});
+
+test("a custom-host page that is not a meeting still becomes the snapshot", async (t) => {
+  const view = new FakeWebContents(`${GOV}/v2/first`);
+  const { nav } = build(t, view, () => null, govUrl);
+
+  await nav.join(MEETING);
+  view.url = `${GOV}/v2/second`;
+  await nav.join(MEETING);
+  await nav.returnToTeams();
+
+  assert.strictEqual(view.loads[0].url, `${GOV}/v2/second`);
+});
+
+test("a meeting path on some other host is not taken for this profile's meeting", async (t) => {
+  const view = new FakeWebContents(`${GOV}/v2/first`);
+  const { nav } = build(t, view, () => null, () => GOV);
+
+  await nav.join(MEETING);
+  view.url = "https://elsewhere.example/l/meetup-join/19%3ameeting_abc/0";
+  await nav.join(MEETING);
+  await nav.returnToTeams();
+
+  // The elsewhere page replaced the snapshot (it is no meeting of this profile)
+  // and is no Teams page, so Return falls back to the profile's home.
+  assert.strictEqual(view.loads[0].url, GOV);
 });

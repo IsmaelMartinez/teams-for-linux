@@ -19,6 +19,8 @@ const isGone = (target) => !target || target.isDestroyed();
  * @param {() => {url: string, chromeUserAgent: string}} deps.getConfig
  * @param {() => boolean} deps.isCallActive
  * @param {number} deps.deferDelayMs - Wait after a call ends before a held link opens
+ * @param {(webContents: object) => void} [deps.onTargeted] - Told each time a
+ *   link takes a webContents, so an older link still loading there can yield
  * @param {(webContents: object) => string} [deps.getTeamsUrl] - The Teams URL
  *   configured for a webContents' profile (profiles can name their own host);
  *   the router accepts its origin. Defaults to the global `url`.
@@ -37,6 +39,7 @@ function createDeepLinkOpener({
   deferDelayMs,
   getActivator = () => null,
   getTeamsUrl = () => getConfig().url,
+  onTargeted = () => {},
 }) {
   // Bumped per `open` call: after its await, only the newest call may fall back.
   let generation = 0;
@@ -64,6 +67,7 @@ function createDeepLinkOpener({
       console.debug("[DEEPLINK] target closed before the link could open, dropped");
       return;
     }
+    onTargeted(target);
     const config = getConfig();
     const teamsUrl = getTeamsUrl(target);
 

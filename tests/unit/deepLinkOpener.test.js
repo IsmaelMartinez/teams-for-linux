@@ -34,7 +34,7 @@ class FakeWebContents extends EventEmitter {
 
 // Mirrors how app wires it: the root window's webContents unless multi-account
 // injected a getter for the active profile.
-function build(t, { routedBy = () => false, activator = null, getTeamsUrl } = {}) {
+function build(t, { routedBy = () => false, activator = null, getTeamsUrl, onTargeted } = {}) {
   t.mock.timers.enable({ apis: ["setTimeout"] });
   t.mock.method(console, "debug", () => {});
   t.mock.method(console, "info", () => {});
@@ -62,6 +62,7 @@ function build(t, { routedBy = () => false, activator = null, getTeamsUrl } = {}
     deferDelayMs: DELAY,
     getActivator: () => activator,
     ...(getTeamsUrl ? { getTeamsUrl } : {}),
+    ...(onTargeted ? { onTargeted } : {}),
   });
   return { root, targets, state, routed, teamsUrls, opener, tick: (ms) => t.mock.timers.tick(ms) };
 }
@@ -469,4 +470,33 @@ test("without a per-profile lookup (multi-account off) the router gets the globa
     ["navigate", CONFIG.url],
     ["compose", CONFIG.url],
   ]);
+});
+
+test("each link tells the observer which webContents it targets, so an older load there can yield", async (t) => {
+  const told = [];
+  const { targets, state, opener, tick } = build(t, { onTargeted: (webContents) => told.push(webContents.name) });
+  const view = new FakeWebContents("profile-a");
+  targets.set(() => view);
+
+  await opener.open(LINK);
+  state.callActive = true;
+  await opener.open(LINK);
+  state.callActive = false;
+  opener.deferred.release();
+  tick(DELAY);
+  await settle();
+
+  assert.deepStrictEqual(told, ["profile-a", "profile-a", "profile-a"]);
+});
+
+test("a link whose target is already gone does not tell the observer", async (t) => {
+  const told = [];
+  const { targets, opener } = build(t, { onTargeted: (webContents) => told.push(webContents.name) });
+  const gone = new FakeWebContents("gone");
+  gone.destroy();
+  targets.set(() => gone);
+
+  await opener.open(LINK, gone);
+
+  assert.deepStrictEqual(told, []);
 });

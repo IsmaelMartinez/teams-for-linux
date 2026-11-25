@@ -1040,6 +1040,72 @@ describe('ProfileViewManager launch link', () => {
       assert.strictEqual(loads[1][0], LINK, 'the retry opens the link, not the profile page');
     });
 
+    it('logs only the error code for a failed launch-link load, never its URL or path', async (t) => {
+      failFirstLoads(t, 'ERR_INTERNET_DISCONNECTED');
+      buildWithLaunch([LEGACY, PROFILE_A], 'profile-a', 'https://teams.cloud.microsoft/l/meetup-join/19%3ameeting_abc/0?context=x');
+      await settle();
+
+      assert.ok(lines.some((line) => line.includes('ERR_INTERNET_DISCONNECTED')), 'the failure is logged');
+      for (const line of lines) {
+        assert.ok(!line.includes('meetup-join') && !line.includes('meeting_abc'), line);
+      }
+    });
+
+    describe('a newer link during the connectivity sweep', () => {
+      // The sweep is held open so a newer link can arrive while it waits.
+      function buildWithSlowSweep() {
+        let finishSweep;
+        const slowManager = () => {
+          const ConnectionManager = require('../../app/connectionManager');
+          const manager = new ConnectionManager();
+          manager.isOnline = () => new Promise((resolve) => (finishSweep = resolve));
+          managers.push(manager);
+          return manager;
+        };
+        const pm = fakeProfilesManager([LEGACY, PROFILE_A, PROFILE_B]);
+        pm.activeId = 'profile-a';
+        const pvm = new ProfileViewManager(
+          fakeWindow(),
+          pm,
+          { url: 'https://teams.cloud.microsoft', chromeUserAgent: 'UA' },
+          () => {},
+          () => {},
+          () => {},
+          () => {},
+          slowManager
+        );
+        pvm.setLaunchUrl(LINK);
+        pvm.initialize();
+        return { pvm, finishSweep: (online = true) => finishSweep(online) };
+      }
+
+      it('is not undone by the older launch link, and the manager is stopped', async (t) => {
+        const { pvm, finishSweep } = buildWithSlowSweep();
+        const [viewA] = createdViews;
+        await settle();
+        const cleanup = t.mock.method(managers[0], 'cleanup');
+
+        pvm.noteDeepLink(viewA.webContents); // a second-instance link opens here
+        finishSweep();
+        await settle();
+
+        assert.strictEqual(viewA.webContents.loads, undefined, 'the older link never loads');
+        assert.strictEqual(cleanup.mock.callCount(), 1);
+      });
+
+      it('still loads the launch link when nothing newer arrived, or only another view got one', async () => {
+        const { pvm, finishSweep } = buildWithSlowSweep();
+        const [viewA, viewB] = createdViews;
+        await settle();
+
+        pvm.noteDeepLink(viewB.webContents);
+        finishSweep();
+        await settle();
+
+        assert.strictEqual(viewA.webContents.loads[0][0], LINK);
+      });
+    });
+
     it('stops retrying when the view is destroyed', async (t) => {
       failFirstLoads(t, 'ERR_INTERNET_DISCONNECTED', 5);
       buildWithLaunch([LEGACY, PROFILE_A], 'profile-a', LINK);

@@ -118,6 +118,8 @@ class ProfileViewManager {
   #bootstrapInFlight = false;
   #launchUrl = null;
   #createConnectionManager;
+  // webContents id -> how many deep links have targeted that view
+  #linkGenerations = new Map();
   #initialized = false;
   // The switcher pill (a single persistent WebContentsView held separately from
   // #views so #hideAllOverlays never detaches it).
@@ -677,8 +679,16 @@ class ProfileViewManager {
   // needs a window-like shell around the view's webContents.
   #loadLaunchLink(webContents, url) {
     const connection = this.#createConnectionManager();
-    webContents.once("destroyed", () => connection.cleanup());
+    const { id } = webContents;
+    const handedOver = this.#linkGenerations.get(id) ?? 0;
+    webContents.once("destroyed", () => {
+      connection.cleanup();
+      this.#linkGenerations.delete(id);
+    });
     connection.start(url, {
+      // A newer link that opened in this view while the manager waited for the
+      // network must not be undone by this older one.
+      isStale: () => (this.#linkGenerations.get(id) ?? 0) !== handedOver,
       window: {
         webContents,
         isDestroyed: () => webContents.isDestroyed(),
@@ -727,6 +737,18 @@ class ProfileViewManager {
       return launchUrl;
     }
     return null;
+  }
+
+  /**
+   * Records that a deep link now targets `webContents`, so a launch link still
+   * waiting for the network in that view is older than it and is dropped.
+   *
+   * @param {Electron.WebContents} webContents
+   */
+  noteDeepLink(webContents) {
+    const id = webContents?.id;
+    if (typeof id !== "number") return;
+    this.#linkGenerations.set(id, (this.#linkGenerations.get(id) ?? 0) + 1);
   }
 
   /**

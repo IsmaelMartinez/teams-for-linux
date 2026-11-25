@@ -86,7 +86,7 @@ launch link at cold start.
   through a per-view `ConnectionManager` (the root window's mechanism: waits for
   the network, treats the launcher's `ERR_ABORTED` redirect as success, retries
   a real failure on resume or `did-fail-load`, stopped when the view is
-  destroyed); an ordinary profile start page is loaded once, without retry. The root window
+  destroyed, and dropped if a newer link opened in the view while it waited for the network: `noteDeepLink` bumps a per-view counter that the manager's `isStale` hook checks before loading); an ordinary profile start page is loaded once, without retry. The root window
   (Profile 0, hidden behind the view) starts on its usual page. With the flag
   off, or Profile 0 active, nothing is held.
 - After a second-instance link the target's webContents is focused as well as

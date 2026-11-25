@@ -520,6 +520,8 @@ const getDeepLinkActivator = () => deepLinkActivator;
 // The Teams URL a webContents' profile is configured with (multi-account only;
 // profiles can name their own host). Falls back to the global `url`.
 let deepLinkUrlResolver = null;
+// Told which webContents each link targets (multi-account only).
+let deepLinkTargetedHook = null;
 function getDeepLinkTeamsUrl(webContents) {
   try {
     return deepLinkUrlResolver?.(webContents) || config.url;
@@ -533,6 +535,7 @@ const { open: openDeepLink, deferred: deferredDeepLink } = createDeepLinkOpener(
   router: deepLinkRouter,
   getActivator: getDeepLinkActivator,
   getTeamsUrl: getDeepLinkTeamsUrl,
+  onTargeted: (webContents) => deepLinkTargetedHook?.(webContents),
   resolveTarget: resolveDeepLinkTarget,
   getConfig: () => config,
   isCallActive: () => callRegistry.active,
@@ -934,6 +937,16 @@ exports.setDeepLinkTarget = deepLinkTarget.set;
  */
 exports.setDeepLinkUrlResolver = function setDeepLinkUrlResolver(resolve) {
   deepLinkUrlResolver = typeof resolve === 'function' ? resolve : null;
+};
+
+/**
+ * Multi-account: told which webContents each external link targets, so a launch
+ * link still waiting for the network in that view yields to it.
+ *
+ * @param {(webContents: Electron.WebContents) => void} hook
+ */
+exports.setDeepLinkTargetedHook = function setDeepLinkTargetedHook(hook) {
+  deepLinkTargetedHook = typeof hook === 'function' ? hook : null;
 };
 
 /**

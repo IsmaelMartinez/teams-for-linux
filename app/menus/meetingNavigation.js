@@ -8,6 +8,8 @@
  *
  * Never log a meeting URL: its query parameters may contain tokens.
  */
+const PUBLIC_HOSTS = ["teams.microsoft.com", "teams.cloud.microsoft"];
+
 class MeetingNavigation {
   #getTarget;
   #getConfig;
@@ -66,7 +68,7 @@ class MeetingNavigation {
       // overwrite the last known good Teams location. A snapshot taken on
       // another surface says nothing about this one, so it is dropped.
       const currentUrl = target.getURL();
-      if (!this.#isMeetingUrl(currentUrl)) {
+      if (!this.#isMeetingUrl(currentUrl, this.#getTeamsUrl(target))) {
         this.#preJoinUrl = currentUrl;
       } else if (this.#preJoinTarget !== target) {
         this.#preJoinUrl = null;
@@ -122,12 +124,20 @@ class MeetingNavigation {
     }
   }
 
-  #isMeetingUrl(url) {
+  // The pattern only knows the public Teams hosts, but Join rewrites a meeting
+  // onto the profile's own host (GovCloud, say). A page on that host counts too,
+  // judged by its path, query and fragment rebased onto a public host.
+  #isMeetingUrl(url, teamsUrl) {
     if (!url || typeof url !== "string") return false;
     const pattern = this.#getConfig().meetupJoinRegEx;
     if (!pattern) return false;
     try {
-      return new RegExp(pattern).test(url);
+      const regex = new RegExp(pattern);
+      if (regex.test(url)) return true;
+      if (typeof teamsUrl !== "string") return false;
+      const { origin, pathname, search, hash } = new URL(url);
+      if (origin !== new URL(teamsUrl).origin) return false;
+      return PUBLIC_HOSTS.some((host) => regex.test(`https://${host}${pathname}${search}${hash}`));
     } catch {
       return false;
     }
