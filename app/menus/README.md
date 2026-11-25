@@ -12,6 +12,7 @@ Manages application and system tray menus.
 - **[index.js](index.js)**: Entry point, loads menu definitions
 - **[appMenu.js](appMenu.js)**: Application menu structure (shared with tray)
 - **[tray.js](tray.js)**: System tray implementation and menu
+- **[meetingNavigation.js](meetingNavigation.js)**: Join Meeting and Return to Teams navigation
 - **[themeIcon.js](themeIcon.js)**: Copies a chosen app icon into the user icon theme (Linux only)
 
 ## App Icon
@@ -21,3 +22,12 @@ Manages application and system tray menus.
 After a choice, on Linux outside Snap and Flatpak, a prompt asks whether to also use it for the taskbar and launcher; the answer is reflected in the **Also use it for the taskbar and launcher** checkbox, which can be changed at any time. When on, the app writes the current icon at every hicolor size to `$XDG_DATA_HOME/icons/hicolor/<size>x<size>/apps/<name>.png`, touches the theme directory and sends `org.kde.KIconLoader.iconChanged`, so the taskbar and launcher follow on the next start (some desktops after a new login). Unticking removes the files again. `<name>` is the `Icon=` of the desktop entry the shell matches this window to: a profile launcher by `StartupWMClass` matching `window.class` (see the multiple instances guide), otherwise `teams-for-linux.desktop`, otherwise the entry whose `Exec` runs this binary. Sizes are written to temp names and renamed only once all succeed, so a failed replacement keeps the previous set. The written paths are recorded per icon name in `$XDG_DATA_HOME/teams-for-linux/theme-icon.json`; a size that already holds a file not in that list is skipped, and removal deletes exactly the listed files, so hand-placed icons and other profiles' icons are never overwritten or removed. If the chosen PNG can no longer be read when the box is ticked, an error is shown and nothing is written. A failed session bus connection is logged and does not stop the app. The files live outside the package and survive an uninstall; untick before removing the app to clean them up.
 
 **Reset to default** removes the theme files along with the custom icon.
+
+## Join Meeting and Return to Teams
+
+**Join Meeting** (`Ctrl+J`, also in the tray menu) navigates the Teams surface
+it is given: the root window, or with `multiAccount.enabled` the **active
+profile's** view. `MeetingNavigation` snapshots that surface's current page for
+**Return to Teams** and remembers which surface it was, so Return loads the
+snapshot back into the same profile even after a profile switch (if that view
+is gone it uses the active one). A snapshot is never reused across surfaces.

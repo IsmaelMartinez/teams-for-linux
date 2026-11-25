@@ -888,3 +888,64 @@ describe('ProfileViewManager window title follows the active profile (#3068)', (
     assert.deepStrictEqual(titles, [null]);
   });
 });
+
+// A link the app was launched with belongs to the active profile (ADR-020):
+// its view takes the link as its first load instead of the root window.
+describe('ProfileViewManager launch link', () => {
+  const LINK = 'https://teams.cloud.microsoft/l/chat/0/0?users=a@b.com';
+
+  function buildWithLaunch(profiles, activeId, link) {
+    const pm = fakeProfilesManager(profiles);
+    pm.activeId = activeId;
+    const pvm = new ProfileViewManager(
+      fakeWindow(),
+      pm,
+      { url: 'https://teams.cloud.microsoft', chromeUserAgent: 'UA' },
+      () => {},
+      () => {}
+    );
+    pvm.setLaunchUrl(link);
+    pvm.initialize();
+    return pvm;
+  }
+
+  it('loads the link in the active profile view and the profile page in the others', () => {
+    buildWithLaunch([LEGACY, PROFILE_A, PROFILE_B], 'profile-b', LINK);
+    const [viewA, viewB] = createdViews;
+
+    assert.strictEqual(viewB.webContents.loads[0][0], LINK);
+    assert.strictEqual(viewA.webContents.loads[0][0], 'https://teams.cloud.microsoft');
+  });
+
+  it('does not take the link for a background profile when the active one is Profile 0', () => {
+    buildWithLaunch([LEGACY, PROFILE_A], 'profile-0', LINK);
+
+    assert.strictEqual(createdViews[0].webContents.loads[0][0], 'https://teams.cloud.microsoft');
+  });
+
+  it('ignores a link that is not https, which a view with the full preload must not load', () => {
+    buildWithLaunch([LEGACY, PROFILE_A], 'profile-a', 'http://evil.example/');
+
+    assert.strictEqual(createdViews[0].webContents.loads[0][0], 'https://teams.cloud.microsoft');
+  });
+
+  it('drops a link the active view did not take, so a later profile does not inherit it', () => {
+    const profiles = [LEGACY];
+    const pm = fakeProfilesManager(profiles);
+    const pvm = new ProfileViewManager(
+      fakeWindow(),
+      pm,
+      { url: 'https://teams.cloud.microsoft', chromeUserAgent: 'UA' },
+      () => {},
+      () => {}
+    );
+    pvm.setLaunchUrl(LINK);
+    pvm.initialize();
+
+    profiles.push(PROFILE_A);
+    pm.activeId = 'profile-a';
+    pm.emit('add', PROFILE_A);
+
+    assert.strictEqual(createdViews.at(-1).webContents.loads[0][0], 'https://teams.cloud.microsoft');
+  });
+});

@@ -97,3 +97,42 @@ test("the slot is free again by the time the link opens", (t) => {
 
   assert.strictEqual(opened.length, 2);
 });
+
+test("a link opens on the surface it was held for", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const opened = [];
+  const link = new DeferredDeepLink((url, target) => opened.push([url, target]), DELAY);
+  const target = new (require("node:events").EventEmitter)();
+
+  link.defer("https://teams.cloud.microsoft/l/a", target);
+  link.release();
+  t.mock.timers.tick(DELAY);
+
+  assert.deepStrictEqual(opened, [["https://teams.cloud.microsoft/l/a", target]]);
+  assert.strictEqual(target.listenerCount("did-navigate"), 0, "no listener outlives the hold");
+});
+
+test("a navigation of the held surface cancels the link; cancel and replace drop the listener", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const opened = [];
+  const link = new DeferredDeepLink((url) => opened.push(url), DELAY);
+  const { EventEmitter } = require("node:events");
+  const first = new EventEmitter();
+  const second = new EventEmitter();
+
+  link.defer("https://teams.cloud.microsoft/l/a", first);
+  assert.strictEqual(first.listenerCount("did-navigate"), 1);
+  first.emit("did-navigate");
+  assert.strictEqual(link.pending, false);
+  assert.strictEqual(first.listenerCount("did-navigate"), 0);
+
+  link.defer("https://teams.cloud.microsoft/l/b", first);
+  link.defer("https://teams.cloud.microsoft/l/c", second);
+  assert.strictEqual(first.listenerCount("did-navigate"), 0, "replacing a hold releases its surface");
+  link.cancel();
+  assert.strictEqual(second.listenerCount("did-navigate"), 0);
+
+  link.release();
+  t.mock.timers.tick(DELAY);
+  assert.deepStrictEqual(opened, []);
+});

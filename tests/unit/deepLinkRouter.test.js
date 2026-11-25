@@ -124,9 +124,7 @@ test("findRouterFrame declines while the window is on another origin", () => {
 });
 
 function windowWith(frameUrl, executeJavaScript) {
-  return {
-    webContents: { mainFrame: { url: frameUrl, executeJavaScript } },
-  };
+  return { mainFrame: { url: frameUrl, executeJavaScript } };
 }
 
 test("navigateInPage succeeds when the SPA consumes the fragment", async () => {
@@ -249,7 +247,7 @@ test("navigateInPage declines when the window is torn down mid-flight", async ()
   // Electron throws on a destroyed object rather than returning undefined, so
   // optional chaining would not reach the fallback here.
   const destroyed = {
-    get webContents() {
+    get mainFrame() {
       throw new Error("Object has been destroyed");
     },
   };

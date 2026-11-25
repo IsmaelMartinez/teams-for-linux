@@ -6,7 +6,10 @@ Manages the primary BrowserWindow that hosts the Teams web interface.
 
 - **[index.js](index.js)**: Entry point and window lifecycle management
 - **[browserWindowManager.js](browserWindowManager.js)**: Window creation, configuration, and event handling
-- **[deepLinkRouter.js](deepLinkRouter.js)**: In-page routing for Teams deep links
+- **[deepLinkRouter.js](deepLinkRouter.js)**: In-page routing for Teams deep links, on whichever webContents it is given
+- **[deepLinkOpener.js](deepLinkOpener.js)**: Opens one deep link on one webContents: in-page route, else full navigation, else deferred while a call is active
+- **[deepLinkTarget.js](deepLinkTarget.js)**: Which webContents external links open in: the root window, or the active profile's view when multi-account injects a getter
+- **[deferredDeepLink.js](deferredDeepLink.js)**: The one-slot holder for a link waiting out a call
 - **[msalCookiePersistence.js](msalCookiePersistence.js)**: Promotes the `msal.cache.encryption` session cookie to a persistent one so sign-in survives restarts. Installed once per session on the root window and on every multi-account profile view (#3183)
 - **[protocolLink.js](protocolLink.js)**: Protocol schemes the app registers, `web+msteams:` normalisation and resolving launch arguments to the URL to open
 
@@ -39,3 +42,31 @@ lands in the chat being left, takes focus back from the highlighted message, bac
 off when the user points elsewhere, types into another field or navigates with
 the keyboard): the SPA opens the
 conversation but leaves focus wherever it was.
+
+### Which webContents a link opens in
+
+Without multi-account, always the root window's webContents. With
+`multiAccount.enabled`, `app/index.js` calls `setDeepLinkTarget(getControlWebContents)`
+so a link opens in the **active profile's** webContents: the root window for
+Profile 0, the profile's `WebContentsView` for any other. A getter that
+answers null, a destroyed webContents or throws falls back to the root window.
+This covers a second instance (`msteams:` / https links, browser redirector
+extensions), the Join Meeting dialog and menu entry (see `app/menus`), and the
+launch link at cold start.
+
+- The target is resolved **once per link** and kept for the whole of
+  `openDeepLink`, including a deferred release: switching profile while a link
+  waits does not move it. If that webContents is destroyed by release time
+  (the profile was removed) the link is dropped and a debug line (no URL) says
+  so; it never falls back to another profile.
+- The call deferral stays global (`callActive`): any active call holds a
+  full-navigation fallback, even one in another profile. That is deliberately
+  conservative, and what a single window always did. A `did-navigate` in the
+  link's own target cancels the held link (the root window's `did-navigate`
+  still does too, and also resets `callActive`).
+- Cold start: when the stored active profile lives in a view, `onAppReady`
+  keeps the https launch link out of the root window and hands it to
+  `ProfileViewManager.setLaunchUrl`, which uses it as that view's first load.
+  The root window (Profile 0, hidden behind the view) starts on its usual page.
+- After a second-instance link the target's webContents is focused as well as
+  the window, so typing after the link lands in the active profile.

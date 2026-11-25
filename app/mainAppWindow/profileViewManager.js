@@ -115,6 +115,7 @@ class ProfileViewManager {
   #focusHandler = null;
   #navigationHandler = null;
   #bootstrapInFlight = false;
+  #launchUrl = null;
   #initialized = false;
   // The switcher pill (a single persistent WebContentsView held separately from
   // #views so #hideAllOverlays never detaches it).
@@ -291,6 +292,8 @@ class ProfileViewManager {
     // From here on, every #showActive re-raises it (adding a profile view
     // would otherwise paint over it).
     this.#createChromeView();
+    // Whatever the active profile's view did not take is stale now.
+    this.#launchUrl = null;
   }
 
   /** Return the live WebContents for the currently selected Teams profile. */
@@ -654,9 +657,32 @@ class ProfileViewManager {
       }
     });
 
-    view.webContents.loadURL(this.#urlFor(profile), {
+    view.webContents.loadURL(this.#firstLoadUrl(profile), {
       userAgent: this.#config.chromeUserAgent,
     });
+  }
+
+  /**
+   * Holds a launch link for the active profile's first load, so an app
+   * started with a link opens it in that profile rather than on the root
+   * window behind it. Must be called before `initialize()`; the link is
+   * spent by the active profile's view, or dropped when `initialize()` ends.
+   *
+   * @param {string} url - An https URL
+   */
+  setLaunchUrl(url) {
+    this.#launchUrl = isHttpsUrl(url) ? url : null;
+  }
+
+  // The profile's own page, or the launch link when this is the active
+  // profile's view and one is waiting. Never logged: it carries the target.
+  #firstLoadUrl(profile) {
+    const launchUrl = this.#launchUrl;
+    if (launchUrl && this.#profilesManager.getActive()?.id === profile.id) {
+      this.#launchUrl = null;
+      return launchUrl;
+    }
+    return this.#urlFor(profile);
   }
 
   // A URL saved before https was enforced would otherwise load with the full

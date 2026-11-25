@@ -808,6 +808,13 @@ async function handleAppReady() {
           mainAppWindow.injectScreenSharingLogic,
           mainAppWindow.setTitleOverride
         );
+        // A link the app was launched with belongs to the active profile:
+        // hand it over as that view's first load (before initialize creates
+        // the views), and aim external links and Join Meeting at the active
+        // profile from here on.
+        const coldStartLink = mainAppWindow.takeColdStartLink();
+        if (coldStartLink) profileViewManager.setLaunchUrl(coldStartLink);
+        mainAppWindow.setDeepLinkTarget(getControlWebContents);
         profileViewManager.initialize();
         const {
           registerProfileNotificationFlags,

@@ -1,0 +1,119 @@
+/**
+ * Join Meeting and Return to Teams navigation.
+ *
+ * Both act on one Teams surface: the root window's webContents, or with
+ * multiple accounts (ADR-020) the active profile's view. Joining remembers
+ * which surface it left and from where, and Return to Teams puts that same
+ * surface back, whichever profile is active by then.
+ *
+ * Never log a meeting URL: its query parameters may contain tokens.
+ */
+class MeetingNavigation {
+  #getTarget;
+  #getConfig;
+  #showWindow;
+  #showError;
+  #preJoinUrl = null;
+  #preJoinTarget = null;
+
+  /**
+   * @param {object} deps
+   * @param {() => Electron.WebContents} deps.getTarget - Surface to navigate
+   * @param {() => {url: string, chromeUserAgent: string, meetupJoinRegEx: string}} deps.getConfig
+   * @param {() => void} deps.showWindow - Brings the app window to the front
+   * @param {(title: string, message: string) => void} deps.showError
+   */
+  constructor({ getTarget, getConfig, showWindow, showError }) {
+    this.#getTarget = getTarget;
+    this.#getConfig = getConfig;
+    this.#showWindow = showWindow;
+    this.#showError = showError;
+  }
+
+  async join(meetingUrl) {
+    try {
+      // Validate the incoming URL up front so a parse failure or a
+      // non-matching URL falls through to the outer catch rather than
+      // ending up assigned raw inside the Teams window.
+      const parsed = new URL(meetingUrl);
+      if (!this.#isMeetingUrl(meetingUrl)) {
+        throw new Error("Not a recognised meeting URL");
+      }
+
+      // One surface for the whole call, so the snapshot and the navigation
+      // cannot land on different profiles.
+      const target = this.#getTarget();
+
+      // Snapshot the current Teams URL so the user can jump back after the
+      // meeting ends (see #2322). Skip the snapshot if we're already on a
+      // meeting URL (e.g. a prior takeover page) so repeat joins don't
+      // overwrite the last known good Teams location. A snapshot taken on
+      // another surface says nothing about this one, so it is dropped.
+      const currentUrl = target.getURL();
+      if (!this.#isMeetingUrl(currentUrl)) {
+        this.#preJoinUrl = currentUrl;
+      } else if (this.#preJoinTarget !== target) {
+        this.#preJoinUrl = null;
+      }
+      this.#preJoinTarget = target;
+
+      // Navigate inside the loaded Teams SPA (same-origin) so the app shell
+      // is preserved when the org allows authenticated join. Only rewrite
+      // to the current origin when the current page is actually on a Teams
+      // host; otherwise (login page, error page) navigate to the URL as-is.
+      const destination = this.#isValidTeamsUrl(currentUrl)
+        ? new URL(currentUrl).origin + parsed.pathname + parsed.search + parsed.hash
+        : parsed.href;
+      const script = `window.location.assign(${JSON.stringify(destination)});`;
+      this.#showWindow();
+      await target.executeJavaScript(script, true);
+    } catch {
+      // Avoid logging the error object: URL query parameters may contain tokens.
+      console.error("[JOIN_MEETING] Failed to navigate to meeting URL");
+      this.#showError("Error", "Failed to join meeting. Please check the URL.");
+    }
+  }
+
+  async returnToTeams() {
+    const config = this.#getConfig();
+    const destination = this.#isValidTeamsUrl(this.#preJoinUrl)
+      ? this.#preJoinUrl
+      : config.url;
+    try {
+      // The surface that joined, if it is still there; else the active one.
+      const joined = this.#preJoinTarget;
+      const target = joined && !joined.isDestroyed() ? joined : this.#getTarget();
+      this.#showWindow();
+      await target.loadURL(destination, { userAgent: config.chromeUserAgent });
+    } catch {
+      console.error("[RETURN_TO_TEAMS] Navigation failed");
+      this.#showError("Error", "Failed to return to Teams.");
+    }
+  }
+
+  #isMeetingUrl(url) {
+    if (!url || typeof url !== "string") return false;
+    const pattern = this.#getConfig().meetupJoinRegEx;
+    if (!pattern) return false;
+    try {
+      return new RegExp(pattern).test(url);
+    } catch {
+      return false;
+    }
+  }
+
+  #isValidTeamsUrl(url) {
+    if (!url || typeof url !== "string") return false;
+    try {
+      const { protocol, hostname } = new URL(url);
+      return (
+        protocol === "https:" &&
+        /(^|\.)teams\.(microsoft\.com|live\.com|cloud\.microsoft)$/.test(hostname)
+      );
+    } catch {
+      return false;
+    }
+  }
+}
+
+module.exports = MeetingNavigation;
