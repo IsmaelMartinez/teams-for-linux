@@ -2,6 +2,7 @@
 
 const { describe, it, beforeEach } = require('node:test');
 const assert = require('node:assert');
+const { EventEmitter } = require('node:events');
 
 const tool = require('../../app/browser/tools/documentPictureInPicture');
 const main = require('../../app/mainAppWindow/documentPictureInPicture');
@@ -218,15 +219,19 @@ describe('documentPictureInPicture window-open decision', () => {
     }
   });
 
-  it('allows the popup as a capped, always-on-top window', () => {
-    assert.deepStrictEqual(main.documentPictureInPictureResponse(), {
+  it('allows the popup as an always-on-top window without max size hints, so the user can maximize it', () => {
+    const response = new main.DocumentPictureInPictureWindows().windowOpenResponse({
+      ...pipDetails,
+      features: 'popup,width=500,height=350',
+    });
+    assert.deepStrictEqual(response, {
       action: 'allow',
       overrideBrowserWindowOptions: {
+        width: 500,
+        height: 350,
         alwaysOnTop: true,
         autoHideMenuBar: true,
         fullscreenable: false,
-        maxWidth: main.PIP_MAX_WIDTH,
-        maxHeight: main.PIP_MAX_HEIGHT,
         // Must match the opener's sandbox setting or window.open() returns null.
         // The rest is pinned to the secure values, and no preload is given.
         webPreferences: { sandbox: false, contextIsolation: true, nodeIntegration: false },
@@ -248,12 +253,24 @@ describe('documentPictureInPicture window-open decision', () => {
   });
 
   it('hands out a fresh webPreferences object each time', () => {
-    const first = main.documentPictureInPictureResponse();
+    const windows = new main.DocumentPictureInPictureWindows();
+    const first = windows.windowOpenResponse(pipDetails);
     first.overrideBrowserWindowOptions.webPreferences.sandbox = true;
     assert.strictEqual(
-      main.documentPictureInPictureResponse().overrideBrowserWindowOptions.webPreferences.sandbox,
+      windows.windowOpenResponse(pipDetails).overrideBrowserWindowOptions.webPreferences.sandbox,
       false,
     );
+  });
+
+  it('sizes the window itself, clamping what the page asks for to the cap', () => {
+    const windows = new main.DocumentPictureInPictureWindows();
+    const sizeFor = (features) => {
+      const { width, height } = windows.windowOpenResponse({ ...pipDetails, features }).overrideBrowserWindowOptions;
+      return { width, height };
+    };
+    assert.deepStrictEqual(sizeFor('popup,width=5000,height=5000'), { width: main.PIP_MAX_WIDTH, height: main.PIP_MAX_HEIGHT });
+    assert.deepStrictEqual(sizeFor('popup, WIDTH = 10 , height=abc'), { width: 100, height: 300 });
+    assert.deepStrictEqual(sizeFor(undefined), { width: 400, height: 300 });
   });
 
   it('profile views give the PiP popup the same window options', () => {
@@ -261,8 +278,131 @@ describe('documentPictureInPicture window-open decision', () => {
       config: { meetupJoinRegEx: '^https://teams\\.microsoft\\.com/l/meetup-join/', ...ENABLED },
       loadInView: () => assert.fail('PiP popup must not load in the view'),
     });
-    assert.deepStrictEqual(handler(pipDetails), main.documentPictureInPictureResponse());
+    assert.deepStrictEqual(handler(pipDetails), main.documentPictureInPictureWindows.windowOpenResponse(pipDetails));
     // Other about:blank popups keep the profile default.
     assert.deepStrictEqual(handler({ url: 'about:blank' }), { action: 'allow' });
+  });
+});
+
+// BrowserWindow stand-in: emits resize/closed like Electron and applies
+// setBounds; its webContents emits content-bounds-updated.
+class FakeBrowserWindow extends EventEmitter {
+  constructor(width, height) {
+    super();
+    this.bounds = { x: 0, y: 0, width, height };
+    this.webContents = new EventEmitter();
+  }
+  getBounds() {
+    return { ...this.bounds };
+  }
+  getNormalBounds() {
+    return { ...this.bounds };
+  }
+  setBounds(bounds) {
+    const resized = bounds.width !== this.bounds.width || bounds.height !== this.bounds.height;
+    this.bounds = { ...bounds };
+    if (resized) this.emit('resize');
+  }
+  userResize(width, height) {
+    this.bounds = { ...this.bounds, width, height };
+    this.emit('resize');
+  }
+  // As Electron does, applies the request unless a listener prevents it.
+  pageRequests(bounds) {
+    let prevented = false;
+    this.webContents.emit('content-bounds-updated', { preventDefault: () => { prevented = true; } }, bounds);
+    if (!prevented) this.setBounds(bounds);
+    return prevented;
+  }
+}
+
+describe('documentPictureInPicture window watch', () => {
+  const pipDetails = { url: 'about:blank', frameName: main.PIP_FRAME_NAME };
+
+  function setup() {
+    const windows = new main.DocumentPictureInPictureWindows();
+    const opener = new EventEmitter();
+    windows.watchOpener(opener, ENABLED);
+    const open = (width, height, details = pipDetails) => {
+      const pip = new FakeBrowserWindow(width, height);
+      opener.emit('did-create-window', pip, details);
+      return pip;
+    };
+    const nextSize = () => {
+      const { width, height } = windows.windowOpenResponse({ ...pipDetails, features: 'width=400,height=300' }).overrideBrowserWindowOptions;
+      return { width, height };
+    };
+    return { open, nextSize };
+  }
+
+  it('clamps page-initiated growth past the cap', () => {
+    const { open } = setup();
+    const pip = open(400, 300);
+    assert.strictEqual(pip.pageRequests({ x: 5, y: 5, width: 2400, height: 1300 }), true);
+    assert.deepStrictEqual(pip.bounds, { x: 5, y: 5, width: main.PIP_MAX_WIDTH, height: main.PIP_MAX_HEIGHT });
+    assert.strictEqual(pip.pageRequests({ x: 5, y: 5, width: 600, height: 400 }), false);
+  });
+
+  it('lets the page move a window the user enlarged without shrinking it, but not grow it further', () => {
+    const { open } = setup();
+    const pip = open(400, 300);
+    pip.userResize(1600, 1000);
+    assert.strictEqual(pip.pageRequests({ x: 40, y: 40, width: 1600, height: 1000 }), false);
+    assert.strictEqual(pip.pageRequests({ x: 40, y: 40, width: 2400, height: 1300 }), true);
+    assert.deepStrictEqual(pip.bounds, { x: 40, y: 40, width: 1600, height: 1000 });
+  });
+
+  it('reopens at the size the user last chose, even past the cap', () => {
+    const { open, nextSize } = setup();
+    const pip = open(400, 300);
+    pip.userResize(1600, 1000);
+    assert.deepStrictEqual(nextSize(), { width: 400, height: 300 }, 'remembered only once the window is gone');
+    pip.emit('closed');
+    assert.deepStrictEqual(nextSize(), { width: 1600, height: 1000 });
+  });
+
+  it('keeps the page size when the window closes at the size it opened with', () => {
+    const { open, nextSize } = setup();
+    const pip = open(500, 350);
+    pip.userResize(900, 700);
+    pip.userResize(500, 350);
+    pip.emit('closed');
+    assert.deepStrictEqual(nextSize(), { width: 400, height: 300 });
+  });
+
+  it('does not remember a size the page set', () => {
+    const { open, nextSize } = setup();
+    const pip = open(400, 300);
+    pip.pageRequests({ x: 0, y: 0, width: 600, height: 400 });
+    pip.pageRequests({ x: 0, y: 0, width: 2400, height: 1300 });
+    assert.deepStrictEqual(pip.bounds, { x: 0, y: 0, width: main.PIP_MAX_WIDTH, height: main.PIP_MAX_HEIGHT });
+    pip.emit('closed');
+    assert.deepStrictEqual(nextSize(), { width: 400, height: 300 });
+  });
+
+  it("keeps the user's size when the page resizes the window afterwards", () => {
+    const { open, nextSize } = setup();
+    const pip = open(400, 300);
+    pip.userResize(1600, 1000);
+    pip.pageRequests({ x: 0, y: 0, width: 600, height: 400 });
+    assert.deepStrictEqual(pip.bounds, { x: 0, y: 0, width: 600, height: 400 });
+    pip.emit('closed');
+    assert.deepStrictEqual(nextSize(), { width: 1600, height: 1000 });
+  });
+
+  it('does not remember a maximize the user did not follow with a resize', () => {
+    const { open, nextSize } = setup();
+    const pip = open(400, 300);
+    pip.getNormalBounds = () => ({ x: 0, y: 0, width: 400, height: 300 });
+    pip.userResize(2560, 1368);
+    pip.emit('closed');
+    assert.deepStrictEqual(nextSize(), { width: 400, height: 300 });
+  });
+
+  it('ignores windows that are not the PiP popup', () => {
+    const { open } = setup();
+    const other = open(400, 300, { url: 'about:blank', frameName: 'other' });
+    assert.strictEqual(other.pageRequests({ x: 0, y: 0, width: 2400, height: 1300 }), false);
+    assert.strictEqual(other.listenerCount('closed'), 0);
   });
 });
