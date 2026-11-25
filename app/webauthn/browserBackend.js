@@ -49,13 +49,26 @@ const BUSY_MESSAGE = "NotAllowedError: a passkey request is already open in the 
 let busy = false;
 
 /**
- * The page to run the ceremony in. Other origins (auth.webauthn.extraOrigins)
- * get their root page; getAssertion() checks the origin after loading.
+ * The page to run the ceremony in, for an exact https origin (scheme, host,
+ * optional port; no credentials or path). Other origins
+ * (auth.webauthn.extraOrigins) get their root page; getAssertion() checks the
+ * origin after loading. The URL becomes a browser command-line argument, so
+ * anything that is not a plain https origin is refused here.
  * @param {string} origin
  * @returns {string}
+ * @throws {Error} SecurityError for anything but an exact https origin
  */
 function metadataPageUrl(origin) {
-  return origin + (METADATA_PAGES[origin] ?? "/");
+  let url;
+  try {
+    url = new URL(origin);
+  } catch {
+    url = null;
+  }
+  if (!url || url.protocol !== "https:" || url.origin !== origin) {
+    throw new Error("SecurityError: the browser passkey backend only serves exact https origins");
+  }
+  return new URL(METADATA_PAGES[url.origin] ?? "/", url.origin).href;
 }
 
 /**
@@ -76,14 +89,14 @@ function buildGetScript(options) {
       ...(c.transports ? { transports: c.transports } : {}),
     })),
   };
-  return `(async () => {
+  return String.raw`(async () => {
   const req = ${JSON.stringify(request)};
   const dec = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
   const enc = (b) => {
     const bytes = new Uint8Array(b);
     let bin = "";
     for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
-    return btoa(bin).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/, "");
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   };
   try {
     const publicKey = {
@@ -238,49 +251,55 @@ async function waitForOrigin(cdp, sessionId, origin) {
  * @param {(cdp: CdpPipe, sessionId: string) => Promise<void>} [env.beforeGet] - tests only
  * @returns {Promise<object>} assertion, same shape as fido2Backend.getAssertion()
  */
-async function getAssertion(options, { browserPath = "", headless = false, beforeGet = null } = {}) {
+async function getAssertion(options, { browserPath = "", headless = false, beforeGet = null, tmpDir = os.tmpdir() } = {}) {
   if (busy) throw new Error(BUSY_MESSAGE);
   const browser = findBrowser(browserPath);
   if (!browser) throw new Error("NotSupportedError: no Chrome, Chromium or Edge found for the browser passkey backend");
+  // The caller checks the origin against the login allowlist; it is checked
+  // again here because it becomes part of the browser's command line.
+  const pageUrl = metadataPageUrl(options.origin);
   options.abortSignal?.throwIfAborted?.();
 
   busy = true;
-  const pageUrl = metadataPageUrl(options.origin);
-  const profile = fs.mkdtempSync(path.join(os.tmpdir(), "tfl-passkey-"));
-  const args = [
-    "--remote-debugging-pipe",
-    `--user-data-dir=${profile}`,
-    "--no-first-run",
-    "--no-default-browser-check",
-    "--disable-sync",
-    "--password-store=basic",
-    "--window-size=560,640",
-    ...(headless ? ["--headless=new"] : []),
-    `--app=${pageUrl}`,
-  ];
-  const child = spawn(browser, args, { stdio: ["ignore", "ignore", "ignore", "pipe", "pipe"] });
-  const cdp = new CdpPipe(child);
-  const closed = new Promise((resolve) => child.once("exit", resolve));
-  const spawnFailed = new Promise((_, reject) =>
-    child.once("error", () => reject(new Error("NotSupportedError: the browser for the passkey backend did not start"))));
-  const aborted = new Promise((_, reject) => {
-    options.abortSignal?.addEventListener("abort", () => reject(new Error(CANCELLED_MESSAGE)), { once: true });
-  });
-  // Closing the browser window is the user's cancel.
-  const windowClosed = closed.then(() => { throw new Error(CANCELLED_MESSAGE); });
-  // Only one of these settles the race; the others may reject later (the
-  // window closing in `finally` does, every time) and must not surface as
-  // unhandled rejections in the main process.
-  for (const p of [spawnFailed, aborted, windowClosed]) p.catch(() => {});
-
-  log.info("[WEBAUTHN:browser] Started browser", {
-    browser: path.basename(browser),
-    knownPage: options.origin in METADATA_PAGES,
-    credCount: options.allowCredentials?.length || 0,
-  });
+  let profile = null;
+  let child = null;
+  let cdp = null;
+  let closed = null;
   const startedAt = Date.now();
-
   try {
+    profile = fs.mkdtempSync(path.join(tmpDir, "tfl-passkey-"));
+    const args = [
+      "--remote-debugging-pipe",
+      `--user-data-dir=${profile}`,
+      "--no-first-run",
+      "--no-default-browser-check",
+      "--disable-sync",
+      "--password-store=basic",
+      "--window-size=560,640",
+      ...(headless ? ["--headless=new"] : []),
+      `--app=${pageUrl}`,
+    ];
+    child = spawn(browser, args, { stdio: ["ignore", "ignore", "ignore", "pipe", "pipe"] });
+    cdp = new CdpPipe(child);
+    closed = new Promise((resolve) => child.once("exit", resolve));
+    const spawnFailed = new Promise((_, reject) =>
+      child.once("error", () => reject(new Error("NotSupportedError: the browser for the passkey backend did not start"))));
+    const aborted = new Promise((_, reject) => {
+      options.abortSignal?.addEventListener("abort", () => reject(new Error(CANCELLED_MESSAGE)), { once: true });
+    });
+    // Closing the browser window is the user's cancel.
+    const windowClosed = closed.then(() => { throw new Error(CANCELLED_MESSAGE); });
+    // Only one of these settles the race; the others may reject later (the
+    // window closing in `finally` does, every time) and must not surface as
+    // unhandled rejections in the main process.
+    for (const p of [spawnFailed, aborted, windowClosed]) p.catch(() => {});
+
+    log.info("[WEBAUTHN:browser] Started browser", {
+      browser: path.basename(browser),
+      knownPage: options.origin in METADATA_PAGES,
+      credCount: options.allowCredentials?.length || 0,
+    });
+
     const ceremony = (async () => {
       const sessionId = await attachToPage(cdp);
       await waitForOrigin(cdp, sessionId, options.origin);
@@ -317,12 +336,22 @@ async function getAssertion(options, { browserPath = "", headless = false, befor
       type: value.type || "public-key",
     };
   } finally {
-    if (child.exitCode === null && child.signalCode === null) {
-      cdp.call("Browser.close", {}, undefined, 3_000).catch(() => {});
-      const killed = await Promise.race([closed.then(() => true), sleep(5_000).then(() => false)]);
-      if (!killed) child.kill("SIGKILL");
+    // Each step guarded on its own, and `busy` reset last whatever failed:
+    // a request left marked open would refuse every later sign-in.
+    try {
+      if (child && child.exitCode === null && child.signalCode === null) {
+        cdp.call("Browser.close", {}, undefined, 3_000).catch(() => {});
+        const exited = await Promise.race([closed.then(() => true), sleep(5_000).then(() => false)]);
+        if (!exited) child.kill("SIGKILL");
+      }
+    } catch (err) {
+      log.warn("[WEBAUTHN:browser] Could not close the browser", { errClass: log.classifyError(err) });
     }
-    fs.rmSync(profile, { recursive: true, force: true });
+    try {
+      if (profile) fs.rmSync(profile, { recursive: true, force: true });
+    } catch (err) {
+      log.warn("[WEBAUTHN:browser] Could not remove the temporary profile", { errClass: log.classifyError(err) });
+    }
     busy = false;
   }
 }

@@ -92,6 +92,14 @@ describe('metadataPageUrl', () => {
   it('falls back to the root page for other origins', () => {
     assert.strictEqual(browserBackend.metadataPageUrl('https://sso.example.com'), 'https://sso.example.com/');
   });
+
+  // The URL becomes a browser command-line argument (--app=...).
+  it('refuses anything but an exact https origin', () => {
+    for (const bad of ['http://login.microsoft.com', 'https://user@login.microsoft.com', 'https://login.microsoft.com/path',
+      'https://login.microsoft.com/', '--headless', 'javascript:alert(1)', 'https://login.microsoft.com ', '', undefined]) {
+      assert.throws(() => browserBackend.metadataPageUrl(bad), /SecurityError/, String(bad));
+    }
+  });
 });
 
 describe('buildGetScript', () => {
@@ -153,6 +161,23 @@ describe('buildGetScript', () => {
   it('embeds options as data, so a hostile value cannot become code', async () => {
     const { seen } = await run({ challenge, rpId: '"); throw 1; ("' }, credential);
     assert.strictEqual(seen.publicKey.rpId, '"); throw 1; ("');
+  });
+});
+
+describe('getAssertion setup failures', () => {
+  const browserPath = path.join(tempBin(['fake-browser']), 'fake-browser');
+
+  it('refuses a bad origin before starting anything', async () => {
+    await assert.rejects(browserBackend.getAssertion({ challenge: 'AA', origin: '--headless' }, { browserPath }), /SecurityError/);
+  });
+
+  it('does not stay busy when the temporary profile cannot be created', async () => {
+    const tmpDir = path.join(os.tmpdir(), 'tfl-no-such-dir-' + process.pid, 'missing');
+    const call = () => browserBackend.getAssertion(
+      { challenge: 'AA', origin: 'https://login.microsoft.com' }, { browserPath, tmpDir });
+    await assert.rejects(call(), { code: 'ENOENT' });
+    // Before the fix the second call failed with BUSY_MESSAGE.
+    await assert.rejects(call(), { code: 'ENOENT' });
   });
 });
 
