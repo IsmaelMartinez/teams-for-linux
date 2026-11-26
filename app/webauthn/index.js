@@ -16,7 +16,7 @@
  * Requires fido2-tools system package on Linux.
  */
 
-const { BrowserWindow, ipcMain, webFrameMain } = require("electron");
+const { app, BrowserWindow, ipcMain, webFrameMain } = require("electron");
 const { setTimeout: sleep } = require("node:timers/promises");
 const fido2Backend = require("./fido2Backend");
 const browserBackend = require("./browserBackend");
@@ -43,21 +43,69 @@ let allowedOrigins = new Set(DEFAULT_ORIGINS);
 const skippedOrigins = new Set();
 
 // auth.webauthn.backend: "fido2" (USB keys through fido2-tools, the default) or
-// "browser" (a real Chrome/Edge/Chromium answers, which reaches a phone
+// "browser" (a real Chrome/Edge/Chromium/Brave answers, which reaches a phone
 // passkey over QR). Set once at initialize().
 let backend = "fido2";
 let browserPath = "";
 
+// The browser ceremony in progress, if any. browserBackend runs one at a time,
+// so one slot is enough for the quit handler to reach it.
+let activeBrowserRequest = null;
+
+/**
+ * Abort the browser ceremony when the page that asked for it goes away: the
+ * sender is destroyed, or its main frame starts loading another document.
+ * Login iframes navigate during a normal sign-in, so only the main frame
+ * counts, and same-document navigations (history.pushState, hash changes)
+ * leave the page in place.
+ * @param {Electron.WebContents} sender
+ * @param {AbortController} controller
+ * @returns {() => void} removes the listeners
+ */
+function abortWhenPageLeaves(sender, controller) {
+  if (!sender || typeof sender.on !== "function") return () => {};
+  if (sender.isDestroyed?.()) {
+    controller.abort("page-closed");
+    return () => {};
+  }
+  const onDestroyed = () => controller.abort("page-closed");
+  const onNavigation = (details) => {
+    if (details?.isMainFrame && !details.isSameDocument) controller.abort("page-navigated");
+  };
+  sender.once("destroyed", onDestroyed);
+  sender.on("did-start-navigation", onNavigation);
+  return () => {
+    sender.removeListener("destroyed", onDestroyed);
+    sender.removeListener("did-start-navigation", onNavigation);
+  };
+}
+
+/**
+ * On quit, abort the open browser ceremony and hold the quit until it has
+ * closed the browser and removed the throwaway profile (bounded by the
+ * backend's own close timeout), then quit again.
+ * @param {Electron.Event} event
+ */
+function onBeforeQuit(event) {
+  if (!activeBrowserRequest) return;
+  event.preventDefault();
+  const { controller, done } = activeBrowserRequest;
+  controller.abort("app-quit");
+  done.catch(() => {}).then(() => setImmediate(() => app.quit()));
+}
+
 /**
  * The browser backend's half of handleWebauthnRequest. The browser shows its
  * own dialog and QR code, so there is no device wait, PIN or touch prompt
- * here; closing the browser window cancels.
+ * here; closing the browser window cancels, and so does the page reloading,
+ * navigating away or closing, or the app quitting.
  * @param {string} operation
+ * @param {Electron.WebContents} sender - the page that asked
  * @param {string} origin - already checked against the allowlist
  * @param {object} options
  * @param {number} startedAt
  */
-async function handleBrowserRequest(operation, origin, options, startedAt) {
+async function handleBrowserRequest(operation, sender, origin, options, startedAt) {
   if (operation === "create") {
     log.warn("[WEBAUTHN] Blocked request", { op: operation, reason: "browser-backend-get-only" });
     return {
@@ -65,18 +113,30 @@ async function handleBrowserRequest(operation, origin, options, startedAt) {
       error: "NotSupportedError: the browser passkey backend does not register credentials. Add the passkey in a browser, on the account's Security info page.",
     };
   }
+  const controller = new AbortController();
+  const stopWatching = abortWhenPageLeaves(sender, controller);
+  const done = browserBackend.getAssertion({ ...options, origin, abortSignal: controller.signal }, { browserPath });
+  // A second request is refused by the backend as already open; it must not
+  // take the slot of the ceremony that is.
+  const request = activeBrowserRequest ? null : { controller, done };
+  if (request) activeBrowserRequest = request;
   try {
-    const data = await browserBackend.getAssertion({ ...options, origin }, { browserPath });
+    const data = await done;
     log.info("[WEBAUTHN] Succeeded", { op: operation, backend, totalMs: Date.now() - startedAt });
     return { success: true, data };
   } catch (err) {
     const totalMs = Date.now() - startedAt;
     if (err.message === fido2Backend.CANCELLED_MESSAGE) {
-      log.info("[WEBAUTHN] Cancelled by user", { op: operation, backend, totalMs });
+      // The page's own abort is not the user's cancel; say which it was.
+      const reason = controller.signal.aborted ? controller.signal.reason : "window-closed";
+      log.info("[WEBAUTHN] Cancelled", { op: operation, backend, reason, totalMs });
     } else {
       log.error("[WEBAUTHN] Failed", { op: operation, backend, errClass: log.classifyError(err), totalMs });
     }
     return { success: false, error: err.message };
+  } finally {
+    stopWatching();
+    if (request && activeBrowserRequest === request) activeBrowserRequest = null;
   }
 }
 
@@ -175,7 +235,7 @@ async function handleWebauthnRequest(operation, event, options) {
   let pinMs = null;
   let touchMs = null;
 
-  if (backend === "browser") return handleBrowserRequest(operation, origin, options, startedAt);
+  if (backend === "browser") return handleBrowserRequest(operation, event.sender, origin, options, startedAt);
 
   try {
     // Determine if UV is required (PIN will be needed). A get with no
@@ -435,11 +495,12 @@ async function initialize(mainWindow, config) {
   browserPath = config?.auth?.webauthn?.browserPath || "";
   if (backend === "browser") {
     if (!findBrowser(browserPath)) {
-      log.warn("[WEBAUTHN] Browser backend: no Chrome, Chromium or Edge found (set auth.webauthn.browserPath)");
+      log.warn("[WEBAUTHN] Browser backend: no Chrome, Edge, Chromium or Brave found (set auth.webauthn.browserPath)");
       log.warn("[WEBAUTHN] Passkey support will not be available");
       return;
     }
     log.info("[WEBAUTHN] Browser backend: browser found, registering IPC handlers");
+    app.on("before-quit", onBeforeQuit);
   } else {
     const available = await fido2Backend.isAvailable();
     if (!available) {
