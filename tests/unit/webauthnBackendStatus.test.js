@@ -19,8 +19,11 @@ const {
 
 describe('rendererArguments', () => {
   const enabled = { auth: { webauthn: { enabled: true } } };
-  const withTools = { platform: 'linux', toolsAvailable: () => true };
-  const withoutTools = { platform: 'linux', toolsAvailable: () => false };
+  // Every collaborator is stubbed so results never depend on attached
+  // hardware, PATH or the SNAP environment variable.
+  const base = { platform: 'linux', fidoDevicePresent: () => false, isSnap: false };
+  const withTools = { ...base, toolsAvailable: () => true };
+  const withoutTools = { ...base, toolsAvailable: () => false };
 
   it('flags the default (auth.webauthn.enabled off) on Linux', () => {
     assert.deepStrictEqual(rendererArguments({}, withTools), [NO_BACKEND_ARG]);
@@ -63,7 +66,7 @@ describe('rendererArguments', () => {
 
   it('never flags macOS or Windows, where Chromium WebAuthn works', () => {
     for (const platform of ['darwin', 'win32']) {
-      assert.deepStrictEqual(rendererArguments({}, { platform, toolsAvailable: () => false }), []);
+      assert.deepStrictEqual(rendererArguments({}, { ...withoutTools, platform }), []);
     }
   });
 });
