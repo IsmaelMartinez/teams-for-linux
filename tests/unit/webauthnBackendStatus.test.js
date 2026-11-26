@@ -8,7 +8,9 @@ const path = require('node:path');
 const vm = require('node:vm');
 const {
   NO_BACKEND_ARG,
+  descriptorHasFidoUsagePage,
   hasFido2Tools,
+  hasFidoDevice,
   rendererArguments,
 } = require('../../app/webauthn/backendStatus');
 
@@ -32,9 +34,59 @@ describe('rendererArguments', () => {
     assert.deepStrictEqual(rendererArguments(enabled, withTools), []);
   });
 
+  it('keeps native WebAuthn when a security key is plugged in, flag off', () => {
+    const env = { ...withoutTools, fidoDevicePresent: () => true };
+    assert.deepStrictEqual(rendererArguments({}, env), []);
+  });
+
+  it('flags the page when no security key is plugged in, flag off', () => {
+    const env = { ...withoutTools, fidoDevicePresent: () => false };
+    assert.deepStrictEqual(rendererArguments({}, env), [NO_BACKEND_ARG]);
+  });
+
+  it('does not look for a key when the fido2-tools backend will answer', () => {
+    const env = { ...withTools, fidoDevicePresent: () => { throw new Error('unexpected'); } };
+    assert.deepStrictEqual(rendererArguments(enabled, env), []);
+  });
+
+  it('falls back to hiding when the detector throws', () => {
+    const env = { ...withoutTools, fidoDevicePresent: () => { throw new Error('EACCES'); } };
+    assert.deepStrictEqual(rendererArguments({}, env), [NO_BACKEND_ARG]);
+  });
+
   it('never flags macOS or Windows, where Chromium WebAuthn works', () => {
     for (const platform of ['darwin', 'win32']) {
       assert.deepStrictEqual(rendererArguments({}, { platform, toolsAvailable: () => false }), []);
+    }
+  });
+});
+
+describe('FIDO device detection', () => {
+  const fidoDescriptor = Buffer.from([0x06, 0xd0, 0xf1, 0x09, 0x01, 0xa1, 0x01, 0xc0]);
+  const keyboardDescriptor = Buffer.from([0x05, 0x01, 0x09, 0x06, 0xa1, 0x01, 0x05, 0x07, 0xc0]);
+
+  it('finds the FIDO usage page and ignores other pages', () => {
+    assert.strictEqual(descriptorHasFidoUsagePage(fidoDescriptor), true);
+    assert.strictEqual(descriptorHasFidoUsagePage(keyboardDescriptor), false);
+    assert.strictEqual(descriptorHasFidoUsagePage(Buffer.alloc(0)), false);
+  });
+
+  it('scans hidraw descriptors under a class directory', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 't4l-hidraw-'));
+    try {
+      assert.strictEqual(hasFidoDevice(path.join(root, 'missing')), false);
+      const add = (name, bytes) => {
+        const dir = path.join(root, name, 'device');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'report_descriptor'), bytes);
+      };
+      add('hidraw0', keyboardDescriptor);
+      fs.mkdirSync(path.join(root, 'hidraw1'));
+      assert.strictEqual(hasFidoDevice(root), false);
+      add('hidraw2', fidoDescriptor);
+      assert.strictEqual(hasFidoDevice(root), true);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
     }
   });
 });
