@@ -5,7 +5,7 @@
  *
  * Electron on Linux cannot reach a phone passkey (the QR / hybrid flow,
  * electron/electron#24573), and fido2-tools only talks to USB keys. Chrome, Edge,
- * Chromium and Brave do reach the phone, so for an assertion this backend:
+ * Chromium, Brave and Vivaldi do reach the phone, so for an assertion this backend:
  *
  * 1. starts the browser with a throwaway empty profile, driven over
  *    --remote-debugging-pipe (a private pipe, no network port);
@@ -254,7 +254,7 @@ async function waitForOrigin(cdp, sessionId, origin) {
 async function getAssertion(options, { browserPath = "", headless = false, beforeGet = null, tmpDir = os.tmpdir() } = {}) {
   if (busy) throw new Error(BUSY_MESSAGE);
   const browser = findBrowser(browserPath);
-  if (!browser) throw new Error("NotSupportedError: no Chrome, Edge, Chromium or Brave found for the browser passkey backend");
+  if (!browser) throw new Error("NotSupportedError: no Chrome, Edge, Chromium, Brave or Vivaldi found for the browser passkey backend");
   // The caller checks the origin against the login allowlist; it is checked
   // again here because it becomes part of the browser's command line.
   const pageUrl = metadataPageUrl(options.origin);

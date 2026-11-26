@@ -32,6 +32,15 @@ describe('findBrowser', () => {
     assert.strictEqual(findBrowser('', dir), path.join(dir, 'microsoft-edge-stable'));
   });
 
+  it('finds Brave and Vivaldi when no other browser is installed', () => {
+    const brave = tempBin(['brave-browser']);
+    assert.strictEqual(findBrowser('', brave), path.join(brave, 'brave-browser'));
+    for (const name of ['vivaldi-stable', 'vivaldi']) {
+      const dir = tempBin([name]);
+      assert.strictEqual(findBrowser('', dir), path.join(dir, name));
+    }
+  });
+
   it('looks a configured command name up on PATH', () => {
     const dir = tempBin(['my-chrome']);
     assert.strictEqual(findBrowser('my-chrome', dir), path.join(dir, 'my-chrome'));

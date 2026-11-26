@@ -43,7 +43,7 @@ let allowedOrigins = new Set(DEFAULT_ORIGINS);
 const skippedOrigins = new Set();
 
 // auth.webauthn.backend: "fido2" (USB keys through fido2-tools, the default) or
-// "browser" (a real Chrome/Edge/Chromium/Brave answers, which reaches a phone
+// "browser" (a real Chrome/Edge/Chromium/Brave/Vivaldi answers, which reaches a phone
 // passkey over QR). Set once at initialize().
 let backend = "fido2";
 let browserPath = "";
@@ -495,7 +495,7 @@ async function initialize(mainWindow, config) {
   browserPath = config?.auth?.webauthn?.browserPath || "";
   if (backend === "browser") {
     if (!findBrowser(browserPath)) {
-      log.warn("[WEBAUTHN] Browser backend: no Chrome, Edge, Chromium or Brave found (set auth.webauthn.browserPath)");
+      log.warn("[WEBAUTHN] Browser backend: no Chrome, Edge, Chromium, Brave or Vivaldi found (set auth.webauthn.browserPath)");
       log.warn("[WEBAUTHN] Passkey support will not be available");
       return;
     }

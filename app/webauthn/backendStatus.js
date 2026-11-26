@@ -74,6 +74,8 @@ const BROWSERS = [
   "chromium",
   "chromium-browser",
   "brave-browser",
+  "vivaldi-stable",
+  "vivaldi",
 ];
 
 function isExecutable(file) {
