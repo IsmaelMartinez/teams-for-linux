@@ -12,8 +12,8 @@
  * the fido2-tools backend (auth.webauthn.enabled plus the binaries on PATH), or
  * a FIDO security key plugged in, which Chromium's native WebAuthn drives over
  * hidraw with no PIN prompt of ours (#3261). The key is looked for once, when
- * the window is created, so a key plugged in later is only noticed after a
- * reload.
+ * the window is created, so a key plugged in later is only noticed after
+ * the app is restarted (a page reload does not recompute it).
  *
  * The flag travels as a renderer command-line argument (webPreferences
  * `additionalArguments`) rather than over IPC: the config reaches the preload
