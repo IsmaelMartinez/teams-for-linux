@@ -729,6 +729,20 @@ The systemd man pages document prefix drop-ins in general but do not list `Timeo
 
 **Related GitHub Issues:** [Issue #3161](https://github.com/IsmaelMartinez/teams-for-linux/issues/3161)
 
+#### Issue: Meeting links from a calendar open in the browser instead of the app
+
+**Description:** Calendar invitations can wrap Teams links in a redirect URL. Clicking one in the browser ends in the Teams web app instead of Teams for Linux, and the wrapped link is not accepted as a meeting link when pasted into the app or clicked in a chat.
+
+**Solutions/Workarounds:**
+
+:::note
+This is a third-party extension, not maintained here.
+:::
+
+1.  **Use the Linux Teams Redirect Chrome extension.** [Linux Teams Redirect](https://chromewebstore.google.com/detail/kbnmkaekphfgfcgfehiokheblhcahejm) ([source](https://github.com/veselov/linux-teams-redirect)) catches the navigation once the redirect has resolved to a Teams link on `teams.microsoft.com`, `teams.live.com` or `teams.cloud.microsoft`, and reopens it as an `msteams://` link, which the desktop hands to the application registered for `x-scheme-handler/msteams`. It handles `/meet/...`, `/l/<kind>/...` and launcher (`/dl/launcher/launcher.html?url=...`) links, and leaves the Teams web app itself alone.
+
+**Related GitHub Issues:** [Issue #3253](https://github.com/IsmaelMartinez/teams-for-linux/issues/3253)
+
 #### Issue: Spellchecker Not Working
 
 **Description:** The bundled `node_spellchecker` only includes the `en_US` dictionary.
