@@ -49,6 +49,13 @@ describe('rendererArguments', () => {
     assert.deepStrictEqual(rendererArguments(enabled, env), []);
   });
 
+  it('keeps hiding on the snap without looking for a key', () => {
+    let called = false;
+    const env = { ...withoutTools, isSnap: true, fidoDevicePresent: () => { called = true; return true; } };
+    assert.deepStrictEqual(rendererArguments({}, env), [NO_BACKEND_ARG]);
+    assert.strictEqual(called, false);
+  });
+
   it('falls back to hiding when the detector throws', () => {
     const env = { ...withoutTools, fidoDevicePresent: () => { throw new Error('EACCES'); } };
     assert.deepStrictEqual(rendererArguments({}, env), [NO_BACKEND_ARG]);

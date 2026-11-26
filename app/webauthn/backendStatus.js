@@ -96,17 +96,28 @@ function hasFidoDevice(classDir = HIDRAW_CLASS_DIR) {
  * Renderer arguments for a window that loads the web app. On macOS and
  * Windows Chromium's own WebAuthn works, so nothing is hidden there.
  * @param {object} config - startup config
- * @param {{ platform?: string, toolsAvailable?: () => boolean, fidoDevicePresent?: () => boolean }} [env]
+ * @param {{ platform?: string, toolsAvailable?: () => boolean, fidoDevicePresent?: () => boolean, isSnap?: boolean }} [env]
  * @returns {string[]}
  */
 function rendererArguments(
   config,
-  { platform = process.platform, toolsAvailable = hasFido2Tools, fidoDevicePresent = hasFidoDevice } = {}
+  {
+    platform = process.platform,
+    toolsAvailable = hasFido2Tools,
+    fidoDevicePresent = hasFidoDevice,
+    isSnap = Boolean(process.env.SNAP),
+  } = {}
 ) {
   if (platform !== "linux") return [];
   if (config?.auth?.webauthn?.enabled && toolsAvailable()) {
     console.debug("[WEBAUTHN] Renderer gate: fido2-tools backend");
     return [];
+  }
+  // The snap has no hidraw or raw-usb plug, so native WebAuthn cannot reach a
+  // key there even when sysfs shows one; keep hiding to avoid the #3204 hang.
+  if (isSnap) {
+    console.info("[WEBAUTHN] Renderer gate: snap cannot reach USB keys, WebAuthn hidden");
+    return [NO_BACKEND_ARG];
   }
   let deviceFound;
   try {
