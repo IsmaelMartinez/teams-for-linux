@@ -7,6 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const vm = require('node:vm');
 const {
+  NATIVE_ARG,
   NO_BACKEND_ARG,
   descriptorHasFidoUsagePage,
   hasFido2Tools,
@@ -39,7 +40,12 @@ describe('rendererArguments', () => {
 
   it('keeps native WebAuthn when a security key is plugged in, flag off', () => {
     const env = { ...withoutTools, fidoDevicePresent: () => true };
-    assert.deepStrictEqual(rendererArguments({}, env), []);
+    assert.deepStrictEqual(rendererArguments({}, env), [NATIVE_ARG]);
+  });
+
+  it('marks native WebAuthn even when the flag is on but fido2-tools is missing', () => {
+    const env = { ...withoutTools, fidoDevicePresent: () => true };
+    assert.deepStrictEqual(rendererArguments(enabled, env), [NATIVE_ARG]);
   });
 
   it('flags the page when no security key is plugged in, flag off', () => {
@@ -170,6 +176,23 @@ describe('neutralizeIfNoBackend', () => {
     api.neutralizeIfNoBackend([NO_BACKEND_ARG]);
     assert.strictEqual(await credentials.get({ password: true }), 'native');
     assert.deepStrictEqual(passwordCalls, [{ password: true }]);
+  });
+
+  it('leaves navigator.credentials native when the renderer is marked native', async () => {
+    const { context, credentials, api } = load();
+    const getBefore = credentials.get;
+    context.process.argv = ['electron', NATIVE_ARG];
+    api.init({ auth: { webauthn: { enabled: true } } }, { invoke: async () => { throw new Error('unexpected'); } });
+    assert.strictEqual(credentials.get, getBefore);
+    assert.strictEqual(await credentials.get({ publicKey: {} }), 'native');
+  });
+
+  it('still patches navigator.credentials for the IPC backend without the native mark', () => {
+    const { context, credentials, api } = load();
+    const getBefore = credentials.get;
+    context.process.argv = ['electron'];
+    api.init({ auth: { webauthn: { enabled: true } } }, { invoke: async () => ({}) });
+    assert.notStrictEqual(credentials.get, getBefore);
   });
 
   it('stops init() from routing requests to an IPC handler that does not exist', async () => {

@@ -595,7 +595,7 @@ describe('WebAuthn main-frame override', () => {
 			console: { debug: () => {}, error: () => {}, info: () => {}, warn: () => {} },
 			module,
 			navigator: { credentials },
-			process: { platform: 'linux' },
+			process: { platform: 'linux', argv: [] },
 			require: requireFromTools,
 			window: { addEventListener: () => {} },
 		});
@@ -1090,7 +1090,7 @@ describe('WebAuthn origin allowlist - auth.webauthn.extraOrigins', () => {
 			console: { debug: () => {}, error: () => {}, info: () => {}, warn: () => {} },
 			module,
 			navigator: { credentials: { create: () => {}, get: () => {} } },
-			process: { platform: 'linux' },
+			process: { platform: 'linux', argv: [] },
 			require: requireFromTools,
 			window: { addEventListener: (_type, listener) => { messageListener = listener; } },
 		});

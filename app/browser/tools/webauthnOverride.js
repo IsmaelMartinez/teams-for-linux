@@ -16,7 +16,7 @@
 // ceremony relayed out of a login iframe is not blocked here after the main
 // process would have allowed it (#2931).
 const { buildAllowedOrigins } = require("../../webauthn/originAllowlist");
-const { NO_BACKEND_ARG } = require("../../webauthn/backendStatus");
+const { NATIVE_ARG, NO_BACKEND_ARG } =require("../../webauthn/backendStatus");
 
 let neutralized = false;
 
@@ -58,6 +58,15 @@ function init(config, ipcRenderer) {
   // should not be offered a key at all.
   if (neutralized) {
     console.debug("[WEBAUTHN] Skipping: no security key backend");
+    return;
+  }
+
+  // A security key is plugged in and no fido2-tools backend answers (the main
+  // process registers the IPC handlers only with fido2-tools), so leave
+  // navigator.credentials to Chromium's native WebAuthn. process.argv is
+  // synchronous and per renderer, so it also holds for profile views.
+  if (process.argv.includes(NATIVE_ARG)) {
+    console.debug("[WEBAUTHN] Skipping: native WebAuthn handles the security key");
     return;
   }
 

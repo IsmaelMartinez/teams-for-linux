@@ -29,6 +29,11 @@ const path = require("node:path");
 
 const NO_BACKEND_ARG = "--webauthn-no-backend";
 
+// Tells the preload a plugged-in key is answered by Chromium's native WebAuthn,
+// so webauthnOverride must not reroute requests to IPC handlers that the main
+// process only registers when fido2-tools is present.
+const NATIVE_ARG = "--webauthn-native";
+
 // The three binaries the fido2-tools backend runs.
 const FIDO2_TOOLS = ["fido2-cred", "fido2-assert", "fido2-token"];
 
@@ -127,13 +132,14 @@ function rendererArguments(
   }
   if (deviceFound) {
     console.info("[WEBAUTHN] Renderer gate: security key present, native WebAuthn kept");
-    return [];
+    return [NATIVE_ARG];
   }
   console.info("[WEBAUTHN] Renderer gate: no security key or backend, WebAuthn hidden");
   return [NO_BACKEND_ARG];
 }
 
 module.exports = {
+  NATIVE_ARG,
   NO_BACKEND_ARG,
   descriptorHasFidoUsagePage,
   hasFido2Tools,
