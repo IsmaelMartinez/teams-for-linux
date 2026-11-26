@@ -48,6 +48,10 @@ This deviates from the retired research note, which recommended building the pro
 
 Hardware validation by [@spthiel on PR #2779](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779#issuecomment-5163132960) confirmed the prompt appears with no visible gap after the PIN dialog closes, and that both Cancel and the timeout land on Microsoft's "We couldn't sign you in" page with no `fido2-assert` process left behind. The `auth.webauthn.enabled` off path remains open: Electron's native WebAuthn draws no UI on Linux, and it is not yet clear what Cancel would mean when the underlying Chromium call cannot be aborted.
 
+## Erratum (2026-11-26)
+
+The root cause above overstates the gap: Electron's native WebAuthn did work with user-verifying (biometric) USB keys on Linux over hidraw, with no PIN asked, as reported in [#3261](https://github.com/IsmaelMartinez/teams-for-linux/issues/3261). What is missing is any UI for PIN entry, phone flows and cancel. The renderer gate therefore keeps native WebAuthn when a FIDO device is plugged in and hides it only when nothing can answer.
+
 ## Alternatives Considered
 
 ### Wait for Chromium Linux WebAuthn

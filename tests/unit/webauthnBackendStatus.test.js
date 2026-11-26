@@ -7,8 +7,11 @@ const os = require('node:os');
 const path = require('node:path');
 const vm = require('node:vm');
 const {
+  NATIVE_ARG,
   NO_BACKEND_ARG,
+  descriptorHasFidoUsagePage,
   hasFido2Tools,
+  hasFidoDevice,
   rendererArguments,
 } = require('../../app/webauthn/backendStatus');
 
@@ -17,8 +20,11 @@ const {
 
 describe('rendererArguments', () => {
   const enabled = { auth: { webauthn: { enabled: true } } };
-  const withTools = { platform: 'linux', toolsAvailable: () => true };
-  const withoutTools = { platform: 'linux', toolsAvailable: () => false };
+  // Every collaborator is stubbed so results never depend on attached
+  // hardware, PATH or the SNAP environment variable.
+  const base = { platform: 'linux', fidoDevicePresent: () => false, isSnap: false };
+  const withTools = { ...base, toolsAvailable: () => true };
+  const withoutTools = { ...base, toolsAvailable: () => false };
 
   it('flags the default (auth.webauthn.enabled off) on Linux', () => {
     assert.deepStrictEqual(rendererArguments({}, withTools), [NO_BACKEND_ARG]);
@@ -32,9 +38,71 @@ describe('rendererArguments', () => {
     assert.deepStrictEqual(rendererArguments(enabled, withTools), []);
   });
 
+  it('keeps native WebAuthn when a security key is plugged in, flag off', () => {
+    const env = { ...withoutTools, fidoDevicePresent: () => true };
+    assert.deepStrictEqual(rendererArguments({}, env), [NATIVE_ARG]);
+  });
+
+  it('marks native WebAuthn even when the flag is on but fido2-tools is missing', () => {
+    const env = { ...withoutTools, fidoDevicePresent: () => true };
+    assert.deepStrictEqual(rendererArguments(enabled, env), [NATIVE_ARG]);
+  });
+
+  it('flags the page when no security key is plugged in, flag off', () => {
+    const env = { ...withoutTools, fidoDevicePresent: () => false };
+    assert.deepStrictEqual(rendererArguments({}, env), [NO_BACKEND_ARG]);
+  });
+
+  it('does not look for a key when the fido2-tools backend will answer', () => {
+    const env = { ...withTools, fidoDevicePresent: () => { throw new Error('unexpected'); } };
+    assert.deepStrictEqual(rendererArguments(enabled, env), []);
+  });
+
+  it('keeps hiding on the snap without looking for a key', () => {
+    let called = false;
+    const env = { ...withoutTools, isSnap: true, fidoDevicePresent: () => { called = true; return true; } };
+    assert.deepStrictEqual(rendererArguments({}, env), [NO_BACKEND_ARG]);
+    assert.strictEqual(called, false);
+  });
+
+  it('falls back to hiding when the detector throws', () => {
+    const env = { ...withoutTools, fidoDevicePresent: () => { throw new Error('EACCES'); } };
+    assert.deepStrictEqual(rendererArguments({}, env), [NO_BACKEND_ARG]);
+  });
+
   it('never flags macOS or Windows, where Chromium WebAuthn works', () => {
     for (const platform of ['darwin', 'win32']) {
-      assert.deepStrictEqual(rendererArguments({}, { platform, toolsAvailable: () => false }), []);
+      assert.deepStrictEqual(rendererArguments({}, { ...withoutTools, platform }), []);
+    }
+  });
+});
+
+describe('FIDO device detection', () => {
+  const fidoDescriptor = Buffer.from([0x06, 0xd0, 0xf1, 0x09, 0x01, 0xa1, 0x01, 0xc0]);
+  const keyboardDescriptor = Buffer.from([0x05, 0x01, 0x09, 0x06, 0xa1, 0x01, 0x05, 0x07, 0xc0]);
+
+  it('finds the FIDO usage page and ignores other pages', () => {
+    assert.strictEqual(descriptorHasFidoUsagePage(fidoDescriptor), true);
+    assert.strictEqual(descriptorHasFidoUsagePage(keyboardDescriptor), false);
+    assert.strictEqual(descriptorHasFidoUsagePage(Buffer.alloc(0)), false);
+  });
+
+  it('scans hidraw descriptors under a class directory', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 't4l-hidraw-'));
+    try {
+      assert.strictEqual(hasFidoDevice(path.join(root, 'missing')), false);
+      const add = (name, bytes) => {
+        const dir = path.join(root, name, 'device');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'report_descriptor'), bytes);
+      };
+      add('hidraw0', keyboardDescriptor);
+      fs.mkdirSync(path.join(root, 'hidraw1'));
+      assert.strictEqual(hasFidoDevice(root), false);
+      add('hidraw2', fidoDescriptor);
+      assert.strictEqual(hasFidoDevice(root), true);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
     }
   });
 });
@@ -108,6 +176,23 @@ describe('neutralizeIfNoBackend', () => {
     api.neutralizeIfNoBackend([NO_BACKEND_ARG]);
     assert.strictEqual(await credentials.get({ password: true }), 'native');
     assert.deepStrictEqual(passwordCalls, [{ password: true }]);
+  });
+
+  it('leaves navigator.credentials native when the renderer is marked native', async () => {
+    const { context, credentials, api } = load();
+    const getBefore = credentials.get;
+    context.process.argv = ['electron', NATIVE_ARG];
+    api.init({ auth: { webauthn: { enabled: true } } }, { invoke: async () => { throw new Error('unexpected'); } });
+    assert.strictEqual(credentials.get, getBefore);
+    assert.strictEqual(await credentials.get({ publicKey: {} }), 'native');
+  });
+
+  it('still patches navigator.credentials for the IPC backend without the native mark', () => {
+    const { context, credentials, api } = load();
+    const getBefore = credentials.get;
+    context.process.argv = ['electron'];
+    api.init({ auth: { webauthn: { enabled: true } } }, { invoke: async () => ({}) });
+    assert.notStrictEqual(credentials.get, getBefore);
   });
 
   it('stops init() from routing requests to an IPC handler that does not exist', async () => {
