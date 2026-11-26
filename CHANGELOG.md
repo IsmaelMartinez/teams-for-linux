@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.33.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.33.0...v2.33.1) (2026-11-26)
+
+
+### Bug Fixes
+
+* **deeplink:** route /meet/ links in page instead of reloading ([#3267](https://github.com/IsmaelMartinez/teams-for-linux/issues/3267)) ([88034dd](https://github.com/IsmaelMartinez/teams-for-linux/commit/88034dd57cf5c278bccc34b0ad81d2cd9768b6f3))
+* **media:** let the user resize and maximize the meeting pop-out ([#3251](https://github.com/IsmaelMartinez/teams-for-linux/issues/3251)) ([907566b](https://github.com/IsmaelMartinez/teams-for-linux/commit/907566b8dece2cb843635c335c275adcdfdd3532))
+* **multi-account:** keep overlay views sized to the window after maximize/restore ([#3257](https://github.com/IsmaelMartinez/teams-for-linux/issues/3257)) ([a2a0d4c](https://github.com/IsmaelMartinez/teams-for-linux/commit/a2a0d4ce8394fba07821f2f44bb5d53e96e48233))
+* **webauthn:** keep native WebAuthn when a security key is plugged in ([#3264](https://github.com/IsmaelMartinez/teams-for-linux/issues/3264)) ([a772f22](https://github.com/IsmaelMartinez/teams-for-linux/commit/a772f2234d8a9d12c6f1e895d9edf0f29697d605))
+
+
+### Documentation
+
+* **troubleshooting:** note tenants that only accept a passkey or security key ([#3243](https://github.com/IsmaelMartinez/teams-for-linux/issues/3243)) ([3a8b0d4](https://github.com/IsmaelMartinez/teams-for-linux/commit/3a8b0d40b0523dde4031756f777093cdfd9c21a6))
+
 ## [2.33.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.32.1...v2.33.0) (2026-11-24)
 
 
