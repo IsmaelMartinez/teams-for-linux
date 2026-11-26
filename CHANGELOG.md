@@ -15,6 +15,10 @@
 
 * **troubleshooting:** note tenants that only accept a passkey or security key ([#3243](https://github.com/IsmaelMartinez/teams-for-linux/issues/3243)) ([3a8b0d4](https://github.com/IsmaelMartinez/teams-for-linux/commit/3a8b0d40b0523dde4031756f777093cdfd9c21a6))
 
+### Thanks
+
+Big thanks to @jpenberthy, @starek4, @veselov, @vitorhmcorreia for contributing to this release.
+
 ## [2.33.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.32.1...v2.33.0) (2026-11-24)
 
 
