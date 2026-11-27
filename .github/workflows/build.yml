@@ -186,7 +186,7 @@ jobs:
         run: node scripts/recordArtifactChecksums.js dist checksums-linux_x64.txt
 
       - name: Upload artifact checksums
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: checksums-linux_x64
@@ -248,7 +248,7 @@ jobs:
         run: node scripts/recordArtifactChecksums.js dist checksums-linux_arm64.txt
 
       - name: Upload artifact checksums
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: checksums-linux_arm64
@@ -330,7 +330,7 @@ jobs:
         run: node scripts/recordArtifactChecksums.js dist checksums-dmg.txt
 
       - name: Upload artifact checksums
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: checksums-dmg
@@ -401,7 +401,7 @@ jobs:
         run: node scripts/recordArtifactChecksums.js dist checksums-exe.txt
 
       - name: Upload artifact checksums
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: checksums-exe
@@ -419,10 +419,11 @@ jobs:
 
   # Attests the SHA-256 of every release file the build jobs recorded. It checks
   # out nothing and runs no project code, so the only identity able to sign
-  # (id-token) is never exposed to dependency install scripts. Skipped when any
-  # build job fails.
+  # (id-token) is never exposed to dependency install scripts. It runs under the
+  # same condition as "Build for Release", so whatever is published is attested,
+  # and is skipped when any build job fails.
   attest:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     needs: [linux_x64, linux_arm64, dmg, exe]
     runs-on: ubuntu-latest
     permissions:
