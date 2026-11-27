@@ -58,6 +58,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [034](034-native-wayland-default.md) | Native Wayland by Default on deb, rpm and integrated AppImage | ✅ Accepted | 2026-10-22 | pending release |
 | [035](035-renderer-trust-boundary.md) | Renderer Trust Boundary with Context Isolation Disabled | ✅ Implemented | 2026-11-07 | v2.24.0, v2.30.0 |
 | [036](036-agents-md-adoption.md) | Adopt AGENTS.md as the Agent Instruction File | ✅ Accepted | 2026-11-07 | N/A |
+| [037](037-automation-contract.md) | One Declared Automation Contract for MQTT and D-Bus | ✅ Accepted | 2026-11-27 | pending release |
 
 **Legend:**
 - ✅ **Implemented** - Decision accepted and code in production
@@ -194,6 +195,7 @@ Architecture Decision Records capture important architectural decisions along wi
 | [006](006-cli-argument-parsing-library.md) | CLI Argument Parsing Library | Keep yargs for config parsing, use MQTT for action commands instead of CLI subcommands |
 | [007](007-embedded-mqtt-broker.md) | Embedded MQTT Broker | Rejected bundling Aedes broker - users still need client tools, better alternatives exist |
 | [033](033-dbus-control-api.md) | Opt-in D-Bus Control API | Fixed named Teams actions and observed state on the Linux user session bus, behind `dbusControl.enabled`, through a transport-neutral control service; MQTT stays independent |
+| [037](037-automation-contract.md) | One Declared Automation Contract | `app/control/contract.js` declares the state, commands, MQTT topics and D-Bus interface once as data that the code reads; the reference and an AsyncAPI file are generated from it and tests pin the adapters to it |
 
 **Key Outcomes:**
 - Avoid fragile CLI argument bypass layer

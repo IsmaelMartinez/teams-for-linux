@@ -217,6 +217,8 @@ npm run generate-config-docs
 
 This regenerates `docs-site/docs/configuration-generated.md` and `docs-site/static/config-schema.json` from `app/config/options.js`; commit both with your change (CI fails if they drift). The generator **fails** if any option is missing `describe`, `type`, or `applyMode`, or if an `object` option lacks `fields` — schema completeness is a merge gate, not a convention.
 
+The MQTT and D-Bus interfaces are declared the same way, in `app/control/contract.js`. After editing it, run `npm run generate-control-docs` to regenerate `docs-site/docs/automation-contract-generated.md` and `docs-site/static/mqtt-asyncapi.json`; a unit test fails when either is stale.
+
 The same schema also drives warn-only validation of the user's `config.json` at startup (`app/config/validator.js` logs `[CONFIG]` warnings for unknown keys, type mismatches, and invalid choices, but never blocks boot), so a complete declaration is all the wiring your option needs.
 
 ### 5. Lint and test

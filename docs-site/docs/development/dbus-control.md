@@ -9,6 +9,8 @@ The optional control service exposes a deliberately small set of named Teams act
 | Object path | `/com/github/IsmaelMartinez/teams_for_linux` |
 | Interface | `com.github.IsmaelMartinez.teams_for_linux.Control` |
 
+The generated [automation contract reference](../automation-contract-generated.md) lists the methods, signals and observed state below next to what MQTT offers, and is checked against the code by a test.
+
 ## Methods
 
 | Method | Signature | Meaning |

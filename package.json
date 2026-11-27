@@ -33,6 +33,7 @@
     "generate-release-info": "node scripts/generateReleaseInfo.js",
     "generate-ipc-docs": "node scripts/generateIpcDocs.js",
     "generate-config-docs": "node scripts/generateConfigDocs.js",
+    "generate-control-docs": "node scripts/generateControlDocs.js",
     "prebuild": "npm run generate-release-info",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",

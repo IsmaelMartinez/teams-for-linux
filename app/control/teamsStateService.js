@@ -2,19 +2,18 @@
 
 const { app, ipcMain } = require('electron');
 const { EventEmitter } = require('node:events');
+const { shared } = require('./contract');
 
-const PRESENCE = new Map([
-	[-1, 'unknown'], [1, 'available'], [2, 'busy'], [3, 'do_not_disturb'], [4, 'away'], [5, 'be_right_back'],
-]);
-const MICROPHONE_STATES = new Set(['speaking', 'silent', 'muted', 'off', 'unknown']);
-const MICROPHONE_CONTROL = new Map([['muted', 'muted'], ['speaking', 'unmuted'], ['silent', 'unmuted'], ['off', 'off']]);
-const microphoneControl = (state) => MICROPHONE_CONTROL.get(state) || 'unknown';
+const PRESENCE = new Map(shared.presence.observed);
+const MICROPHONE_STATES = new Set(shared.microphone.states);
+const MICROPHONE_CONTROL = new Map(Object.entries(shared.microphone.controlFor));
+const microphoneControl = (state) => MICROPHONE_CONTROL.get(state) || shared.microphone.controlFallback;
+const CALLER_FIELDS = shared.caller.fields.map(({ name }) => name);
 const PROFILE_DEFAULTS = {
 	presenceStatus: 'unknown', presenceStatusCode: -1, inCall: false,
 	cameraEnabled: false, screenSharing: false, meetingStarted: false, callParticipants: null,
 };
-const MAX_PARTICIPANTS = 100;
-const MAX_NAME_LENGTH = 128;
+const { maxEntries: MAX_PARTICIPANTS, maxNameLength: MAX_NAME_LENGTH } = shared.participants;
 
 /** Main-process, transport-independent snapshot of the Teams state we observe. */
 class TeamsStateService extends EventEmitter {
@@ -152,7 +151,7 @@ class TeamsStateService extends EventEmitter {
 	#sanitizeCaller(details) {
 		if (!details || typeof details !== 'object' || Array.isArray(details)) return null;
 		const caller = {};
-		for (const key of ['scenario', 'number', 'name', 'queue', 'contact', 'callId']) {
+		for (const key of CALLER_FIELDS) {
 			const value = details[key];
 			if (value !== undefined && value !== null && ['string', 'number', 'boolean'].includes(typeof value)) caller[key] = value;
 		}

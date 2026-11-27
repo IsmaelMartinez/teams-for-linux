@@ -8,6 +8,8 @@ Teams for Linux includes built-in **bidirectional** MQTT support, allowing you t
 - **Publish** your Microsoft Teams status to an MQTT broker for monitoring and automation
 - **Receive** action commands from MQTT to control Teams (toggle mute, video, etc.)
 
+The [automation contract reference](automation-contract-generated.md) is generated from the contract the code reads and lists every topic, payload, retained flag and command in one place, next to what the D-Bus interface offers.
+
 ## Overview
 
 The MQTT integration provides two-way communication with your MQTT broker:

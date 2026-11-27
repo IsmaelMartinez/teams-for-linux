@@ -1,0 +1,846 @@
+{
+	"defaultsWithCommandTopic": {
+		"mqtt": {
+			"enabled": true,
+			"brokerUrl": "mqtt://x",
+			"clientId": "teams-for-linux",
+			"topicPrefix": "teams",
+			"statusTopic": "status",
+			"homeAssistant": {
+				"enabled": true,
+				"discoveryPrefix": "homeassistant",
+				"deviceName": "Teams for Linux"
+			},
+			"mediaTopics": {
+				"inCall": "in-call",
+				"incomingCall": "incoming-call",
+				"meetingStarted": "meeting-started",
+				"camera": "camera",
+				"microphone": "microphone",
+				"microphoneControl": "microphone/control",
+				"screenSharing": "screen-sharing"
+			},
+			"commandTopic": "command"
+		},
+		"published": [
+			{
+				"topic": "homeassistant/sensor/teams-for-linux/status/config",
+				"payload": {
+					"name": "Teams Status",
+					"unique_id": "teams-for-linux_status",
+					"state_topic": "teams/status",
+					"value_template": "{{ value_json.status }}",
+					"icon": "mdi:microsoft-teams",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/sensor/teams-for-linux/microphone/config",
+				"payload": {
+					"name": "Teams Microphone",
+					"unique_id": "teams-for-linux_microphone",
+					"state_topic": "teams/microphone",
+					"icon": "mdi:microphone",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/binary_sensor/teams-for-linux/in_call/config",
+				"payload": {
+					"name": "Teams In Call",
+					"unique_id": "teams-for-linux_in_call",
+					"state_topic": "teams/in-call",
+					"payload_on": "true",
+					"payload_off": "false",
+					"icon": "mdi:phone-in-talk",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/binary_sensor/teams-for-linux/screen_sharing/config",
+				"payload": {
+					"name": "Teams Screen Sharing",
+					"unique_id": "teams-for-linux_screen_sharing",
+					"state_topic": "teams/screen-sharing",
+					"payload_on": "true",
+					"payload_off": "false",
+					"icon": "mdi:monitor-share",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/binary_sensor/teams-for-linux/camera/config",
+				"payload": {
+					"name": "Teams Camera",
+					"unique_id": "teams-for-linux_camera",
+					"state_topic": "teams/camera",
+					"payload_on": "true",
+					"payload_off": "false",
+					"icon": "mdi:camera",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/binary_sensor/teams-for-linux/incoming_call/config",
+				"payload": {
+					"name": "Teams Incoming Call",
+					"unique_id": "teams-for-linux_incoming_call",
+					"state_topic": "teams/incoming-call",
+					"payload_on": "true",
+					"payload_off": "false",
+					"icon": "mdi:phone-ring",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/binary_sensor/teams-for-linux/meeting_started/config",
+				"payload": {
+					"name": "Teams Meeting Started",
+					"unique_id": "teams-for-linux_meeting_started",
+					"state_topic": "teams/meeting-started",
+					"payload_on": "true",
+					"payload_off": "false",
+					"icon": "mdi:calendar-clock",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/button/teams-for-linux/toggle_mute/config",
+				"payload": {
+					"name": "Teams Toggle Mute",
+					"unique_id": "teams-for-linux_toggle_mute",
+					"command_topic": "teams/command",
+					"payload_press": "{\"action\":\"toggle-mute\"}",
+					"icon": "mdi:microphone",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/button/teams-for-linux/toggle_video/config",
+				"payload": {
+					"name": "Teams Toggle Video",
+					"unique_id": "teams-for-linux_toggle_video",
+					"command_topic": "teams/command",
+					"payload_press": "{\"action\":\"toggle-video\"}",
+					"icon": "mdi:video",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/button/teams-for-linux/toggle_hand_raise/config",
+				"payload": {
+					"name": "Teams Toggle Hand Raise",
+					"unique_id": "teams-for-linux_toggle_hand_raise",
+					"command_topic": "teams/command",
+					"payload_press": "{\"action\":\"toggle-hand-raise\"}",
+					"icon": "mdi:hand-back-left",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/button/teams-for-linux/leave/config",
+				"payload": {
+					"name": "Teams Leave Call",
+					"unique_id": "teams-for-linux_leave",
+					"command_topic": "teams/command",
+					"payload_press": "{\"action\":\"leave\"}",
+					"icon": "mdi:phone-hangup",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			}
+		]
+	},
+	"defaultsWithoutCommandTopic": {
+		"mqtt": {
+			"enabled": true,
+			"brokerUrl": "mqtt://x",
+			"clientId": "teams-for-linux",
+			"topicPrefix": "teams",
+			"statusTopic": "status",
+			"homeAssistant": {
+				"enabled": true,
+				"discoveryPrefix": "homeassistant",
+				"deviceName": "Teams for Linux"
+			},
+			"mediaTopics": {
+				"inCall": "in-call",
+				"incomingCall": "incoming-call",
+				"meetingStarted": "meeting-started",
+				"camera": "camera",
+				"microphone": "microphone",
+				"microphoneControl": "microphone/control",
+				"screenSharing": "screen-sharing"
+			},
+			"commandTopic": ""
+		},
+		"published": [
+			{
+				"topic": "homeassistant/sensor/teams-for-linux/status/config",
+				"payload": {
+					"name": "Teams Status",
+					"unique_id": "teams-for-linux_status",
+					"state_topic": "teams/status",
+					"value_template": "{{ value_json.status }}",
+					"icon": "mdi:microsoft-teams",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/sensor/teams-for-linux/microphone/config",
+				"payload": {
+					"name": "Teams Microphone",
+					"unique_id": "teams-for-linux_microphone",
+					"state_topic": "teams/microphone",
+					"icon": "mdi:microphone",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/binary_sensor/teams-for-linux/in_call/config",
+				"payload": {
+					"name": "Teams In Call",
+					"unique_id": "teams-for-linux_in_call",
+					"state_topic": "teams/in-call",
+					"payload_on": "true",
+					"payload_off": "false",
+					"icon": "mdi:phone-in-talk",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/binary_sensor/teams-for-linux/screen_sharing/config",
+				"payload": {
+					"name": "Teams Screen Sharing",
+					"unique_id": "teams-for-linux_screen_sharing",
+					"state_topic": "teams/screen-sharing",
+					"payload_on": "true",
+					"payload_off": "false",
+					"icon": "mdi:monitor-share",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/binary_sensor/teams-for-linux/camera/config",
+				"payload": {
+					"name": "Teams Camera",
+					"unique_id": "teams-for-linux_camera",
+					"state_topic": "teams/camera",
+					"payload_on": "true",
+					"payload_off": "false",
+					"icon": "mdi:camera",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/binary_sensor/teams-for-linux/incoming_call/config",
+				"payload": {
+					"name": "Teams Incoming Call",
+					"unique_id": "teams-for-linux_incoming_call",
+					"state_topic": "teams/incoming-call",
+					"payload_on": "true",
+					"payload_off": "false",
+					"icon": "mdi:phone-ring",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "homeassistant/binary_sensor/teams-for-linux/meeting_started/config",
+				"payload": {
+					"name": "Teams Meeting Started",
+					"unique_id": "teams-for-linux_meeting_started",
+					"state_topic": "teams/meeting-started",
+					"payload_on": "true",
+					"payload_off": "false",
+					"icon": "mdi:calendar-clock",
+					"availability": {
+						"topic": "teams/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"teams-for-linux"
+						],
+						"name": "Teams for Linux",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			}
+		]
+	},
+	"custom": {
+		"mqtt": {
+			"enabled": true,
+			"brokerUrl": "mqtt://x",
+			"clientId": "tfl-2",
+			"topicPrefix": "home/office",
+			"statusTopic": "presence",
+			"homeAssistant": {
+				"enabled": true,
+				"discoveryPrefix": "ha",
+				"deviceName": "Office Teams"
+			},
+			"mediaTopics": {
+				"inCall": "call",
+				"incomingCall": "ring",
+				"meetingStarted": "meeting",
+				"camera": "cam",
+				"microphone": "mic",
+				"microphoneControl": "mic/ctl",
+				"screenSharing": "share"
+			},
+			"commandTopic": "cmd"
+		},
+		"published": [
+			{
+				"topic": "ha/sensor/tfl-2/status/config",
+				"payload": {
+					"name": "Teams Status",
+					"unique_id": "tfl-2_status",
+					"state_topic": "home/office/presence",
+					"value_template": "{{ value_json.status }}",
+					"icon": "mdi:microsoft-teams",
+					"availability": {
+						"topic": "home/office/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"tfl-2"
+						],
+						"name": "Office Teams",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "ha/sensor/tfl-2/microphone/config",
+				"payload": {
+					"name": "Teams Microphone",
+					"unique_id": "tfl-2_microphone",
+					"state_topic": "home/office/mic",
+					"icon": "mdi:microphone",
+					"availability": {
+						"topic": "home/office/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"tfl-2"
+						],
+						"name": "Office Teams",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "ha/binary_sensor/tfl-2/in_call/config",
+				"payload": {
+					"name": "Teams In Call",
+					"unique_id": "tfl-2_in_call",
+					"state_topic": "home/office/call",
+					"payload_on": "true",
+					"payload_off": "false",
+					"icon": "mdi:phone-in-talk",
+					"availability": {
+						"topic": "home/office/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"tfl-2"
+						],
+						"name": "Office Teams",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "ha/binary_sensor/tfl-2/screen_sharing/config",
+				"payload": {
+					"name": "Teams Screen Sharing",
+					"unique_id": "tfl-2_screen_sharing",
+					"state_topic": "home/office/share",
+					"payload_on": "true",
+					"payload_off": "false",
+					"icon": "mdi:monitor-share",
+					"availability": {
+						"topic": "home/office/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"tfl-2"
+						],
+						"name": "Office Teams",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "ha/binary_sensor/tfl-2/camera/config",
+				"payload": {
+					"name": "Teams Camera",
+					"unique_id": "tfl-2_camera",
+					"state_topic": "home/office/cam",
+					"payload_on": "true",
+					"payload_off": "false",
+					"icon": "mdi:camera",
+					"availability": {
+						"topic": "home/office/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"tfl-2"
+						],
+						"name": "Office Teams",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "ha/binary_sensor/tfl-2/incoming_call/config",
+				"payload": {
+					"name": "Teams Incoming Call",
+					"unique_id": "tfl-2_incoming_call",
+					"state_topic": "home/office/ring",
+					"payload_on": "true",
+					"payload_off": "false",
+					"icon": "mdi:phone-ring",
+					"availability": {
+						"topic": "home/office/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"tfl-2"
+						],
+						"name": "Office Teams",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "ha/binary_sensor/tfl-2/meeting_started/config",
+				"payload": {
+					"name": "Teams Meeting Started",
+					"unique_id": "tfl-2_meeting_started",
+					"state_topic": "home/office/meeting",
+					"payload_on": "true",
+					"payload_off": "false",
+					"icon": "mdi:calendar-clock",
+					"availability": {
+						"topic": "home/office/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"tfl-2"
+						],
+						"name": "Office Teams",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "ha/button/tfl-2/toggle_mute/config",
+				"payload": {
+					"name": "Teams Toggle Mute",
+					"unique_id": "tfl-2_toggle_mute",
+					"command_topic": "home/office/cmd",
+					"payload_press": "{\"action\":\"toggle-mute\"}",
+					"icon": "mdi:microphone",
+					"availability": {
+						"topic": "home/office/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"tfl-2"
+						],
+						"name": "Office Teams",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "ha/button/tfl-2/toggle_video/config",
+				"payload": {
+					"name": "Teams Toggle Video",
+					"unique_id": "tfl-2_toggle_video",
+					"command_topic": "home/office/cmd",
+					"payload_press": "{\"action\":\"toggle-video\"}",
+					"icon": "mdi:video",
+					"availability": {
+						"topic": "home/office/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"tfl-2"
+						],
+						"name": "Office Teams",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "ha/button/tfl-2/toggle_hand_raise/config",
+				"payload": {
+					"name": "Teams Toggle Hand Raise",
+					"unique_id": "tfl-2_toggle_hand_raise",
+					"command_topic": "home/office/cmd",
+					"payload_press": "{\"action\":\"toggle-hand-raise\"}",
+					"icon": "mdi:hand-back-left",
+					"availability": {
+						"topic": "home/office/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"tfl-2"
+						],
+						"name": "Office Teams",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			},
+			{
+				"topic": "ha/button/tfl-2/leave/config",
+				"payload": {
+					"name": "Teams Leave Call",
+					"unique_id": "tfl-2_leave",
+					"command_topic": "home/office/cmd",
+					"payload_press": "{\"action\":\"leave\"}",
+					"icon": "mdi:phone-hangup",
+					"availability": {
+						"topic": "home/office/connected",
+						"payload_available": "true",
+						"payload_not_available": "false"
+					},
+					"device": {
+						"identifiers": [
+							"tfl-2"
+						],
+						"name": "Office Teams",
+						"model": "Teams for Linux",
+						"manufacturer": "teams-for-linux"
+					}
+				},
+				"options": {
+					"retain": true
+				}
+			}
+		]
+	}
+}

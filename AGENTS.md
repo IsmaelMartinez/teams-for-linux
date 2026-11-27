@@ -24,6 +24,7 @@ This file provides guidance to AI coding agents working in this repository. Clau
 - `npm run generate-release-info` - Generate release information file
 - `npm run generate-ipc-docs` - Generate IPC API documentation from code comments
 - `npm run generate-config-docs` - Regenerate `configuration-generated.md` and `config-schema.json`; mandatory after editing `app/config/options.js` (CI has a drift guard)
+- `npm run generate-control-docs` - Regenerate `automation-contract-generated.md` and `mqtt-asyncapi.json`; mandatory after editing `app/control/contract.js` (a unit test has the drift guard)
 
 **Release:**
 - Releases are managed by [release-please](https://github.com/googleapis/release-please) — merge the auto-generated Release PR to trigger a release

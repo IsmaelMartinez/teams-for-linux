@@ -1,5 +1,8 @@
 const mqtt = require('mqtt');
 const { EventEmitter } = require('node:events');
+const { shared, mqtt: mqttContract } = require('../control/contract');
+
+const { availability, qos: DEFAULT_QOS } = mqttContract;
 
 // What an error may contribute to a log line. Its message is left out: for a
 // connection failure it carries the broker's host name, and topics and broker
@@ -19,26 +22,20 @@ class MQTTClient extends EventEmitter {
 		this.client = null;
 		this.isConnected = false;
 		this.lastPublishedStatus = null;
-		this.statusMap = {
-			'-1': 'unknown',
-			'1': 'available',
-			'2': 'busy',
-			'3': 'do_not_disturb',
-			'4': 'away',
-			'5': 'be_right_back'
-		};
+		this.statusMap = Object.fromEntries(shared.presence.observed.map(([code, name]) => [String(code), name]));
 
-		// Command handling configuration
-		this.actionShortcutMap = {
-			'toggle-mute': 'Ctrl+Shift+M',
-			'mute': 'Ctrl+Shift+M',
-			'unmute': 'Ctrl+Shift+M',
-			'toggle-video': 'Ctrl+Shift+O',
-			'toggle-hand-raise': 'Ctrl+Shift+K',
-			'leave': 'Ctrl+Shift+H'
-		};
+		// Command handling configuration: the contract's actions that send a
+		// keyboard shortcut, and those (get-calendar) that do not.
+		const shortcutFor = (command) => shared.shortcuts[shared.commands[command].shortcut];
+		this.actionShortcutMap = Object.fromEntries(
+			mqttContract.actions
+				.filter(({ command }) => shared.commands[command].effect === 'shortcut')
+				.map(({ action, command }) => [action, shortcutFor(command)])
+		);
 
-		this.nonShortcutActions = ['get-calendar'];
+		this.nonShortcutActions = mqttContract.actions
+			.filter(({ command }) => shared.commands[command].effect !== 'shortcut')
+			.map(({ action }) => action);
 	}
 
 	get allowedActions() {
@@ -52,15 +49,15 @@ class MQTTClient extends EventEmitter {
 		}
 
 		try {
-			const connectionTopic = `${this.config.topicPrefix}/connected`;
+			const connectionTopic = `${this.config.topicPrefix}/${availability.subtopic}`;
 
 			const options = {
 				clientId: this.config.clientId,
 				will: {
 					topic: connectionTopic,
-					payload: 'false',
-					qos: 0,
-					retain: true
+					payload: availability.offline,
+					qos: DEFAULT_QOS,
+					retain: availability.retained
 				}
 			};
 
@@ -77,7 +74,7 @@ class MQTTClient extends EventEmitter {
 				this.isConnected = true;
 				console.info('[MQTT] Successfully connected to broker');
 
-				this.client.publish(connectionTopic, 'true', { retain: true });
+				this.client.publish(connectionTopic, availability.online, { retain: availability.retained });
 
 				// Subscribe to command topic for receiving action commands (if configured)
 				if (this.config.commandTopic) {
@@ -146,7 +143,7 @@ class MQTTClient extends EventEmitter {
 		try {
 			await this.client.publish(topic, payloadString, {
 				retain: options.retain ?? true,
-				qos: options.qos ?? 0
+				qos: options.qos ?? DEFAULT_QOS
 			});
 
 			console.debug('[MQTT] Published a message');
@@ -256,8 +253,8 @@ class MQTTClient extends EventEmitter {
 		if (this.client) {
 			console.debug('[MQTT] Disconnecting from broker');
 			try {
-				const connectionTopic = `${this.config.topicPrefix}/connected`;
-				await this.client.publish(connectionTopic, 'false', { retain: true });
+				const connectionTopic = `${this.config.topicPrefix}/${availability.subtopic}`;
+				await this.client.publish(connectionTopic, availability.offline, { retain: availability.retained });
 				await this.client.end(false);
 			} catch (error) {
 				console.error('[MQTT] Error disconnecting:', errorCode(error));
