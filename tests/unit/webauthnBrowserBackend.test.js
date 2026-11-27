@@ -8,6 +8,7 @@ const os = require('node:os');
 const path = require('node:path');
 const vm = require('node:vm');
 const {
+  NATIVE_ARG,
   NO_BACKEND_ARG,
   findBrowser,
   backendName,
@@ -82,9 +83,37 @@ describe('rendererArguments with the browser backend', () => {
     assert.strictEqual(asked, '/x/edge');
   });
 
-  it('hides WebAuthn when no browser is found', () => {
-    const args = rendererArguments(config, { platform: 'linux', toolsAvailable: () => true, browserAvailable: () => false });
+  it('hides WebAuthn when no browser and no security key are found', () => {
+    const args = rendererArguments(config, {
+      platform: 'linux',
+      toolsAvailable: () => true,
+      browserAvailable: () => false,
+      fidoDevicePresent: () => false,
+      isSnap: false,
+    });
     assert.deepStrictEqual(args, [NO_BACKEND_ARG]);
+  });
+
+  it('keeps native WebAuthn for a plugged-in key when no browser is found', () => {
+    const args = rendererArguments(config, {
+      platform: 'linux',
+      browserAvailable: () => false,
+      fidoDevicePresent: () => true,
+      isSnap: false,
+    });
+    assert.deepStrictEqual(args, [NATIVE_ARG]);
+  });
+
+  it('routes to the browser backend even when a security key is plugged in', () => {
+    let probed = false;
+    const args = rendererArguments(config, {
+      platform: 'linux',
+      browserAvailable: () => true,
+      fidoDevicePresent: () => { probed = true; return true; },
+      isSnap: false,
+    });
+    assert.deepStrictEqual(args, []);
+    assert.strictEqual(probed, false);
   });
 });
 
