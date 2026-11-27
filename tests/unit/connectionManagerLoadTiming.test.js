@@ -94,14 +94,17 @@ describe('ConnectionManager initial page load timing', () => {
 	});
 
 	it('reports the elapsed time of a failed load and still schedules the retry', async () => {
-		const loadError = new Error('ERR_CONNECTION_TIMED_OUT (-118) loading the page');
+		// The message embeds the URL (and with it a meeting id); only the code may be logged.
+		const loadError = new Error("ERR_CONNECTION_TIMED_OUT (-118) loading 'https://teams.cloud.microsoft/l/meetup-join/19%3ameeting_abc/0'");
+		loadError.code = 'ERR_CONNECTION_TIMED_OUT';
 		let setUrl;
 		let reloadCount;
 		({ manager, setUrl, reloadCount } = managerWithFakeWindow({ loadMs: 3000, loadError }));
 		await manager.load(false);
 
 		assert.strictEqual(errors.length, 1);
-		assert.match(errors[0], /^\[CONNECTION\] Failed to load page after 3\.0s: ERR_CONNECTION_TIMED_OUT/);
+		assert.strictEqual(errors[0], '[CONNECTION] Failed to load page after 3.0s (code: ERR_CONNECTION_TIMED_OUT)');
+		assert.ok(!errors[0].includes('meetup-join') && !errors[0].includes('meeting_abc'));
 		assert.ok(!infos.some((line) => line.includes('Teams navigation finished in')), 'a failed load is not reported as finished');
 
 		// With a page URL present, refresh() skips a healthy page, so it only

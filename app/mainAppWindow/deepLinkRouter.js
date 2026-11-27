@@ -106,14 +106,15 @@ const ROUTE_CONSUMED_TIMEOUT_MS = 750;
 /**
  * Attempts to reach a deep link through the loaded SPA's router.
  *
- * @param {Electron.BrowserWindow} window - Main application window
+ * @param {Electron.WebContents} webContents - The Teams surface to route in:
+ *   the root window's webContents, or the active profile's view
  * @param {string} url - Deep link URL resolved from the launch argument
  * @param {string} teamsUrl - Configured Teams URL, accepted as the frame's
  *   origin alongside the known Teams hosts
  * @returns {Promise<boolean>} True when the SPA consumed the route; false
  *   means the caller should fall back to a full navigation
  */
-async function navigateInPage(window, url, teamsUrl) {
+async function navigateInPage(webContents, url, teamsUrl) {
   const route = toHashRoute(url);
   if (!route) {
     return false;
@@ -122,11 +123,11 @@ async function navigateInPage(window, url, teamsUrl) {
   const configuredOrigin = configuredOriginOf(teamsUrl);
 
   // Electron throws "Object has been destroyed" rather than returning
-  // undefined when the window is torn down mid-flight, so this reaches the
+  // undefined when the surface is torn down mid-flight, so this reaches the
   // fallback instead of rejecting out of the module.
   let frame;
   try {
-    frame = findRouterFrame(window.webContents.mainFrame, configuredOrigin);
+    frame = findRouterFrame(webContents.mainFrame, configuredOrigin);
   } catch {
     return false;
   }
@@ -299,20 +300,20 @@ function focusComposeBox(find, selectors, timeoutMs, settleMs) {
  * Best effort: a miss (meeting link, renamed selectors, torn-down window) is
  * not an error and changes nothing.
  *
- * @param {Electron.BrowserWindow} window - Main application window
+ * @param {Electron.WebContents} webContents - The surface the link was routed in
  * @param {string} url - The deep link that was just routed in page
  * @param {string} teamsUrl - Configured Teams URL, as for `navigateInPage`
  * @returns {Promise<{focused: boolean, afterMs: number|null}>} Whether a
  *   compose box was focused, and how long after the route it first was
  */
-async function focusCompose(window, url, teamsUrl) {
+async function focusCompose(webContents, url, teamsUrl) {
   const miss = { focused: false, afterMs: null };
   const route = toHashRoute(url);
   if (!route || !CONVERSATION_ROUTE.test(route)) {
     return miss;
   }
   try {
-    const frame = findRouterFrame(window.webContents.mainFrame, configuredOriginOf(teamsUrl));
+    const frame = findRouterFrame(webContents.mainFrame, configuredOriginOf(teamsUrl));
     if (!frame) {
       return miss;
     }

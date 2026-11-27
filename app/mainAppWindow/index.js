@@ -22,8 +22,12 @@ const ConnectionManager = require("../connectionManager");
 const ssoPasswordPrefill = require("../ssoPasswordPrefill");
 const BrowserWindowManager = require("../mainAppWindow/browserWindowManager");
 const deepLinkRouter = require("./deepLinkRouter");
-const { DeferredDeepLink } = require("./deferredDeepLink");
+const { createDeepLinkOpener } = require("./deepLinkOpener");
+const { createDeepLinkTarget } = require("./deepLinkTarget");
+const { createCallRegistry } = require("./callRegistry");
+const { createLaunchLinkHold } = require("./launchLinkHold");
 const { resolveLaunchUrl } = require("./protocolLink");
+const { isHttpsUrl } = require("../profilesManager");
 const os = require("node:os");
 const path = require("node:path");
 const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
@@ -381,7 +385,15 @@ let lastAuthRecoveryAt = 0;
 const AUTH_RECOVERY_COOLDOWN_MS = 30 * 60 * 1000;
 // Worker UPRs are transient during active calls (#2428); suppress them only while
 // a call is in progress so startup recovery still works for stale-token loops (#2480).
-let callActive = false;
+// A registry rather than a flag: with profiles, one hang-up must not clear
+// another profile's call. `callRegistry.active` is the old boolean.
+const callRegistry = createCallRegistry({
+  onIdle: () => {
+    // The last call left by navigating or being destroyed, with no disconnect
+    // event to follow: a link held for it can open now.
+    if (deferredDeepLink.pending) deferredDeepLink.release();
+  },
+});
 // Timestamp of the last trusted auth-failure signal. Used to correlate login
 // popups with an actually-broken session: while the stale "sign in again"
 // banner is up the renderer keeps emitting failure signatures every few
@@ -452,7 +464,7 @@ function maybeScheduleAuthRecovery(message, sourceId) {
 
   if (Date.now() - lastAuthRecoveryAt < AUTH_RECOVERY_COOLDOWN_MS) return;
 
-  if (callActive) {
+  if (callRegistry.active) {
     handleMidCallAuthSignal(source);
     return;
   }
@@ -495,12 +507,40 @@ let recoveryQueuedForCallEnd = false;
 // the call, so the link waits for the call to end, as auth recovery does.
 // Same teardown delay as the queued recovery.
 const CALL_TEARDOWN_DELAY_MS = 5000;
-const deferredDeepLink = new DeferredDeepLink(
-  (url) => openDeepLink(url).catch(() => console.debug('[DEEPLINK] deferred navigation failed')),
-  CALL_TEARDOWN_DELAY_MS
-);
-// Bumped per `openDeepLink` call: after its await, only the newest call may fall back.
-let deepLinkGeneration = 0;
+// The surface an external link opens on: the root window's webContents unless
+// multi-account injects the active profile's (`setDeepLinkTarget`).
+const deepLinkTarget = createDeepLinkTarget(() => window.webContents);
+const resolveDeepLinkTarget = deepLinkTarget.resolve;
+
+// Brings a webContents' profile to the front (multi-account only; null with the
+// flag off, where there is nothing to switch).
+let deepLinkActivator = null;
+const getDeepLinkActivator = () => deepLinkActivator;
+
+// The Teams URL a webContents' profile is configured with (multi-account only;
+// profiles can name their own host). Falls back to the global `url`.
+let deepLinkUrlResolver = null;
+// Told which webContents each link targets (multi-account only).
+let deepLinkTargetedHook = null;
+function getDeepLinkTeamsUrl(webContents) {
+  try {
+    return deepLinkUrlResolver?.(webContents) || config.url;
+  } catch {
+    console.debug('[DEEPLINK] profile URL lookup failed, using the configured URL');
+    return config.url;
+  }
+}
+
+const { open: openDeepLink, deferred: deferredDeepLink } = createDeepLinkOpener({
+  router: deepLinkRouter,
+  getActivator: getDeepLinkActivator,
+  getTeamsUrl: getDeepLinkTeamsUrl,
+  onTargeted: (webContents) => deepLinkTargetedHook?.(webContents),
+  resolveTarget: resolveDeepLinkTarget,
+  getConfig: () => config,
+  isCallActive: () => callRegistry.active,
+  deferDelayMs: CALL_TEARDOWN_DELAY_MS,
+});
 // A single transient worker UPR must not prompt (#2428); require the worker
 // signals to persist this long into the same call before treating them as a
 // genuine mid-call auth failure.
@@ -528,7 +568,7 @@ function handleMidCallAuthSignal(source) {
     if (now - firstMidCallWorkerSignalAt < MIDCALL_WORKER_SIGNAL_CONFIRM_MS) return;
   }
 
-  promptMidCallReauth(false);
+  void promptMidCallReauth(false);
 }
 
 /**
@@ -594,11 +634,11 @@ function triggerPopupRecovery(context) {
   const now = Date.now();
   if (now - lastPopupRecoveryAt < POPUP_RECOVERY_DEDUPE_MS) return;
   lastPopupRecoveryAt = now;
-  if (callActive) {
+  if (callRegistry.active) {
     // Recovery would end the active call — let the user decide. force=true:
     // an explicit click re-prompts even after an earlier "Not now".
     console.info(`[AUTH_RECOVERY] ${context} during an active call, asking user`);
-    promptMidCallReauth(true);
+    void promptMidCallReauth(true);
     return;
   }
   console.info(`[AUTH_RECOVERY] ${context}, triggering in-app recovery`);
@@ -762,7 +802,7 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   connectionManager = new ConnectionManager();
 
   if (iconChooser) {
-    menus = new Menus(window, configGroup, iconChooser.getFile(), connectionManager, profilesManagerRef);
+    menus = new Menus(window, configGroup, iconChooser.getFile(), connectionManager, profilesManagerRef, resolveDeepLinkTarget, getDeepLinkActivator, getDeepLinkTeamsUrl);
     menus.onSpellCheckerLanguageChanged = onSpellCheckerLanguageChanged;
   }
 
@@ -785,18 +825,20 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
   // detect this, clear stale auth state, and reload to force a clean
   // interactive login. Detection itself lives in maybeScheduleAuthRecovery
   // so the forwarded window-error path can reuse it.
-  app.on('teams-call-connected', () => {
-    callActive = true;
+  app.on('teams-call-connected', (sender) => {
+    callRegistry.connected(sender ?? window.webContents);
     resetMidCallAuthState();
   });
-  app.on('teams-call-disconnected', () => {
-    callActive = false;
+  app.on('teams-call-disconnected', (sender) => {
+    callRegistry.disconnected(sender ?? window.webContents);
     resetMidCallAuthState();
     if (recoveryQueuedForCallEnd) {
       // Recovery clears the session and reloads at the same deadline; a link
       // opened alongside it would be replaced mid-load, so recovery wins.
       deferredDeepLink.cancel();
-    } else if (deferredDeepLink.pending) {
+    } else if (deferredDeepLink.pending && !callRegistry.active) {
+      // Only when no renderer is still in a call: a link held for a profile
+      // that is still mid-call keeps waiting for that call.
       console.info('[DEEPLINK] Call ended, opening the deferred link');
       deferredDeepLink.release();
     }
@@ -814,16 +856,18 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     }
   });
   // Page reload (including renderer crash recovery) resets renderer-side call state,
-  // so clear the flag to avoid getting stuck if 'teams-call-disconnected' was missed.
+  // so the registry drops the root's entry (on the root's own did-navigate) to avoid
+  // getting stuck if 'teams-call-disconnected' was missed.
   // A reload also moots any queued recovery: if the session is still broken,
   // fresh signals will re-trigger detection.
   window.webContents.on('did-navigate', () => {
-    callActive = false;
     resetMidCallAuthState();
     recoveryQueuedForCallEnd = false;
-    // The window moved on: a link still waiting, or released and not yet
-    // opened, would land on top of wherever this navigation went.
-    deferredDeepLink.cancel();
+    // The root window moved on: a link still waiting, or released and not yet
+    // opened, for the root would land on top of wherever this navigation went.
+    // One held for a profile's view is unaffected (and that profile's call
+    // stays registered).
+    deferredDeepLink.cancelIfFor(window.webContents);
   });
   window.webContents.on('console-message', (event) => {
     maybeScheduleAuthRecovery(event.message, event.sourceId);
@@ -836,13 +880,84 @@ exports.onAppReady = async function onAppReady(configGroup, customBackground, sh
     config.auth?.basic?.hosts,
   );
 
-  const url = processArgs(process.argv);
+  let url = processArgs(process.argv);
+  if (launchLinkHold.offerOlder(url)) {
+    // The link belongs in the active profile's view, which does not exist
+    // yet: it is held for the view manager's first load of that view (unless a
+    // second instance delivered a newer one during the awaits above, which
+    // stays), and the root window (Profile 0, hidden behind the view) starts
+    // on its usual page.
+    url = null;
+  }
   connectionManager.start(url, {
     window: window,
     config: config,
   });
 
   applyAppConfiguration(config, window);
+};
+
+// Multi-account on and the stored active profile lives in a WebContentsView
+// rather than on the root window.
+function isActiveProfileOverlay() {
+  if (!config.multiAccount?.enabled || !profilesManagerRef) return false;
+  const active = profilesManagerRef.getActive();
+  return Boolean(active) && active.id !== profilesManagerRef.getLegacyProfile()?.id;
+}
+
+// A link that arrives while the active profile's view is not wired up yet
+// (the launch argument, or a second instance during startup) is held here
+// rather than sent to the root window; see `takeColdStartLink`.
+const launchLinkHold = createLaunchLinkHold({
+  shouldHold: () => !deepLinkTarget.isInstalled() && isActiveProfileOverlay(),
+  isHttpsUrl,
+});
+
+/**
+ * Hands over, once, the https link held back for the active profile's view,
+ * or null when there is none.
+ *
+ * @returns {string|null}
+ */
+exports.takeColdStartLink = launchLinkHold.take;
+
+/**
+ * Multi-account: supplies the webContents external links open in (the active
+ * profile's). The getter may return null; the root window is the fallback.
+ *
+ * @param {() => Electron.WebContents|null} getter
+ */
+exports.setDeepLinkTarget = deepLinkTarget.set;
+
+/**
+ * Multi-account: the Teams URL configured for a webContents' profile, which can
+ * name its own host. The router accepts that origin when routing a link in page.
+ *
+ * @param {(webContents: Electron.WebContents) => string} resolve
+ */
+exports.setDeepLinkUrlResolver = function setDeepLinkUrlResolver(resolve) {
+  deepLinkUrlResolver = typeof resolve === 'function' ? resolve : null;
+};
+
+/**
+ * Multi-account: told which webContents each external link targets, so a launch
+ * link still waiting for the network in that view yields to it.
+ *
+ * @param {(webContents: Electron.WebContents) => void} hook
+ */
+exports.setDeepLinkTargetedHook = function setDeepLinkTargetedHook(hook) {
+  deepLinkTargetedHook = typeof hook === 'function' ? hook : null;
+};
+
+/**
+ * Multi-account: how to bring a webContents' profile to the front, used before
+ * a deferred link or Return to Teams navigates a view that may be hidden by
+ * then. Must not throw (see `createProfileActivator`).
+ *
+ * @param {(webContents: Electron.WebContents) => boolean} activate
+ */
+exports.setDeepLinkActivator = function setDeepLinkActivator(activate) {
+  deepLinkActivator = typeof activate === 'function' ? activate : null;
 };
 
 function onSpellCheckerLanguageChanged(languages) {
@@ -898,6 +1013,7 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
   if (window && !window.isDestroyed()) {
     event.preventDefault();
     const url = processArgs(args);
+    let target = null;
     if (url && allowFurtherRequests) {
       allowFurtherRequests = false;
       setTimeout(() => {
@@ -907,58 +1023,26 @@ exports.onAppSecondInstance = function onAppSecondInstance(event, args) {
       // navigation it started, and the main process exits on
       // unhandledRejection. The error is dropped rather than logged because it
       // carries the deep link, and with it the recipient or meeting.
-      openDeepLink(url).catch(() => {
-        console.debug("[DEEPLINK] navigation failed");
-      });
+      // Resolved here, once, and handed down: the link stays on this surface
+      // even if the user switches profile while it waits.
+      // Startup gap: the active profile's view is not ready, so the link is
+      // held for its first load instead of landing on the root window.
+      if (!launchLinkHold.offer(url)) {
+        target = resolveDeepLinkTarget();
+        openDeepLink(url, target).catch(() => {
+          console.debug("[DEEPLINK] navigation failed");
+        });
+      }
     }
 
     restoreWindow();
+    // restoreWindow focuses the root window; a profile's view needs the
+    // keyboard focus itself or typing after the link lands goes nowhere.
+    if (target && target !== window.webContents && !target.isDestroyed()) {
+      target.focus();
+    }
   }
 };
-
-/**
- * Opens a deep link, preferring in-page routing over a full navigation.
- *
- * A full `loadURL` discards the running SPA and cold-boots it, which is the
- * multi-second delay between activating a link and seeing the target. Launcher
- * links route through the loaded SPA instead, and anything it does not consume
- * falls back to the full navigation.
- *
- * @param {string} url - Deep link URL resolved from the launch argument
- */
-async function openDeepLink(url) {
-  // The newest link wins, whichever way it ends up opening: one held from
-  // earlier must not open over it, and the full navigation below can outlast
-  // the release delay before `did-navigate` would get to cancel it.
-  deferredDeepLink.cancel();
-  const generation = ++deepLinkGeneration;
-
-  const routed = await deepLinkRouter.navigateInPage(window, url, config.url);
-  if (routed) {
-    console.debug("[DEEPLINK] routed in page");
-    const { focused, afterMs } = await deepLinkRouter.focusCompose(window, url, config.url);
-    const outcome = focused ? `focused after ${afterMs} ms` : "not found";
-    console.debug(`[DEEPLINK] compose box ${outcome}`);
-    return;
-  }
-
-  // A released link is not held off by the second-instance cooldown, so a
-  // newer one can arrive during the wait above; it owns the fallback then.
-  if (generation !== deepLinkGeneration) {
-    console.debug("[DEEPLINK] superseded by a newer link, fallback skipped");
-    return;
-  }
-
-  if (callActive) {
-    // Only the URL is kept, never logged: it carries the recipient or meeting.
-    console.info("[DEEPLINK] in-page routing unavailable during a call, deferring to the call end");
-    deferredDeepLink.defer(url);
-    return;
-  }
-
-  console.debug("[DEEPLINK] in-page routing unavailable, reloading");
-  await window.loadURL(url, { userAgent: config.chromeUserAgent });
-}
 
 function applyAppConfiguration(config, window) {
   applySpellCheckerConfiguration(config.spellCheckerLanguages, window);
@@ -1545,7 +1629,7 @@ function secureOpenLink(details) {
       : { action: "deny" };
 
   if (action === 1) {
-    removePopupWindowMenu();
+    void removePopupWindowMenu();
   }
 
   return returnValue;

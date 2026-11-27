@@ -549,3 +549,49 @@ test('a notification click switches to the profile that raised it', async () => 
     await closeAndCleanup(ctx);
   }
 });
+
+// A link from outside the app (a second instance: the msteams: handler or a
+// browser redirector) opens in the ACTIVE profile's view, not on the root
+// window behind it (Profile 0).
+test('a second-instance link navigates the active profile view, not the root window', async () => {
+  const { ctx } = await startWithTwoProfiles('teams-e2e-deeplink-');
+
+  try {
+    const link = 'https://teams.microsoft.com/l/chat/0/0?users=e2e@example.invalid';
+    // Record every main-frame navigation start per surface, then emit the
+    // event Electron raises when a second copy of the app is launched.
+    const result = await ctx.electronApp.evaluate(async ({ app, BrowserWindow }, link) => {
+      const win = BrowserWindow.getAllWindows().find(
+        (w) => w.contentView.children.length === 3
+      );
+      const active = win.contentView.children.find((c) => c.getVisible() && c !== win.contentView.children.at(-1));
+      const surfaces = {
+        root: win.webContents,
+        active: active.webContents,
+        background: win.contentView.children[0].webContents,
+      };
+      const started = { root: [], active: [], background: [] };
+      for (const [name, wc] of Object.entries(surfaces)) {
+        wc.on('did-start-navigation', (details) => {
+          if (details.isMainFrame) started[name].push(details.url);
+        });
+      }
+      globalThis.__deepLinkStarted = started;
+      app.emit('second-instance', { preventDefault() {} }, ['teams-for-linux', link], process.cwd());
+      return { activeIsBackground: surfaces.active === surfaces.background };
+    }, link);
+    expect(result.activeIsBackground).toBe(false);
+
+    await expect
+      .poll(
+        () => ctx.electronApp.evaluate(() => globalThis.__deepLinkStarted.active),
+        { timeout: 15000 }
+      )
+      .toContain(link);
+    const started = await ctx.electronApp.evaluate(() => globalThis.__deepLinkStarted);
+    expect(started.root.filter((url) => url.includes('/l/chat/'))).toEqual([]);
+    expect(started.background.filter((url) => url.includes('/l/chat/'))).toEqual([]);
+  } finally {
+    await closeAndCleanup(ctx);
+  }
+});

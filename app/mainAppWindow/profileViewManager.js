@@ -3,6 +3,7 @@ const path = require("node:path");
 const SenderProfileMap = require("./senderProfileMap");
 const { reloadIfSignedOut } = require("./signOutReload");
 const { isHttpsUrl } = require("../profilesManager");
+const ConnectionManager = require("../connectionManager");
 const { keepMsalEncryptionCookiePersistent } = require("./msalCookiePersistence");
 const { blockUrlPreviews } = require("./urlPreviewBlock");
 const webauthnBackend = require("../webauthn/backendStatus");
@@ -115,6 +116,10 @@ class ProfileViewManager {
   #focusHandler = null;
   #navigationHandler = null;
   #bootstrapInFlight = false;
+  #launchUrl = null;
+  #createConnectionManager;
+  // webContents id -> how many deep links have targeted that view
+  #linkGenerations = new Map();
   #initialized = false;
   // The switcher pill (a single persistent WebContentsView held separately from
   // #views so #hideAllOverlays never detaches it).
@@ -157,7 +162,8 @@ class ProfileViewManager {
     bindDisplayMediaHandler,
     bindWindowOpenHandler = () => {},
     onViewDidFinishLoad = () => {},
-    setTitleOverride = () => {}
+    setTitleOverride = () => {},
+    createConnectionManager = () => new ConnectionManager()
   ) {
     this.#window = window;
     this.#profilesManager = profilesManager;
@@ -166,6 +172,7 @@ class ProfileViewManager {
     this.#bindWindowOpenHandler = bindWindowOpenHandler;
     this.#onViewDidFinishLoad = onViewDidFinishLoad;
     this.#setTitleOverride = setTitleOverride;
+    this.#createConnectionManager = createConnectionManager;
     this.#registry = new SenderProfileMap(profilesManager);
   }
 
@@ -291,6 +298,8 @@ class ProfileViewManager {
     // From here on, every #showActive re-raises it (adding a profile view
     // would otherwise paint over it).
     this.#createChromeView();
+    // Whatever the active profile's view did not take is stale now.
+    this.#launchUrl = null;
   }
 
   /** Return the live WebContents for the currently selected Teams profile. */
@@ -654,9 +663,106 @@ class ProfileViewManager {
       }
     });
 
-    view.webContents.loadURL(this.#urlFor(profile), {
-      userAgent: this.#config.chromeUserAgent,
+    const launchUrl = this.#takeLaunchUrl(profile);
+    if (launchUrl) {
+      this.#loadLaunchLink(view.webContents, launchUrl);
+    } else {
+      void this.#loadFirstPage(view.webContents, this.#urlFor(profile));
+    }
+  }
+
+  // A launch link used to go through the root window's ConnectionManager,
+  // which waits for the network, tolerates the launcher's ERR_ABORTED redirect
+  // and retries a real failure when the network returns (resume, did-fail-load).
+  // The view takes the same path, one manager per view (started once, so
+  // retries never stack), stopped when the view is destroyed. The manager only
+  // needs a window-like shell around the view's webContents.
+  #loadLaunchLink(webContents, url) {
+    const connection = this.#createConnectionManager();
+    const { id } = webContents;
+    const handedOver = this.#linkGenerations.get(id) ?? 0;
+    webContents.once("destroyed", () => {
+      connection.cleanup();
+      this.#linkGenerations.delete(id);
     });
+    connection.start(url, {
+      // A newer link that opened in this view while the manager waited for the
+      // network must not be undone by this older one.
+      isStale: () => (this.#linkGenerations.get(id) ?? 0) !== handedOver,
+      window: {
+        webContents,
+        isDestroyed: () => webContents.isDestroyed(),
+        setTitle: () => {},
+        reload: () => webContents.reload(),
+        loadURL: (target, options) => webContents.loadURL(target, options),
+      },
+      config: this.#config,
+    });
+  }
+
+  // Fire-and-forget first load of an ordinary profile page. Teams' launcher
+  // page redirects in the page, which can reject loadURL with ERR_ABORTED, and
+  // the process-wide unhandledRejection handler exits on anything it cannot
+  // classify. So the failure is handled here: only the error code is logged,
+  // never the error or the URL. No retry: a profile's start page is reloaded by
+  // the user or by the sign-in flow, unlike a launch link, which is spent.
+  async #loadFirstPage(webContents, url) {
+    try {
+      await webContents.loadURL(url, { userAgent: this.#config.chromeUserAgent });
+    } catch (error) {
+      console.debug("[ProfileViewManager] First load interrupted", {
+        code: error?.code ?? error?.errno,
+      });
+    }
+  }
+
+  /**
+   * Holds a launch link for the active profile's first load, so an app
+   * started with a link opens it in that profile rather than on the root
+   * window behind it. Must be called before `initialize()`; the link is
+   * spent by the active profile's view, or dropped when `initialize()` ends.
+   *
+   * @param {string} url - An https URL
+   */
+  setLaunchUrl(url) {
+    this.#launchUrl = isHttpsUrl(url) ? url : null;
+  }
+
+  // The launch link, when this is the active profile's view and one is
+  // waiting (spent here). Never logged: it carries the target.
+  #takeLaunchUrl(profile) {
+    const launchUrl = this.#launchUrl;
+    if (launchUrl && this.#profilesManager.getActive()?.id === profile.id) {
+      this.#launchUrl = null;
+      return launchUrl;
+    }
+    return null;
+  }
+
+  /**
+   * Records that a deep link now targets `webContents`, so a launch link still
+   * waiting for the network in that view is older than it and is dropped.
+   *
+   * @param {Electron.WebContents} webContents
+   */
+  noteDeepLink(webContents) {
+    const id = webContents?.id;
+    if (typeof id !== "number") return;
+    this.#linkGenerations.set(id, (this.#linkGenerations.get(id) ?? 0) + 1);
+  }
+
+  /**
+   * The Teams URL a webContents' profile is configured with: its own stored
+   * https `url`, else the global one. The root window is always the global one.
+   *
+   * @param {Electron.WebContents} webContents
+   * @returns {string}
+   */
+  getStartUrl(webContents) {
+    if (webContents === this.#window?.webContents) return this.#config.url;
+    const profileId = this.resolveProfileId(webContents);
+    const profile = this.#profilesManager.list().find((p) => p.id === profileId);
+    return profile ? this.#urlFor(profile) : this.#config.url;
   }
 
   // A URL saved before https was enforced would otherwise load with the full
