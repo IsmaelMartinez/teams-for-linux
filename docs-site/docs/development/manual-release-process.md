@@ -116,6 +116,16 @@ The Flathub `master` manifest tracks `releases/latest`, and that endpoint skips 
 - **stable** — Manual promotion from candidate after testing
 :::
 
+### Build provenance
+
+On a push to `main`, each build job in `.github/workflows/build.yml` records the SHA-256 of the files it built (`scripts/recordArtifactChecksums.js`) and uploads that small text file as a `checksums-<job>` workflow artifact. Once all four build jobs have succeeded, the `attest` job downloads those files and runs `actions/attest` over them, which creates a signed SLSA build provenance attestation for every release file. The `attest` job checks out nothing and runs no project code, and it is the only job with `id-token: write`, so dependency install scripts in the build jobs never have a signing identity. Pull requests run the checksum step too, but upload nothing and do not attest. Users check a download with `gh attestation verify`, as described in the [installation guide](../installation.md#verify-a-download). Snap packages are built by the separate snap workflows and are not attested.
+
+Three repository settings complement this and can be enabled by the maintainer in the repository settings. None of them is assumed to be on.
+
+- Setting the default workflow token to read-only means a workflow that forgets to declare `permissions` gets no write access. `build.yml` already declares every job's permissions explicitly.
+- Requiring actions to be pinned to a full commit SHA makes GitHub refuse any workflow that references an action by tag. All workflows are pinned already, with the version in a trailing comment.
+- Immutable releases lock a release's assets and tag once it is published. Everything must therefore be attached while the release is still a draft, which is how this flow already works, since the build uploads into the draft. The pre-release and latest flags stay editable, so the promotion steps above are unaffected.
+
 ### Flathub beta branch
 
 The Flathub packaging repo has a `beta` branch that Flathub builds into the `flathub-beta` remote, which is how Flatpak users test a pre-release before it reaches stable. Flathub's hosted update checker only runs against a repo's default branch (`master`), so it never opens an update PR for `beta`; the `x-checker-data` queries on that branch describe what it should track, but nothing executes them.
