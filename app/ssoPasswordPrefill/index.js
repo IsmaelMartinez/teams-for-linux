@@ -41,24 +41,13 @@
  */
 
 const { exec } = require("node:child_process");
-
-// Built-in Microsoft login hosts. Mirrors AUTH_LOGIN_DOMAINS in
-// app/mainAppWindow/index.js; kept local so this module stays self-contained.
-const DEFAULT_LOGIN_HOSTS = [
-  "login.microsoftonline.com",
-  "login.microsoft.com",
-  "login.live.com",
-];
+const { isPrefillLoginHost } = require("../helpers/teamsHosts");
 
 // How long the renderer observer watches for the password field / MFA options,
 // and how long the password command may run before being killed.
 const OBSERVER_TIMEOUT_MS = 20000;
 const COMMAND_TIMEOUT_MS = 15000;
 const COMMAND_MAX_BUFFER = 1024 * 1024;
-
-function hostMatches(hostname, suffixes) {
-  return suffixes.some((d) => hostname === d || hostname.endsWith("." + d));
-}
 
 /**
  * Whether a URL is a login page we may act on. Pure; exported for testing.
@@ -72,7 +61,7 @@ function isLoginUrl(url, extraHosts = []) {
     // injected, so a cleartext (http:) page must never qualify even on an
     // otherwise-recognised login host.
     if (parsed.protocol !== "https:") return false;
-    return hostMatches(parsed.hostname, [...DEFAULT_LOGIN_HOSTS, ...extraHosts]);
+    return isPrefillLoginHost(parsed.hostname, extraHosts);
   } catch {
     return false;
   }

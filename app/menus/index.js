@@ -27,6 +27,7 @@ const JoinMeetingDialog = require("../joinMeetingDialog");
 const AddProfileDialog = require("../profileDialogs/addProfile");
 const ManageProfileDialog = require("../profileDialogs/manageProfile");
 const autoUpdaterModule = require("../autoUpdater");
+const { isTeamsHost } = require("../helpers/teamsHosts");
 const {
   writeMigratedConfig,
   MIGRATED_FILE,
@@ -820,10 +821,7 @@ class Menus {
     if (!url || typeof url !== 'string') return false;
     try {
       const { protocol, hostname } = new URL(url);
-      return (
-        protocol === 'https:' &&
-        /(^|\.)teams\.(microsoft\.com|live\.com|cloud\.microsoft)$/.test(hostname)
-      );
+      return protocol === 'https:' && isTeamsHost(hostname);
     } catch {
       return false;
     }

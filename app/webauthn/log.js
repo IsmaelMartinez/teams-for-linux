@@ -15,6 +15,8 @@
  * still applies to any residual strings that slip through.
  */
 
+const { SIGN_IN_HOSTS } = require("../helpers/teamsHosts");
+
 let debugEnabled = false;
 
 /**
@@ -42,11 +44,7 @@ function debug(...args) {
   if (debugEnabled) console.debug(...args);
 }
 
-const ORIGIN_BUCKETS = new Map([
-  ["https://login.microsoftonline.com", "login.microsoftonline.com"],
-  ["https://login.microsoft.com", "login.microsoft.com"],
-  ["https://login.live.com", "login.live.com"],
-]);
+const ORIGIN_BUCKETS = new Map(SIGN_IN_HOSTS.map((host) => [`https://${host}`, host]));
 
 /**
  * Reduce an origin URL to a safe bucket label. Unknown origins become "other"
