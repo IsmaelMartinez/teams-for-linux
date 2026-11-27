@@ -14,6 +14,17 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.33.1" date="2026-11-26">
+      <description>
+        <ul>
+          <li>deeplink: route /meet/ links in page instead of reloading (#3267)</li>
+          <li>media: let the user resize and maximize the meeting pop-out (#3251)</li>
+          <li>multi-account: keep overlay views sized to the window after maximize/restore (#3257)</li>
+          <li>webauthn: keep native WebAuthn when a security key is plugged in (#3264)</li>
+          <li>troubleshooting: note tenants that only accept a passkey or security key (#3243)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.33.0" date="2026-11-24">
       <description>
         <ul>
