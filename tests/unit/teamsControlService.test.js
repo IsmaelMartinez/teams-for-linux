@@ -138,6 +138,17 @@ describe('TeamsControlService transport-neutral controls', () => {
 		assert.equal(scripts.length, 1, 'invalid status does not execute renderer code');
 	});
 
+	it('clears a forced status through the same presence endpoint with an empty body', () => {
+		const { control, scripts } = fixture();
+		assert.equal(control.resetStatus(), true);
+		assert.equal(scripts.length, 1);
+		assert.match(scripts[0], /acquireToken\("https:\/\/presence\.teams\.microsoft\.com"\)/);
+		assert.match(scripts[0], /https:\/\/presence\.teams\.microsoft\.com\/v1\/me\/forceavailability\//);
+		assert.match(scripts[0], /method: "PUT"/);
+		assert.match(scripts[0], /body: null/);
+		assert.equal(/JSON\.stringify/.test(scripts[0]), false);
+	});
+
 	it('includes the required OffWork activity when setting offline', () => {
 		const { control, scripts } = fixture();
 		assert.equal(control.setStatus('offline'), true);
@@ -149,11 +160,13 @@ describe('TeamsControlService transport-neutral controls', () => {
 		const { control } = fixture();
 		control.getShortcutWebContents = () => ({ isDestroyed: () => false });
 		assert.equal(control.setStatus('available'), false);
+		assert.equal(control.resetStatus(), false);
 		control.getShortcutWebContents = () => ({
 			isDestroyed: () => false,
 			executeJavaScript() { throw Error('renderer unavailable'); },
 		});
 		assert.equal(control.setStatus('available'), false);
+		assert.equal(control.resetStatus(), false);
 	});
 
 });

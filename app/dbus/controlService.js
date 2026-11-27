@@ -22,6 +22,7 @@ const INTERFACE = {
     ToggleHandRaise: ["", "b"],
     LeaveCall: ["", "b"],
     SetStatus: ["s", "b"],
+    ResetStatus: ["", "b"],
     GetState: ["", "s"],
   },
   signals: {
@@ -130,6 +131,7 @@ class DBusControlService {
             ToggleHandRaise: () => this.dispatch(bus, "toggleHandRaise"),
             LeaveCall: () => this.dispatch(bus, "leaveCall"),
             SetStatus: (status) => this.dispatch(bus, "setStatus", status),
+            ResetStatus: () => this.dispatch(bus, "resetStatus"),
             GetState: () => this.getState(bus),
           }));
           bus.exportInterface(implementation, OBJECT_PATH, INTERFACE);

@@ -107,11 +107,25 @@ class TeamsControlService extends EventEmitter {
     if (typeof status !== "string") return false;
     const presence = PRESENCE_AVAILABILITY.get(status);
     if (!presence) return false;
+    return this.#putForceAvailability(presence);
+  }
 
+  /**
+   * Clear a forced status. The Teams web client does that by PUT to the same
+   * forceavailability endpoint with an empty body.
+   *
+   * @returns {boolean} Whether the request was dispatched to a live renderer.
+   */
+  resetStatus() {
+    return this.#putForceAvailability(null);
+  }
+
+  #putForceAvailability(presence) {
     try {
       const webContents = this.getShortcutWebContents();
       if (!webContents || webContents.isDestroyed() ||
           typeof webContents.executeJavaScript !== "function") return false;
+      const body = presence ? `JSON.stringify(${JSON.stringify(presence)})` : "null";
       const script = `
         (async () => {
           const handler = window.teamsForLinuxReactHandler;
@@ -124,7 +138,7 @@ class TeamsControlService extends EventEmitter {
               Authorization: "Bearer " + tokenResult.token,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(${JSON.stringify(presence)}),
+            body: ${body},
           });
           return response.ok;
         })()
