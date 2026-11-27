@@ -10,7 +10,8 @@ On Linux, Chromium's WebAuthn implementation lacks hardware support. This module
 - `touchPrompt.js`: "Waiting for your security key" prompt shown for the duration of the security-key call, with a Cancel that aborts it. Same BrowserWindow + contextBridge pattern as `pinDialog.js`. The same window doubles as the "Insert your security key" prompt (`view: "insert"`, text swapped in on `dom-ready`; a query string on the file URL stopped the window from ever showing on Wayland) while `index.js` polls `fido2-token -L` once a second for a key, before the PIN is asked for.
 - `originAllowlist.js`: Builds the set of origins a ceremony may be served for, from the built-in Microsoft origins plus `auth.webauthn.extraOrigins`. Shared with the preload relay so both gates agree.
 - `index.js`: Sets up `ipcMain` handlers, origin validation, and PIN callback wiring.
-- `backendStatus.js`: Decides at window creation whether anything will answer a WebAuthn ceremony: the `fido2-tools` backend (Linux, `auth.webauthn.enabled` and the three binaries on `PATH`), or a FIDO security key plugged in (a hidraw report descriptor declaring usage page `0xF1D0`, read from `/sys/class/hidraw`), which Electron's native WebAuthn then handles. A key plugged in after the window was created is only noticed after restarting the app (a profile view created later checks again). The snap keeps hiding WebAuthn because its confinement cannot reach USB keys. When neither is present, it passes `--webauthn-no-backend` to the renderer, and the top of `preload.js` hides `PublicKeyCredential` and refuses public-key requests with `NotSupportedError` before any page script runs. Without that, Electron leaves `PublicKeyCredential` defined, Microsoft's sign-in offers a security key, and `navigator.credentials.get()` never settles.
+- `browserBackend.js`: The experimental `browser` backend (`auth.webauthn.backend: "browser"`). Hands an assertion to a real Chrome, Edge, Chromium, Brave or Vivaldi, which reaches a passkey on a phone over the QR / hybrid flow that Electron on Linux cannot start. See [Browser backend](#browser-backend-phone-passkeys) below.
+- `backendStatus.js`: Decides at window creation whether anything will answer a WebAuthn ceremony: the configured backend (Linux, `auth.webauthn.enabled` and either the three `fido2-tools` binaries on `PATH`, or a Chromium-based browser for `auth.webauthn.backend: "browser"`), or a FIDO security key plugged in (a hidraw report descriptor declaring usage page `0xF1D0`, read from `/sys/class/hidraw`), which Electron's native WebAuthn then handles. A key plugged in after the window was created is only noticed after restarting the app (a profile view created later checks again). The snap keeps hiding WebAuthn because its confinement cannot reach USB keys. When neither is present, it passes `--webauthn-no-backend` to the renderer, and the top of `preload.js` hides `PublicKeyCredential` and refuses public-key requests with `NotSupportedError` before any page script runs. Without that, Electron leaves `PublicKeyCredential` defined, Microsoft's sign-in offers a security key, and `navigator.credentials.get()` never settles.
 
 ## Prerequisites
 
@@ -48,6 +49,34 @@ tenant whose key prompt is served by its own identity provider logs
 paths) and restart. The allowlist gates two places, `index.js` and the
 postMessage relay in `app/browser/tools/webauthnOverride.js`; both build it from
 `originAllowlist.js`, so neither can drift.
+
+## Browser backend (phone passkeys)
+
+Electron on Linux has no WebAuthn transport of its own ([electron/electron#24573](https://github.com/electron/electron/issues/24573)), so the QR / hybrid flow to a phone never starts, and `fido2-tools` only reaches USB keys. A tenant that only accepts phishing-resistant methods, with the passkey on a phone, therefore has no way to sign in. Chromium browsers do run the hybrid flow, so the `browser` backend lends the ceremony to one:
+
+```json
+{
+  "auth": {
+    "webauthn": {
+      "enabled": true,
+      "backend": "browser"
+    }
+  }
+}
+```
+
+For each `credentials.get()`, `browserBackend.js`:
+
+1. Starts the browser (`auth.webauthn.browserPath`, or the first of Chrome, Edge, Chromium, Brave, Vivaldi on `PATH`, see `findBrowser()` in `backendStatus.js`) with a throwaway profile in the temp directory, driven over `--remote-debugging-pipe`: the DevTools protocol runs over the child's fd 3/4, so there is no debugging port for other local processes to reach.
+2. Opens a small app window on a static page of the requesting origin, Microsoft's public OpenID metadata (`/common/v2.0/.well-known/openid-configuration`, on `login.live.com` `/.well-known/openid-configuration`). It is JSON, so no page script runs, and the empty profile sends no cookies. It has to be a real HTTPS load: a page served through the DevTools protocol (`Fetch.fulfillRequest`, at request or response stage) is refused with `WebAuthn is not supported on sites with TLS certificate errors`, and a 404 is replaced by Chromium's own error page, whose origin is opaque. The origin and `isSecureContext` are checked before the call.
+3. Calls `navigator.credentials.get()` there with the page's own challenge, `rpId`, `allowCredentials`, `userVerification` and timeout. The browser shows its own dialog, including the QR code for a phone.
+4. Returns the browser's assertion in the shape `fido2Backend.getAssertion()` returns. The `clientDataJSON` is the browser's own, so it carries the same origin a browser sign-in would.
+
+The request skips the USB key wait, PIN and touch prompts. Closing the browser window cancels; one request runs at a time; the profile is deleted afterwards. Registration (`create`) is refused: passkeys are added in a browser, on the account's Security info page. Origins added with `auth.webauthn.extraOrigins` get their root page, which works only if it loads on that origin without a redirect.
+
+The log shows `[WEBAUTHN:browser] Started browser`, `[WEBAUTHN] Cancelled { reason }` (`window-closed`, `page-closed`, `page-navigated` or `app-quit`), `Assertion received { attachment, hasUserHandle, elapsedMs }` and `[WEBAUTHN] Succeeded { backend: 'browser' }`; no credential material, account or tenant data.
+
+Tests: `tests/unit/webauthnBrowserBackend.test.js`. `WEBAUTHN_BROWSER_IT=1 node --test tests/unit/webauthnBrowserBackend.test.js` also runs the backend against a headless browser and the real page, with a DevTools virtual authenticator, and verifies the signature. A virtual authenticator skips Chromium's TLS check, so that test cannot catch the certificate error above; only a real authenticator can.
 
 ## Reading a sign-in log
 

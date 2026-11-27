@@ -48,6 +48,16 @@ This deviates from the retired research note, which recommended building the pro
 
 Hardware validation by [@spthiel on PR #2779](https://github.com/IsmaelMartinez/teams-for-linux/pull/2779#issuecomment-5163132960) confirmed the prompt appears with no visible gap after the PIN dialog closes, and that both Cancel and the timeout land on Microsoft's "We couldn't sign you in" page with no `fido2-assert` process left behind. The `auth.webauthn.enabled` off path remains open: Electron's native WebAuthn draws no UI on Linux, and it is not yet clear what Cancel would mean when the underlying Chromium call cannot be aborted.
 
+### Addendum (2026-11): browser backend for phone passkeys
+
+Issue #2714 asked for phone (QR / hybrid) passkeys. `fido2-tools` cannot help: it talks to USB HID devices, and the hybrid transport needs the caBLE tunnel and Bluetooth advertising that Chromium implements but Electron on Linux never starts. Draft [PR #3034](https://github.com/IsmaelMartinez/teams-for-linux/pull/3034) explored an external helper wrapping libwebauthn, which brings back the distribution and trust questions of the "External helper process" alternative below.
+
+The `browser` backend (`app/webauthn/browserBackend.js`, opt-in via `auth.webauthn.backend: "browser"`) reuses the hybrid implementation already on the user's machine: a real Chrome, Edge, Chromium, Brave or Vivaldi, started per ceremony with a throwaway profile and driven over `--remote-debugging-pipe`, runs `navigator.credentials.get()` on a static page of the requesting origin and returns the assertion through the existing IPC path. Nothing is bundled, nothing listens on a port, and the code that talks to the phone is the browser's own.
+
+Two constraints shaped it. The page must be a real HTTPS load of the requesting origin: Chromium refuses WebAuthn on a page synthesised through the DevTools protocol (`Fetch.fulfillRequest`) as a certificate error, so the backend loads Microsoft's public OpenID metadata JSON, which runs no script. And the clientDataJSON is the browser's, top-level, so a ceremony started inside a cross-origin iframe would be answered as if top-level; on the Microsoft sign-in tested (a tenant requiring phishing-resistant MFA, main-frame request on `login.microsoft.com`) Entra accepted it, and the session persisted across restarts.
+
+Costs: a browser window appears during sign-in, a Chromium browser must be installed, and registration is not covered (passkeys are added in a browser). The virtual authenticator used by the integration test bypasses Chromium's TLS check, so the certificate constraint above is only covered by a real authenticator.
+
 ## Erratum (2026-11-26)
 
 The root cause above overstates the gap: Electron's native WebAuthn did work with user-verifying (biometric) USB keys on Linux over hidraw, with no PIN asked, as reported in [#3261](https://github.com/IsmaelMartinez/teams-for-linux/issues/3261). What is missing is any UI for PIN entry, phone flows and cancel. The renderer gate therefore keeps native WebAuthn when a FIDO device is plugged in and hides it only when nothing can answer.

@@ -9,7 +9,8 @@
  * `navigator.credentials.get({ publicKey })` never settles and Microsoft's
  * sign-in hangs for the page's 600 s timeout (#3204). So the preload hides
  * WebAuthn from the page (webauthnOverride.js) unless something can answer:
- * the fido2-tools backend (auth.webauthn.enabled plus the binaries on PATH), or
+ * the configured backend (auth.webauthn.enabled plus fido2-tools on PATH, or a
+ * Chromium-based browser for backend "browser"), or
  * a FIDO security key plugged in, which Chromium's native WebAuthn drives over
  * hidraw with no PIN prompt of ours (#3261). The key is looked for once, when
  * the window is created, so a key plugged in later is only noticed after
@@ -31,7 +32,7 @@ const NO_BACKEND_ARG = "--webauthn-no-backend";
 
 // Tells the preload a plugged-in key is answered by Chromium's native WebAuthn,
 // so webauthnOverride must not reroute requests to IPC handlers that the main
-// process only registers when fido2-tools is present.
+// process only registers when the configured backend is available.
 const NATIVE_ARG = "--webauthn-native";
 
 // The three binaries the fido2-tools backend runs.
@@ -61,6 +62,60 @@ function hasFido2Tools(pathEnv = process.env.PATH ?? "") {
       }
     })
   );
+}
+
+// Browsers the "browser" backend (browserBackend.js) can drive, in order of
+// preference. All Chromium-based: they reach a phone passkey over QR/hybrid.
+const BROWSERS = [
+  "google-chrome-stable",
+  "google-chrome",
+  "microsoft-edge-stable",
+  "microsoft-edge",
+  "chromium",
+  "chromium-browser",
+  "brave-browser",
+  "vivaldi-stable",
+  "vivaldi",
+];
+
+function isExecutable(file) {
+  try {
+    fs.accessSync(file, fs.constants.X_OK);
+    return fs.statSync(file).isFile();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The browser the "browser" backend runs: auth.webauthn.browserPath when set
+ * (an absolute path, or a command name looked up on PATH), else the first of
+ * BROWSERS on PATH. Same function for the renderer gate and the backend.
+ * @param {string} [configured]
+ * @param {string} [pathEnv]
+ * @returns {string|null} absolute path
+ */
+function findBrowser(configured = "", pathEnv = process.env.PATH ?? "") {
+  if (configured && path.isAbsolute(configured)) return isExecutable(configured) ? configured : null;
+  const dirs = pathEnv.split(path.delimiter).filter(Boolean);
+  for (const name of configured ? [configured] : BROWSERS) {
+    if (name.includes("/")) continue;
+    for (const dir of dirs) {
+      const file = path.join(dir, name);
+      if (isExecutable(file)) return file;
+    }
+  }
+  return null;
+}
+
+/**
+ * Which backend answers a ceremony: "browser" only when asked for in
+ * auth.webauthn.backend, fido2-tools otherwise.
+ * @param {object} config
+ * @returns {"browser"|"fido2"}
+ */
+function backendName(config) {
+  return config?.auth?.webauthn?.backend === "browser" ? "browser" : "fido2";
 }
 
 /**
@@ -101,7 +156,7 @@ function hasFidoDevice(classDir = HIDRAW_CLASS_DIR) {
  * Renderer arguments for a window that loads the web app. On macOS and
  * Windows Chromium's own WebAuthn works, so nothing is hidden there.
  * @param {object} config - startup config
- * @param {{ platform?: string, toolsAvailable?: () => boolean, fidoDevicePresent?: () => boolean, isSnap?: boolean }} [env]
+ * @param {{ platform?: string, toolsAvailable?: () => boolean, browserAvailable?: (configured: string) => boolean, fidoDevicePresent?: () => boolean, isSnap?: boolean }} [env]
  * @returns {string[]}
  */
 function rendererArguments(
@@ -109,14 +164,21 @@ function rendererArguments(
   {
     platform = process.platform,
     toolsAvailable = hasFido2Tools,
+    browserAvailable = (configured) => findBrowser(configured) !== null,
     fidoDevicePresent = hasFidoDevice,
     isSnap = Boolean(process.env.SNAP),
   } = {}
 ) {
   if (platform !== "linux") return [];
-  if (config?.auth?.webauthn?.enabled && toolsAvailable()) {
-    console.debug("[WEBAUTHN] Renderer gate: fido2-tools backend");
-    return [];
+  if (config?.auth?.webauthn?.enabled) {
+    const backend = backendName(config);
+    const available = backend === "browser"
+      ? browserAvailable(config.auth.webauthn.browserPath || "")
+      : toolsAvailable();
+    if (available) {
+      console.debug(`[WEBAUTHN] Renderer gate: ${backend === "browser" ? "browser" : "fido2-tools"} backend`);
+      return [];
+    }
   }
   // The snap has no hidraw or raw-usb plug, so native WebAuthn cannot reach a
   // key there even when sysfs shows one; keep hiding to avoid the #3204 hang.
@@ -141,7 +203,9 @@ function rendererArguments(
 module.exports = {
   NATIVE_ARG,
   NO_BACKEND_ARG,
+  backendName,
   descriptorHasFidoUsagePage,
+  findBrowser,
   hasFido2Tools,
   hasFidoDevice,
   rendererArguments,

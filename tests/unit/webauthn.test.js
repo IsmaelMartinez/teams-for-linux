@@ -1565,3 +1565,106 @@ describe('WebAuthn IPC gate - relayed ceremony origins', () => {
 		assert.strictEqual(backendCalls.length, 0);
 	});
 });
+
+// ─── Browser backend: the page's abort reaches the browser (PR #3260 review) ──
+
+// Without an abort signal, a page that reloaded or navigated mid-ceremony left
+// the browser window open until the user closed it or it timed out, and the
+// backend refused every new request as already open meanwhile.
+describe('WebAuthn browser backend - abort when the page goes away', () => {
+	const { EventEmitter } = require('node:events');
+	const ORIGIN = 'https://login.microsoftonline.com';
+	const CANCELLED = 'Operation cancelled by user';
+	const handlers = new Map();
+	const quitListeners = [];
+	let quitCalls = 0;
+	let pending = null;
+
+	const webauthnMain = loadWebauthnWith({
+		[require.resolve('electron')]: {
+			app: {
+				on: (name, listener) => { if (name === 'before-quit') quitListeners.push(listener); },
+				quit: () => { quitCalls++; },
+			},
+			BrowserWindow: { fromWebContents: () => null },
+			ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) },
+			webFrameMain: { fromId: () => null },
+		},
+		[require.resolve('../../app/webauthn/fido2Backend')]: {
+			CANCELLED_MESSAGE: CANCELLED,
+			isAvailable: async () => true,
+		},
+		[require.resolve('../../app/webauthn/backendStatus')]: {
+			backendName: () => 'browser',
+			findBrowser: () => '/usr/bin/fake-browser',
+		},
+		// Stands in for the real backend: settles when aborted, or when the
+		// test resolves it.
+		[require.resolve('../../app/webauthn/browserBackend')]: {
+			getAssertion: (options) => new Promise((resolve, reject) => {
+				pending = { signal: options.abortSignal, resolve };
+				options.abortSignal.addEventListener('abort', () => reject(new Error(CANCELLED)), { once: true });
+			}),
+		},
+	});
+
+	const makeSender = () => Object.assign(new EventEmitter(), { isDestroyed: () => false });
+	const invokeGet = (sender) => handlers.get('webauthn:get')(
+		{ senderFrame: { origin: ORIGIN }, sender },
+		{ challenge: 'Y2hhbGxlbmdl', rpId: 'example.com', allowCredentials: [] },
+	);
+	const tick = () => new Promise((resolve) => setImmediate(resolve));
+
+	before(async () => {
+		await webauthnMain.initialize(null, { auth: { webauthn: { enabled: true, backend: 'browser' } } });
+		assert.ok(handlers.has('webauthn:get'), 'webauthn:get handler should be registered');
+		assert.strictEqual(quitListeners.length, 1, 'a before-quit listener should be registered');
+	});
+
+	it('aborts when the main frame starts loading another document', async () => {
+		const sender = makeSender();
+		const result = invokeGet(sender);
+		sender.emit('did-start-navigation', { isMainFrame: true, isSameDocument: false, url: 'https://teams.microsoft.com/' });
+		assert.strictEqual((await result).success, false);
+		assert.strictEqual(pending.signal.reason, 'page-navigated');
+	});
+
+	it('keeps going when a login iframe navigates, or the page changes only its URL', async () => {
+		const sender = makeSender();
+		const result = invokeGet(sender);
+		sender.emit('did-start-navigation', { isMainFrame: false, isSameDocument: false, url: 'https://login.live.com/' });
+		sender.emit('did-start-navigation', { isMainFrame: true, isSameDocument: true, url: `${ORIGIN}/#step2` });
+		assert.strictEqual(pending.signal.aborted, false);
+		pending.resolve({ credentialId: 'Y3JlZA' });
+		assert.strictEqual((await result).success, true);
+	});
+
+	it('aborts when the page is closed, and removes its listeners afterwards', async () => {
+		const sender = makeSender();
+		const result = invokeGet(sender);
+		sender.emit('destroyed');
+		assert.strictEqual((await result).success, false);
+		assert.strictEqual(pending.signal.reason, 'page-closed');
+		assert.strictEqual(sender.listenerCount('did-start-navigation'), 0);
+		assert.strictEqual(sender.listenerCount('destroyed'), 0);
+	});
+
+	it('on quit, aborts the open request and quits once it has cleaned up', async () => {
+		const result = invokeGet(makeSender());
+		let prevented = false;
+		quitListeners[0]({ preventDefault: () => { prevented = true; } });
+		assert.strictEqual(prevented, true, 'quit waits for the browser and the profile');
+		assert.strictEqual(pending.signal.reason, 'app-quit');
+		assert.strictEqual((await result).success, false);
+		const before = quitCalls;
+		await tick();
+		await tick();
+		assert.strictEqual(quitCalls, before + 1, 'quit resumes after cleanup');
+	});
+
+	it('leaves quit alone when no request is open', () => {
+		let prevented = false;
+		quitListeners[0]({ preventDefault: () => { prevented = true; } });
+		assert.strictEqual(prevented, false);
+	});
+});
