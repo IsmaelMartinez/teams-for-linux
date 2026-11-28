@@ -883,7 +883,7 @@ For separately launched profiles, set a different `busName` in each profile's `c
 | `mqtt.homeAssistant.deviceName` | `string` | `"Teams for Linux"` | Device name shown in Home Assistant |
 | `mqtt.mediaTopics` | `object` | see the [MQTT guide](mqtt-integration.md#media-topics) | Custom subtopic names for the call, camera, microphone and screen-sharing topics |
 | `mqtt.incomingCallCaller.enabled` | `boolean` | `false` | Publish the ringing call's caller (name, number, call queue) to the incoming-call/caller topic, and carry it in the D-Bus caller signal. Off by default because it sends callers' personal details to the broker and the session bus |
-| `mqtt.calendarExport.enabled` | `boolean` | `true` | Let the `get-calendar` command publish your calendar events to the broker. Needs `graphApi.enabled` and a command topic; when `false`, `get-calendar` commands are refused |
+| `mqtt.calendarExport.enabled` | `boolean` | `false` | Let the `get-calendar` command publish your calendar events to the broker. Off by default, so `get-calendar` commands are refused until you set it to `true`; also needs `graphApi.enabled` and a command topic |
 | `mqtt.meetingStartDetection.enabled` | `boolean` | `false` | Detect a scheduled meeting starting and publish it as a pulse to the meeting-started topic and the D-Bus meeting-started signal (experimental) |
 | `mqtt.meetingStartDetection.patterns` | `array` | `["meeting started", "started the meeting"]` | Case-insensitive regular expressions for the DOM fallback; the defaults only cover English Teams |
 | `mqtt.meetingStartDetection.resetSeconds` | `number` | `10` | Seconds after which the meeting-started topic resets to false if you never join; joining resets it at once |
@@ -919,7 +919,7 @@ For separately launched profiles, set a different `busName` in each profile's `c
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `graphApi.enabled` | `boolean` | `false` | Enable the Microsoft Graph API integration, used by Quick Chat and by the MQTT `get-calendar` command, which publishes your calendar events to the broker |
+| `graphApi.enabled` | `boolean` | `false` | Enable the Microsoft Graph API integration, used by Quick Chat and by the MQTT `get-calendar` command, which publishes your calendar events to the broker once `mqtt.calendarExport.enabled` is on |
 
 ```json title="Example Configuration"
 {

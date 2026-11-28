@@ -86,10 +86,16 @@ describe('get-calendar handling', () => {
 		assert.strictEqual(logs.filter((l) => l.level === 'warn').length, 1);
 	});
 
-	it('is allowed when the option is absent, as before it existed', async () => {
-		const { handle, published } = setup({ config: { mqtt: {} } });
+	it('is refused when the option is absent: calendar export is opt-in', async () => {
+		const { handle, requests, published } = setup({ config: { mqtt: {} } });
 		await handle(dates);
-		assert.strictEqual(published.length, 1);
+		assert.deepStrictEqual(requests, []);
+		assert.deepStrictEqual(published, []);
+	});
+
+	it('is off in the default configuration', () => {
+		const options = require('../../app/config/options');
+		assert.strictEqual(options.mqtt.default.calendarExport.enabled, false);
 	});
 
 	it('is refused when there is no Graph client', async () => {
