@@ -67,8 +67,9 @@ describe('MQTT command intake', () => {
 		const events = capture(client);
 		const padded = JSON.stringify({ action: 'toggle-mute', pad: 'x'.repeat(3000), marker: 'BIG-PAYLOAD' });
 		client.handleMessage(COMMAND_TOPIC, buffer(padded), { retain: false });
+		client.handleMessage(COMMAND_TOPIC, buffer(padded), { retain: false });
 		assert.deepStrictEqual(events, []);
-		assert.strictEqual(logs.filter((l) => l.level === 'warn').length, 1);
+		assert.strictEqual(logs.filter((l) => l.level === 'warn').length, 1, 'warned once, however many arrive');
 		assert.ok(!allLogText().includes('BIG-PAYLOAD'));
 		assert.ok(!allLogText().includes('Failed to handle'), 'the message must not reach the parser');
 	});

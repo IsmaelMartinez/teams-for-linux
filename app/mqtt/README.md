@@ -121,7 +121,7 @@ Command messages should be sent as JSON with the following structure:
 - `leave` - Leave/hang up the active call (Ctrl+Shift+H)
 - `get-calendar` - Publish calendar events between `startDate` and `endDate` to `{topicPrefix}/calendar`; needs `graphApi.enabled`, `calendarExport.enabled` and a command topic (no shortcut). The dates are ISO 8601 strings (`2025-11-27` or `2025-11-27T10:00`, with optional seconds, fraction and `Z` or offset), the start before the end, at most 366 days apart
 
-Command messages are ignored when they are retained or longer than 2048 bytes, and only the arguments declared for the command are read (`app/mqtt/index.js`, `handleMessage` and `handleCommand`). `app/mqtt/calendarCommand.js` handles `get-calendar`. A plain `mqtt://` broker that is not on this machine logs a one-time warning that the connection is not encrypted.
+Command messages are ignored when the broker delivers them as retained messages (on connect or reconnect) or when they are longer than 2048 bytes, and only the arguments declared for the command are read (`app/mqtt/index.js`, `handleMessage` and `handleCommand`). `app/mqtt/calendarCommand.js` handles `get-calendar`. A plain `mqtt://` broker that is not on this machine logs a one-time warning that the connection is not encrypted.
 
 The generated [automation contract reference](../../docs-site/docs/automation-contract-generated.md) lists every topic, payload and command, and the AsyncAPI document it links describes the MQTT side.
 

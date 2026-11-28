@@ -80,7 +80,7 @@ class MQTTMediaStatusService {
 			await this.#mqttClient.publish(topic, value, { retain: RETAINED[topicId] });
 			console.debug(`[MQTTMediaStatusService] ${label}, published`);
 		} catch (error) {
-			console.error(`[MQTTMediaStatusService] Failed to publish a message:`,errorCode(error));
+			console.error('[MQTTMediaStatusService] Failed to publish a message:', errorCode(error));
 		}
 	}
 

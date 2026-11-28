@@ -280,7 +280,7 @@ Commands are validated with multiple security measures:
 - **JSON Validation**: Commands must be valid JSON
 - **Declared Arguments Only**: Only the arguments listed for a command are read, and an argument of the wrong type counts as absent, so `"force": "true"` is the same as no `force`. Any other property in the message is ignored
 - **Size Limit**: A command message longer than 2048 bytes is ignored without being parsed
-- **No Retained Commands**: A command published with the retain flag is ignored, with one warning in the log, because the broker would deliver it again on every reconnect. Publish commands without the retain flag
+- **No Replayed Commands**: A command the broker has kept as a retained message is ignored when the broker delivers it on connect or reconnect, with one warning in the log. A command sent with the retain flag while the app is connected still runs once, like any other; it is the stored copy that is never replayed. Publish commands without the retain flag
 - **Localhost Recommended**: For maximum security, use a localhost MQTT broker
 
 :::warning Security Notice

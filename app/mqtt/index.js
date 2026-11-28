@@ -73,6 +73,7 @@ class MQTTClient extends EventEmitter {
 			mqttContract.actions.map(({ action, command }) => [action, shared.commands[command].args])
 		);
 		this.retainedCommandWarned = false;
+		this.oversizedCommandWarned = false;
 	}
 
 	get allowedActions() {
@@ -178,7 +179,12 @@ class MQTTClient extends EventEmitter {
 		}
 
 		if (message.length > MAX_COMMAND_BYTES) {
-			console.warn(`[MQTT] Ignoring a command message longer than ${MAX_COMMAND_BYTES} bytes`);
+			// Once, like the retained warning: whoever can publish here could
+			// otherwise fill the log one message at a time.
+			if (!this.oversizedCommandWarned) {
+				this.oversizedCommandWarned = true;
+				console.warn(`[MQTT] Ignoring a command message longer than ${MAX_COMMAND_BYTES} bytes`);
+			}
 			return;
 		}
 
