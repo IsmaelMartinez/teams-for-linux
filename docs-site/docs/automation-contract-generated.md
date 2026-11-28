@@ -10,12 +10,12 @@ The MQTT side is also available as an AsyncAPI 3.0 document, [mqtt-asyncapi.json
 
 ## Observed state
 
-Values are what the app observed, not state confirmed by Teams. D-Bus reports the selected profile, while MQTT publishes what any profile reports. The gate column names the option that must be on for the field to carry anything, and the personal data column marks fields that describe other people. The MQTT microphone topics never carry `unknown`: that value only appears in the D-Bus snapshot, before a microphone state has been observed.
+Values are what the app observed, not state confirmed by Teams. D-Bus reports the selected profile, except `incomingCall` and `incomingCallCaller`, which describe the latest ringing call whichever profile it rings in, while MQTT publishes what any profile reports. The gate column names the option that must be on for the field to carry anything, and the personal data column marks fields that describe other people. The MQTT microphone topics never carry `unknown`: that value only appears in the D-Bus snapshot, before a microphone state has been observed.
 
 | Field | Meaning | Type and values | Gate | Personal data | MQTT topic | D-Bus signal |
 |-------|---------|-----------------|------|---------------|------------|--------------|
 | `presenceStatus` | Your Teams presence as a stable name; unknown until Teams reports it. | `string`: `unknown` or `available` or `busy` or `do_not_disturb` or `away` or `be_right_back` | none | no | `status` (JSON, retained) | `PresenceChanged` |
-| `presenceStatusCode` | The numeric presence code Teams reported, -1 while unknown. | `integer`: `-1` or `1` or `2` or `3` or `4` or `5` | none | no | `status` (JSON, retained) | `PresenceChanged` |
+| `presenceStatusCode` | The numeric presence code Teams reported, an integer in the int32 range, -1 until Teams reports one. A code outside the known ones is kept, and the presence status for it is unknown. | `integer` | none | no | `status` (JSON, retained) | `PresenceChanged` |
 | `inCall` | Whether a call is connected. | `boolean` | none | no | `in-call` (text, retained) | `InCallChanged` |
 | `incomingCall` | Whether a call is ringing. | `boolean` | none | no | `incoming-call` (text, retained) | `IncomingCallChanged` |
 | `incomingCallCaller` | Who is calling while a call rings: scenario, number, name, queue, contact and callId, each present only when Teams supplies it. The option governs both transports. | `object or null` | `mqtt.incomingCallCaller.enabled` | yes | `incoming-call/caller` (JSON, not retained) | `IncomingCallCallerChanged` |

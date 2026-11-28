@@ -174,7 +174,7 @@ Status updates are published as JSON with the following structure:
 
 | Status | Code | Description |
 |--------|------|-------------|
-| `unknown` | `-1` | A status code outside the known ones. When no status is detected at all, nothing is published |
+| `unknown` | `-1`, or any other code | A status code outside the known ones, published with the code it was given. When no status is detected at all, nothing is published |
 | `available` | `1` | Available / Online |
 | `busy` | `2` | Busy / In a call |
 | `do_not_disturb` | `3` | Do Not Disturb / Presenting |

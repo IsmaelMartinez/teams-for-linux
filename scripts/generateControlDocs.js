@@ -417,7 +417,7 @@ The MQTT side is also available as an AsyncAPI 3.0 document, [mqtt-asyncapi.json
 
 ## Observed state
 
-Values are what the app observed, not state confirmed by Teams. D-Bus reports the selected profile, while MQTT publishes what any profile reports. The gate column names the option that must be on for the field to carry anything, and the personal data column marks fields that describe other people. The MQTT microphone topics never carry \`unknown\`: that value only appears in the D-Bus snapshot, before a microphone state has been observed.
+Values are what the app observed, not state confirmed by Teams. D-Bus reports the selected profile, except \`incomingCall\` and \`incomingCallCaller\`, which describe the latest ringing call whichever profile it rings in, while MQTT publishes what any profile reports. The gate column names the option that must be on for the field to carry anything, and the personal data column marks fields that describe other people. The MQTT microphone topics never carry \`unknown\`: that value only appears in the D-Bus snapshot, before a microphone state has been observed.
 
 ${renderStateTable()}
 ## Commands
