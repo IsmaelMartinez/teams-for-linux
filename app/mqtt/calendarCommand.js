@@ -1,16 +1,28 @@
 'use strict';
 
 const { errorCode } = require('./index');
+const { shared } = require('../control/contract');
 
 const MAX_RANGE_DAYS = 366;
 const MAX_RANGE_MS = MAX_RANGE_DAYS * 24 * 60 * 60 * 1000;
 
-// An ISO 8601 date (2025-11-27) or date-time (2025-11-27T10:00, with optional
-// seconds, fraction and Z or +hh:mm offset). Anchored, with no repeated group.
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
+// The shape each date argument must have is declared in the contract, which
+// also publishes it in the AsyncAPI document.
+const DATE_SHAPE = Object.fromEntries(
+	shared.commands.getCalendar.args.map(({ name, pattern }) => [name, new RegExp(pattern)])
+);
 
-function toTime(value) {
-	if (typeof value !== 'string' || !ISO_DATE.test(value)) return Number.NaN;
+// Date.parse rolls a day the month does not have into the next month
+// (2025-02-30 becomes 2 March), while Graph would be sent the original text.
+function isRealDay(value) {
+	const [year, month, day] = value.slice(0, 10).split('-').map(Number);
+	const date = new Date(0);
+	date.setUTCFullYear(year, month - 1, day);
+	return date.getUTCMonth() === month - 1;
+}
+
+function toTime(value, shape) {
+	if (typeof value !== 'string' || !shape.test(value) || !isRealDay(value)) return Number.NaN;
 	return Date.parse(value);
 }
 
@@ -37,8 +49,8 @@ function createCalendarCommandHandler({ getGraphApiClient, mqttClient, config })
 			return;
 		}
 
-		const start = toTime(startDate);
-		const end = toTime(endDate);
+		const start = toTime(startDate, DATE_SHAPE.startDate);
+		const end = toTime(endDate, DATE_SHAPE.endDate);
 		if (Number.isNaN(start) || Number.isNaN(end)) {
 			console.warn('[MQTT] get-calendar refused: startDate and endDate must be ISO 8601 dates or date-times');
 			return;

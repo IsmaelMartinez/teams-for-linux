@@ -1,24 +1,12 @@
 'use strict';
 
-const { describe, it, beforeEach, afterEach } = require('node:test');
+const { describe, it } = require('node:test');
 const assert = require('node:assert');
 
 const { createCalendarCommandHandler } = require('../../app/mqtt/calendarCommand');
+const { captureConsole } = require('./helpers/captureConsole');
 
-let logs;
-const originals = {};
-
-beforeEach(() => {
-	logs = [];
-	for (const level of ['debug', 'info', 'warn', 'error']) {
-		originals[level] = console[level];
-		console[level] = (...args) => logs.push({ level, args });
-	}
-});
-
-afterEach(() => {
-	for (const [level, fn] of Object.entries(originals)) console[level] = fn;
-});
+const logs = captureConsole();
 
 function setup({ graph, config = { mqtt: { calendarExport: { enabled: true } } } } = {}) {
 	const requests = [];
@@ -39,6 +27,7 @@ describe('get-calendar input', () => {
 		['a date-time with a fraction and Z', '2025-11-27T10:00:00.123Z', '2025-11-27T10:00:00.456Z'],
 		['a date-time with an offset', '2025-11-27T10:00+01:00', '2025-11-27T10:00:00-05:00'],
 		['a range of 366 days', '2025-01-01', '2026-01-02'],
+		['a leap day', '2024-02-29', '2024-03-01'],
 	];
 	for (const [name, startDate, endDate] of accepted) {
 		it(`accepts ${name}`, async () => {
@@ -59,6 +48,9 @@ describe('get-calendar input', () => {
 		['a missing end', '2025-01-01', undefined],
 		['a missing start', undefined, '2025-01-02'],
 		['an impossible month', '2025-13-01', '2025-14-01'],
+		['30 February, which Date.parse would roll into March', '2025-02-30', '2025-03-05'],
+		['29 February outside a leap year', '2025-02-29', '2025-03-05'],
+		['31 April as the end, with a time', '2025-04-01', '2025-04-31T10:00Z'],
 		['a lowercase t separator', '2025-01-01t10:00', '2025-01-02'],
 		['a start after the end', '2025-01-02', '2025-01-01'],
 		['a start equal to the end', '2025-01-01', '2025-01-01'],

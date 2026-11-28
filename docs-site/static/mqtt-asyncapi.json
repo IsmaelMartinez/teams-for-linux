@@ -735,12 +735,12 @@
                 "startDate": {
                   "type": "string",
                   "description": "Start of the range, an ISO 8601 date or date-time.",
-                  "format": "date-time"
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}(?:T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{1,9})?)?(?:Z|[+-]\\d{2}:\\d{2})?)?$"
                 },
                 "endDate": {
                   "type": "string",
                   "description": "End of the range, an ISO 8601 date or date-time, after the start and at most 366 days from it.",
-                  "format": "date-time"
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}(?:T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{1,9})?)?(?:Z|[+-]\\d{2}:\\d{2})?)?$"
                 }
               }
             }

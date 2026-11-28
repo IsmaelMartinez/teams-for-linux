@@ -299,4 +299,18 @@ describe('AsyncAPI document', () => {
 		assert.deepEqual(actions, mqtt.actions.map(({ action }) => action));
 		assert.equal(document.operations.receiveCommand.action, 'receive');
 	});
+
+	it('publishes the shape of the calendar dates, and the documented forms satisfy it', () => {
+		const calendar = document.components.messages.command.payload.oneOf.find((schema) => schema.title === 'get-calendar');
+		for (const { name, pattern } of shared.commands.getCalendar.args) {
+			const schema = calendar.properties[name];
+			assert.equal(schema.pattern, pattern, name);
+			// date-time would turn away the plain date the app accepts.
+			assert.equal(schema.format, undefined, name);
+			for (const documented of ['2025-11-27', '2025-11-27T10:00', '2026-01-05T00:00:00Z', '2025-11-27T10:00:00.123+01:00']) {
+				assert.match(documented, new RegExp(pattern), `${name} ${documented}`);
+			}
+			assert.doesNotMatch('2025-11-27 10:00', new RegExp(pattern), name);
+		}
+	});
 });
