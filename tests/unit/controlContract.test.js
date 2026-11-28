@@ -31,6 +31,32 @@ describe('contract completeness', () => {
 		assert.deepEqual(generator.lintContract(), []);
 	});
 
+	// Breaks one entry, lints, and restores it, so each area is shown to report an incomplete entry.
+	const lintWith = (target, key, value) => {
+		const original = target[key];
+		target[key] = value;
+		try {
+			return generator.lintContract();
+		} finally {
+			target[key] = original;
+		}
+	};
+
+	it('reports an incomplete state entry', () => {
+		assert.ok(lintWith(shared.state[0], 'description', '').includes('state "presenceStatus" is missing a description'));
+		assert.ok(lintWith(shared.state[0], 'personalData', undefined).includes('state "presenceStatus" is missing personalData (true or false)'));
+	});
+
+	it('reports an incomplete MQTT topic', () => {
+		assert.ok(lintWith(mqtt.topics[0], 'retained', undefined).includes('MQTT topic "status" is missing retained (true or false)'));
+		assert.ok(lintWith(mqtt.topics[0], 'state', ['nope']).includes('MQTT topic "status" carries unknown state field "nope"'));
+	});
+
+	it('reports an incomplete D-Bus method and signal', () => {
+		assert.ok(lintWith(dbus.methods.Mute, 'command', 'nope').includes('D-Bus method "Mute" names unknown command "nope"'));
+		assert.ok(lintWith(dbus.signals.InCallChanged, 'state', []).includes('D-Bus signal "InCallChanged" carries no state field'));
+	});
+
 	it('declares the state fields in the order of the snapshot', () => {
 		const service = new TeamsStateService({});
 		assert.deepEqual(shared.state.map(({ field }) => field), Object.keys(service.getState()));

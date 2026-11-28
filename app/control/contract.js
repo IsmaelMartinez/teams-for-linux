@@ -76,8 +76,8 @@ const shared = {
 			description: 'Your Teams presence as a stable name; unknown until Teams reports it.',
 		},
 		{
-			field: 'presenceStatusCode', type: 'integer', values: PRESENCE_OBSERVED.map(([code]) => code), gate: null, personalData: false,
-			description: 'The numeric presence code Teams reported, -1 while unknown.',
+			field: 'presenceStatusCode', type: 'integer', gate: null, personalData: false,
+			description: 'The numeric presence code Teams reported, an integer in the int32 range, -1 until Teams reports one. A code outside the known ones is kept, and the presence status for it is unknown.',
 		},
 		{
 			field: 'inCall', type: 'boolean', gate: null, personalData: false,

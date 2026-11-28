@@ -160,7 +160,7 @@ class MQTTMediaStatusService {
 		this.#meetingStartedResetTimer = setTimeout(() => {
 			this.#meetingStartedResetTimer = null;
 			// #publishBoolean handles its own errors
-			this.#publishBoolean('meetingStarted', 'false', 'Meeting-started pulse reset');
+			void this.#publishBoolean('meetingStarted', 'false', 'Meeting-started pulse reset');
 		}, this.#meetingStartedResetMs);
 
 		await this.#publishBoolean('meetingStarted', 'true', 'Meeting start detected');

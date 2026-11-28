@@ -65,18 +65,33 @@ function isBlank(text) {
   return !text || !String(text).trim();
 }
 
+// Pushes "<where> <message>" for every rule whose condition holds.
+function report(violations, where, rules) {
+  for (const [failed, message] of rules) {
+    if (failed) violations.push(`${where} ${message}`);
+  }
+}
+
+function lintGate(violations, where, gate) {
+  if (gate && !resolveOption(gate).exists) {
+    violations.push(`${where} is gated by "${gate}", which is not in app/config/options.js`);
+  }
+}
+
 function lintState(violations) {
   const fields = new Set();
   for (const entry of shared.state) {
     const where = `state "${entry.field}"`;
     if (isBlank(entry.field)) violations.push("a state entry is missing its field");
-    if (fields.has(entry.field)) violations.push(`${where} is declared twice`);
+    report(violations, where, [
+      [fields.has(entry.field), "is declared twice"],
+      [isBlank(entry.type), "is missing a type"],
+      [isBlank(entry.description), "is missing a description"],
+      [entry.gate === undefined, "is missing gate (use null for none)"],
+      [typeof entry.personalData !== "boolean", "is missing personalData (true or false)"],
+    ]);
+    lintGate(violations, where, entry.gate);
     fields.add(entry.field);
-    if (isBlank(entry.type)) violations.push(`${where} is missing a type`);
-    if (isBlank(entry.description)) violations.push(`${where} is missing a description`);
-    if (entry.gate === undefined) violations.push(`${where} is missing gate (use null for none)`);
-    if (typeof entry.personalData !== "boolean") violations.push(`${where} is missing personalData (true or false)`);
-    if (entry.gate && !resolveOption(entry.gate).exists) violations.push(`${where} is gated by "${entry.gate}", which is not in app/config/options.js`);
   }
   return fields;
 }
@@ -96,49 +111,91 @@ function lintCommands(violations) {
   }
 }
 
+function lintTopicPayload(violations, where, payload) {
+  report(violations, where, [
+    [!payload || !["text", "json"].includes(payload.format), 'needs a payload with format "text" or "json"'],
+    [payload?.format === "text" && !payload.values?.length, "needs the payload values"],
+    [payload?.format === "json" && !payload.properties, "needs the payload properties"],
+  ]);
+}
+
+function lintTopicCarries(violations, where, topic, fields) {
+  report(violations, where, [
+    [!topic.state?.length && !topic.command, "carries neither state nor a command"],
+  ]);
+  for (const field of topic.state ?? []) {
+    if (!fields.has(field)) violations.push(`${where} carries unknown state field "${field}"`);
+  }
+  if (topic.command && !shared.commands[topic.command]) {
+    violations.push(`${where} names unknown command "${topic.command}"`);
+  }
+}
+
+function lintTopicOption(violations, where, topic) {
+  if (topic.option && !resolveOption(topic.option).exists && isBlank(topic.derivedDefault)) {
+    violations.push(`${where} names option "${topic.option}", which is not in app/config/options.js and has no derivedDefault`);
+  }
+}
+
+function lintTopic(violations, topic, fields, ids) {
+  const where = `MQTT topic "${topic.id}"`;
+  report(violations, where, [
+    [ids.has(topic.id), "is declared twice"],
+    [isBlank(topic.description), "is missing a description"],
+    [typeof topic.retained !== "boolean", "is missing retained (true or false)"],
+    [topic.gate === undefined, "is missing gate (use null for none)"],
+  ]);
+  lintTopicPayload(violations, where, topic.payload);
+  lintGate(violations, where, topic.gate);
+  report(violations, where, [
+    [Boolean(topic.option) === Boolean(topic.fixedSubtopic), "needs exactly one of option and fixedSubtopic"],
+  ]);
+  lintTopicCarries(violations, where, topic, fields);
+  lintTopicOption(violations, where, topic);
+  ids.add(topic.id);
+}
+
 function lintMqtt(violations, fields) {
   const ids = new Set();
   for (const topic of mqtt.topics) {
-    const where = `MQTT topic "${topic.id}"`;
-    if (ids.has(topic.id)) violations.push(`${where} is declared twice`);
-    ids.add(topic.id);
-    if (isBlank(topic.description)) violations.push(`${where} is missing a description`);
-    if (typeof topic.retained !== "boolean") violations.push(`${where} is missing retained (true or false)`);
-    if (topic.gate === undefined) violations.push(`${where} is missing gate (use null for none)`);
-    if (!topic.payload || !["text", "json"].includes(topic.payload.format)) violations.push(`${where} needs a payload with format "text" or "json"`);
-    if (topic.payload?.format === "text" && !topic.payload.values?.length) violations.push(`${where} needs the payload values`);
-    if (topic.payload?.format === "json" && !topic.payload.properties) violations.push(`${where} needs the payload properties`);
-    if (topic.gate && !resolveOption(topic.gate).exists) violations.push(`${where} is gated by "${topic.gate}", which is not in app/config/options.js`);
-    if (Boolean(topic.option) === Boolean(topic.fixedSubtopic)) violations.push(`${where} needs exactly one of option and fixedSubtopic`);
-    if (!topic.state?.length && !topic.command) violations.push(`${where} carries neither state nor a command`);
-    for (const field of topic.state ?? []) {
-      if (!fields.has(field)) violations.push(`${where} carries unknown state field "${field}"`);
-    }
-    if (topic.command && !shared.commands[topic.command]) violations.push(`${where} names unknown command "${topic.command}"`);
-    if (topic.option && !resolveOption(topic.option).exists && isBlank(topic.derivedDefault)) {
-      violations.push(`${where} names option "${topic.option}", which is not in app/config/options.js and has no derivedDefault`);
-    }
+    lintTopic(violations, topic, fields, ids);
   }
   const actions = new Set();
   for (const { action, command } of mqtt.actions) {
-    if (actions.has(action)) violations.push(`MQTT action "${action}" is declared twice`);
+    const where = `MQTT action "${action}"`;
+    report(violations, where, [
+      [actions.has(action), "is declared twice"],
+      [!shared.commands[command], `names unknown command "${command}"`],
+    ]);
     actions.add(action);
-    if (!shared.commands[command]) violations.push(`MQTT action "${action}" names unknown command "${command}"`);
+  }
+}
+
+function lintDbusMethod(violations, name, method) {
+  report(violations, `D-Bus method "${name}"`, [
+    [!shared.commands[method.command], `names unknown command "${method.command}"`],
+    [typeof method.in !== "string" || typeof method.out !== "string", "needs in and out signatures"],
+  ]);
+}
+
+function lintDbusSignal(violations, name, signal, fields) {
+  const where = `D-Bus signal "${name}"`;
+  report(violations, where, [
+    [isBlank(signal.signature), "is missing its signature"],
+    [signal.args?.length !== signal.signature?.length, "needs one argument name per signature character"],
+    [!signal.state?.length, "carries no state field"],
+  ]);
+  for (const field of signal.state ?? []) {
+    if (!fields.has(field)) violations.push(`${where} carries unknown state field "${field}"`);
   }
 }
 
 function lintDbus(violations, fields) {
   for (const [name, method] of Object.entries(dbus.methods)) {
-    if (!shared.commands[method.command]) violations.push(`D-Bus method "${name}" names unknown command "${method.command}"`);
-    if (typeof method.in !== "string" || typeof method.out !== "string") violations.push(`D-Bus method "${name}" needs in and out signatures`);
+    lintDbusMethod(violations, name, method);
   }
   for (const [name, signal] of Object.entries(dbus.signals)) {
-    if (isBlank(signal.signature)) violations.push(`D-Bus signal "${name}" is missing its signature`);
-    if (signal.args?.length !== signal.signature?.length) violations.push(`D-Bus signal "${name}" needs one argument name per signature character`);
-    if (!signal.state?.length) violations.push(`D-Bus signal "${name}" carries no state field`);
-    for (const field of signal.state ?? []) {
-      if (!fields.has(field)) violations.push(`D-Bus signal "${name}" carries unknown state field "${field}"`);
-    }
+    lintDbusSignal(violations, name, signal, fields);
   }
 }
 
@@ -238,7 +295,8 @@ function argCell(args) {
 function dbusSignatureCell(name, method) {
   const command = shared.commands[method.command];
   const params = [...method.in].map((type, index) => `${type} ${command.args[index]?.name ?? "arg"}`).join(", ");
-  return `${code(`${name}(${params}) -> ${method.out}`)}`;
+  const signature = `${name}(${params}) -> ${method.out}`;
+  return code(signature);
 }
 
 function renderCommandTable() {
@@ -290,7 +348,8 @@ function renderTopicTable() {
 `;
   for (const topic of mqtt.topics) {
     const carries = [...(topic.state ?? []).map(code), ...(topic.command ? [`command ${code(topic.command)}`] : [])];
-    md += `| ${code(`<topicPrefix>/${defaultSubtopic(topic)}`)} | ${subtopicCell(topic)} | ${payloadCell(topic)} | ${topic.retained ? "yes" : "no"} | ${gateCell(topic)} | ${carries.join(", ")} |\n`;
+    const topicPath = `<topicPrefix>/${defaultSubtopic(topic)}`;
+    md += `| ${code(topicPath)} | ${subtopicCell(topic)} | ${payloadCell(topic)} | ${topic.retained ? "yes" : "no"} | ${gateCell(topic)} | ${carries.join(", ")} |\n`;
   }
   return md;
 }
@@ -345,6 +404,7 @@ function generateMarkdown() {
   const availability = mqtt.availability;
   const defaults = options.mqtt.default;
   const availabilityTopic = `<topicPrefix>/${availability.subtopic}`;
+  const discoveryTopic = `${defaults.homeAssistant.discoveryPrefix}/<component>/<clientId>/<objectId>/config`;
   return `# Automation Contract Reference (Auto-Generated)
 
 :::note
@@ -357,7 +417,7 @@ The MQTT side is also available as an AsyncAPI 3.0 document, [mqtt-asyncapi.json
 
 ## Observed state
 
-Values are what the app observed, not state confirmed by Teams. D-Bus reports the selected profile, while MQTT publishes what any profile reports. The gate column names the option that must be on for the field to carry anything, and the personal data column marks fields that describe other people. The MQTT microphone topics never carry \`unknown\`: that value only appears in the D-Bus snapshot, before a microphone state has been observed.
+Values are what the app observed, not state confirmed by Teams. D-Bus reports the selected profile, except \`incomingCall\` and \`incomingCallCaller\`, which describe the latest ringing call whichever profile it rings in, while MQTT publishes what any profile reports. The gate column names the option that must be on for the field to carry anything, and the personal data column marks fields that describe other people. The MQTT microphone topics never carry \`unknown\`: that value only appears in the D-Bus snapshot, before a microphone state has been observed.
 
 ${renderStateTable()}
 ## Commands
@@ -387,7 +447,7 @@ Commands are read from ${code(`<topicPrefix>/<${mqtt.commandTopicOption}>`)} as 
 ${renderActionTable()}
 ### Home Assistant entities
 
-With \`mqtt.homeAssistant.enabled\` the app publishes retained discovery messages under ${code(`${defaults.homeAssistant.discoveryPrefix}/<component>/<clientId>/<objectId>/config`)} on every connect. For the default topics and a command topic of ${code("command")} they create these entities; the buttons are left out when no command topic is set.
+With \`mqtt.homeAssistant.enabled\` the app publishes retained discovery messages under ${code(discoveryTopic)} on every connect. For the default topics and a command topic of ${code("command")} they create these entities; the buttons are left out when no command topic is set.
 
 ${renderEntityTable()}
 ## D-Bus
