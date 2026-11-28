@@ -496,6 +496,7 @@ function payloadSchema(payload) {
 function argumentSchema(arg) {
   const schema = { type: arg.type, description: arg.description };
   if (arg.format) schema.format = arg.format;
+  if (arg.pattern) schema.pattern = arg.pattern;
   if (arg.values) schema.enum = arg.values;
   return schema;
 }

@@ -322,7 +322,7 @@ The `get-calendar` command retrieves calendar events for a specified date range:
 - `startDate`: ISO 8601 date or date-time string (start of date range)
 - `endDate`: ISO 8601 date or date-time string (end of date range)
 
-Both must be strings in the form `2025-11-27` or `2025-11-27T10:00`, where the date-time can add seconds, a fraction and `Z` or an offset such as `+01:00`. Anything else, including free text after a date, is refused. The start must be before the end and the range at most 366 days. A refused command is logged with a general reason and never with the values you sent.
+Both must be strings in the form `2025-11-27` or `2025-11-27T10:00`, where the date-time can add seconds, a fraction and `Z` or an offset such as `+01:00`. Anything else, including free text after a date and a day the month does not have (30 February), is refused. The start must be before the end and the range at most 366 days. A refused command is logged with a general reason and never with the values you sent.
 
 **Response Topic:** `<topicPrefix>/calendar` (`teams/calendar` with the default prefix). It is not retained, so only subscribers connected when the response is published receive it.
 
