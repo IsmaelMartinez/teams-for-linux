@@ -172,6 +172,19 @@ The beta remote carries pre-release builds and packaging changes that are still 
 
 Packages are built for x86_64 and arm64. 32-bit ARM (armv7l) builds ended with the move to Electron 44, which no longer ships 32-bit binaries; existing armv7l installs keep working but receive no further updates.
 
+### Verify a Download
+
+Each file on a release page shows its SHA-256 digest next to the file name, so you can compare it with the output of `sha256sum` on the file you downloaded. For a stronger check, the deb, rpm, AppImage, tar.gz, macOS and Windows files are also covered by a build provenance attestation. With the [GitHub CLI](https://cli.github.com/) installed, this command confirms the file was built by this repository's build workflow from the `main` branch and has not changed since:
+
+```bash
+gh attestation verify teams-for-linux_*.deb \
+  --repo IsmaelMartinez/teams-for-linux \
+  --signer-workflow IsmaelMartinez/teams-for-linux/.github/workflows/build.yml \
+  --source-ref refs/heads/main
+```
+
+`--repo` alone would accept a file attested by any workflow or branch of the repository; the two extra flags tie the check to the release pipeline. The command exits with an error if no matching attestation is found. Attestations exist only for releases built after this check was added, so older releases will not verify. The snap package is built and published by a separate workflow and is not covered.
+
 ### Package Installation
 
 #### Debian/Ubuntu (.deb)
