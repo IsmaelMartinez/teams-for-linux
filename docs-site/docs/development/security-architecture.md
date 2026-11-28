@@ -154,13 +154,14 @@ The React handler acts only when the page's host is `teams.cloud.microsoft`, `te
 
 **Features**:
 - **Main-frame only**: it listens to `will-navigate` and `will-redirect` and ignores sub-frames. A server redirect inside a load the app started itself is covered by `will-redirect`
+- **Documents only**: a link the operating system opens (`mailto:`, `tel:`, `msteams:` and the like) fires `will-navigate` too but never puts a page in the window, so the guard ignores it and the `openExternal` permission above still decides
 - **Trusted destinations**: the same trusted-page predicate as the IPC sender check, plus the origins in `urlHandling.navigationLock.extraOrigins` and `auth.webauthn.extraOrigins`, any page `auth.webLogin.extraHosts` accepts, `about:blank`, and a `blob:` URL whose inner origin is trusted. Anything unparseable is untrusted
 - **Observe by default**: with `urlHandling.navigationLock.enabled` off (the default) nothing is blocked. The first navigation to each untrusted origin in a session is logged once at `info` with its scheme and whether it was a navigation or a redirect, and a hint names the option once
 - **Block when enabled**: the navigation is cancelled, a `warn` is logged without the origin, and a non-blocking dialog names the origin on screen, once per origin and at most five per session, with how to allow it (add it to `urlHandling.navigationLock.extraOrigins` in `config.json` and restart)
 
 **Protection**: The preload stays attached to whatever page the window shows, so a page the window has been sent to would otherwise keep the IPC reach the preload gives it. With the lock on, the window cannot leave the sites the user trusts. A cancelled redirect rejects the `loadURL()` that started it with `ERR_FAILED`, so every `loadURL` on these webContents handles its rejection: the process-wide `unhandledRejection` handler exits the app on anything it cannot classify.
 
-**Limits**: the lock is off by default because a federated tenant's sign-in site cannot be known in advance, and blocking it would stop the user signing in until they add it. Popups from these windows are outside it: they get no preload, a sandbox and context isolation. Same-document navigations (`history.pushState`) fire neither event and do not change the page's origin.
+**Limits**: the lock is off by default because a federated tenant's sign-in site cannot be known in advance, and blocking it would stop the user signing in until they add it. With the lock on, a redirect to an unlisted site inside the app's own first load leaves the window empty, and it is retried as a failed load, until the origin is added and the app restarted. Popups from these windows are outside it: they get no preload, a sandbox and context isolation. Same-document navigations (`history.pushState`) fire neither event and do not change the page's origin.
 
 ## Recommended User-Level Security
 

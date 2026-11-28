@@ -15,6 +15,22 @@ const MAX_SEEN_ORIGINS = 50;
 
 const SETTING = "urlHandling.navigationLock.enabled";
 
+// Schemes that put a document in the window. `will-navigate` also fires for a
+// link the operating system opens (mailto:, tel:, msteams:, ...): the window
+// stays on its page, and whether the link may open is already decided by the
+// openExternal permission (security/permissions.js), so the guard leaves those
+// alone. Checked on Electron 45.4.1: without this a mailto: link was blocked.
+const DOCUMENT_SCHEMES = new Set(["http:", "https:", "file:", "data:", "blob:", "about:", "filesystem:"]);
+
+// An unparseable URL counts as a document, so the trust decision refuses it.
+function loadsDocument(url) {
+  try {
+    return DOCUMENT_SCHEMES.has(new URL(url).protocol);
+  } catch {
+    return true;
+  }
+}
+
 // What the user sees and logs for an origin: the opaque ones (data:, an
 // about: page, a file outside the app) have no host to show, so their scheme
 // stands in.
@@ -116,6 +132,7 @@ function createNavigationGuard({ config, isTrustedPage, onBlocked = () => {}, lo
 
   const handle = (kind) => (details) => {
     if (!details?.isMainFrame || typeof details.url !== "string") return;
+    if (!loadsDocument(details.url)) return;
     if (isTrustedDestination(details.url)) return;
     if (enabled) block(details, kind);
     else observe(details.url, kind);

@@ -252,6 +252,31 @@ describe('navigation guard: enabled', () => {
 	});
 });
 
+describe('navigation guard: links the operating system opens', () => {
+	// will-navigate fires for these too, but the window stays on its page and the
+	// openExternal permission decides whether they open.
+	const EXTERNAL = ['mailto:someone@corp.example', 'tel:+15550100', 'msteams://teams.microsoft.com/l/chat/0/0', 'sip:someone@corp.example'];
+
+	it('leaves them alone in both modes: not prevented, not reported, not logged', () => {
+		for (const config of [{}, { urlHandling: { navigationLock: { enabled: true } } }]) {
+			const { navigate, logger, blocked } = setup({ config });
+			for (const url of EXTERNAL) {
+				assert.strictEqual(navigate('will-navigate', url).prevented, false, url);
+			}
+			assert.deepStrictEqual(blocked, []);
+			assert.deepStrictEqual(logger.lines, []);
+		}
+	});
+
+	it('still guards every scheme that puts a document in the window', () => {
+		const { navigate, blocked } = setup({ config: { urlHandling: { navigationLock: { enabled: true } } } });
+		for (const url of ['http://unrelated.example/', 'https://unrelated.example/', 'file:///etc/passwd', 'data:text/html,x', 'blob:https://unrelated.example/1', 'not a url']) {
+			assert.strictEqual(navigate('will-navigate', url).prevented, true, url);
+		}
+		assert.strictEqual(blocked.length, 6);
+	});
+});
+
 describe('navigation guard: frames', () => {
 	it('ignores sub-frame events in both modes', () => {
 		for (const config of [{}, { urlHandling: { navigationLock: { enabled: true } } }]) {
