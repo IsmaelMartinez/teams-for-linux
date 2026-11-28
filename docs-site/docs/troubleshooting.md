@@ -729,6 +729,32 @@ The systemd man pages document prefix drop-ins in general but do not list `Timeo
 
 **Related GitHub Issues:** [Issue #3161](https://github.com/IsmaelMartinez/teams-for-linux/issues/3161)
 
+#### Issue: Meeting links from a calendar open in the browser instead of the app
+
+**Description:** Calendar invitations can wrap Teams links in a redirect URL. Clicking one in the browser ends in the Teams web app instead of Teams for Linux, and the wrapped link is not accepted as a meeting link when pasted into the app or clicked in a chat.
+
+**Solutions/Workarounds:**
+
+:::note
+Both options are third-party browser extensions, not maintained here.
+:::
+
+1.  **Use the Redirector extension with a rewrite rule.** [Redirector](https://github.com/einaregilsson/Redirector) ([Firefox add-on](https://addons.mozilla.org/firefox/addon/redirector/)) redirects URLs that match a pattern. The rule shared in [#1098](https://github.com/IsmaelMartinez/teams-for-linux/issues/1098) sends Teams `https` links to `msteams://`:
+
+    - **Include pattern:** `https://teams.microsoft.com/(.*)`
+    - **Redirect to:** `msteams://teams.microsoft.com/$1`
+    - **Pattern type:** Regular Expression
+    - **Apply to:** Main window (address bar)
+
+    This pattern matches every `teams.microsoft.com` URL, including the Teams web app, so the web app does not open in that browser while the rule is enabled. Redirector is no longer in the Chrome Web Store; on Chrome, use option 2.
+
+2.  **Use the Linux Teams Redirect Chrome extension.** [Linux Teams Redirect](https://chromewebstore.google.com/detail/kbnmkaekphfgfcgfehiokheblhcahejm) ([source](https://github.com/veselov/linux-teams-redirect)) catches the navigation once the redirect has resolved to a Teams link on `teams.microsoft.com`, `teams.live.com` or `teams.cloud.microsoft`, and reopens it as an `msteams://` link, which the desktop hands to the application registered for `x-scheme-handler/msteams`. It handles `/meet/...`, `/l/<kind>/...` and launcher (`/dl/launcher/launcher.html?url=...`) links, and leaves the Teams web app itself alone.
+
+    - Chrome asks before opening the app. Ticking "Always allow … to open links of this type in the associated app" in that prompt stops it, and later links open the app without asking.
+    - While the extension is enabled, meeting and deep links that go through Teams' launcher open the app directly, so the launcher's option to continue in the browser is not offered. Disable the extension to join in the browser.
+
+**Related GitHub Issues:** [Issue #1098](https://github.com/IsmaelMartinez/teams-for-linux/issues/1098), [Issue #3253](https://github.com/IsmaelMartinez/teams-for-linux/issues/3253)
+
 #### Issue: Spellchecker Not Working
 
 **Description:** The bundled `node_spellchecker` only includes the `en_US` dictionary.
