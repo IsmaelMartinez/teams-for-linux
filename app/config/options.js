@@ -1426,7 +1426,7 @@ module.exports = {
       urlHandling: {
         default: {
           defaultHandler: "",
-          meetupJoinRegEx: "^https://teams\\.(?:microsoft\\.com|live\\.com|cloud\\.microsoft)/(v2/\\?meetingjoin=|meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)",
+          meetupJoinRegEx: defaults.meetupJoinRegEx,
           openMeetupJoinInApp: true,
           navigationLock: {
             enabled: false,

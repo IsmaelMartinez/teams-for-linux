@@ -29,12 +29,14 @@ const path = require("node:path");
 const { installProfileWindowOpenHandler } = require("./profileWindowOpenPolicy");
 const { reloadIfSignedOut } = require("./signOutReload");
 const { isSafeExternalUrl, schemeOf } = require("../helpers/externalUrl");
-// Microsoft Cloud App Security proxy suffixes. Tenants that route Teams
-// through Defender for Cloud Apps (MCAS) load and store cookies on
-// MCAS-proxied domains rather than the underlying Microsoft domain.
-// Strip recognized suffixes before matching against AUTH_DOMAINS /
-// TEAMS_DOMAINS so proxied hosts are treated like canonical hosts.
-const { stripMcasSuffix } = require("../helpers/teamsHosts");
+// Host lists and matchers (including the Microsoft Cloud App Security proxy
+// handling) live in helpers/teamsHosts.js.
+const {
+  isTeamsContentUrl,
+  isAuthLoginUrl,
+  isTrustedAuthSource,
+  isAuthCookieDomain,
+} = require("../helpers/teamsHosts");
 const { keepMsalEncryptionCookiePersistent } = require("./msalCookiePersistence");
 const { isUrlPreviewRequest } = require("./urlPreviewBlock");
 const { createNavigationGuard } = require("../security/navigationGuard");
@@ -289,19 +291,6 @@ function createScreenSharePreviewWindow() {
   });
 }
 
-// Microsoft auth domains whose cookies should be checked/cleaned
-const AUTH_DOMAINS = [
-  'login.microsoftonline.com',
-  'login.microsoft.com',
-  'teams.microsoft.com',
-  'teams.cloud.microsoft',
-  'microsoft.com',
-  'office.com',
-  'office365.com',
-  'live.com',
-  'microsoftonline.com',
-];
-
 // Azure AD / MSAL / SharePoint auth cookie names
 const AUTH_COOKIE_NAMES = new Set([
   'ESTSAUTH',
@@ -343,9 +332,7 @@ async function cleanExpiredAuthCookies(windowSession, forceCleanAll = false) {
     const nowSeconds = Date.now() / 1000;
 
     const authCookies = allCookies.filter(cookie => {
-      const domain = stripMcasSuffix((cookie.domain || '').replace(/^\./, ''));
-      const isAuthDomain = AUTH_DOMAINS.some(d => domain === d || domain.endsWith('.' + d));
-      return isAuthDomain && AUTH_COOKIE_NAMES.has(cookie.name);
+      return isAuthCookieDomain(cookie.domain) && AUTH_COOKIE_NAMES.has(cookie.name);
     });
 
     const expired = authCookies.filter(c => c.expirationDate && c.expirationDate < nowSeconds);
@@ -405,8 +392,6 @@ const AUTH_FAILURE_PATTERNS = ['InteractionRequired', 'interaction_required'];
 // clear-and-reload on its own. Recovery from a UPR happens only through an
 // explicit user action (the banner click, or the mid-call prompt).
 const OPT_IN_AUTH_FAILURE_PATTERNS = ['Uncaught Error: UPR:'];
-// Only trust auth failure signals from Teams/Microsoft origins
-const TRUSTED_AUTH_SOURCES = ['teams.cloud.microsoft', 'teams.microsoft.com', 'login.microsoftonline.com'];
 // Loop guard for the automatic clear-and-reload. A cooldown rather than a
 // single-shot flag: a long-running app can hit a second stale session hours
 // after the first recovery (observed in the field: recovery at 10:55, the
@@ -476,9 +461,10 @@ function maybeScheduleAuthRecovery(message, sourceId) {
   const isOptInWorkerSignal = isWorkerUpr;
   if (!isReliableSignal && !isOptInWorkerSignal) return;
 
-  // Verify the message originates from a trusted Microsoft source
+  // Only trust auth failure signals from Teams/Microsoft origins. An empty
+  // source (no script URL) is let through.
   const source = sourceId || '';
-  if (source && !TRUSTED_AUTH_SOURCES.some(s => source.includes(s))) return;
+  if (source && !isTrustedAuthSource(source)) return;
 
   // Record the signal even while recovery is cooling down or a call is
   // active, so the login-popup interception can still correlate against a
@@ -1267,53 +1253,6 @@ function onBeforeRequestHandler(details, callback) {
   }
 }
 
-// Teams domains whose enforcing CSP we never touch
-const TEAMS_DOMAINS = [
-  'teams.cloud.microsoft',
-  'teams.microsoft.com',
-  'teams.live.com',
-  'statics.teams.cdn.office.net',
-];
-
-/**
- * Checks whether a URL belongs to a Teams domain.
- * Also handles Microsoft Cloud App Security (MCAS) proxy suffix.
- */
-function isTeamsDomain(url) {
-  try {
-    const hostname = stripMcasSuffix(new URL(url).hostname);
-    return TEAMS_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
-  } catch {
-    return false;
-  }
-}
-
-// Microsoft Identity Platform login hostnames. When Teams opens a popup to
-// one of these it is requesting interactive re-authentication (e.g. the
-// "sign in again" banner). Kept separate from AUTH_DOMAINS because that
-// list includes broad domains used for cookie scoping; this narrower set
-// is only the endpoints that initiate an OAuth/OIDC interactive flow.
-const AUTH_LOGIN_DOMAINS = [
-  'login.microsoftonline.com',
-  'login.microsoft.com',
-  'login.live.com',
-];
-
-/**
- * Returns true when the URL targets a Microsoft Identity Platform login page.
- * Used to intercept re-auth popups that Teams opens from the "sign in again"
- * banner so they complete inside the Electron app instead of opening an
- * external browser window that Electron cannot observe.
- */
-function isAuthLoginUrl(url) {
-  try {
-    const hostname = stripMcasSuffix(new URL(url).hostname);
-    return AUTH_LOGIN_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Strips report-only CSP headers for non-Teams domains (#2326).
  *
@@ -1323,7 +1262,7 @@ function isAuthLoginUrl(url) {
  * Report-only headers are safe to strip since they should never block.
  */
 function stripCspForAuthPages(responseHeaders, url) {
-  if (isTeamsDomain(url)) return;
+  if (isTeamsContentUrl(url)) return;
 
   for (const key of Object.keys(responseHeaders)) {
     if (key.toLowerCase() === 'content-security-policy-report-only') {

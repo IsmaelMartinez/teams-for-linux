@@ -10,9 +10,10 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
 
-// Default patterns from app/config/index.js
-const v1Pattern = /^msteams:\/(?:meet\/|l\/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)\/)/;
-const v2Pattern = /^msteams:\/\/teams\.(?:microsoft\.com|live\.com|cloud\.microsoft)\/(?:meet\/|l\/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)\/)/;
+// The real default patterns, not copies of them
+const options = require('../../app/config/options');
+const v1Pattern = new RegExp(options.msTeamsProtocols.default.v1);
+const v2Pattern = new RegExp(options.msTeamsProtocols.default.v2);
 
 describe('msTeamsProtocols v1 pattern', () => {
   describe('Valid v1 links - should match', () => {

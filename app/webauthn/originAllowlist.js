@@ -13,11 +13,9 @@
  * a subdomain of a configured origin has to be configured in its own right.
  */
 
-const DEFAULT_ORIGINS = [
-  "https://login.microsoftonline.com",
-  "https://login.microsoft.com",
-  "https://login.live.com",
-];
+const { SIGN_IN_HOSTS } = require("../helpers/teamsHosts");
+
+const DEFAULT_ORIGINS = SIGN_IN_HOSTS.map((host) => `https://${host}`);
 
 /**
  * Reduce a configured entry to an exact https origin, or null if it cannot be
