@@ -1428,9 +1428,13 @@ module.exports = {
           defaultHandler: "",
           meetupJoinRegEx: "^https://teams\\.(?:microsoft\\.com|live\\.com|cloud\\.microsoft)/(v2/\\?meetingjoin=|meet/|l/(?:app|call|channel|chat|entity|file|meet(?:ing|up-join)|message|task|team)/)",
           openMeetupJoinInApp: true,
+          navigationLock: {
+            enabled: false,
+            extraOrigins: [],
+          },
         },
         describe:
-          "How the app decides which URLs it opens itself and which it hands to the desktop. Replaces the deprecated defaultURLHandler, meetupJoinRegEx and onNewWindowOpenMeetupJoinUrlInApp options.",
+          "How the app decides which URLs it opens itself and which it hands to the desktop. Replaces the deprecated defaultURLHandler, meetupJoinRegEx and onNewWindowOpenMeetupJoinUrlInApp options. urlHandling.navigationLock keeps the Teams window on the sites you trust: with enabled set to true, a navigation or redirect to any other site is blocked and a dialog names it; while it is off, such a navigation is only noted once in the log.",
         type: "object",
         fields: {
           "defaultHandler": {
@@ -1444,6 +1448,16 @@ module.exports = {
           "openMeetupJoinInApp": {
             type: "boolean",
             describe: "Open meetupJoinRegEx URLs in the app instead of the default browser",
+          },
+          "navigationLock.enabled": {
+            type: "boolean",
+            describe:
+              "Block the Teams window, and each multi-account profile view, from navigating to or being redirected to a site outside the trusted ones: Teams, the Microsoft sign-in hosts, your configured URL and profile URLs, the origins in navigationLock.extraOrigins and auth.webauthn.extraOrigins, and the hosts in auth.webLogin.extraHosts. A dialog names each blocked site. Off by default; while off, the first navigation to each such site is only noted in the log.",
+          },
+          "navigationLock.extraOrigins": {
+            type: "array",
+            describe:
+              "Extra sign-in origins the navigation lock lets the Teams window reach, for example your federated identity provider. Exact https origins only: scheme, host and, where the site is not on 443, its port (e.g. 'https://sso.example.com'). Wildcards, paths and http entries are ignored. Only used when navigationLock.enabled is true.",
           },
         },
         applyMode: "restart",

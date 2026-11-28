@@ -62,7 +62,8 @@ Treat Teams' own CSP as outside the application's control: it limits what inject
 - **Channel Allowlisting**: Only legitimate IPC channels are permitted
 - **Payload Sanitization**: Removes the `__proto__`, `constructor` and `prototype` properties from the first argument of each message, recursing up to 10 levels deep; anything nested deeper, and any further arguments, are passed through as sent, so handlers still validate what they use
 - **Request Validation**: Every `ipcMain.handle`, `on` and `once` registration is wrapped, so the allowlist and sender checks run before the handler
-- **Sender Pinning**: The channels in `appPageOnlyChannels` (the screen-share picker, the profile channels and the Graph channels) are answered only when the sending frame shows a file inside the app directory (`isSenderAllowed`), so page script cannot capture the screen, pick a source, switch profiles or call the Graph API on its own. Channels outside that list answer any frame
+- **Sender Check on Every Channel**: `isSenderAllowed` reads the frame that sent each message (`event.senderFrame`, never `event.sender.getURL()`, which can already name the next page) and puts every allowlisted channel in one of three classes. `appPageOnlyChannels` (the screen-share picker, the profile channels, the Graph channels and the app's own dialogs, prompts and toasts) answer only a frame showing a file inside the app directory, so page script cannot capture the screen, pick a source, switch profiles, call the Graph API or answer a PIN prompt on its own. `anySenderChannels` is a short list pinned by a test, each entry with its reason in the code: `get-config`, `get-zoom-level`, `title-bar-overlay-update`, `webauthn:create` and `webauthn:get`. Every other channel answers the app's own pages and trusted web pages, meaning Teams, the Microsoft sign-in hosts, the configured URL and the `https` profile URLs (the predicate the permission handlers use, shared through `app/security/trustedPages.js`). A page on any other site, such as a federated sign-in page the window has been navigated to, is refused. A call with no event at all is an in-process `ipcMain.emit` and stays allowed
+- **Quiet Refusals**: sign-in pages still run the preload's tools, so refusals are routine; the first one per channel is logged at `warn` with the channel and the sender's scheme only, and the rest are counted without logging
 - **No Raw `ipcRenderer` in the Page**: With `contextIsolation: false`, anything `electronAPI` returns is usable by page script, so its listener helpers return nothing and strip Electron's IPC event (whose `sender` is the raw `ipcRenderer`) before calling back
 - **Listener Errors Contained**: an exception or rejected promise from an `ipcMain.on` or `once` listener is logged and dropped by the wrapper in `app/security/ipcSecurity.js`, so a message with an unexpected shape cannot reach the process-wide error handlers that exit the app
 
@@ -147,6 +148,20 @@ The React handler acts only when the page's host is `teams.cloud.microsoft`, `te
 
 **Protection**: Without these handlers Electron grants every request, so a page opened in an app window could use the microphone or camera without a prompt (GHSA-58j7-22f8-6xqp, item 3).
 
+#### 10. Navigation Lock
+
+**Implementation**: `app/security/navigationGuard.js`, installed on the Teams window and on every multi-account profile view
+
+**Features**:
+- **Main-frame only**: it listens to `will-navigate` and `will-redirect` and ignores sub-frames. A server redirect inside a load the app started itself is covered by `will-redirect`
+- **Trusted destinations**: the same trusted-page predicate as the IPC sender check, plus the origins in `urlHandling.navigationLock.extraOrigins` and `auth.webauthn.extraOrigins`, any page `auth.webLogin.extraHosts` accepts, `about:blank`, and a `blob:` URL whose inner origin is trusted. Anything unparseable is untrusted
+- **Observe by default**: with `urlHandling.navigationLock.enabled` off (the default) nothing is blocked. The first navigation to each untrusted origin in a session is logged once at `info` with its scheme and whether it was a navigation or a redirect, and a hint names the option once
+- **Block when enabled**: the navigation is cancelled, a `warn` is logged without the origin, and a non-blocking dialog names the origin on screen, once per origin and at most five per session, with how to allow it (add it to `urlHandling.navigationLock.extraOrigins` in `config.json` and restart)
+
+**Protection**: The preload stays attached to whatever page the window shows, so a page the window has been sent to would otherwise keep the IPC reach the preload gives it. With the lock on, the window cannot leave the sites the user trusts. A cancelled redirect rejects the `loadURL()` that started it with `ERR_FAILED`, so every `loadURL` on these webContents handles its rejection: the process-wide `unhandledRejection` handler exits the app on anything it cannot classify.
+
+**Limits**: the lock is off by default because a federated tenant's sign-in site cannot be known in advance, and blocking it would stop the user signing in until they add it. Popups from these windows are outside it: they get no preload, a sandbox and context isolation. Same-document navigations (`history.pushState`) fire neither event and do not change the page's origin.
+
 ## Recommended User-Level Security
 
 ### System-Level Sandboxing
@@ -192,13 +207,13 @@ The application's exposure is concentrated in one place: script running in the T
 
 What the controls bound today:
 
-- Page script reaches only the named `electronAPI` methods and the IPC channels behind them, with privileged channels answered only for the app's own pages
+- Page script reaches only the named `electronAPI` methods and the IPC channels behind them, with privileged channels answered only for the app's own pages and every other channel only for the app's pages and trusted web pages (five channels, listed above, answer any page)
 - It cannot load a `<webview>`, read credentials from the configuration, or obtain device permissions for a page outside the trusted set
 - Links it hands to the operating system are limited to web, mail, phone, SIP and Teams schemes
 
 What remains open:
 
-- A top-level navigation away from Teams keeps the preload attached to the new page. [ADR-035](adr/035-renderer-trust-boundary.md) records this as the outstanding item
+- A top-level navigation away from Teams keeps the preload attached to the new page unless the navigation lock (`urlHandling.navigationLock.enabled`) is on, which is off by default. A page on a foreign site still gets the credential-free `get-config` answer, and the preload's own tools run there. Section 10 and [ADR-035](adr/035-renderer-trust-boundary.md) describe what is and is not refused
 - The controls depend on rules that every browser tool must keep following, so a regression is possible; the unit tests named above guard the known cases
 - Everything depends on Teams web staying free of script injection, which this project does not control
 

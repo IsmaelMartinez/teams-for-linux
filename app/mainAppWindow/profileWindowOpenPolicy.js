@@ -5,7 +5,8 @@
  * Profile views historically installed NO `setWindowOpenHandler` at all — only
  * the root window has one (`onNewWindow` in mainAppWindow/index.js) — so every
  * `window.open()` from a profile view took Electron's default path: a bare new
- * BrowserWindow inheriting the view's partition and preload. This policy ports
+ * BrowserWindow inheriting the view's partition (and, on Electron 45, no
+ * preload: the popup is sandboxed and context-isolated). This policy ports
  * the ONE part of the root behaviour that is provably safe per view:
  *
  *   - Teams deep links matching `meetupJoinRegEx` (meeting joins, but the

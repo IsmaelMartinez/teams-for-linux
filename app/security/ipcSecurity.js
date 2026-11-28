@@ -26,9 +26,13 @@ const { validateIpcChannel, isSenderAllowed } = require("./ipcValidator");
  * startup; calling it twice would double-wrap every registration.
  *
  * @param {import("electron").IpcMain} ipcMain
- * @param {{ error: Function }} [logger] - defaults to console
+ * @param {{ error: Function, warn: Function }} [logger] - defaults to console
+ * @param {(url: string) => boolean} [isTrustedPage] - the rule for channels
+ *   that answer trusted web pages (see ipcValidator.js); resolved on every
+ *   message, so it may read state that appears after installation. Without it
+ *   only the static rule applies.
  */
-function installIpcSecurity(ipcMain, logger = console) {
+function installIpcSecurity(ipcMain, logger = console, isTrustedPage = undefined) {
   const originalHandle = ipcMain.handle.bind(ipcMain);
   const originalOn = ipcMain.on.bind(ipcMain);
   const originalRemoveListener = ipcMain.removeListener.bind(ipcMain);
@@ -83,13 +87,37 @@ function installIpcSecurity(ipcMain, logger = console) {
     if (index !== -1) registered.splice(index, 1);
   }
 
+  // Channel -> number of sender refusals. Refusals are routine on a sign-in
+  // page (the preload's tools still call their channels there), so only the
+  // first one per channel is logged and the rest are counted silently.
+  const senderRefusals = new Map();
+
+  // A scheme only: the host of a sign-in page identifies the user's employer.
+  function senderScheme(event) {
+    try {
+      return new URL(event.senderFrame.url).protocol.slice(0, -1);
+    } catch {
+      return "unknown";
+    }
+  }
+
+  function noteSenderRefusal(channel, kind, event) {
+    const count = senderRefusals.get(channel) ?? 0;
+    senderRefusals.set(channel, count + 1);
+    if (count === 0) {
+      logger.warn(`[IPC Security] Rejected ${kind} from an untrusted sender for channel: ${channel}`, {
+        scheme: senderScheme(event),
+      });
+    }
+  }
+
   function isAllowed(channel, event, args, kind) {
     if (!validateIpcChannel(channel, args.length > 0 ? args[0] : null)) {
       logger.error(`[IPC Security] Rejected ${kind} for channel: ${channel}`);
       return false;
     }
-    if (!isSenderAllowed(channel, event)) {
-      logger.error(`[IPC Security] Rejected ${kind} from an untrusted sender for channel: ${channel}`);
+    if (!isSenderAllowed(channel, event, isTrustedPage)) {
+      noteSenderRefusal(channel, kind, event);
       return false;
     }
     return true;

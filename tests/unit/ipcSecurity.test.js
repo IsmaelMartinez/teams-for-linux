@@ -8,8 +8,10 @@ const { pathToFileURL } = require('node:url');
 
 const { installIpcSecurity } = require('../../app/security/ipcSecurity');
 
-const ALLOWED = 'webauthn:touch-cancel';
-const OTHER_ALLOWED = 'webauthn:pin-cancel';
+// Any-sender channels: the tests using these are about registration and
+// removal, not about who sent the message, and they emit bare events.
+const ALLOWED = 'get-zoom-level';
+const OTHER_ALLOWED = 'get-config';
 const BLOCKED = 'not-an-allowlisted-channel';
 
 /**
@@ -25,7 +27,7 @@ function fakeIpcMain() {
 
 // validateIpcChannel warns on the console for every blocked channel, and the
 // wrapper logs its own line. Neither is what is under test.
-const silent = { error() {} };
+const silent = { error() {}, warn() {} };
 let originalWarn;
 
 beforeEach(() => {
@@ -325,7 +327,7 @@ describe('IPC security - picker-only channels', () => {
     assert.strictEqual(await ipcMain.invokeHandlers.get(PICKER_CHANNEL)(appPage, { types: ['screen'] }), 'sources');
   });
 
-  it('leaves other channels open to any sender', async () => {
+  it('leaves an any-sender channel open to any page', async () => {
     const ipcMain = fakeIpcMain();
     installIpcSecurity(ipcMain, silent);
     ipcMain.handle(ALLOWED, () => 'result');
@@ -400,5 +402,144 @@ describe('IPC security - listener failures', () => {
     assert.deepStrictEqual(unhandled, []);
     assert.strictEqual(logger.errors.length, 1);
     assert.strictEqual(logger.errors[0][1].name, 'Error');
+  });
+});
+
+// ADR-035: the preload runs on every page the Teams window shows, so channels
+// outside the pinned and any-sender lists answer only the app's own pages and
+// trusted web pages.
+describe('IPC security - channels that answer trusted pages', () => {
+  const CLASS_3 = 'show-notification';
+  const trusted = { senderFrame: { url: 'https://teams.microsoft.com/v2/' } };
+  const untrusted = { senderFrame: { url: 'https://sso.corp.example/login?user=alice' } };
+
+  function recordingLogger() {
+    const warnings = [];
+    const errors = [];
+    return {
+      warnings,
+      errors,
+      warn: (...args) => warnings.push(args),
+      error: (...args) => errors.push(args),
+    };
+  }
+
+  it('refuses an on() event from an untrusted sender and accepts a trusted one', () => {
+    const ipcMain = fakeIpcMain();
+    installIpcSecurity(ipcMain, silent);
+    const seen = [];
+    ipcMain.on(CLASS_3, (_event, payload) => seen.push(payload));
+
+    ipcMain.emit(CLASS_3, untrusted, 'refused');
+    ipcMain.emit(CLASS_3, trusted, 'accepted');
+
+    assert.deepStrictEqual(seen, ['accepted']);
+  });
+
+  it('refuses a once() event without consuming the listener', () => {
+    const ipcMain = fakeIpcMain();
+    installIpcSecurity(ipcMain, silent);
+    const seen = [];
+    ipcMain.once(CLASS_3, (_event, payload) => seen.push(payload));
+
+    ipcMain.emit(CLASS_3, untrusted, 'refused');
+    assert.strictEqual(ipcMain.listenerCount(CLASS_3), 1);
+    ipcMain.emit(CLASS_3, trusted, 'accepted');
+    ipcMain.emit(CLASS_3, trusted, 'again');
+
+    assert.deepStrictEqual(seen, ['accepted']);
+    assert.strictEqual(ipcMain.listenerCount(CLASS_3), 0);
+  });
+
+  it('rejects a handle() request from an untrusted sender and serves a trusted one', async () => {
+    const ipcMain = fakeIpcMain();
+    installIpcSecurity(ipcMain, silent);
+    let calls = 0;
+    ipcMain.handle(CLASS_3, () => { calls += 1; return 'result'; });
+    const handler = ipcMain.invokeHandlers.get(CLASS_3);
+
+    await assert.rejects(() => handler(untrusted, {}), /Unauthorized IPC channel/);
+    assert.strictEqual(calls, 0);
+    assert.strictEqual(await handler(trusted, {}), 'result');
+  });
+
+  it('accepts the configured origin through the predicate, resolved on every message', () => {
+    const ipcMain = fakeIpcMain();
+    let trustedNow = false;
+    installIpcSecurity(ipcMain, silent, () => trustedNow);
+    const seen = [];
+    ipcMain.on(CLASS_3, (_event, payload) => seen.push(payload));
+
+    ipcMain.emit(CLASS_3, untrusted, 'before');
+    trustedNow = true;
+    ipcMain.emit(CLASS_3, untrusted, 'after');
+
+    assert.deepStrictEqual(seen, ['after']);
+  });
+
+  it('lets an in-process emit with no event reach the listener', () => {
+    const ipcMain = fakeIpcMain();
+    installIpcSecurity(ipcMain, silent);
+    let calls = 0;
+    ipcMain.on('config-file-changed', () => { calls += 1; });
+
+    ipcMain.emit('config-file-changed');
+
+    assert.strictEqual(calls, 1);
+  });
+
+  it('logs the first refusal per channel, with the scheme only, and counts the rest silently', () => {
+    const ipcMain = fakeIpcMain();
+    const logger = recordingLogger();
+    installIpcSecurity(ipcMain, logger);
+    ipcMain.on(CLASS_3, () => {});
+    ipcMain.on('get-sticker-list', () => {});
+
+    for (let i = 0; i < 5; i += 1) ipcMain.emit(CLASS_3, untrusted, {});
+    ipcMain.emit('get-sticker-list', untrusted, {});
+
+    assert.strictEqual(logger.warnings.length, 2);
+    assert.ok(logger.warnings[0][0].includes(CLASS_3));
+    assert.deepStrictEqual(logger.warnings[0][1], { scheme: 'https' });
+    assert.ok(logger.warnings[1][0].includes('get-sticker-list'));
+    assert.strictEqual(logger.errors.length, 0);
+  });
+
+  it('never logs the sender host, path or query', () => {
+    const ipcMain = fakeIpcMain();
+    const logger = recordingLogger();
+    installIpcSecurity(ipcMain, logger);
+    ipcMain.on(CLASS_3, () => {});
+    ipcMain.handle('get-sticker-list', () => {});
+
+    ipcMain.emit(CLASS_3, untrusted, {});
+    ipcMain.invokeHandlers.get('get-sticker-list')(untrusted, {}).catch(() => {});
+
+    const logged = JSON.stringify([logger.warnings, logger.errors]);
+    assert.ok(!logged.includes('sso.corp.example'), logged);
+    assert.ok(!logged.includes('alice'), logged);
+  });
+
+  it('logs the scheme as unknown when the sender frame is gone', () => {
+    const ipcMain = fakeIpcMain();
+    const logger = recordingLogger();
+    installIpcSecurity(ipcMain, logger);
+    ipcMain.on(CLASS_3, () => {});
+
+    ipcMain.emit(CLASS_3, { get senderFrame() { throw new Error('disposed'); } }, {});
+
+    assert.deepStrictEqual(logger.warnings[0][1], { scheme: 'unknown' });
+  });
+
+  it('keeps logging unknown-channel rejections at error level every time', () => {
+    const ipcMain = fakeIpcMain();
+    const logger = recordingLogger();
+    installIpcSecurity(ipcMain, logger);
+    ipcMain.on(BLOCKED, () => {});
+
+    ipcMain.emit(BLOCKED, trusted, {});
+    ipcMain.emit(BLOCKED, trusted, {});
+
+    assert.strictEqual(logger.errors.length, 2);
   });
 });

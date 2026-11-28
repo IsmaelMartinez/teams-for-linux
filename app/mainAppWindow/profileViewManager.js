@@ -92,6 +92,7 @@ class ProfileViewManager {
   #config;
   #bindDisplayMediaHandler;
   #bindWindowOpenHandler;
+  #bindNavigationGuard;
   #onViewDidFinishLoad;
   #setTitleOverride;
   #views = new Map();
@@ -149,6 +150,9 @@ class ProfileViewManager {
    *   Sets the window title from the active profile view's page title, or
    *   hands it back to the root window (Profile 0) with null. Electron only
    *   mirrors the root webContents' title onto the window (#3068).
+   * @param {(webContents: Electron.WebContents) => void} [bindNavigationGuard]
+   *   Watches each profile view's main-frame navigations away from the trusted
+   *   sites, as for the root window (security/navigationGuard.js).
    */
   constructor(
     window,
@@ -157,8 +161,10 @@ class ProfileViewManager {
     bindDisplayMediaHandler,
     bindWindowOpenHandler = () => {},
     onViewDidFinishLoad = () => {},
-    setTitleOverride = () => {}
+    setTitleOverride = () => {},
+    bindNavigationGuard = () => {}
   ) {
+    this.#bindNavigationGuard = bindNavigationGuard;
     this.#window = window;
     this.#profilesManager = profilesManager;
     this.#config = config;
@@ -559,6 +565,7 @@ class ProfileViewManager {
     this.#bindWindowOpenHandler(view.webContents, view.webContents, () =>
       this.#activate(profileId)
     );
+    this.#bindNavigationGuard(view.webContents);
     // The root window injects the screen-sharing script on every
     // did-finish-load of its own webContents; profile views need the same,
     // or a share from a second profile runs with Teams' raw constraints
@@ -623,10 +630,11 @@ class ProfileViewManager {
         }
       }
     });
-    // Attribute anything this view spawns to its profile. A popup genuinely
-    // shares the view's partition and preload (window.open inherits them from
-    // the opener); a <webview> guest has its own, but it lives inside this
-    // profile's surface, so its IPC still belongs to this profile.
+    // Attribute anything this view spawns to its profile. A popup shares the
+    // view's partition but not its preload: Electron 45 gives it none, with a
+    // sandbox and context isolation (ADR-035); a <webview> guest has its own,
+    // but it lives inside this profile's surface, so its IPC still belongs to
+    // this profile.
     this.#watchDescendants(view.webContents, {
       profileId,
       loadTarget: view.webContents,
@@ -654,9 +662,17 @@ class ProfileViewManager {
       }
     });
 
-    view.webContents.loadURL(this.#urlFor(profile), {
-      userAgent: this.#config.chromeUserAgent,
-    });
+    // Not awaited. The load rejects when a redirect interrupts it (ERR_ABORTED)
+    // or the navigation guard cancels one (ERR_FAILED), and the process-wide
+    // unhandledRejection handler exits on anything it cannot classify. Only the
+    // error code is logged: the message carries the URL.
+    view.webContents
+      .loadURL(this.#urlFor(profile), { userAgent: this.#config.chromeUserAgent })
+      .catch((error) => {
+        console.debug("[ProfileViewManager] Initial load interrupted", {
+          code: error?.code ?? error?.errno,
+        });
+      });
   }
 
   // A URL saved before https was enforced would otherwise load with the full

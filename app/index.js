@@ -21,6 +21,7 @@ const { allowedChannels } = require("./security/ipcValidator");
 const { installIpcSecurity } = require("./security/ipcSecurity");
 const { installWebviewGuard } = require("./security/webviewGuard");
 const { installPermissionHandlers } = require("./security/permissions");
+const { createTrustedPageCheck } = require("./security/trustedPages");
 const { sanitize: sanitizePii } = require("./utils/logSanitizer");
 const { isPreLoginAuthNoise, parseChunkLoadFailure, formatChunkLoadWarning } = require("./utils/rendererErrors");
 const { register: registerGlobalShortcuts, sendKeyboardEventToWindow } = require("./globalShortcuts");
@@ -181,6 +182,26 @@ const partitionsManager = new PartitionsManager(appConfig.settingsStore);
 // keeping the renderer surface byte-identical with the flag off.
 const profilesManager = new ProfilesManager(appConfig.settingsStore);
 
+// https profile URLs, trusted alongside config.url by the permission handlers,
+// the IPC sender check and the navigation guard. Cached because electron-store
+// re-reads its JSON on every access and permission checks are frequent; profile
+// events invalidate it.
+let profileUrlCache = null;
+const invalidateProfileUrls = () => {
+  profileUrlCache = null;
+};
+profilesManager.on("add", invalidateProfileUrls);
+profilesManager.on("update", invalidateProfileUrls);
+profilesManager.on("remove", invalidateProfileUrls);
+const getProfileUrls = () => {
+  profileUrlCache ??= profilesManager
+    .list()
+    .map((p) => p.url)
+    .filter((url) => typeof url === "string" && url.startsWith("https://"));
+  return profileUrlCache;
+};
+const isTrustedPage = createTrustedPageCheck(() => [config.url, ...getProfileUrls()]);
+
 // Per-profile WebContentsView lifecycle. Only constructed when the
 // multi-account flag is on; the manager is wired to the main window
 // after `mainAppWindow.onAppReady` resolves.
@@ -264,7 +285,9 @@ if (gotTheLock) {
   // IPC call is validated against the allowlist in app/security/ipcValidator.js.
   // The wrapping also covers removal, so listeners registered per short-lived
   // window can actually be taken off again. See app/security/ipcSecurity.js.
-  installIpcSecurity(ipcMain);
+  // Channels outside the pinned and any-sender lists answer only the app's own
+  // pages and trusted web pages (the configured and profile URLs included).
+  installIpcSecurity(ipcMain, console, isTrustedPage);
   // Refuse every <webview> attach (GHSA-6xpg-fhf9-chcr). See app/security/webviewGuard.js.
   installWebviewGuard(app);
 
@@ -770,24 +793,9 @@ async function handleAppReady() {
     // Device permissions only for Teams, sign-in and the app's own pages
     // (GHSA-58j7-22f8-6xqp). Same timing as above, so profile partitions are
     // caught by the session-created listener.
-    // Cached because electron-store re-reads its JSON on every access and
-    // permission checks are frequent; profile events invalidate it.
-    let profileUrlCache = null;
-    const invalidateProfileUrls = () => {
-      profileUrlCache = null;
-    };
-    profilesManager.on("add", invalidateProfileUrls);
-    profilesManager.on("update", invalidateProfileUrls);
-    profilesManager.on("remove", invalidateProfileUrls);
-    installPermissionHandlers(config, app, session.defaultSession, () => {
-      profileUrlCache ??= profilesManager
-        .list()
-        .map((p) => p.url)
-        .filter((url) => typeof url === "string" && url.startsWith("https://"));
-      return profileUrlCache;
-    });
+    installPermissionHandlers(config, app, session.defaultSession, getProfileUrls);
 
-    await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService, profilesManager);
+    await mainAppWindow.onAppReady(appConfig, customBackground, screenSharingService, profilesManager, isTrustedPage);
 
     // Flatpak only: record the background permission with the desktop portal
     // and set the Background Apps status line (issue #2815). No-op elsewhere.
@@ -806,7 +814,8 @@ async function handleAppReady() {
           mainAppWindow.bindDisplayMediaHandler,
           mainAppWindow.bindWindowOpenHandler,
           mainAppWindow.injectScreenSharingLogic,
-          mainAppWindow.setTitleOverride
+          mainAppWindow.setTitleOverride,
+          mainAppWindow.bindNavigationGuard
         );
         profileViewManager.initialize();
         const {
