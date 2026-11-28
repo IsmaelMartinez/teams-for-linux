@@ -169,8 +169,8 @@ const shared = {
 		getCalendar: {
 			description: 'Publish your calendar events between two dates. Needs the Graph API integration.',
 			args: [
-				{ name: 'startDate', type: 'string', required: true, format: 'date-time', description: 'Start of the range, ISO 8601.' },
-				{ name: 'endDate', type: 'string', required: true, format: 'date-time', description: 'End of the range, ISO 8601.' },
+				{ name: 'startDate', type: 'string', required: true, format: 'date-time', description: 'Start of the range, an ISO 8601 date or date-time.' },
+				{ name: 'endDate', type: 'string', required: true, format: 'date-time', description: 'End of the range, an ISO 8601 date or date-time, after the start and at most 366 days from it.' },
 			],
 			effect: 'calendar',
 		},
@@ -252,7 +252,7 @@ const mqtt = {
 			},
 		},
 		{
-			id: 'calendar', fixedSubtopic: 'calendar', retained: false, gate: 'graphApi.enabled', requires: ['mqtt.commandTopic'], command: 'getCalendar',
+			id: 'calendar', fixedSubtopic: 'calendar', retained: false, gate: 'graphApi.enabled', requires: ['mqtt.commandTopic', 'mqtt.calendarExport.enabled'], command: 'getCalendar',
 			description: 'Calendar events, published only in answer to a get-calendar command.',
 			payload: {
 				format: 'json',

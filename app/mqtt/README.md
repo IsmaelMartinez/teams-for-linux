@@ -59,6 +59,7 @@ The MQTT module is configured through the main application configuration. Add th
 - **homeAssistant.discoveryPrefix**: `string` - HA discovery topic prefix (default: "homeassistant")
 - **homeAssistant.deviceName**: `string` - Device name shown in Home Assistant (default: "Teams for Linux")
 - **incomingCallCaller.enabled**: `boolean` - Publish the ringing call's caller (name, number, call queue) as JSON to `{topicPrefix}/incoming-call/caller` (default: false, since it sends callers' personal details to the broker — see issue #3019)
+- **calendarExport.enabled**: `boolean` - Let the `get-calendar` command publish your calendar events to the broker (default: true; needs `graphApi.enabled` and a command topic). When false, `get-calendar` commands are refused.
 - **meetingStartDetection.enabled**: `boolean` - Enable detection of a scheduled meeting starting, published as a pulse to `{topicPrefix}/meeting-started` (default: false, experimental — see issue #2587). Both the primary and DOM-fallback detection paths are described in [app/browser/tools/README.md](../browser/tools/README.md); an earlier calendar-polling design was dropped in favor of this approach and lives in [git history](https://github.com/IsmaelMartinez/teams-for-linux/commits/main/docs-site/docs/development/plan/mqtt-incoming-call-plan.md) under `docs-site/docs/development/plan/mqtt-incoming-call-plan.md`.
 - **meetingStartDetection.patterns**: `string[]` - Case-insensitive regular expressions for the DOM fallback path (default: `["meeting started", "started the meeting"]`; English-only — override for other Teams UI languages). Primary detection uses Teams' internal command stream and ignores these.
 - **meetingStartDetection.resetSeconds**: `number` - Seconds before the meeting-started topic auto-resets to `false` (default: 10)
@@ -118,7 +119,9 @@ Command messages should be sent as JSON with the following structure:
 - `toggle-video` - Toggle video on/off (Ctrl+Shift+O)
 - `toggle-hand-raise` - Toggle hand raise in meeting (Ctrl+Shift+K)
 - `leave` - Leave/hang up the active call (Ctrl+Shift+H)
-- `get-calendar` - Publish calendar events between `startDate` and `endDate` (ISO 8601) to `{topicPrefix}/calendar`; needs `graphApi.enabled` and a command topic (no shortcut)
+- `get-calendar` - Publish calendar events between `startDate` and `endDate` to `{topicPrefix}/calendar`; needs `graphApi.enabled`, `calendarExport.enabled` and a command topic (no shortcut). The dates are ISO 8601 strings (`2025-11-27` or `2025-11-27T10:00`, with optional seconds, fraction and `Z` or offset), the start before the end, at most 366 days apart
+
+Command messages are ignored when they are retained or longer than 2048 bytes, and only the arguments declared for the command are read (`app/mqtt/index.js`, `handleMessage` and `handleCommand`). `app/mqtt/calendarCommand.js` handles `get-calendar`. A plain `mqtt://` broker that is not on this machine logs a one-time warning that the connection is not encrypted.
 
 The generated [automation contract reference](../../docs-site/docs/automation-contract-generated.md) lists every topic, payload and command, and the AsyncAPI document it links describes the MQTT side.
 

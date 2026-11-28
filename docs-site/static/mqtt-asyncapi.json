@@ -170,7 +170,7 @@
     },
     "calendar": {
       "address": "{topicPrefix}/calendar",
-      "description": "Calendar events, published only in answer to a get-calendar command. The subtopic is fixed. Needs graphApi.enabled and mqtt.commandTopic. Not retained.",
+      "description": "Calendar events, published only in answer to a get-calendar command. The subtopic is fixed. Needs graphApi.enabled and mqtt.commandTopic and mqtt.calendarExport.enabled. Not retained.",
       "parameters": {
         "topicPrefix": {
           "$ref": "#/components/parameters/topicPrefix"
@@ -734,12 +734,12 @@
                 },
                 "startDate": {
                   "type": "string",
-                  "description": "Start of the range, ISO 8601.",
+                  "description": "Start of the range, an ISO 8601 date or date-time.",
                   "format": "date-time"
                 },
                 "endDate": {
                   "type": "string",
-                  "description": "End of the range, ISO 8601.",
+                  "description": "End of the range, an ISO 8601 date or date-time, after the start and at most 366 days from it.",
                   "format": "date-time"
                 }
               }

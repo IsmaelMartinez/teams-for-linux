@@ -1,9 +1,12 @@
 const { app, ipcMain } = require('electron');
 const { getMediaTopics } = require('./mediaTopics');
-const { shared, mqtt: mqttContract } = require('../control/contract');
+const { mqtt: mqttContract } = require('../control/contract');
+const { sanitizeCaller } = require('../control/sanitizeCaller');
+const { errorCode } = require('./index');
 
-const CALLER_FIELDS = shared.caller.fields.map(({ name }) => name);
 const RETAINED = Object.fromEntries(mqttContract.topics.map(({ id, retained }) => [id, retained]));
+// The states the microphone topic can carry; anything else the page sends is dropped.
+const MICROPHONE_PUBLISHED = new Set(mqttContract.topics.find(({ id }) => id === 'microphone').payload.values);
 
 /**
  * MQTT Media Status Service
@@ -77,7 +80,7 @@ class MQTTMediaStatusService {
 			await this.#mqttClient.publish(topic, value, { retain: RETAINED[topicId] });
 			console.debug(`[MQTTMediaStatusService] ${label}, published`);
 		} catch (error) {
-			console.error(`[MQTTMediaStatusService] Failed to publish ${subtopic}:`, { message: error.message });
+			console.error(`[MQTTMediaStatusService] Failed to publish a message:`,errorCode(error));
 		}
 	}
 
@@ -117,12 +120,7 @@ class MQTTMediaStatusService {
 	 * payload are kept out of the log, since it holds names and numbers.
 	 */
 	async #publishIncomingCallCaller(details) {
-		const caller = {};
-		for (const key of CALLER_FIELDS) {
-			if (details?.[key] !== undefined && details[key] !== null) {
-				caller[key] = details[key];
-			}
-		}
+		const caller = { ...sanitizeCaller(details) };
 		caller.timestamp = new Date().toISOString();
 		caller.clientId = this.#clientId;
 		try {
@@ -130,7 +128,7 @@ class MQTTMediaStatusService {
 			await this.#mqttClient.publish(topic, JSON.stringify(caller), { retain: RETAINED.incomingCallCaller });
 			console.debug('[MQTTMediaStatusService] Incoming call caller published');
 		} catch (error) {
-			console.error('[MQTTMediaStatusService] Failed to publish the incoming call caller:', { message: error.message });
+			console.error('[MQTTMediaStatusService] Failed to publish the incoming call caller:', errorCode(error));
 		}
 	}
 
@@ -175,10 +173,12 @@ class MQTTMediaStatusService {
 	}
 
 	async #handleCameraChanged(event, enabled) {
+		if (typeof enabled !== 'boolean') return;
 		await this.#publishBoolean('camera', String(enabled), 'Camera state changed');
 	}
 
 	async #handleMicrophoneChanged(event, state) {
+		if (!MICROPHONE_PUBLISHED.has(state)) return;
 		await this.#publishMicrophoneState(state);
 
 		const controlState = this.#toMicrophoneControlState(state);

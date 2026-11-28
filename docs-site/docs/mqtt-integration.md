@@ -107,6 +107,7 @@ Add these options under the `mqtt` key in your `config.json`:
 | `commandTopic` | `string` | `""` | Topic name for receiving commands (inbound). Leave empty or omit to disable command reception (status publishing only). Set to `"command"` to enable. |
 | `statusCheckInterval` | `number` | `10000` | Polling fallback interval in milliseconds |
 | `mediaTopics` | `object` | see [Media Topics](#media-topics) | Custom topic names for media state topics |
+| `calendarExport.enabled` | `boolean` | `true` | Let the `get-calendar` command publish your calendar events to the broker. Needs `graphApi.enabled` and a command topic; set it to `false` and `get-calendar` commands are refused (see [Calendar Data Export](#calendar-data-export)) |
 
 ### Topic Structure
 
@@ -143,7 +144,7 @@ All keys are optional; omitted keys fall back to the defaults shown above. [Home
 
 ### Broker URL Formats
 
-- **Plain TCP**: `mqtt://broker.example.com:1883`. The password and every message travel in clear text.
+- **Plain TCP**: `mqtt://broker.example.com:1883`. The password and every message travel in clear text, so when the app connects to a plain `mqtt://` (or `ws://`) broker that is not on this machine it logs a warning saying so, and with a command topic set it adds that anyone on the network path can send commands. The warning never names the host, URL or topic. Connections to `localhost`, `127.0.0.0/8` addresses and `::1` do not warn.
 - **TLS/SSL**: `mqtts://broker.example.com:8883`. The broker's certificate is verified with the default settings only; there is no option for a private certificate authority, a client certificate or skipping verification, so the broker needs a certificate your system already trusts.
 
 :::note WebSocket Support
@@ -277,6 +278,9 @@ Commands are validated with multiple security measures:
 
 - **Action Whitelist**: Only the supported actions are allowed
 - **JSON Validation**: Commands must be valid JSON
+- **Declared Arguments Only**: Only the arguments listed for a command are read, and an argument of the wrong type counts as absent, so `"force": "true"` is the same as no `force`. Any other property in the message is ignored
+- **Size Limit**: A command message longer than 2048 bytes is ignored without being parsed
+- **No Retained Commands**: A command published with the retain flag is ignored, with one warning in the log, because the broker would deliver it again on every reconnect. Publish commands without the retain flag
 - **Localhost Recommended**: For maximum security, use a localhost MQTT broker
 
 :::warning Security Notice
@@ -286,7 +290,7 @@ Most commands trigger Teams keyboard shortcuts, but `get-calendar` publishes you
 ## Calendar Data Export
 
 :::info Prerequisites
-Calendar export requires **Graph API** to be enabled in your configuration, and a command topic to be set. See [Configuration Options](#configuration-options) for MQTT setup.
+Calendar export requires **Graph API** to be enabled in your configuration, and a command topic to be set. It is on by default; set `mqtt.calendarExport.enabled` to `false` to refuse `get-calendar` commands. See [Configuration Options](#configuration-options) for MQTT setup.
 :::
 
 :::warning Your calendar goes to the broker
@@ -315,8 +319,10 @@ The `get-calendar` command retrieves calendar events for a specified date range:
 **Parameters:**
 
 - `action`: Must be `"get-calendar"`
-- `startDate`: ISO 8601 datetime string (start of date range)
-- `endDate`: ISO 8601 datetime string (end of date range)
+- `startDate`: ISO 8601 date or date-time string (start of date range)
+- `endDate`: ISO 8601 date or date-time string (end of date range)
+
+Both must be strings in the form `2025-11-27` or `2025-11-27T10:00`, where the date-time can add seconds, a fraction and `Z` or an offset such as `+01:00`. Anything else, including free text after a date, is refused. The start must be before the end and the range at most 366 days. A refused command is logged with a general reason and never with the values you sent.
 
 **Response Topic:** `<topicPrefix>/calendar` (`teams/calendar` with the default prefix). It is not retained, so only subscribers connected when the response is published receive it.
 

@@ -1042,6 +1042,9 @@ module.exports = {
           incomingCallCaller: {
             enabled: false,
           },
+          calendarExport: {
+            enabled: true,
+          },
           meetingStartDetection: {
             enabled: false,
             patterns: ["meeting started", "started the meeting"],
@@ -1109,6 +1112,11 @@ module.exports = {
             type: "boolean",
             describe:
               "Publish the ringing call's caller (name, number, call queue) as JSON to the incoming-call/caller topic, and carry it in the D-Bus incoming-call caller signal and state. Off by default because it sends callers' personal details to the broker and the session bus.",
+          },
+          "calendarExport.enabled": {
+            type: "boolean",
+            describe:
+              "Let the get-calendar command publish your calendar events to the broker. Needs graphApi.enabled and a command topic; when off, get-calendar commands are refused.",
           },
           "meetingStartDetection.enabled": {
             type: "boolean",
