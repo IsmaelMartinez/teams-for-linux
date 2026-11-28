@@ -17,7 +17,7 @@ The generated [automation contract reference](../automation-contract-generated.m
 | --- | --- | --- |
 | `AcceptAudio`, `AcceptVideo`, `DeclineCall` | `() -> b` | Dispatch the corresponding action for the known incoming call |
 | `ToggleMute`, `ToggleVideo`, `ToggleHandRaise`, `LeaveCall` | `() -> b` | Use the application's fixed Teams shortcut mapping |
-| `Mute`, `Unmute` | `(b force) -> b` | Set desired mute state; already-desired state returns false. Unknown state requires `force=true`; argument must be Boolean. |
+| `Mute`, `Unmute` | `(b force) -> b` | Set desired mute state; already-desired state returns false. An unknown or `off` microphone state requires `force=true`; argument must be Boolean. |
 | `SetStatus` | `(s status) -> b` | Set the selected profile's Teams status. Accepted values are `available`, `busy`, `do_not_disturb`, `away`, `be_right_back`, and `offline`. |
 | `GetState` | `() -> s` | Current JSON state snapshot |
 
@@ -27,7 +27,7 @@ The generated [automation contract reference](../automation-contract-generated.m
 
 Signals: `StateChanged(s stateJson)`, `PresenceChanged(s status, i statusCode)`, `InCallChanged(b)`, `IncomingCallChanged(b)`, `IncomingCallCallerChanged(s callerJson)`, `CameraChanged(b)`, `MicrophoneChanged(s)`, `MicrophoneControlChanged(s)`, `ScreenSharingChanged(b)`, `MeetingStartedChanged(b)`, and `CallParticipantsChanged(s participantsJson)`. `StateChanged` carries the full snapshot; typed signals follow when values change. Call `GetState` after connecting for an immediate snapshot. No D-Bus properties are exported because the installed dbus-native version exposes properties read/write.
 
-The snapshot has exactly eleven keys: `presenceStatus`, `presenceStatusCode`, `inCall`, `incomingCall`, `incomingCallCaller`, `cameraEnabled`, `microphoneState`, `microphoneControlState`, `screenSharing`, `meetingStarted`, `callParticipants`. Presence, call and media state are scoped to the selected profile, not an aggregate across accounts; unobserved values are false/unknown rather than stale data from another profile. Incoming-call fields describe the latest ringing renderer, independently of the selected profile. Initial presence/microphone state is unknown, booleans are false, and caller is null. These are observations, not server-confirmed Teams state.
+The generated [automation contract reference](../automation-contract-generated.md#observed-state) describes each field. `presenceStatus` is one of `unknown`, `available`, `busy`, `do_not_disturb`, `away` or `be_right_back`; `SetStatus` also accepts `offline`, which can be set but is never observed. The snapshot has exactly eleven keys: `presenceStatus`, `presenceStatusCode`, `inCall`, `incomingCall`, `incomingCallCaller`, `cameraEnabled`, `microphoneState`, `microphoneControlState`, `screenSharing`, `meetingStarted`, `callParticipants`. Presence, call and media state are scoped to the selected profile, not an aggregate across accounts (MQTT, unlike this service, does not follow the selected profile: its state topics report whichever profile last reported, and its keyboard-shortcut commands go to the main window); unobserved values are false/unknown rather than stale data from another profile. Incoming-call fields describe the latest ringing renderer, independently of the selected profile. Initial presence/microphone state is unknown, booleans are false, and caller is null. These are observations, not server-confirmed Teams state.
 
 Caller information remains opt-in through `config.mqtt.incomingCallCaller.enabled`, independently of MQTT being enabled. If enabled, caller details may appear in broadcast state signals. The same opt-in requirement applies to other transports; D-Bus caller identity is not used for authorization. The bus API is available to clients on the user session bus and does not add per-caller access control.
 
@@ -39,7 +39,7 @@ This option reads the call tiles from Teams' own page markup. Microsoft changes 
 
 Set `dbusControl.callParticipants` to `true` (with `dbusControl.enabled`, restart required) to publish who is in the current call and who is speaking. It is off by default and applies to D-Bus only; MQTT never receives it.
 
-`callParticipants` is `null` outside a call or when the option is off. In a call it is a JSON array sorted by name:
+`callParticipants` is `null` outside a call or when the option is off. In a call it is a JSON array sorted by name (the sort happens in the Teams page, in `app/browser/tools/callParticipants.js`, and the service passes the array on unchanged):
 
 ```json
 [{ "name": "Ada Lovelace", "speaking": true }, { "name": "Grace Hopper", "speaking": false }]

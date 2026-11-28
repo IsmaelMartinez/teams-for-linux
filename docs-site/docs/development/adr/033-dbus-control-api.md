@@ -8,7 +8,7 @@ id: 033-dbus-control-api
 
 ✅ Implemented (v2.25.0 onwards)
 
-The first version shipped in v2.25.0 ([PR #3059](https://github.com/IsmaelMartinez/teams-for-linux/pull/3059)), per-instance bus names in v2.26.0 ([PR #3094](https://github.com/IsmaelMartinez/teams-for-linux/pull/3094)), the device-bridge guide in v2.29.0 ([PR #3153](https://github.com/IsmaelMartinez/teams-for-linux/pull/3153)) and `SetStatus` on 2026-11-07 ([PR #3178](https://github.com/IsmaelMartinez/teams-for-linux/pull/3178)), which lands in the release after v2.30.0.
+The first version shipped in v2.25.0 ([PR #3059](https://github.com/IsmaelMartinez/teams-for-linux/pull/3059)), per-instance bus names in v2.26.0 ([PR #3094](https://github.com/IsmaelMartinez/teams-for-linux/pull/3094)), the device-bridge guide in v2.29.0 ([PR #3153](https://github.com/IsmaelMartinez/teams-for-linux/pull/3153)) and `SetStatus` in v2.31.0 ([PR #3178](https://github.com/IsmaelMartinez/teams-for-linux/pull/3178)).
 
 ## Context
 
@@ -27,7 +27,7 @@ The implementation is split so the transport is replaceable:
 - `app/control/teamsControlService.js` and `teamsStateService.js` are transport-neutral. They own the fixed shortcut mappings, incoming-call action dispatch, the authenticated presence request and the state snapshot. Arbitrary shortcut input and Graph or calendar access are deliberately outside this service.
 - `app/dbus/controlService.js` adapts that service to D-Bus: it owns the well-known name, exports the fixed `com.github.IsmaelMartinez.teams_for_linux.Control` interface at `/com/github/IsmaelMartinez/teams_for_linux`, publishes `StateChanged` plus typed change signals, and releases everything on stop. It uses `@homebridge/dbus-native`.
 
-The interface carries named methods only: `AcceptAudio`, `AcceptVideo`, `DeclineCall`, `ToggleMute`, `ToggleVideo`, `ToggleHandRaise`, `LeaveCall`, `Mute` and `Unmute` with a `force` flag, `SetStatus`, and `GetState`. There is no arbitrary shortcut method. A `true` return means the action was dispatched, not that Teams acknowledged it. Incoming-call actions target the latest ringing renderer; shortcuts and `SetStatus` target the selected profile and fail closed when its renderer is unavailable. No D-Bus properties are exported, because the installed dbus-native version would expose them read/write; state is read through `GetState` and the signals.
+The interface carries named methods only: `AcceptAudio`, `AcceptVideo`, `DeclineCall`, `ToggleMute`, `ToggleVideo`, `ToggleHandRaise`, `LeaveCall`, `Mute` and `Unmute` with a `force` flag, `SetStatus`, and `GetState`. A `CallParticipantsChanged` signal, behind the opt-in `dbusControl.callParticipants`, carries the names of the remote participants and who is speaking. There is no arbitrary shortcut method. A `true` return means the action was dispatched, not that Teams acknowledged it. Incoming-call actions target the latest ringing renderer; shortcuts and `SetStatus` target the selected profile and fail closed when its renderer is unavailable. No D-Bus properties are exported, because the installed dbus-native version would expose them read/write; state is read through `GetState` and the signals.
 
 State is observation, not server-confirmed Teams state: presence, call and media values are scoped to the selected profile, unobserved values are false or unknown rather than stale data from another profile, and caller identity appears only with the existing `mqtt.incomingCallCaller.enabled` opt-in, which governs both transports.
 

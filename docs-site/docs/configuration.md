@@ -861,6 +861,7 @@ The optional Linux session-bus interface exposes Teams controls and observed pre
 |--------|------|---------|-------------|
 | `dbusControl.enabled` | `boolean` | `false` | Enable the local D-Bus interface |
 | `dbusControl.busName` | `string` | `""` | Service name for this instance. Empty uses the Flatpak app ID or `com.github.IsmaelMartinez.teams_for_linux`. Invalid names disable the service. |
+| `dbusControl.callParticipants` | `boolean` | `false` | Also publish the names of remote call participants and who is speaking (`CallParticipantsChanged`). Names are visible to every process on your session bus. Experimental: it reads Teams call markup, which can change without notice |
 
 For separately launched profiles, set a different `busName` in each profile's `config.json`, such as `com.github.IsmaelMartinez.teams_for_linux.Work` and `com.github.IsmaelMartinez.teams_for_linux.Personal`. The object path and interface remain the same. See the [D-Bus control guide](development/dbus-control.md) for examples, name requirements, and sandbox limitations.
 
@@ -880,6 +881,11 @@ For separately launched profiles, set a different `busName` in each profile's `c
 | `mqtt.homeAssistant.enabled` | `boolean` | `false` | Enable Home Assistant MQTT auto-discovery (publishes discovery configs so HA creates entities automatically) |
 | `mqtt.homeAssistant.discoveryPrefix` | `string` | `"homeassistant"` | MQTT discovery topic prefix used by Home Assistant |
 | `mqtt.homeAssistant.deviceName` | `string` | `"Teams for Linux"` | Device name shown in Home Assistant |
+| `mqtt.mediaTopics` | `object` | see the [MQTT guide](mqtt-integration.md#media-topics) | Custom subtopic names for the call, camera, microphone and screen-sharing topics |
+| `mqtt.incomingCallCaller.enabled` | `boolean` | `false` | Publish the ringing call's caller (name, number, call queue) to the incoming-call/caller topic, and carry it in the D-Bus caller signal. Off by default because it sends callers' personal details to the broker and the session bus |
+| `mqtt.meetingStartDetection.enabled` | `boolean` | `false` | Detect a scheduled meeting starting and publish it as a pulse to the meeting-started topic and the D-Bus meeting-started signal (experimental) |
+| `mqtt.meetingStartDetection.patterns` | `array` | `["meeting started", "started the meeting"]` | Case-insensitive regular expressions for the DOM fallback; the defaults only cover English Teams |
+| `mqtt.meetingStartDetection.resetSeconds` | `number` | `10` | Seconds after which the meeting-started topic resets to false if you never join; joining resets it at once |
 
 **Example MQTT Configuration:**
 ```json
@@ -903,24 +909,7 @@ For separately launched profiles, set a different `busName` in each profile's `c
 }
 ```
 
-**Published Topics:**
-
-When MQTT is enabled, the following topics are automatically published:
-
-| Topic | Payload | Description |
-|-------|---------|-------------|
-| `\{topicPrefix\}/connected` | `"true"` or `"false"` | App connection state (uses MQTT Last Will) |
-| `\{topicPrefix\}/\{statusTopic\}` | JSON object | User presence status (Available, Busy, DND, Away, BRB) |
-| `\{topicPrefix\}/in-call` | `"true"` or `"false"` | Active call state (connected/disconnected). Uses WebRTC fallback for reliable detection even from popup windows. |
-| `\{topicPrefix\}/camera` | `"true"` or `"false"` | Camera on/off state (monitors video sender track via WebRTC, filters out screen-sharing tracks) |
-| `\{topicPrefix\}/microphone` | `"speaking"` \| `"silent"` \| `"muted"` \| `"off"` | Microphone state derived from the WebRTC speaking-indicator. `speaking` = audio is being transmitted, `silent` = mic open but quiet, `muted` = the outgoing audio sender stopped sending or Teams has zeroed the audio signal, `off` = not in a call. Activates when `mqtt.enabled` is true (no separate toggle required). |
-| `\{topicPrefix\}/incoming-call` | `"true"` or `"false"` | Incoming call ringing state. Fires before user accepts. Parity with `incomingCallCommand`. Covers 1:1 ring-type calls, calls from phone numbers, and call-queue calls. |
-| `\{topicPrefix\}/incoming-call/caller` | JSON object | Who is calling while `incoming-call` is `"true"`: `scenario`, and where known `number`, `name`, `queue`, `contact` and `callId`, and a `timestamp` and `clientId`. Published just before `incoming-call` goes `"true"`, and again if Teams fills the details in while ringing. Not retained. Off unless `mqtt.incomingCallCaller.enabled` is `true`. |
-| `\{topicPrefix\}/screen-sharing` | `"true"` or `"false"` | Screen sharing active state |
-
-All topics except `incoming-call/caller` use retained messages, ensuring subscribers receive the last known state immediately upon connecting.
-
-**Connection State:** The `connected` topic uses MQTT Last Will and Testament (LWT). If the app crashes or loses network connectivity, the broker automatically publishes `"false"`, allowing home automation to detect and handle stale state.
+**Published topics:** the generated [automation contract reference](automation-contract-generated.md#topics) lists every topic MQTT publishes, with its payload, retained flag and the option that gates it, and [MQTT Integration](mqtt-integration.md#published-topics) explains them.
 
 > [!NOTE]
 > By default, MQTT operates in **status-only mode** (publishes status to `\{topicPrefix\}/\{statusTopic\}` but doesn't receive commands). To enable **bidirectional mode**, set `commandTopic` to a topic name like `"command"`. Commands will then be received on `\{topicPrefix\}/\{commandTopic\}`. See the **[MQTT Integration Guide](mqtt-integration.md)** for complete documentation, command examples, home automation, and troubleshooting.
@@ -929,7 +918,7 @@ All topics except `incoming-call/caller` use retained messages, ensuring subscri
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `graphApi.enabled` | `boolean` | `false` | Enable Microsoft Graph API integration for calendar and mail access |
+| `graphApi.enabled` | `boolean` | `false` | Enable the Microsoft Graph API integration, used by Quick Chat and by the MQTT `get-calendar` command, which publishes your calendar events to the broker |
 
 ```json title="Example Configuration"
 {

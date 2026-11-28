@@ -1048,7 +1048,7 @@ module.exports = {
             resetSeconds: 10,
           },
         },
-        describe: "MQTT configuration for publishing Teams status updates and receiving action commands",
+        describe: "MQTT configuration for publishing Teams status and call state and receiving action commands. The get-calendar command publishes your calendar events when graphApi.enabled is on and a command topic is set.",
         type: "object",
         fields: {
           "enabled": {
@@ -1108,22 +1108,22 @@ module.exports = {
           "incomingCallCaller.enabled": {
             type: "boolean",
             describe:
-              "Publish the ringing call's caller (name, number, call queue) as JSON to the incoming-call/caller topic. Off by default because it sends callers' personal details to the broker.",
+              "Publish the ringing call's caller (name, number, call queue) as JSON to the incoming-call/caller topic, and carry it in the D-Bus incoming-call caller signal and state. Off by default because it sends callers' personal details to the broker and the session bus.",
           },
           "meetingStartDetection.enabled": {
             type: "boolean",
             describe:
-              "Enable detection of a scheduled meeting starting (Teams' meeting-start banner/toast), published as a pulse to the meeting-started topic (experimental, see issue #2587).",
+              "Enable detection of a scheduled meeting starting (Teams' meeting-start banner/toast), published as a pulse to the meeting-started topic and the D-Bus meeting-started signal and state (experimental, see issue #2587).",
           },
           "meetingStartDetection.patterns": {
             type: "array",
             describe:
-              "Case-insensitive regular expressions for the DOM fallback, matched against banner/toast text. Primary detection uses Teams' internal command stream and needs no patterns; the defaults only cover English Teams, override for other UI languages.",
+              "Case-insensitive regular expressions for the DOM fallback (shared by MQTT and D-Bus meeting-start detection), matched against banner/toast text. Primary detection uses Teams' internal command stream and needs no patterns; the defaults only cover English Teams, override for other UI languages.",
           },
           "meetingStartDetection.resetSeconds": {
             type: "number",
             describe:
-              "Seconds after which the meeting-started topic resets to false if you never join. Joining the call resets it immediately, whichever comes first.",
+              "Seconds after which the meeting-started topic and D-Bus state reset to false if you never join. Joining the call resets it immediately, whichever comes first.",
           },
         },
         applyMode: "restart",
@@ -1152,13 +1152,13 @@ module.exports = {
         default: {
           enabled: false,
         },
-        describe: "Microsoft Graph API integration for enhanced Teams functionality (calendar, user profile, etc.)",
+        describe: "Microsoft Graph API integration, used by Quick Chat (contact search and sending messages) and by the MQTT get-calendar command, which publishes your calendar events to the broker.",
         type: "object",
         fields: {
           "enabled": {
             type: "boolean",
             describe:
-              "Enable the Microsoft Graph API integration for calendar and mail access.",
+              "Enable the Microsoft Graph API integration used by Quick Chat and by the MQTT get-calendar command (calendar events are published to the broker).",
           },
         },
         applyMode: "restart",

@@ -53,6 +53,8 @@ The MQTT module is configured through the main application configuration. Add th
 - **topicPrefix**: `string` - Topic prefix for all messages (default: "teams")
 - **statusTopic**: `string` - Topic name for status messages (default: "status")
 - **commandTopic**: `string` - Topic name for receiving commands (default: "" - disabled). Set to "command" to enable bidirectional mode.
+- **statusCheckInterval**: `number` - Polling fallback interval in milliseconds for status detection (default: 10000)
+- **mediaTopics**: `object` - Custom subtopic names for the call, camera, microphone and screen-sharing topics (see the [MQTT guide](../../docs-site/docs/mqtt-integration.md#media-topics))
 - **homeAssistant.enabled**: `boolean` - Enable Home Assistant MQTT auto-discovery (default: false)
 - **homeAssistant.discoveryPrefix**: `string` - HA discovery topic prefix (default: "homeassistant")
 - **homeAssistant.deviceName**: `string` - Device name shown in Home Assistant (default: "Teams for Linux")
@@ -112,9 +114,13 @@ Command messages should be sent as JSON with the following structure:
 #### Supported Actions
 
 - `toggle-mute` - Toggle microphone mute (Ctrl+Shift+M)
+- `mute` and `unmute` - Set the microphone state; they send the same shortcut only when the tracked state would change (`force` is described in the [MQTT guide](../../docs-site/docs/mqtt-integration.md#state-aware-mute-and-unmute))
 - `toggle-video` - Toggle video on/off (Ctrl+Shift+O)
 - `toggle-hand-raise` - Toggle hand raise in meeting (Ctrl+Shift+K)
 - `leave` - Leave/hang up the active call (Ctrl+Shift+H)
+- `get-calendar` - Publish calendar events between `startDate` and `endDate` (ISO 8601) to `{topicPrefix}/calendar`; needs `graphApi.enabled` and a command topic (no shortcut)
+
+The generated [automation contract reference](../../docs-site/docs/automation-contract-generated.md) lists every topic, payload and command, and the AsyncAPI document it links describes the MQTT side.
 
 #### Command Security
 
@@ -145,23 +151,7 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"leave"}' -q 1
 
 When `mqtt.homeAssistant.enabled` is `true`, Teams for Linux publishes MQTT discovery messages that automatically create the following entities in Home Assistant:
 
-### Sensors
-
-| Entity | Type | Description |
-|--------|------|-------------|
-| Teams Status | `sensor` | Current presence status (available, busy, etc.) |
-| Teams In Call | `binary_sensor` | Active call state |
-| Teams Incoming Call | `binary_sensor` | Incoming call ringing state (before accept) |
-| Teams Meeting Started | `binary_sensor` | Scheduled-meeting-start pulse (experimental, requires `meetingStartDetection.enabled`) |
-
-### Controls
-
-| Entity | Type | Description |
-|--------|------|-------------|
-| Teams Toggle Mute | `button` | Toggle microphone mute |
-| Teams Toggle Video | `button` | Toggle camera on/off |
-| Teams Toggle Hand Raise | `button` | Toggle hand raise in meeting |
-| Teams Leave Call | `button` | Leave/hang up the active call |
+The entities (sensors for status, microphone, in-call, incoming call, meeting started, screen sharing and camera, and buttons for the keyboard-shortcut commands) are listed in the generated [automation contract reference](../../docs-site/docs/automation-contract-generated.md#home-assistant-entities). Buttons are only created when `commandTopic` is set.
 
 All entities are grouped under a single **Teams for Linux** device in Home Assistant and respect the `availability_topic` (`{topicPrefix}/connected`) — entities show as unavailable when Teams for Linux is not running.
 
