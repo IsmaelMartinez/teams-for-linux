@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.34.0](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.33.1...v2.34.0) (2026-11-28)
+
+
+### Features
+
+* **auth:** experimental browser backend for phone passkeys on Linux ([#3260](https://github.com/IsmaelMartinez/teams-for-linux/issues/3260)) ([f32a37c](https://github.com/IsmaelMartinez/teams-for-linux/commit/f32a37c5d2caa0c57339abf44f0f521805ba9f9e))
+
+
+### Code Improvements
+
+* **security:** name every Teams and Microsoft host list in one module ([#3273](https://github.com/IsmaelMartinez/teams-for-linux/issues/3273)) ([c3ccc73](https://github.com/IsmaelMartinez/teams-for-linux/commit/c3ccc73f97f75dac5352927a018e413bd14568a1))
+
+
+### CI/CD
+
+* **release:** attest release artifacts and pin the remaining actions ([#3272](https://github.com/IsmaelMartinez/teams-for-linux/issues/3272)) ([0cbdc5b](https://github.com/IsmaelMartinez/teams-for-linux/commit/0cbdc5b8513c79263ed678143c313cab01c9199c))
+
+### Thanks
+
+Big thanks to @vitorhmcorreia for contributing to this release.
+
 ## [2.33.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.33.0...v2.33.1) (2026-11-26)
 
 
