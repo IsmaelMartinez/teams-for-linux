@@ -39,6 +39,7 @@ const {
 } = require("../helpers/teamsHosts");
 const { keepMsalEncryptionCookiePersistent } = require("./msalCookiePersistence");
 const { isUrlPreviewRequest } = require("./urlPreviewBlock");
+const { createNavigationGuard } = require("../security/navigationGuard");
 const {
   isDocumentPictureInPictureRequest,
   documentPictureInPictureWindows,
@@ -69,6 +70,7 @@ let screenSharingService = null;
 let connectionManager = null;
 let menus = null;
 let browserWindowManager = null;
+let navigationGuard = null;
 // Page title of the profile view currently shown over the root window, or
 // null while Profile 0 is (see setTitleOverride).
 let titleOverride = null;
@@ -91,7 +93,42 @@ function bindWindowOpenHandler(targetWebContents, loadTargetWebContents, activat
     config,
     loadTargetWebContents,
     activate,
+    allowsLoad: (url) => navigationGuard.allowsLoad(url),
   });
+}
+
+// Watch a Teams webContents (the root window or a profile view) for
+// main-frame navigations away from the trusted sites (navigationGuard.js).
+function bindNavigationGuard(targetWebContents) {
+  navigationGuard.attach(targetWebContents);
+}
+
+const MAX_BLOCKED_DIALOGS = 5;
+const blockedDialogOrigins = new Set();
+
+// Tell the user which site the navigation lock stopped, once per origin and at
+// most five times per session. The origin is shown on screen only, never logged.
+// Not awaited: the navigation was already cancelled, and a dialog the user
+// leaves open must not hold anything up.
+function showBlockedNavigationDialog(origin) {
+  if (blockedDialogOrigins.has(origin) || blockedDialogOrigins.size >= MAX_BLOCKED_DIALOGS) return;
+  blockedDialogOrigins.add(origin);
+  if (!window || window.isDestroyed()) return;
+  try {
+    dialog
+      .showMessageBox(window, {
+        type: "info",
+        title: "Navigation blocked",
+        message: "The Teams window tried to open a site that is not trusted, and the navigation was blocked.",
+        detail:
+          `${origin}\n\nIf this is your sign-in site, add it to urlHandling.navigationLock.extraOrigins ` +
+          "in config.json and restart the app.",
+        buttons: ["OK"],
+      })
+      .catch(() => {});
+  } catch {
+    console.warn("[NAV_LOCK] Could not show the blocked navigation dialog");
+  }
 }
 
 // Register the in-app screen-share picker on a given session. `setDisplayMediaRequestHandler`
@@ -629,12 +666,28 @@ async function triggerAuthRecovery() {
   await cleanExpiredAuthCookies(window.webContents.session, true);
 
   console.info('[AUTH_RECOVERY] Reloading for fresh auth...');
-  window.loadURL(config.url, { userAgent: config.chromeUserAgent });
+  loadInWindow(config.url);
 }
 
-exports.onAppReady = async function onAppReady(configGroup, customBackground, sharingService, profilesManager = null) {
+// A fire-and-forget load into the Teams window. The load rejects when the page
+// redirects it (ERR_ABORTED) or the navigation guard cancels a redirect
+// (ERR_FAILED), and the process-wide unhandledRejection handler exits on
+// anything it cannot classify, so the failure is handled here. Only the error
+// code is logged: the message carries the URL.
+function loadInWindow(url) {
+  window.loadURL(url, { userAgent: config.chromeUserAgent }).catch((error) => {
+    console.debug("[WINDOW] Navigation interrupted", { code: error?.code ?? error?.errno });
+  });
+}
+
+exports.onAppReady = async function onAppReady(configGroup, customBackground, sharingService, profilesManager = null, isTrustedPage = () => false) {
   appConfig = configGroup;
   config = configGroup.startupConfig;
+  navigationGuard = createNavigationGuard({
+    config,
+    isTrustedPage,
+    onBlocked: showBlockedNavigationDialog,
+  });
   customBackgroundService = customBackground;
   screenSharingService = sharingService;
   profilesManagerRef = profilesManager;
@@ -870,6 +923,7 @@ exports.performIncomingCallAction = function (action) {
 
 exports.bindDisplayMediaHandler = bindDisplayMediaHandler;
 exports.bindWindowOpenHandler = bindWindowOpenHandler;
+exports.bindNavigationGuard = bindNavigationGuard;
 exports.injectScreenSharingLogic = injectScreenSharingLogic;
 exports.setTitleOverride = setTitleOverride;
 
@@ -1107,9 +1161,10 @@ function restoreWindow() {
  */
 function processArgs(args) {
   const url = resolveLaunchUrl(args, config);
-  if (url) {
-    window.show();
-  }
+  // The app loads this link itself, which no navigation event announces, so
+  // the navigation lock is asked here (navigationGuard.js, allowsLoad).
+  if (!url || !navigationGuard.allowsLoad(url)) return null;
+  window.show();
   return url;
 }
 
@@ -1268,8 +1323,8 @@ function onNewWindow(details) {
   }
 
   if (new RegExp(config.meetupJoinRegEx).test(details.url)) {
-    if (config.onNewWindowOpenMeetupJoinUrlInApp) {
-      window.loadURL(details.url, { userAgent: config.chromeUserAgent });
+    if (config.onNewWindowOpenMeetupJoinUrlInApp && navigationGuard.allowsLoad(details.url)) {
+      loadInWindow(details.url);
     }
     return { action: "deny" };
   } else if (
@@ -1381,6 +1436,7 @@ function addEventHandlers() {
 
   window.on("page-title-updated", onPageTitleUpdated);
   window.webContents.setWindowOpenHandler(onNewWindow);
+  bindNavigationGuard(window.webContents);
   // Keep the unsandboxed PiP window on about:blank (documentPictureInPicture.js).
   window.webContents.on("did-create-window", (child, details) => {
     if (isDocumentPictureInPictureRequest(details, config)) {

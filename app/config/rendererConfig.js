@@ -26,6 +26,8 @@ const SECRET_PATHS = [
   ["auth", "basic", "passwordCommand"],
   ["auth", "webLogin", "user"],
   ["auth", "webLogin", "passwordCommand"],
+  // Names the user's identity provider and no page needs it.
+  ["urlHandling", "navigationLock", "extraOrigins"],
   ["clientCertPassword"],
   ["clientCertPath"],
   ["ssoBasicAuthUser"],

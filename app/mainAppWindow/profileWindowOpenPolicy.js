@@ -5,7 +5,8 @@
  * Profile views historically installed NO `setWindowOpenHandler` at all — only
  * the root window has one (`onNewWindow` in mainAppWindow/index.js) — so every
  * `window.open()` from a profile view took Electron's default path: a bare new
- * BrowserWindow inheriting the view's partition and preload. This policy ports
+ * BrowserWindow inheriting the view's partition (and, on Electron 45, no
+ * preload: the popup is sandboxed and context-isolated). This policy ports
  * the ONE part of the root behaviour that is provably safe per view:
  *
  *   - Teams deep links matching `meetupJoinRegEx` (meeting joins, but the
@@ -79,7 +80,7 @@ function createProfileWindowOpenHandler({ config, loadInView }) {
  *
  * @param {Electron.WebContents} targetWebContents
  * @param {{ config: object, loadTargetWebContents?: Electron.WebContents,
- *           activate?: () => void }} deps
+ *           activate?: () => void, allowsLoad?: (url: string) => boolean }} deps
  */
 // Fire-and-forget navigation into the originating profile view. The SPA
 // taking over the route rejects the load with ERR_ABORTED in normal use
@@ -99,13 +100,16 @@ async function navigateDeepLink(webContents, url, userAgent) {
 
 function installProfileWindowOpenHandler(
   targetWebContents,
-  { config, loadTargetWebContents = targetWebContents, activate }
+  { config, loadTargetWebContents = targetWebContents, activate, allowsLoad = () => true }
 ) {
   targetWebContents.setWindowOpenHandler(
     createProfileWindowOpenHandler({
       config,
       loadInView: (url) => {
         if (loadTargetWebContents.isDestroyed?.()) return;
+        // loadURL raises no will-navigate, so the navigation lock is asked
+        // before the link is loaded (security/navigationGuard.js).
+        if (!allowsLoad(url)) return;
         // Deliberately not awaited: the window-open handler is synchronous,
         // and activation must not depend on the navigation resolving.
         navigateDeepLink(loadTargetWebContents, url, config.chromeUserAgent);

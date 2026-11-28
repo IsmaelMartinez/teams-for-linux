@@ -41,6 +41,21 @@ describe('toRendererConfig', () => {
 		assert.strictEqual(safe.clientCertPath, undefined);
 	});
 
+	// The list names the user's identity provider and no page needs it; the
+	// lock's own switch stays, since it is a plain boolean.
+	it('withholds the navigation lock origins but keeps its switch', () => {
+		const safe = toRendererConfig({
+			...config(),
+			urlHandling: {
+				defaultHandler: '',
+				navigationLock: { enabled: true, extraOrigins: ['https://sso.corp.example'] },
+			},
+		});
+		assert.ok(!JSON.stringify(safe).includes('sso.corp.example'));
+		assert.strictEqual(safe.urlHandling.navigationLock.extraOrigins, undefined);
+		assert.strictEqual(safe.urlHandling.navigationLock.enabled, true);
+	});
+
 	it('keeps everything else, including the PiP frame name the preload needs', () => {
 		const safe = toRendererConfig(config());
 		assert.strictEqual(safe.url, 'https://teams.cloud.microsoft');

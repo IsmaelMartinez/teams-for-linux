@@ -4,6 +4,7 @@ const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert');
 const { EventEmitter } = require('node:events');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 
 const { installIpcSecurity } = require('../../app/security/ipcSecurity');
 
@@ -91,8 +92,13 @@ afterEach(() => {
 
 const loadPrompt = () => require('../../app/webauthn/touchPrompt').showTouchPrompt;
 
-/** Fire a cancel the way the prompt's renderer does, from a given window. */
-const sendCancel = (win) => ipcMain.emit(CANCEL_CHANNEL, { sender: win.webContents });
+/**
+ * Fire a cancel the way the prompt's renderer does, from a given window. The
+ * channel answers only the app's own pages, so the event names the prompt page.
+ */
+const promptPageUrl = pathToFileURL(path.join(__dirname, '..', '..', 'app', 'webauthn', 'touchPrompt.html')).href;
+const sendCancel = (win) =>
+	ipcMain.emit(CANCEL_CHANNEL, { sender: win.webContents, senderFrame: { url: promptPageUrl } });
 
 describe('WebAuthn touch prompt - window', () => {
 	it('titles the window for the wait, not for the touch instant', () => {

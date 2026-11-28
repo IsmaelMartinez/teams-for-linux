@@ -67,4 +67,4 @@ function buildAllowedOrigins(extraOrigins) {
   return origins;
 }
 
-module.exports = { DEFAULT_ORIGINS, buildAllowedOrigins };
+module.exports = { DEFAULT_ORIGINS, buildAllowedOrigins, normalizeOrigin };

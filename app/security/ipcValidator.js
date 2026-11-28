@@ -7,6 +7,7 @@
 
 const path = require('node:path');
 const { fileURLToPath } = require('node:url');
+const { isTrustedUrl } = require('./permissions');
 
 // Allowlist of legitimate IPC channels used by Teams for Linux
 const allowedChannels = new Set([
@@ -240,13 +241,28 @@ function validateIpcChannel(channel, payload = null) {
   return true;
 }
 
-// Channels only local app pages may use, never a web page in the Teams window.
-// The screen-share picker (app/screenSharing/index.html): capturing the screen
-// or picking a source (GHSA-3vg9-cwq9-p773). The profile switcher, the profile
-// dialogs and Quick Chat (app/profileSwitcher, app/profileDialogs,
+// Every allowlisted channel falls in exactly one of three classes, decided from
+// the frame that sent the message (isSenderAllowed):
+//   1. appPageOnlyChannels: only the app's own local pages.
+//   2. anySenderChannels: any page, an explicit short list.
+//   3. everything else: the app's local pages and trusted web pages (Teams, the
+//      Microsoft sign-in hosts, the configured URL and the profile URLs).
+// The preload runs on every page the Teams window shows, including federated
+// sign-in pages whose hosts cannot be known in advance, so a channel that
+// should not answer such a page must stay out of class 2 (ADR-035).
+
+// Class 1. Channels only local app pages may use, never a web page in the Teams
+// window. The screen-share picker (app/screenSharing/index.html): capturing the
+// screen or picking a source (GHSA-3vg9-cwq9-p773). The profile switcher, the
+// profile dialogs and Quick Chat (app/profileSwitcher, app/profileDialogs,
 // app/quickChat): adding a profile would let a page persist a URL that loads
 // with the preload on every start and is trusted for device permissions, and
-// the Graph channels send messages as the user (GHSA-58j7-22f8-6xqp).
+// the Graph channels send messages as the user (GHSA-58j7-22f8-6xqp). The last
+// group is sent only by the app's own dialogs, prompts and toasts (security-key
+// PIN and touch prompts, the secure prompt, the HTTP login form, the
+// join-meeting dialog, Quick Chat, the incoming-call and notification toasts,
+// the screen-share preview window and the profile switcher pill); neither a
+// Teams page nor the Teams preload sends any of them.
 const appPageOnlyChannels = new Set([
   'close-view',
   'desktop-capturer-get-sources',
@@ -273,30 +289,95 @@ const appPageOnlyChannels = new Set([
   'graph-api-get-mail-messages',
   'graph-api-search-people',
   'graph-api-send-chat-message',
+  'webauthn:pin-submit',
+  'webauthn:pin-cancel',
+  'webauthn:touch-cancel',
+  'secure-prompt:submit',
+  'secure-prompt:cancel',
+  'submitForm',
+  'join-meeting-submit',
+  'join-meeting-cancel',
+  'quick-chat:hide',
+  'incoming-call-action',
+  'incoming-call-toast-ready',
+  'get-screen-sharing-status',
+  'resize-preview-window',
+  'notification-toast-click',
+  'profile-switcher-open-add',
+  'profile-switcher-open-manage',
+  'profile-switcher-set-expanded',
+]);
+
+// Class 2. Channels any page may use. A test pins this exact list, so adding to
+// it is a deliberate act.
+const anySenderChannels = new Set([
+  // The preload cannot initialise without it on any page, including a federated
+  // sign-in page that needs the WebAuthn override. Credential-free by
+  // construction (toRendererConfig), though it answers any page.
+  'get-config',
+  // Read-only number. Keeps the user's zoom on sign-in pages, which is an
+  // accessibility matter.
+  'get-zoom-level',
+  // Its handler (assignTitleBarOverlayHandler) accepts only a bounded integer
+  // height and two hex colours, and only changes the window-control colours.
+  // Without it the controls can be unreadable over a third-party sign-in page.
+  'title-bar-overlay-update',
+  // app/webauthn/index.js enforces its own origin allowlist, which includes
+  // user-configured identity provider origins that the general rule does not know.
+  'webauthn:create',
+  'webauthn:get',
 ]);
 
 const APP_ROOT = path.join(__dirname, '..');
 
-/**
- * Check that the frame sending an IPC message may use the channel.
- * Channels outside appPageOnlyChannels accept any sender; those inside accept
- * only frames showing a file shipped in the app directory.
- *
- * @param {string} channel
- * @param {{ senderFrame?: { url?: string } | null }} event
- * @returns {boolean}
- */
-function isSenderAllowed(channel, event) {
-  if (!appPageOnlyChannels.has(channel)) return true;
-  // senderFrame is a getter that throws once the frame is disposed, so it is
-  // read inside the try: a gone frame is simply refused.
+// Class 3 without any configured origin: Teams, the Microsoft sign-in hosts and
+// the app's own local pages. The default when installIpcSecurity is given no
+// predicate.
+const NO_CONFIGURED_ORIGINS = new Set();
+const isStaticallyTrustedPage = (url) => isTrustedUrl(url, NO_CONFIGURED_ORIGINS);
+
+function isAppPageUrl(url) {
+  if (!url.startsWith('file:')) return false;
   try {
-    const url = event?.senderFrame?.url;
-    if (typeof url !== 'string' || !url.startsWith('file:')) return false;
     return fileURLToPath(url).startsWith(APP_ROOT + path.sep);
   } catch {
     return false;
   }
 }
 
-module.exports = { validateIpcChannel, isSenderAllowed, allowedChannels, appPageOnlyChannels };
+/**
+ * Check that the frame sending an IPC message may use the channel (see the
+ * three classes above).
+ *
+ * @param {string} channel
+ * @param {{ senderFrame?: { url?: string } | null } | undefined} event
+ * @param {(url: string) => boolean} [isTrustedPage] - the class 3 rule; the
+ *   default is the static one, so a caller that passes nothing is never more
+ *   permissive
+ * @returns {boolean}
+ */
+function isSenderAllowed(channel, event, isTrustedPage = isStaticallyTrustedPage) {
+  // A call with no event at all is an in-process `ipcMain.emit` (the config
+  // watcher emits `config-file-changed` that way). A renderer message always
+  // carries an event, so a page cannot forge this.
+  if (event === undefined) return true;
+  if (anySenderChannels.has(channel)) return true;
+  // senderFrame is a getter that throws once the frame is disposed, so it is
+  // read inside the try: a gone frame is simply refused.
+  try {
+    const url = event?.senderFrame?.url;
+    if (typeof url !== 'string') return false;
+    if (appPageOnlyChannels.has(channel)) return isAppPageUrl(url);
+    return isTrustedPage(url) === true;
+  } catch {
+    return false;
+  }
+}
+
+module.exports = {
+  validateIpcChannel,
+  isSenderAllowed,
+  allowedChannels,
+  appPageOnlyChannels,
+  anySenderChannels,
+};

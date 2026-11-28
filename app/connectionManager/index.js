@@ -174,7 +174,9 @@ class ConnectionManager {
         console.info(`[CONNECTION] Teams redirected the initial load after ${elapsedSeconds()}s`);
         return;
       }
-      console.error(`[CONNECTION] Failed to load page after ${elapsedSeconds()}s: ${err.message}`);
+      // The code only: the message carries the URL, which can be a tenant's
+      // own address or a launch link with its meeting details.
+      console.error(`[CONNECTION] Failed to load page after ${elapsedSeconds()}s: ${err.code ?? "unknown error"}`);
       _ConnectionManager_needsReload.set(this, true);
       this.debouncedRefresh();
     }

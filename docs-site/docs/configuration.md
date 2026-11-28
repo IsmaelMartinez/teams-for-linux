@@ -843,6 +843,10 @@ A floating sticker panel that lists image files from a local folder and pastes t
 | `msTeamsProtocols` | `object` | `{ v1: "^msteams:/(?:meet/\|l/(?:app\|call\|channel\|chat\|entity\|file\|meet(?:ing\|up-join)\|message\|task\|team)/)", v2: "^msteams://teams\\.(?:microsoft\\.com\|live\\.com\|cloud\\.microsoft)/(?:meet/\|l/(?:app\|call\|channel\|chat\|entity\|file\|meet(?:ing\|up-join)\|message\|task\|team)/)" }` | Regular expressions for Microsoft Teams protocol links (v1 = legacy `msteams:` scheme, v2 = host-based `msteams://` scheme) |
 | `urlHandling.openMeetupJoinInApp` | `boolean` | `true` | Open `urlHandling.meetupJoinRegEx` URLs in the app instead of default browser |
 | `onNewWindowOpenMeetupJoinUrlInApp` | `boolean` | `true` | Deprecated, use `urlHandling.openMeetupJoinInApp` |
+| `urlHandling.navigationLock.enabled` | `boolean` | `false` | Block the Teams window and each profile view from navigating or being redirected to a site outside the trusted ones (Teams, the Microsoft sign-in hosts, your configured and profile URLs, `urlHandling.navigationLock.extraOrigins`, `auth.webauthn.extraOrigins` and the `auth.webLogin.extraHosts` hosts). A dialog names each blocked site. While off, the first navigation to each such site is only noted in the log |
+| `urlHandling.navigationLock.extraOrigins` | `array` | `[]` | Extra sign-in origins the navigation lock lets the window reach, such as a federated identity provider. Exact https origins (`https://sso.example.com`); wildcards, paths and http entries are ignored |
+
+The navigation lock keeps the privileged Teams preload from running on a page you did not choose. If a sign-in site is blocked, the dialog shows its origin: add it to `urlHandling.navigationLock.extraOrigins` in `config.json` and restart.
 
 ### Keyboard Shortcuts
 

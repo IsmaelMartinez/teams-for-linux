@@ -163,6 +163,26 @@ describe('installProfileWindowOpenHandler', () => {
     await rejected.catch(() => {});
   });
 
+  it('asks the navigation lock, and neither loads nor activates when it refuses the link', () => {
+    const popup = fakeWc();
+    const profileView = fakeWc();
+    const asked = [];
+    let activated = 0;
+    installProfileWindowOpenHandler(popup, {
+      config,
+      loadTargetWebContents: profileView,
+      activate: () => activated++,
+      allowsLoad: (url) => {
+        asked.push(url);
+        return false;
+      },
+    });
+    assert.deepStrictEqual(popup.handler({ url: meeting }), { action: 'deny' });
+    assert.deepStrictEqual(asked, [meeting]);
+    assert.deepStrictEqual(profileView.loads, []);
+    assert.strictEqual(activated, 0);
+  });
+
   it('does not load into (or activate for) a destroyed originating view', () => {
     const popup = fakeWc();
     const profileView = fakeWc();
