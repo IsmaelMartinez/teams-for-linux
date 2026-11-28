@@ -6,6 +6,7 @@ const { isHttpsUrl } = require("../profilesManager");
 const { keepMsalEncryptionCookiePersistent } = require("./msalCookiePersistence");
 const { blockUrlPreviews } = require("./urlPreviewBlock");
 const webauthnBackend = require("../webauthn/backendStatus");
+const { isTeamsHost } = require("../helpers/teamsHosts");
 const {
   isDocumentPictureInPictureRequest,
   lockDocumentPictureInPictureWindow,
@@ -29,14 +30,11 @@ const SWITCHER_PILL_SIZE = 56;
 // deliberately exclude `login.microsoftonline.com` and other pre-auth
 // URLs so navigating to the login page (which sets its own cookies on
 // the partition) does not falsely trigger bootstrap.
-const TEAMS_HOST_RE =
-  /(^|\.)teams\.(microsoft\.com|live\.com|cloud\.microsoft)$/;
-
 function isTeamsNavigationUrl(url) {
   if (!url || typeof url !== "string") return false;
   try {
     const { protocol, hostname } = new URL(url);
-    return protocol === "https:" && TEAMS_HOST_RE.test(hostname);
+    return protocol === "https:" && isTeamsHost(hostname);
   } catch {
     return false;
   }

@@ -1,12 +1,13 @@
 const { Notification, shell } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
+const { hasAnyDomainSuffix } = require("../helpers/teamsHosts");
 
 // Hosts whose interrupted downloads are most likely blocked by a Microsoft
 // 365 / SharePoint / tenant DLP or access policy rather than by a network
 // fault. Used only to tailor the wording of the failure notification — it
-// never changes whether or how a download is attempted. Matching is a plain
-// case-insensitive substring test against the download URL's hostname.
+// never changes whether or how a download is attempted. A hint matches when
+// the download URL's lower-cased hostname equals it or ends with "." plus it.
 const POLICY_HOST_HINTS = [
   "sharepoint.com",
   "sharepoint-df.com",
@@ -45,7 +46,7 @@ function looksLikePolicyBlock(url, receivedBytes) {
   if (receivedBytes > 0) return false;
   const host = getHostname(url);
   if (!host) return false;
-  return POLICY_HOST_HINTS.some((hint) => host === hint || host.endsWith("." + hint));
+  return hasAnyDomainSuffix(host, POLICY_HOST_HINTS);
 }
 
 // Mirror Chromium's default "name (1).ext" de-duplication, which forcing a
