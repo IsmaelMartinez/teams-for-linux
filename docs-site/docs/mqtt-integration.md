@@ -8,6 +8,8 @@ Teams for Linux includes built-in **bidirectional** MQTT support, allowing you t
 - **Publish** your Microsoft Teams status to an MQTT broker for monitoring and automation
 - **Receive** action commands from MQTT to control Teams (toggle mute, video, etc.)
 
+The [automation contract reference](automation-contract-generated.md) is generated from the contract the code reads and lists every topic, payload, retained flag and command in one place, next to what the D-Bus interface offers.
+
 ## Overview
 
 The MQTT integration provides two-way communication with your MQTT broker:
@@ -39,13 +41,19 @@ Receive action commands from your MQTT broker to control Teams, enabling scenari
 ### Command Reception Features
 - **Bidirectional Control**: Receive commands from MQTT to control Teams actions
 - **Security Validated**: Action whitelist and JSON validation
-- **Multiple Actions**: Toggle mute, video, raise hand
+- **Multiple Actions**: Toggle mute, mute, unmute, toggle video, toggle hand raise, leave the call, and export calendar events
 - **Reliable Execution**: Maps commands to Teams keyboard shortcuts
 
 ### General Features
-- **Automatic Reconnection**: Handles network interruptions gracefully
+- **Automatic Reconnection**: The client reconnects after network interruptions (see [what retained state means](#what-retained-state-means))
 - **Secure Authentication**: Supports username/password authentication
 - **Configurable Topics**: Customize topic structure to match your MQTT namespace
+
+### What Retained State Means
+
+The state topics are retained, so a subscriber that connects later gets the last value at once. That value is only as fresh as the last publish. Nothing is queued while the app is disconnected from the broker, and after a reconnect the app republishes only the availability topic and the Home Assistant discovery messages, not the state topics. A status detected before the first connection is not published until it changes. Only the availability topic has a last will, so after an unclean exit the other retained topics keep their last value.
+
+The practical rule for consumers is to treat every state topic as valid only while `<topicPrefix>/connected` is `true`. Home Assistant's availability does this for you.
 
 ## Quick Start
 
@@ -90,7 +98,7 @@ Add these options under the `mqtt` key in your `config.json`:
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `enabled` | `boolean` | `false` | Enable/disable MQTT integration (both publishing and commands) |
-| `brokerUrl` | `string` | `""` | MQTT broker URL (e.g., `mqtt://broker:1883` or `mqtts://broker:8883` for TLS) |
+| `brokerUrl` | `string` | `""` | MQTT broker URL (e.g., `mqtt://broker:1883`, or `mqtts://broker:8883` for TLS with the default certificate verification) |
 | `username` | `string` | `""` | MQTT username (optional) |
 | `password` | `string` | `""` | MQTT password (optional) |
 | `clientId` | `string` | `"teams-for-linux"` | Unique client identifier |
@@ -131,12 +139,12 @@ The media state topic names (relative to `topicPrefix`) can be customized via `m
 
 All keys are optional; omitted keys fall back to the defaults shown above. [Home Assistant discovery](#home-assistant-auto-discovery) configurations automatically use the customized topic names.
 
-> **Note:** `incomingCallCaller` tracks `incomingCall` the same way, defaulting to `<incomingCall>/caller`. `microphoneControl` tracks `microphone` by default — if you set `microphone` but omit `microphoneControl`, the control topic becomes `<microphone>/control` (e.g. `microphone: "mic"` → `mic/control`), so the two stay in sync. Set `microphoneControl` explicitly to decouple it.
+> **Note:** `incomingCallCaller` follows `incomingCall`: if you rename `incomingCall` to `ring` and leave `incomingCallCaller` out, the caller topic becomes `ring/caller`. `microphoneControl` does not follow `microphone`, because its default is applied when the configuration loads: renaming `microphone` to `mic` leaves the control topic at `microphone/control` unless you set `microphoneControl` as well.
 
 ### Broker URL Formats
 
-- **Plain TCP**: `mqtt://broker.example.com:1883`
-- **TLS/SSL**: `mqtts://broker.example.com:8883`
+- **Plain TCP**: `mqtt://broker.example.com:1883`. The password and every message travel in clear text.
+- **TLS/SSL**: `mqtts://broker.example.com:8883`. The broker's certificate is verified with the default settings only; there is no option for a private certificate authority, a client certificate or skipping verification, so the broker needs a certificate your system already trusts.
 
 :::note WebSocket Support
 While the underlying mqtt.js library supports WebSocket URLs (`ws://` and `wss://`), these have not been tested with Teams for Linux. If you successfully use WebSocket connections, please share your experience on [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues) or in our [Matrix Space](https://matrix.to/#/#teams-for-linux-space:matrix.org).
@@ -159,14 +167,14 @@ Status updates are published as JSON with the following structure:
 
 - **status** (`string`): Human-readable status name
 - **statusCode** (`number`): Numeric status code for easier parsing
-- **timestamp** (`string`): ISO 8601 timestamp of the status change
+- **timestamp** (`string`): ISO 8601 timestamp of when the message was published
 - **clientId** (`string`): Client identifier from configuration
 
 ### Status Values
 
 | Status | Code | Description |
 |--------|------|-------------|
-| `unknown` | `-1` | Status cannot be determined |
+| `unknown` | `-1`, or any other code | A status code outside the known ones, published with the code it was given. When no status is detected at all, nothing is published |
 | `available` | `1` | Available / Online |
 | `busy` | `2` | Busy / In a call |
 | `do_not_disturb` | `3` | Do Not Disturb / Presenting |
@@ -175,7 +183,9 @@ Status updates are published as JSON with the following structure:
 
 ## MQTT Commands
 
-Teams for Linux can receive action commands via MQTT, allowing external systems to trigger Teams actions like toggle mute, toggle video, raise hand, and toggle blur.
+Teams for Linux can receive action commands via MQTT, allowing external systems to trigger Teams actions like toggle mute, mute, unmute, toggle video, toggle hand raise and leave, and to request calendar events.
+
+The generated [automation contract reference](automation-contract-generated.md#commands) shows what each transport can ask for.
 
 ### Command Message Format
 
@@ -199,13 +209,14 @@ Send commands as JSON messages to the command topic (`teams/command` by default)
 | `toggle-video` | Ctrl+Shift+O | Toggle video on/off |
 | `toggle-hand-raise` | Ctrl+Shift+K | Toggle hand raise in meeting |
 | `leave` | Ctrl+Shift+H | Leave/hang up the active call |
+| `get-calendar` | none | Publish your calendar events to `<topicPrefix>/calendar` (see [Calendar Data Export](#calendar-data-export)) |
 
 ### State-Aware Mute and Unmute
 
 Teams only exposes a mute *toggle* shortcut, so `mute` and `unmute` work by tracking the current microphone state (published on the `microphone/control` topic, see [Published Topics](#published-topics)) and only sending the toggle when the state would actually change:
 
-- `mute` is ignored if the microphone is already muted; `unmute` is ignored if already unmuted.
-- Until the first microphone event arrives (e.g. before you have joined a call since app start), the tracked state is `unknown` and both commands are ignored as a safety default. Add `"force": true` to send the toggle anyway:
+- `mute` is ignored if the microphone is already muted; `unmute` is ignored if already unmuted. `force` never overrides this.
+- When the tracked state is `unknown` (before the first microphone event since app start) or `off` (outside a call), both commands are ignored as a safety default. Add `"force": true`, the JSON boolean and nothing else, to send the toggle anyway:
 
 ```json
 {
@@ -269,13 +280,17 @@ Commands are validated with multiple security measures:
 - **Localhost Recommended**: For maximum security, use a localhost MQTT broker
 
 :::warning Security Notice
-Commands trigger Teams keyboard shortcuts. Only use trusted MQTT brokers and protect your broker credentials. For maximum security, use `mqtt://localhost:1883` with no external network access.
+Most commands trigger Teams keyboard shortcuts, but `get-calendar` publishes your calendar events to the broker (see [Calendar Data Export](#calendar-data-export)) whenever `graphApi.enabled` is on and a command topic is set. Anything that can publish to the command topic can send every command; there is no per-command authentication. Only use trusted MQTT brokers and protect your broker credentials. For maximum security, use `mqtt://localhost:1883` with no external network access, and see [What you expose and how to limit it](#what-you-expose-and-how-to-limit-it).
 :::
 
 ## Calendar Data Export
 
 :::info Prerequisites
-Calendar export requires **Graph API** to be enabled in your configuration. See [Configuration Options](#configuration-options) for MQTT setup.
+Calendar export requires **Graph API** to be enabled in your configuration, and a command topic to be set. See [Configuration Options](#configuration-options) for MQTT setup.
+:::
+
+:::warning Your calendar goes to the broker
+The response is the raw Graph calendar data, which includes event subjects, organiser and attendee names and addresses, body previews and meeting join links. It is published to `<topicPrefix>/calendar` for every subscriber on the broker to read, not only for whoever sent the command.
 :::
 
 Teams for Linux can export calendar data via MQTT commands, allowing you to:
@@ -303,13 +318,13 @@ The `get-calendar` command retrieves calendar events for a specified date range:
 - `startDate`: ISO 8601 datetime string (start of date range)
 - `endDate`: ISO 8601 datetime string (end of date range)
 
-**Response Topic:** `teams/calendar`
+**Response Topic:** `<topicPrefix>/calendar` (`teams/calendar` with the default prefix). It is not retained, so only subscribers connected when the response is published receive it.
 
 All events in the range are returned: Graph API results are paged, and Teams for Linux follows the paging links and merges every page into one `value` array (capped at 50 pages; if the cap is hit, the response keeps the remaining `@odata.nextLink` to show it is incomplete).
 
 ### Calendar Response Format
 
-Calendar data is published to the `teams/calendar` topic as raw Graph API JSON:
+Calendar data is published to the `<topicPrefix>/calendar` topic as raw Graph API JSON:
 
 ```json
 {
@@ -408,7 +423,7 @@ Use `jq` to format the JSON output for better readability. Install with `apt-get
 
 ## Published Topics
 
-When MQTT is enabled, Teams for Linux automatically publishes to the following retained topics:
+When MQTT is enabled, Teams for Linux publishes to the following topics. The generated [automation contract reference](automation-contract-generated.md#topics) lists them with their gates, and the [AsyncAPI document](https://ismaelmartinez.github.io/teams-for-linux/mqtt-asyncapi.json) describes them for tools that read it. All are retained except the caller and calendar topics.
 
 | Topic | Payload | Description |
 |-------|---------|-------------|
@@ -422,10 +437,11 @@ When MQTT is enabled, Teams for Linux automatically publishes to the following r
 | `{topicPrefix}/microphone` | `"speaking"`, `"silent"`, `"muted"`, or `"off"` | Microphone state from WebRTC speaking-indicator monitoring |
 | `{topicPrefix}/microphone/control` | `"muted"`, `"unmuted"`, or `"off"` | Simplified mute state derived from the microphone state; drives the [`mute`/`unmute` command guard](#state-aware-mute-and-unmute) |
 | `{topicPrefix}/screen-sharing` | `"true"` or `"false"` | Screen sharing active state |
+| `{topicPrefix}/calendar` | JSON object | Calendar events, only in answer to a [`get-calendar` command](#calendar-data-export); not retained, requires `graphApi.enabled` and a command topic |
 
 The media topic names after the prefix (`in-call`, `incoming-call`, `incoming-call/caller`, `meeting-started`, `camera`, `microphone`, `microphone/control`, `screen-sharing`) are defaults and can be customized via [`mqtt.mediaTopics`](#media-topics).
 
-All topics except `incoming-call/caller` use retained messages so subscribers receive the last known state immediately on connect. The `connected` topic uses LWT: if the app crashes or loses network, the broker publishes `"false"` automatically.
+The retained topics give subscribers the last known state immediately on connect. The `connected` topic uses a last will: if the app crashes or loses network, the broker publishes `"false"` on it, and it is the only topic that is cleared that way. Every message is published with QoS 0.
 
 The microphone topic activates whenever `mqtt.enabled` is true (no separate toggle). States are derived from WebRTC `RTCPeerConnection.getStats()`: `speaking` means audio is being transmitted, `silent` means the mic is open but quiet, `muted` means the outgoing audio sender stopped sending (its track is disabled, muted, ended or detached, its encoding is paused, or its negotiated direction no longer sends) or Teams has zeroed the audio signal, and `off` means no active call. When the sender shows none of these, a zeroed signal is taken as muted, so a microphone with built-in noise reduction that outputs silence while you are quiet also reports `muted` after about half a second.
 
@@ -545,11 +561,11 @@ When `mqtt.homeAssistant.enabled` is set to `true`, Teams for Linux publishes [M
 
 ### Entities Created
 
-All entities are grouped under a single HA device (identified by `mqtt.clientId`). Availability is tied to the `{topicPrefix}/connected` LWT topic.
+All entities are grouped under a single HA device (identified by `mqtt.clientId`; entities are keyed by it, so changing it creates new entities in Home Assistant). Availability is tied to the `{topicPrefix}/connected` LWT topic.
 
 | HA Component | Entity | State Topic | Description |
 |-------------|--------|-------------|-------------|
-| `sensor` | Teams Status | `{topicPrefix}/{statusTopic}` | Presence status (available, busy, dnd, away, brb) |
+| `sensor` | Teams Status | `{topicPrefix}/{statusTopic}` | Presence status (`available`, `busy`, `do_not_disturb`, `away`, `be_right_back`) |
 | `sensor` | Teams Microphone | `{topicPrefix}/microphone` | Microphone state (speaking, silent, muted, off) |
 | `binary_sensor` | Teams In Call | `{topicPrefix}/in-call` | Whether you are in an active call |
 | `binary_sensor` | Teams Incoming Call | `{topicPrefix}/incoming-call` | Whether a call is ringing |
@@ -674,10 +690,11 @@ mosquitto_pub -h localhost -t "teams/command" -m '{"action":"toggle-video"}' -q 
 
 #### Status Detection Not Working
 
-**Symptoms**: Messages are published but status is always "unknown"
+**Symptoms**: No status messages are published, or the status does not follow your Teams status
 
 **Solutions**:
-- This may occur if Teams UI structure has changed
+- The app publishes nothing when it cannot detect a status; `unknown` appears only for a status code outside the known ones
+- Detection reads the Teams page, so it may fail if the Teams UI structure has changed
 - Decrease `statusCheckInterval` for more frequent polling: `"statusCheckInterval": 5000`
 - Check browser console (DevTools) for JavaScript errors
 - Report the issue on [GitHub Issues](https://github.com/IsmaelMartinez/teams-for-linux/issues) with Teams version info
@@ -734,125 +751,57 @@ You should take extra care when sharing your status with other systems, especial
 - **Protect Credentials**: Passwords in `config.json` are stored in plain text - use appropriate file permissions (`chmod 600`)
 - **Monitor Access**: Regularly review who has access to your MQTT broker and topics
 
-## Architecture Details
+### What you expose and how to limit it
 
-### How It Works
+What the broker's users can see and do depends on what you configure:
 
-The MQTT integration uses a **bidirectional** multi-layer architecture for both status publishing and command reception:
+| Configuration | What it exposes |
+|---------------|-----------------|
+| `mqtt.enabled` | Your presence and call state: in call, ringing, camera, microphone and screen sharing, and the meeting-started pulse when it is enabled |
+| `mqtt.commandTopic` | Anyone who can publish there can send every command: toggle or set the microphone, toggle the camera and hand raise, and leave the call |
+| `mqtt.incomingCallCaller.enabled` | The names and phone numbers of people who call you |
+| A command topic plus `graphApi.enabled` | Your calendar events, on request, through `get-calendar` |
 
-```mermaid
-graph TB
-    subgraph Browser Process
-        A[Teams Web UI] --> B[MutationObserver]
-        A --> C[Polling Monitor]
-        B --> D[Status Detector]
-        C --> D
-        H[Keyboard Events] --> A
-    end
+To limit it, keep the broker on localhost or use `mqtts://` with a certificate your system trusts, require a broker login, and use the broker's access control so each account can do only what it needs. The app's account only needs to publish under its prefix and read its command topic. Your automation's account only needs to read the prefix and publish to the command topic. There is no per-command authentication, so the account that can publish to the command topic can send all of them.
 
-    subgraph Main Process
-        E[IPC Handler] --> F[MQTT Client]
-        F -->|Publish Status| G[MQTT Broker]
-        G -->|Subscribe Commands| F
-        F -->|Command Event| I[Command Handler]
-        I --> H
-    end
+A minimal Mosquitto setup for that, with `teams` as the prefix and `command` as the command topic. Create the password file with `mosquitto_passwd` (`-c` creates the file and overwrites an existing one, so use it for the first user only; it prompts for the password):
 
-    D -->|IPC: user-status-changed| E
-
-    style D fill:#e3f2fd
-    style F fill:#fff3e0
-    style G fill:#e8f5e9
-    style I fill:#fce4ec
+```bash
+mosquitto_passwd -c /etc/mosquitto/passwd teams-app
+mosquitto_passwd /etc/mosquitto/passwd automation
 ```
 
-**Status Publishing Flow** (Outbound):
-1. Teams Web UI status changes → MutationObserver/Polling Monitor detects → Status Detector → IPC to Main Process → MQTT Client publishes to broker
+Then in `mosquitto.conf`, turn off anonymous access and point to the password and ACL files:
 
-**Command Reception Flow** (Inbound):
-1. External system (mosquitto_pub, automation systems, etc.) → MQTT Broker → MQTT Client subscribes → Command validation → Command Handler → Keyboard Events sent to Teams Web UI
+```
+allow_anonymous false
+password_file /etc/mosquitto/passwd
+acl_file /etc/mosquitto/acl
+```
 
-### Status Detection Strategy
+And in `/etc/mosquitto/acl`:
 
-The implementation uses a **dual-layer detection approach** for maximum reliability:
+```
+user teams-app
+topic write teams/#
+topic read teams/command
 
-#### 1. MutationObserver (Primary)
+user automation
+topic read teams/#
+topic write teams/command
+```
 
-- Watches for real-time DOM changes in the Teams interface
-- Monitors status-related attributes: `class`, `aria-label`, `title`, `data-testid`
-- 300ms debouncing prevents excessive checks during UI animations
-- Provides instant updates when Teams status changes
-- Location: `app/browser/tools/mqttStatusMonitor.js`
+Mosquitto's [configuration reference](https://mosquitto.org/man/mosquitto-conf-5.html) says that with an ACL file only the topics listed have access, and that the topic lines after a `user` line apply to that user. The write rule for the app's account covers `teams/connected`, the availability topic. With Home Assistant discovery enabled, the app's account also needs write access to the discovery prefix, for example `topic write homeassistant/#`, and Home Assistant needs to read the topics it subscribes to.
 
-#### 2. Polling (Fallback)
+### Multiple accounts
 
-- Periodic checks ensure status is detected even if DOM events are missed
-- Default interval: 10 seconds (configurable via `statusCheckInterval`)
-- Handles cases where MutationObserver might not fire
-- Provides redundancy for UI structure changes
+MQTT is not profile-aware. The state topics report whichever profile's page last reported, and keyboard-shortcut commands go to the main window, not to the selected profile. The [D-Bus service](development/dbus-control.md) follows the selected profile.
 
-#### 3. Multiple Selector Strategies
+## How It Works
 
-The status detector tries multiple CSS selector patterns to locate status information, making it resilient to Teams UI updates:
+Status detection runs in the Teams page (`app/browser/tools/mqttStatusMonitor.js`). It watches the page for changes with a MutationObserver, debounced by 300ms, and also polls every `statusCheckInterval` milliseconds as a fallback. It tries several ways of reading the status (CSS selectors, the profile control, the page title). When it finds one that differs from the last, it sends it to the main process, which publishes it through the MQTT client in `app/mqtt/index.js`. When it finds none, nothing is sent. The call, camera, microphone and screen-sharing topics come from the same page, through `app/mqtt/mediaStatusService.js`.
 
-- Profile button status attributes
-- Avatar status indicators
-- Presence badges
-- ARIA labels and accessibility attributes
-
-### IPC Communication
-
-#### Status Publishing
-Status changes flow from browser to main process:
-
-1. **Browser-side**: `mqttStatusMonitor.js` detects status change
-2. **IPC Channel**: Sends message via `user-status-changed` channel
-3. **Main Process**: `app/index.js` receives status and forwards to MQTT client
-4. **MQTT Client**: `app/mqtt/index.js` publishes to broker
-
-### Command Processing Strategy
-
-Commands are validated with multiple security layers:
-
-#### 1. MQTT Subscription
-- **Location**: `app/mqtt/index.js`
-- Subscribes to `{topicPrefix}/{commandTopic}` on broker connection
-- Receives messages from external systems
-
-#### 2. Message Validation
-- **JSON Parsing**: Validates message is valid JSON
-- **Structure Check**: Ensures `action` field exists and is a string
-- **Action Whitelist**: Only allows actions listed in [Supported Actions](#supported-actions)
-
-#### 3. Command Execution
-- **Location**: `app/index.js` command handler
-- Maps action to Teams keyboard shortcut:
-  - `toggle-mute` → Ctrl+Shift+M
-  - `toggle-video` → Ctrl+Shift+O
-  - `toggle-hand-raise` → Ctrl+Shift+K
-  - `leave` → Ctrl+Shift+H
-- Sends keyboard events to Teams window via `sendKeyboardEventToWindow`
-- **Location**: `app/globalShortcuts/index.js` for keyboard event generation
-
-### Message Lifecycle
-
-#### Status Publishing
-1. Status change detected in browser process
-2. Deduplicated (only publish if different from last status)
-3. Sent via IPC to main process
-4. Published to MQTT broker with QoS 1 and retain flag
-5. Broker distributes to all subscribers
-6. Message persists for new subscribers (retain flag)
-
-#### Command Reception
-1. External system publishes command to MQTT broker
-2. MQTT Client receives message on command topic
-3. Command validation (JSON, whitelist)
-4. MQTTClient emits 'command' event to main process
-5. Command handler maps action to keyboard shortcut
-6. Keyboard event sent to Teams window
-7. Teams executes the action
-
+Commands travel the other way. The client subscribes to the command topic when it connects and accepts only a JSON object whose `action` is in the [supported actions](#supported-actions) list. A shortcut action is sent as a keyboard event to the main Teams window, and `get-calendar` fetches the events through the Graph API and publishes them.
 
 ## Home Assistant Automation Examples
 

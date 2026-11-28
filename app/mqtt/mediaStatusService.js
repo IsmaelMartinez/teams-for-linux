@@ -1,5 +1,9 @@
 const { app, ipcMain } = require('electron');
 const { getMediaTopics } = require('./mediaTopics');
+const { shared, mqtt: mqttContract } = require('../control/contract');
+
+const CALLER_FIELDS = shared.caller.fields.map(({ name }) => name);
+const RETAINED = Object.fromEntries(mqttContract.topics.map(({ id, retained }) => [id, retained]));
 
 /**
  * MQTT Media Status Service
@@ -8,7 +12,7 @@ const { getMediaTopics } = require('./mediaTopics');
  * to MQTT broker for home automation integration.
  *
  * Publishes to topics:
- * - {topicPrefix}/camera - Camera on/off state (not yet wired)
+ * - {topicPrefix}/camera - Camera on/off state (from speakingIndicator's camera-state-changed)
  * - {topicPrefix}/microphone - Microphone state: 'speaking' | 'silent' | 'muted' | 'off'
  * - {topicPrefix}/in-call - Active call state
  * - {topicPrefix}/incoming-call - Whether a call is ringing
@@ -66,10 +70,11 @@ class MQTTMediaStatusService {
 		console.info('[MQTTMediaStatusService] Initialized');
 	}
 
-	async #publishBoolean(subtopic, value, label) {
+	async #publishBoolean(topicId, value, label) {
+		const subtopic = this.#mediaTopics[topicId];
 		try {
 			const topic = `${this.#topicPrefix}/${subtopic}`;
-			await this.#mqttClient.publish(topic, value, { retain: true });
+			await this.#mqttClient.publish(topic, value, { retain: RETAINED[topicId] });
 			console.debug(`[MQTTMediaStatusService] ${label}, published`);
 		} catch (error) {
 			console.error(`[MQTTMediaStatusService] Failed to publish ${subtopic}:`, { message: error.message });
@@ -77,7 +82,7 @@ class MQTTMediaStatusService {
 	}
 
 	async #handleCallConnected() {
-		await this.#publishBoolean(this.#mediaTopics.inCall, 'true', 'Call connected');
+		await this.#publishBoolean('inCall', 'true', 'Call connected');
 		// Joining the meeting is the answer to "has it started?", so close the
 		// pulse early rather than leaving it true alongside in-call (#2587).
 		await this.#clearMeetingStarted('Meeting joined');
@@ -91,12 +96,12 @@ class MQTTMediaStatusService {
 		if (this.#incomingCallCallerEnabled) {
 			await this.#publishIncomingCallCaller(details);
 		}
-		await this.#publishBoolean(this.#mediaTopics.incomingCall, 'true', 'Incoming call started');
+		await this.#publishBoolean('incomingCall', 'true', 'Incoming call started');
 	}
 
 	// Nothing to clear on the caller topic: it is never retained.
 	async #handleIncomingCallEnded() {
-		await this.#publishBoolean(this.#mediaTopics.incomingCall, 'false', 'Incoming call ended');
+		await this.#publishBoolean('incomingCall', 'false', 'Incoming call ended');
 	}
 
 	/**
@@ -113,7 +118,7 @@ class MQTTMediaStatusService {
 	 */
 	async #publishIncomingCallCaller(details) {
 		const caller = {};
-		for (const key of ['scenario', 'number', 'name', 'queue', 'contact', 'callId']) {
+		for (const key of CALLER_FIELDS) {
 			if (details?.[key] !== undefined && details[key] !== null) {
 				caller[key] = details[key];
 			}
@@ -122,7 +127,7 @@ class MQTTMediaStatusService {
 		caller.clientId = this.#clientId;
 		try {
 			const topic = `${this.#topicPrefix}/${this.#mediaTopics.incomingCallCaller}`;
-			await this.#mqttClient.publish(topic, JSON.stringify(caller), { retain: false });
+			await this.#mqttClient.publish(topic, JSON.stringify(caller), { retain: RETAINED.incomingCallCaller });
 			console.debug('[MQTTMediaStatusService] Incoming call caller published');
 		} catch (error) {
 			console.error('[MQTTMediaStatusService] Failed to publish the incoming call caller:', { message: error.message });
@@ -137,7 +142,7 @@ class MQTTMediaStatusService {
 		if (!this.#meetingStartedResetTimer) return;
 		clearTimeout(this.#meetingStartedResetTimer);
 		this.#meetingStartedResetTimer = null;
-		await this.#publishBoolean(this.#mediaTopics.meetingStarted, 'false', label);
+		await this.#publishBoolean('meetingStarted', 'false', label);
 	}
 
 	/**
@@ -157,20 +162,20 @@ class MQTTMediaStatusService {
 		this.#meetingStartedResetTimer = setTimeout(() => {
 			this.#meetingStartedResetTimer = null;
 			// #publishBoolean handles its own errors
-			this.#publishBoolean(this.#mediaTopics.meetingStarted, 'false', 'Meeting-started pulse reset');
+			void this.#publishBoolean('meetingStarted', 'false', 'Meeting-started pulse reset');
 		}, this.#meetingStartedResetMs);
 
-		await this.#publishBoolean(this.#mediaTopics.meetingStarted, 'true', 'Meeting start detected');
+		await this.#publishBoolean('meetingStarted', 'true', 'Meeting start detected');
 	}
 
 	async #handleCallDisconnected() {
-		await this.#publishBoolean(this.#mediaTopics.inCall, 'false', 'Call disconnected');
+		await this.#publishBoolean('inCall', 'false', 'Call disconnected');
 		await this.#publishMicrophoneState('off');
 		await this.#publishMicrophoneControlState('off');
 	}
 
 	async #handleCameraChanged(event, enabled) {
-		await this.#publishBoolean(this.#mediaTopics.camera, String(enabled), 'Camera state changed');
+		await this.#publishBoolean('camera', String(enabled), 'Camera state changed');
 	}
 
 	async #handleMicrophoneChanged(event, state) {
@@ -194,7 +199,7 @@ class MQTTMediaStatusService {
 
 		this.#lastMicrophoneState = state;
 		const topic = `${this.#topicPrefix}/${this.#mediaTopics.microphone}`;
-		await this.#mqttClient.publish(topic, state, { retain: true });
+		await this.#mqttClient.publish(topic, state, { retain: RETAINED.microphone });
 		console.debug('[MQTTMediaStatusService] Microphone state changed and published');
 	}
 
@@ -205,14 +210,14 @@ class MQTTMediaStatusService {
 
 		this.#lastMicrophoneControlState = controlState;
 		const topic = `${this.#topicPrefix}/${this.#mediaTopics.microphoneControl}`;
-		await this.#mqttClient.publish(topic, controlState, { retain: true });
+		await this.#mqttClient.publish(topic, controlState, { retain: RETAINED.microphoneControl });
 		console.debug('[MQTTMediaStatusService] Microphone control state changed and published');
 		app.emit('teams-microphone-control-changed', controlState);
 	}
 
 	async #handleScreenSharingChanged(isSharing) {
 		const label = isSharing ? 'Screen sharing started' : 'Screen sharing stopped';
-		await this.#publishBoolean(this.#mediaTopics.screenSharing, String(isSharing), label);
+		await this.#publishBoolean('screenSharing', String(isSharing), label);
 	}
 }
 

@@ -243,4 +243,11 @@ class DBusControlService {
   }
 }
 
+// Exposed so a unit test can pin the interface to the automation contract
+// (app/control/contract.js); nothing in the app reads these.
+DBusControlService.DEFAULT_BUS_NAME = DEFAULT_BUS_NAME;
+DBusControlService.OBJECT_PATH = OBJECT_PATH;
+DBusControlService.INTERFACE = INTERFACE;
+DBusControlService.STATE_SIGNALS = STATE_SIGNALS;
+
 module.exports = DBusControlService;

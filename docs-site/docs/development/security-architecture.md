@@ -170,6 +170,8 @@ Some opt-in features let other software on the machine, or on the network, drive
 - **MQTT** (`mqtt.enabled`): anyone who can publish to the command topic can toggle the microphone, camera and raised hand, leave a call and, when the Graph API integration is enabled, request calendar data, which is then published to the broker. A `mqtt://` broker URL is cleartext, so use `mqtts://` for anything beyond localhost
 - **Configured commands**: `auth.basic.passwordCommand`, `auth.webLogin.passwordCommand`, `incomingCallCommand` and `defaultURLHandler` run with the user's permissions
 
+The generated [automation contract reference](../automation-contract-generated.md) lists in one place every state field and command each of the first two exposes, and which fields carry personal data.
+
 ## Configuration Is Trusted
 
 Configuration decides which commands run and which servers are trusted, so anyone who can change it can act as the user. It is read from the user's `config.json`, the system-wide `/etc/teams-for-linux/config.json` (defaults that the user file overrides), environment variables named after options, command-line flags, and `electronCLIFlags`, which passes arbitrary switches to Chromium. None of these is a policy-enforcement mechanism: a system-wide file sets defaults, it cannot lock a setting.

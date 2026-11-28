@@ -1,12 +1,8 @@
 const { sendKeyboardEventToWindow } = require("../globalShortcuts");
 const { EventEmitter } = require("node:events");
+const { shared } = require("./contract");
 
-const SHORTCUTS = {
-  mute: "Ctrl+Shift+M",
-  video: "Ctrl+Shift+O",
-  handRaise: "Ctrl+Shift+K",
-  leave: "Ctrl+Shift+H",
-};
+const SHORTCUTS = shared.shortcuts;
 
 // These names deliberately match the stable status names exposed in the
 // observed D-Bus state.  The Teams presence service uses PascalCase values.

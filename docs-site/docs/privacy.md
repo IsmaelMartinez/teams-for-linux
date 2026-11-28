@@ -66,8 +66,8 @@ The application makes network connections only for the following purposes:
 
 The following features are **optional and disabled by default**. When you enable them, they connect **only to endpoints that you configure yourself** — never to the maintainer:
 
-- **[MQTT presence bridge](mqtt-integration.md)** — publishes your Teams presence/call status to an MQTT broker that **you** specify (for example, for home automation).
-  - If you also enable [`mqtt.incomingCallCaller`](mqtt-integration.md#incoming-call-caller) (off by default), the name, phone number and call queue of whoever is calling you are published to that broker while the call rings.
+- **[MQTT presence bridge](mqtt-integration.md)** — publishes your Teams presence, call state, camera, microphone and screen-sharing state, and (when enabled) a meeting-started pulse to an MQTT broker that **you** specify (for example, for home automation). With a command topic and the Graph API integration enabled, the `get-calendar` command also publishes your calendar events there.
+  - If you also enable [`mqtt.incomingCallCaller`](mqtt-integration.md#incoming-call-caller) (off by default), the name, phone number and call queue of whoever is calling you are published to that broker while the call rings, and are available on the D-Bus service if you enable it.
 - **[Custom call backgrounds](custom-backgrounds.md)** — loads background images from a URL that **you** provide.
 
 The application does **not** transmit information to any infrastructure managed by the maintainer.
