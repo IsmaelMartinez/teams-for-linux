@@ -315,6 +315,12 @@ describe('trusted page check', () => {
 		assert.strictEqual(check('https://profile.example/app'), true);
 	});
 
+	it('trusts a configured URL whatever the case of its scheme and host', () => {
+		const isTrustedPage = createTrustedPageCheck(() => ['HTTPS://Tenant.Example/teams']);
+		assert.strictEqual(isTrustedPage('https://tenant.example/v2/'), true);
+		assert.strictEqual(isTrustedPage('https://tenant.example.evil.example/'), false);
+	});
+
 	it('refuses http, about:blank, a file outside the app and an unrelated origin', () => {
 		const check = createTrustedPageCheck(() => ['https://configured.example']);
 		assert.strictEqual(check('https://unrelated.example/'), false);

@@ -193,11 +193,13 @@ const invalidateProfileUrls = () => {
 profilesManager.on("add", invalidateProfileUrls);
 profilesManager.on("update", invalidateProfileUrls);
 profilesManager.on("remove", invalidateProfileUrls);
+// The same parsed-protocol check ProfilesManager applies when it stores a URL,
+// so every profile URL it accepts (an upper-case scheme included) is trusted.
 const getProfileUrls = () => {
   profileUrlCache ??= profilesManager
     .list()
     .map((p) => p.url)
-    .filter((url) => typeof url === "string" && url.startsWith("https://"));
+    .filter((url) => ProfilesManager.isHttpsUrl(url));
   return profileUrlCache;
 };
 const isTrustedPage = createTrustedPageCheck(() => [config.url, ...getProfileUrls()]);

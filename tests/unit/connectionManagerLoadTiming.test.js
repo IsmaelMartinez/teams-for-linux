@@ -94,14 +94,20 @@ describe('ConnectionManager initial page load timing', () => {
 	});
 
 	it('reports the elapsed time of a failed load and still schedules the retry', async () => {
-		const loadError = new Error('ERR_CONNECTION_TIMED_OUT (-118) loading the page');
+		// Shaped as Electron's loadURL rejection: the code on its own, and a
+		// message that also carries the URL.
+		const loadError = Object.assign(
+			new Error("ERR_CONNECTION_TIMED_OUT (-118) loading 'https://tenant.example/l/meetup-join/secret'"),
+			{ code: 'ERR_CONNECTION_TIMED_OUT', errno: -118 },
+		);
 		let setUrl;
 		let reloadCount;
 		({ manager, setUrl, reloadCount } = managerWithFakeWindow({ loadMs: 3000, loadError }));
 		await manager.load(false);
 
 		assert.strictEqual(errors.length, 1);
-		assert.match(errors[0], /^\[CONNECTION\] Failed to load page after 3\.0s: ERR_CONNECTION_TIMED_OUT/);
+		assert.strictEqual(errors[0], '[CONNECTION] Failed to load page after 3.0s: ERR_CONNECTION_TIMED_OUT');
+		assert.ok(!errors[0].includes('tenant.example'), 'the URL in the error message is not logged');
 		assert.ok(!infos.some((line) => line.includes('Teams navigation finished in')), 'a failed load is not reported as finished');
 
 		// With a page URL present, refresh() skips a healthy page, so it only

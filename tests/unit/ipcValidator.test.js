@@ -283,7 +283,10 @@ describe('isSenderAllowed: the three classes of channel (ADR-035)', () => {
 	});
 
 	describe('a class 3 channel', () => {
-		const configured = (url) => url.startsWith('https://configured.example') || url.startsWith('https://profile.example');
+		// Compared by parsed origin, as the real predicate does: a prefix test
+		// would also accept https://configured.example.evil.example.
+		const CONFIGURED_ORIGINS = new Set(['https://configured.example', 'https://profile.example']);
+		const configured = (url) => CONFIGURED_ORIGINS.has(new URL(url).origin);
 
 		for (const [label, url] of [
 			['a Teams host', 'https://teams.microsoft.com/v2/'],
