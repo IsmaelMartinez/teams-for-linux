@@ -5,10 +5,12 @@
 // Callers differ on purpose in three ways, and each matcher below says which
 // way it goes. Government hosts: only the permission check knows
 // teams.microsoft.us and login.microsoftonline.us. MCAS proxy suffixes: the
-// Teams, sign-in and cookie matchers strip them, the permission check and the
-// sign-in prefill do not. Depth: isTeamsHost allows one label in front of a
-// host, the WebAuthn origins are exact, everything else allows any depth. Do
-// not make these consistent without a policy decision.
+// Teams, sign-in and cookie matchers strip them; the sign-in prefill does not,
+// and the permission check strips them only for the Teams hosts it takes from
+// isTeamsHost, not for its government and sign-in hosts. Depth: isTeamsHost
+// allows one label in front of a host (so the permission check does too, for
+// Teams hosts), the WebAuthn origins are exact, everything else allows any
+// depth. Do not make these consistent without a policy decision.
 //
 // Deliberately NOT routed through this module, because each is a single-purpose
 // list or an exact check, not a statement about which hosts are Teams or
