@@ -1,5 +1,17 @@
 const logger = require('electron-log');
 
+// What an error may contribute to a log line: a code, never its message,
+// which can carry the request URL or text from the response.
+const errorCode = (error) => ({ code: error?.code ?? error?.name ?? 'unknown' });
+
+// The path of a request URL without its query string, which holds the
+// calendar dates and paging tokens.
+function endpointPath(url) {
+  const end = url.search(/[?#]/);
+  const withoutQuery = end === -1 ? url : url.slice(0, end);
+  return withoutQuery.replace(/^https?:\/\/[^/]*/, '');
+}
+
 class GraphApiClient {
   constructor(config = {}) {
     this.config = config;
@@ -73,12 +85,12 @@ class GraphApiClient {
 
         return result;
       } else {
-        logger.warn('[GRAPH_API] Token acquisition failed', result);
+        logger.warn('[GRAPH_API] Token acquisition failed');
         return result || { success: false, error: 'Unknown error' };
       }
 
     } catch (error) {
-      logger.error('[GRAPH_API] Token acquisition error:', error);
+      logger.error('[GRAPH_API] Token acquisition error:', errorCode(error));
       return {
         success: false,
         error: error.message || error.toString()
@@ -101,7 +113,8 @@ class GraphApiClient {
       const url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
       const method = options.method || 'GET';
 
-      logger.debug('[GRAPH_API] Making request', { method, endpoint: url });
+      const path = endpointPath(url);
+      logger.debug('[GRAPH_API] Making request', { method, endpoint: path });
 
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 30000);
@@ -120,7 +133,7 @@ class GraphApiClient {
         });
       } catch (error) {
         if (error.name === 'AbortError') {
-          logger.error('[GRAPH_API] Request timed out', { endpoint: url });
+          logger.error('[GRAPH_API] Request timed out', { endpoint: path });
           return { success: false, error: 'Request timed out' };
         }
         throw error;
@@ -134,26 +147,23 @@ class GraphApiClient {
       if (responseText) {
         try {
           data = JSON.parse(responseText);
-        } catch (parseError) {
+        } catch {
           // Intentionally catch - continue with null data for non-JSON responses (e.g., 204 No Content)
-          logger.warn('[GRAPH_API] Failed to parse response as JSON', {
-            status: response.status,
-            textPreview: responseText.substring(0, 100),
-            parseError: parseError.message
-          });
+          logger.warn('[GRAPH_API] Failed to parse response as JSON', { status: response.status });
         }
       }
 
       if (response.ok) {
         logger.debug('[GRAPH_API] Request successful', {
           status: response.status,
-          endpoint: url
+          endpoint: path
         });
         return { success: true, data };
       } else {
+        const graphCode = data?.error?.code;
         logger.warn('[GRAPH_API] Request failed', {
           status: response.status,
-          error: data?.error
+          ...(typeof graphCode === 'string' && { code: graphCode })
         });
         return {
           success: false,
@@ -164,7 +174,7 @@ class GraphApiClient {
       }
 
     } catch (error) {
-      logger.error('[GRAPH_API] Request error:', error);
+      logger.error('[GRAPH_API] Request error:', errorCode(error));
       return {
         success: false,
         error: error.message || error.toString()
@@ -213,7 +223,7 @@ class GraphApiClient {
 
   /** Get calendar events with optional OData query options (top, select, filter, etc.) */
   async getCalendarEvents(options = {}) {
-    logger.debug('[GRAPH_API] Getting calendar events', options);
+    logger.debug('[GRAPH_API] Getting calendar events');
 
     const queryString = this._buildODataQuery(options);
     const endpoint = queryString ? `/me/calendar/events?${queryString}` : '/me/calendar/events';
@@ -223,7 +233,7 @@ class GraphApiClient {
 
   /** Get calendar view for a time range (ISO 8601 date strings) */
   async getCalendarView(startDateTime, endDateTime, options = {}) {
-    logger.debug('[GRAPH_API] Getting calendar view', { startDateTime, endDateTime });
+    logger.debug('[GRAPH_API] Getting calendar view');
 
     const queryOptions = {
       startDateTime,
@@ -284,7 +294,7 @@ class GraphApiClient {
 
   /** Create a calendar event (requires subject, start, end objects) */
   async createCalendarEvent(event) {
-    logger.debug('[GRAPH_API] Creating calendar event', { subject: event.subject });
+    logger.debug('[GRAPH_API] Creating calendar event');
 
     return await this.makeRequest('/me/calendar/events', {
       method: 'POST',
@@ -313,7 +323,7 @@ class GraphApiClient {
 
   /** Get mail messages with optional OData query options */
   async getMailMessages(options = {}) {
-    logger.debug('[GRAPH_API] Getting mail messages', options);
+    logger.debug('[GRAPH_API] Getting mail messages');
 
     const queryString = this._buildODataQuery(options);
     const endpoint = queryString ? `/me/messages?${queryString}` : '/me/messages';
@@ -447,7 +457,7 @@ class GraphApiClient {
       logger.warn('[GRAPH_API] No chat found containing target user');
       return { success: false, error: 'Could not find a chat with this user. You may need to start a conversation in Teams first.' };
     } catch (error) {
-      logger.error('[GRAPH_API] Conversation resolution error:', error);
+      logger.error('[GRAPH_API] Conversation resolution error:', errorCode(error));
       return { success: false, error: error.message || error.toString() };
     }
   }
@@ -474,12 +484,11 @@ class GraphApiClient {
 
       logger.warn('[GRAPH_API] Send message failed', {
         chatId: chatId?.substring(0, 30) + '...',
-        status: result.status,
-        error: result.error
+        status: result.status
       });
       return result;
     } catch (error) {
-      logger.error('[GRAPH_API] Send message error:', error);
+      logger.error('[GRAPH_API] Send message error:', errorCode(error));
       return { success: false, error: error.message || error.toString() };
     }
   }
@@ -498,7 +507,7 @@ class GraphApiClient {
 
       return await this.sendChatMessage(conversationResult.conversationId, content);
     } catch (error) {
-      logger.error('[GRAPH_API] sendChatMessageToUser error:', error);
+      logger.error('[GRAPH_API] sendChatMessageToUser error:', errorCode(error));
       return { success: false, error: error.message || error.toString() };
     }
   }

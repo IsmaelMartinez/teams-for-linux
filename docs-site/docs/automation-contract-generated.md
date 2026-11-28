@@ -70,7 +70,7 @@ Every topic is published under `mqtt.topicPrefix` (default `teams`). The subtopi
 | `<topicPrefix>/microphone/control` | `mqtt.mediaTopics.microphoneControl` (default `microphone/control`) | text: `muted` or `unmuted` or `off` | yes | none | `microphoneControlState` |
 | `<topicPrefix>/screen-sharing` | `mqtt.mediaTopics.screenSharing` (default `screen-sharing`) | text: `true` or `false` | yes | none | `screenSharing` |
 | `<topicPrefix>/incoming-call/caller` | `mqtt.mediaTopics.incomingCallCaller` (default `incoming-call/caller`; `<incomingCall>/caller` when the option is unset) | JSON object with `scenario`, `number`, `name`, `queue`, `contact`, `callId`, `timestamp`, `clientId` | no | `mqtt.incomingCallCaller.enabled` | `incomingCallCaller` |
-| `<topicPrefix>/calendar` | fixed `calendar` | JSON object with `success`, `data` | no | `graphApi.enabled`, `mqtt.commandTopic` | command `getCalendar` |
+| `<topicPrefix>/calendar` | fixed `calendar` | JSON object with `success`, `data` | no | `graphApi.enabled`, `mqtt.commandTopic`, `mqtt.calendarExport.enabled` | command `getCalendar` |
 
 ### Commands
 

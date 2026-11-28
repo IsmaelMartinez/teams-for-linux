@@ -48,6 +48,12 @@ const CALLER_FIELDS = [
 
 const BOOLEAN_TEXT = { format: 'text', values: ['true', 'false'] };
 
+// What get-calendar accepts for a date: 2025-11-27, or a date-time such as
+// 2025-11-27T10:00 with optional seconds, a fraction and Z or a +hh:mm offset.
+// Anchored, with no repeated group. The command handler compiles it and the
+// AsyncAPI document publishes it, so the two cannot drift.
+const ISO_DATE_OR_DATE_TIME = String.raw`^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})?)?$`;
+
 const shared = {
 	presence: { observed: PRESENCE_OBSERVED, settable: PRESENCE_SETTABLE },
 
@@ -169,8 +175,8 @@ const shared = {
 		getCalendar: {
 			description: 'Publish your calendar events between two dates. Needs the Graph API integration.',
 			args: [
-				{ name: 'startDate', type: 'string', required: true, format: 'date-time', description: 'Start of the range, ISO 8601.' },
-				{ name: 'endDate', type: 'string', required: true, format: 'date-time', description: 'End of the range, ISO 8601.' },
+				{ name: 'startDate', type: 'string', required: true, pattern: ISO_DATE_OR_DATE_TIME, description: 'Start of the range, an ISO 8601 date or date-time.' },
+				{ name: 'endDate', type: 'string', required: true, pattern: ISO_DATE_OR_DATE_TIME, description: 'End of the range, an ISO 8601 date or date-time, after the start and at most 366 days from it.' },
 			],
 			effect: 'calendar',
 		},
@@ -252,7 +258,7 @@ const mqtt = {
 			},
 		},
 		{
-			id: 'calendar', fixedSubtopic: 'calendar', retained: false, gate: 'graphApi.enabled', requires: ['mqtt.commandTopic'], command: 'getCalendar',
+			id: 'calendar', fixedSubtopic: 'calendar', retained: false, gate: 'graphApi.enabled', requires: ['mqtt.commandTopic', 'mqtt.calendarExport.enabled'], command: 'getCalendar',
 			description: 'Calendar events, published only in answer to a get-calendar command.',
 			payload: {
 				format: 'json',

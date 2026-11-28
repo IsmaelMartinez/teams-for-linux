@@ -170,7 +170,7 @@
     },
     "calendar": {
       "address": "{topicPrefix}/calendar",
-      "description": "Calendar events, published only in answer to a get-calendar command. The subtopic is fixed. Needs graphApi.enabled and mqtt.commandTopic. Not retained.",
+      "description": "Calendar events, published only in answer to a get-calendar command. The subtopic is fixed. Needs graphApi.enabled and mqtt.commandTopic and mqtt.calendarExport.enabled. Not retained.",
       "parameters": {
         "topicPrefix": {
           "$ref": "#/components/parameters/topicPrefix"
@@ -734,13 +734,13 @@
                 },
                 "startDate": {
                   "type": "string",
-                  "description": "Start of the range, ISO 8601.",
-                  "format": "date-time"
+                  "description": "Start of the range, an ISO 8601 date or date-time.",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}(?:T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{1,9})?)?(?:Z|[+-]\\d{2}:\\d{2})?)?$"
                 },
                 "endDate": {
                   "type": "string",
-                  "description": "End of the range, ISO 8601.",
-                  "format": "date-time"
+                  "description": "End of the range, an ISO 8601 date or date-time, after the start and at most 366 days from it.",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}(?:T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{1,9})?)?(?:Z|[+-]\\d{2}:\\d{2})?)?$"
                 }
               }
             }

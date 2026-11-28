@@ -59,9 +59,9 @@ describe('MQTT handleCommand - valid commands', () => {
 		assert.strictEqual(emitted.shortcut, undefined);
 	});
 
-	it('preserves extra fields from command payload', () => {
-		const emitted = fireAndCapture({ action: 'toggle-mute', requestId: '123' });
-		assert.strictEqual(emitted.requestId, '123');
+	it('ignores properties the contract does not declare for the command', () => {
+		const emitted = fireAndCapture({ action: 'toggle-mute', requestId: '123', force: true, shortcut: 'Ctrl+Q' });
+		assert.deepStrictEqual(emitted, { action: 'toggle-mute', shortcut: 'Ctrl+Shift+M' });
 	});
 
 	it('emits command event for mute', () => {

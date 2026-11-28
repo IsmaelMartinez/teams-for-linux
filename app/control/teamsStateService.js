@@ -3,12 +3,12 @@
 const { app, ipcMain } = require('electron');
 const { EventEmitter } = require('node:events');
 const { shared } = require('./contract');
+const { sanitizeCaller } = require('./sanitizeCaller');
 
 const PRESENCE = new Map(shared.presence.observed);
 const MICROPHONE_STATES = new Set(shared.microphone.states);
 const MICROPHONE_CONTROL = new Map(Object.entries(shared.microphone.controlFor));
 const microphoneControl = (state) => MICROPHONE_CONTROL.get(state) || shared.microphone.controlFallback;
-const CALLER_FIELDS = shared.caller.fields.map(({ name }) => name);
 const PROFILE_DEFAULTS = {
 	presenceStatus: 'unknown', presenceStatusCode: -1, inCall: false,
 	cameraEnabled: false, screenSharing: false, meetingStarted: false, callParticipants: null,
@@ -143,19 +143,9 @@ class TeamsStateService extends EventEmitter {
 			this.#setMicrophone('off', previousMicrophone);
 		});
 		on(this.app, 'teams-incoming-call-started', (details) => {
-			this.#update({ incomingCall: true, incomingCallCaller: this.callerEnabled ? this.#sanitizeCaller(details) : null });
+			this.#update({ incomingCall: true, incomingCallCaller: this.callerEnabled ? sanitizeCaller(details) : null });
 		});
 		on(this.app, 'teams-incoming-call-ended', () => this.#update({ incomingCall: false, incomingCallCaller: null }));
-	}
-
-	#sanitizeCaller(details) {
-		if (!details || typeof details !== 'object' || Array.isArray(details)) return null;
-		const caller = {};
-		for (const key of CALLER_FIELDS) {
-			const value = details[key];
-			if (value !== undefined && value !== null && ['string', 'number', 'boolean'].includes(typeof value)) caller[key] = value;
-		}
-		return Object.keys(caller).length ? caller : null;
 	}
 
 	#sanitizeParticipants(participants) {
