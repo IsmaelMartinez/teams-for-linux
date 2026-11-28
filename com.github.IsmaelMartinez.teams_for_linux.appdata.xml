@@ -14,6 +14,15 @@
   <url type="bugtracker">https://github.com/IsmaelMartinez/teams-for-linux/issues</url>
   <launchable type="desktop-id">com.github.IsmaelMartinez.teams_for_linux.desktop</launchable>
   <releases>
+    <release version="2.34.0" date="2026-11-28">
+      <description>
+        <ul>
+          <li>auth: experimental browser backend for phone passkeys on Linux (#3260)</li>
+          <li>security: name every Teams and Microsoft host list in one module (#3273)</li>
+          <li>release: attest release artifacts and pin the remaining actions (#3272)</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.33.1" date="2026-11-26">
       <description>
         <ul>

@@ -17,6 +17,10 @@
 
 * **release:** attest release artifacts and pin the remaining actions ([#3272](https://github.com/IsmaelMartinez/teams-for-linux/issues/3272)) ([0cbdc5b](https://github.com/IsmaelMartinez/teams-for-linux/commit/0cbdc5b8513c79263ed678143c313cab01c9199c))
 
+### Thanks
+
+Big thanks to @vitorhmcorreia for contributing to this release.
+
 ## [2.33.1](https://github.com/IsmaelMartinez/teams-for-linux/compare/v2.33.0...v2.33.1) (2026-11-26)
 
 
