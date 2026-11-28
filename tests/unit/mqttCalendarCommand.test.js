@@ -1,24 +1,12 @@
 'use strict';
 
-const { describe, it, beforeEach, afterEach } = require('node:test');
+const { describe, it } = require('node:test');
 const assert = require('node:assert');
 
 const { createCalendarCommandHandler } = require('../../app/mqtt/calendarCommand');
+const { captureConsole } = require('./helpers/captureConsole');
 
-let logs;
-const originals = {};
-
-beforeEach(() => {
-	logs = [];
-	for (const level of ['debug', 'info', 'warn', 'error']) {
-		originals[level] = console[level];
-		console[level] = (...args) => logs.push({ level, args });
-	}
-});
-
-afterEach(() => {
-	for (const [level, fn] of Object.entries(originals)) console[level] = fn;
-});
+const logs = captureConsole();
 
 function setup({ graph, config = { mqtt: { calendarExport: { enabled: true } } } } = {}) {
 	const requests = [];

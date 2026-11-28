@@ -6,11 +6,26 @@ const MAX_RANGE_DAYS = 366;
 const MAX_RANGE_MS = MAX_RANGE_DAYS * 24 * 60 * 60 * 1000;
 
 // An ISO 8601 date (2025-11-27) or date-time (2025-11-27T10:00, with optional
-// seconds, fraction and Z or +hh:mm offset). Anchored, with no repeated group.
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
+// seconds, fraction and Z or +hh:mm offset), checked in three anchored steps,
+// none with a repeated group.
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+const TIME = /^\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?$/;
+const ZONE = /^(?:Z|[+-]\d{2}:\d{2})$/;
+
+function isIsoDate(value) {
+	const separator = value.indexOf('T');
+	if (separator === -1) return DATE.test(value);
+
+	// A time holds digits, colons and a dot, so the first Z, + or - starts the zone.
+	const rest = value.slice(separator + 1);
+	const zoneAt = rest.search(/[Z+-]/);
+	const time = zoneAt === -1 ? rest : rest.slice(0, zoneAt);
+	const zone = zoneAt === -1 ? '' : rest.slice(zoneAt);
+	return DATE.test(value.slice(0, separator)) && TIME.test(time) && (zone === '' || ZONE.test(zone));
+}
 
 function toTime(value) {
-	if (typeof value !== 'string' || !ISO_DATE.test(value)) return Number.NaN;
+	if (typeof value !== 'string' || !isIsoDate(value)) return Number.NaN;
 	return Date.parse(value);
 }
 

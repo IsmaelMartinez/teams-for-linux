@@ -1,6 +1,6 @@
 'use strict';
 
-const { describe, it, beforeEach, afterEach } = require('node:test');
+const { describe, it } = require('node:test');
 const assert = require('node:assert');
 
 // Stub the mqtt library so initialize() can run without a broker.
@@ -8,21 +8,9 @@ const mqttPath = require.resolve('mqtt');
 require.cache[mqttPath] = { id: mqttPath, filename: mqttPath, loaded: true, exports: { connect: () => ({ on() {} }) } };
 
 const { MQTTClient, cleartextWarning } = require('../../app/mqtt/index');
+const { captureConsole } = require('./helpers/captureConsole');
 
-let logs;
-const originals = {};
-
-beforeEach(() => {
-	logs = [];
-	for (const level of ['debug', 'info', 'warn', 'error']) {
-		originals[level] = console[level];
-		console[level] = (...args) => logs.push({ level, args });
-	}
-});
-
-afterEach(() => {
-	for (const [level, fn] of Object.entries(originals)) console[level] = fn;
-});
+const logs = captureConsole();
 
 const allLogText = () => JSON.stringify(logs);
 
