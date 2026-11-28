@@ -70,6 +70,7 @@ function normalizedOrigins(entries) {
  *   of each blocked navigation (enabled mode only)
  * @param {{ info: Function, warn: Function }} [deps.logger] - defaults to console
  * @returns {{ isTrustedDestination: (url: string) => boolean,
+ *             allowsLoad: (url: string) => boolean,
  *             attach: (webContents: import("electron").WebContents) => void }}
  */
 function createNavigationGuard({ config, isTrustedPage, onBlocked = () => {}, logger = console }) {
@@ -119,9 +120,8 @@ function createNavigationGuard({ config, isTrustedPage, onBlocked = () => {}, lo
     }
   }
 
-  function block(details, kind) {
-    details.preventDefault();
-    const { origin, scheme } = describeUrl(details.url);
+  function reportBlocked(url, kind) {
+    const { origin, scheme } = describeUrl(url);
     logger.warn("[NAV_LOCK] Blocked a navigation to an untrusted site", { scheme, kind });
     try {
       onBlocked(origin);
@@ -134,9 +134,28 @@ function createNavigationGuard({ config, isTrustedPage, onBlocked = () => {}, lo
     if (!details?.isMainFrame || typeof details.url !== "string") return;
     if (!loadsDocument(details.url)) return;
     if (isTrustedDestination(details.url)) return;
-    if (enabled) block(details, kind);
-    else observe(details.url, kind);
+    if (enabled) {
+      details.preventDefault();
+      reportBlocked(details.url, kind);
+    } else {
+      observe(details.url, kind);
+    }
   };
+
+  // A load the app starts itself (webContents.loadURL) raises no will-navigate,
+  // so the events above never see where it goes. Most such loads use a
+  // configured URL. The ones that load a URL they were handed (a launch or
+  // protocol link, a deep link a page asked to open) ask here first, so a loose
+  // custom link pattern cannot carry the window past the lock.
+  function allowsLoad(url) {
+    if (isTrustedDestination(url)) return true;
+    if (!enabled) {
+      observe(url, "load");
+      return true;
+    }
+    reportBlocked(url, "load");
+    return false;
+  }
 
   function attach(webContents) {
     webContents.on("will-navigate", handle("navigation"));
@@ -144,7 +163,7 @@ function createNavigationGuard({ config, isTrustedPage, onBlocked = () => {}, lo
     webContents.on("will-redirect", handle("redirect"));
   }
 
-  return { isTrustedDestination, attach };
+  return { isTrustedDestination, allowsLoad, attach };
 }
 
 module.exports = { createNavigationGuard };

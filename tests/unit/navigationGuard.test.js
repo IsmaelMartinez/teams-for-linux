@@ -277,6 +277,55 @@ describe('navigation guard: links the operating system opens', () => {
 	});
 });
 
+describe('navigation guard: loads the app starts', () => {
+	// webContents.loadURL raises no will-navigate, so a caller about to load a
+	// link it was handed asks the guard instead.
+	const enabled = { urlHandling: { navigationLock: { enabled: true } } };
+	const HANDED_IN = 'https://unrelated.example/l/meetup-join/19%3ameeting_abc?context=secret';
+
+	it('allows a trusted link silently in both modes', () => {
+		for (const config of [{}, enabled]) {
+			const { guard, logger, blocked } = setup({ config, configuredUrls: ['https://tenant.example/teams'] });
+			for (const url of ['https://teams.microsoft.com/l/meetup-join/1', 'https://tenant.example/l/chat/0/0']) {
+				assert.strictEqual(guard.allowsLoad(url), true, url);
+			}
+			assert.deepStrictEqual(blocked, []);
+			assert.deepStrictEqual(logger.lines, []);
+		}
+	});
+
+	it('refuses an untrusted link when enabled, and reports its origin', () => {
+		const { guard, logger, blocked } = setup({ config: enabled });
+
+		assert.strictEqual(guard.allowsLoad(HANDED_IN), false);
+		assert.strictEqual(guard.allowsLoad('not a url'), false);
+
+		assert.deepStrictEqual(blocked, ['https://unrelated.example', 'unparseable']);
+		assert.deepStrictEqual(logger.lines[0], [
+			'warn',
+			'[NAV_LOCK] Blocked a navigation to an untrusted site',
+			{ scheme: 'https', kind: 'load' },
+		]);
+		const logged = JSON.stringify(logger.lines);
+		assert.ok(!logged.includes('unrelated.example'), logged);
+		assert.ok(!logged.includes('secret'), logged);
+	});
+
+	it('allows it in observe mode, and notes the origin once across loads and navigations', () => {
+		const { guard, navigate, logger, blocked } = setup();
+
+		assert.strictEqual(guard.allowsLoad(HANDED_IN), true);
+		assert.strictEqual(guard.allowsLoad(HANDED_IN), true);
+		navigate('will-navigate', 'https://unrelated.example/elsewhere');
+
+		assert.deepStrictEqual(blocked, []);
+		const noted = logger.lines.filter(([, message]) => message.includes('left its trusted sites'));
+		assert.strictEqual(noted.length, 1);
+		assert.deepStrictEqual(noted[0][2], { scheme: 'https', kind: 'load' });
+		assert.ok(!JSON.stringify(logger.lines).includes('unrelated.example'));
+	});
+});
+
 describe('navigation guard: frames', () => {
 	it('ignores sub-frame events in both modes', () => {
 		for (const config of [{}, { urlHandling: { navigationLock: { enabled: true } } }]) {

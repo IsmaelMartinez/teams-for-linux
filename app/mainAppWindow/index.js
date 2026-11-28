@@ -93,6 +93,7 @@ function bindWindowOpenHandler(targetWebContents, loadTargetWebContents, activat
     config,
     loadTargetWebContents,
     activate,
+    allowsLoad: (url) => navigationGuard.allowsLoad(url),
   });
 }
 
@@ -1160,9 +1161,10 @@ function restoreWindow() {
  */
 function processArgs(args) {
   const url = resolveLaunchUrl(args, config);
-  if (url) {
-    window.show();
-  }
+  // The app loads this link itself, which no navigation event announces, so
+  // the navigation lock is asked here (navigationGuard.js, allowsLoad).
+  if (!url || !navigationGuard.allowsLoad(url)) return null;
+  window.show();
   return url;
 }
 
@@ -1321,7 +1323,7 @@ function onNewWindow(details) {
   }
 
   if (new RegExp(config.meetupJoinRegEx).test(details.url)) {
-    if (config.onNewWindowOpenMeetupJoinUrlInApp) {
+    if (config.onNewWindowOpenMeetupJoinUrlInApp && navigationGuard.allowsLoad(details.url)) {
       loadInWindow(details.url);
     }
     return { action: "deny" };
