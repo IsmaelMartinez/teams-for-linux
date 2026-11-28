@@ -35,7 +35,8 @@ const { findBrowser } = require("./backendStatus");
 const { CANCELLED_MESSAGE } = require("./fido2Backend");
 const log = require("./log");
 
-// Static same-origin pages per login host. Each answers 200 with JSON and no
+// Static same-origin pages per login host (keys equal the sign-in origins in
+// helpers/teamsHosts.js; a unit test pins that). Each answers 200 with JSON and no
 // redirect (checked 2026-11-25). A 404 is no use: Chromium swaps in its own
 // error page, whose origin is opaque.
 const METADATA_PAGES = {
@@ -358,3 +359,4 @@ async function getAssertion(options, { browserPath = "", headless = false, befor
 
 module.exports = { getAssertion, metadataPageUrl, BUSY_MESSAGE };
 module.exports._buildGetScript = buildGetScript;
+module.exports._METADATA_PAGES = METADATA_PAGES;

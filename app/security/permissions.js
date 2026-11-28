@@ -1,6 +1,6 @@
 const path = require("node:path");
 const { fileURLToPath } = require("node:url");
-const { isTeamsHost } = require("../helpers/teamsHosts");
+const { isPermissionTrustedHost } = require("../helpers/teamsHosts");
 const { isSafeExternalUrl, schemeOf } = require("../helpers/externalUrl");
 
 const APP_ROOT = path.join(__dirname, "..");
@@ -17,15 +17,6 @@ const APP_ROOT = path.join(__dirname, "..");
 // a trusted requester. Opening external apps is narrower: a trusted requester
 // may open only the schemes in helpers/externalUrl.js, and any other main
 // frame only mail and phone links.
-
-const AUTH_LOGIN_HOSTS = [
-  "login.microsoftonline.com",
-  "login.microsoft.com",
-  "login.live.com",
-  "login.microsoftonline.us",
-];
-// GCC High and DoD serve Teams outside the commercial hosts isTeamsHost knows.
-const GOV_TEAMS_DOMAIN = "teams.microsoft.us";
 
 const FRAME_POLICY_GATED = new Set([
   "media",
@@ -47,10 +38,6 @@ function originOf(url) {
   } catch {
     return null;
   }
-}
-
-function hostMatches(host, domain) {
-  return host === domain || host.endsWith("." + domain);
 }
 
 /**
@@ -76,12 +63,7 @@ function isTrustedUrl(url, trustedOrigins) {
     }
   }
   if (parsed.protocol !== "https:") return false;
-  const host = parsed.hostname;
-  return (
-    isTeamsHost(host) ||
-    hostMatches(host, GOV_TEAMS_DOMAIN) ||
-    AUTH_LOGIN_HOSTS.some((d) => hostMatches(host, d))
-  );
+  return isPermissionTrustedHost(parsed.hostname);
 }
 
 /**

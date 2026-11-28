@@ -1,8 +1,5 @@
 name: Build & Release
 
-env:
-  GH_TOKEN: ${{ SECRETS.GITHUB_TOKEN }}
-
 on:
   push:
     branches:
@@ -143,12 +140,20 @@ jobs:
       - name: Validate Release Notes
         run: npm run generate-release-info
 
+      # GH_TOKEN is set per step, not for the workflow, so that `npm ci` and
+      # dependency postinstall scripts never see it. electron-builder reads it
+      # to publish; it is also kept on the PR build in case electron-builder
+      # resolves the GitHub publish config there.
       - name: Build for Release
         if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run dist:linux:x64 -- --publish always
 
       - name: Build for PR
         if: github.ref != 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run dist:linux:x64 -- --publish never
 
       - name: Smoke-launch the packaged app
@@ -176,6 +181,17 @@ jobs:
             echo "::error::packaged app never finished navigating to Teams"
             exit 1
           fi
+
+      - name: Record artifact checksums
+        run: node scripts/recordArtifactChecksums.js dist checksums-linux_x64.txt
+
+      - name: Upload artifact checksums
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: checksums-linux_x64
+          path: checksums-linux_x64.txt
+          retention-days: 1
 
       - name: Upload PR artifacts
         if: github.ref != 'refs/heads/main'
@@ -218,11 +234,26 @@ jobs:
 
       - name: Build for Release
         if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run dist:linux:arm64 -- --publish always
 
       - name: Build for PR
         if: github.ref != 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run dist:linux:arm64 -- --publish never
+
+      - name: Record artifact checksums
+        run: node scripts/recordArtifactChecksums.js dist checksums-linux_arm64.txt
+
+      - name: Upload artifact checksums
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: checksums-linux_arm64
+          path: checksums-linux_arm64.txt
+          retention-days: 1
 
       - name: Upload PR artifacts
         if: github.ref != 'refs/heads/main'
@@ -285,11 +316,26 @@ jobs:
       # reads it yet — this just keeps it correct if that ever changes.
       - name: Build for Release
         if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run dist:mac -- --publish always
 
       - name: Build for PR
         if: github.ref != 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run dist:mac -- --publish never
+
+      - name: Record artifact checksums
+        run: node scripts/recordArtifactChecksums.js dist checksums-dmg.txt
+
+      - name: Upload artifact checksums
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: checksums-dmg
+          path: checksums-dmg.txt
+          retention-days: 1
 
       - name: Upload PR artifacts (x64)
         if: github.ref != 'refs/heads/main'
@@ -341,11 +387,26 @@ jobs:
 
       - name: Build for Release
         if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run dist:windows -- --publish always
 
       - name: Build for PR
         if: github.ref != 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run dist:windows -- --publish never
+
+      - name: Record artifact checksums
+        run: node scripts/recordArtifactChecksums.js dist checksums-exe.txt
+
+      - name: Upload artifact checksums
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: checksums-exe
+          path: checksums-exe.txt
+          retention-days: 1
 
       - name: Upload PR artifacts
         if: github.ref != 'refs/heads/main'
@@ -355,4 +416,38 @@ jobs:
           path: dist/*.exe
           retention-days: 30
           compression-level: 6
+
+  # Attests the SHA-256 of every release file the build jobs recorded. It checks
+  # out nothing and runs no project code, so the only identity able to sign
+  # (id-token) is never exposed to dependency install scripts. It runs under the
+  # same condition as "Build for Release", so whatever is published is attested,
+  # and is skipped when any build job fails.
+  attest:
+    if: github.ref == 'refs/heads/main'
+    needs: [linux_x64, linux_arm64, dmg, exe]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+
+    steps:
+      - name: Download artifact checksums
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: checksums-*
+          path: checksums
+          merge-multiple: true
+
+      - name: Combine checksums
+        run: |
+          set -euo pipefail
+          ls checksums
+          cat checksums/*.txt > subject.checksums.txt
+          cat subject.checksums.txt
+
+      - name: Attest build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-checksums: subject.checksums.txt
 
