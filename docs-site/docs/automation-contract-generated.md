@@ -10,21 +10,21 @@ The MQTT side is also available as an AsyncAPI 3.0 document, [mqtt-asyncapi.json
 
 ## Observed state
 
-Values are what the app observed, not state confirmed by Teams. D-Bus reports the selected profile, while MQTT publishes what any profile reports. The gate column names the option that must be on for the field to carry anything, and the personal data column marks fields that describe other people.
+Values are what the app observed, not state confirmed by Teams. D-Bus reports the selected profile, while MQTT publishes what any profile reports. The gate column names the option that must be on for the field to carry anything, and the personal data column marks fields that describe other people. The MQTT microphone topics never carry `unknown`: that value only appears in the D-Bus snapshot, before a microphone state has been observed.
 
-| Field | Type and values | Gate | Personal data | MQTT topic | D-Bus signal |
-|-------|-----------------|------|---------------|------------|--------------|
-| `presenceStatus` | `string`: `unknown` or `available` or `busy` or `do_not_disturb` or `away` or `be_right_back` | none | no | `status` (JSON, retained) | `PresenceChanged` |
-| `presenceStatusCode` | `integer`: `-1` or `1` or `2` or `3` or `4` or `5` | none | no | `status` (JSON, retained) | `PresenceChanged` |
-| `inCall` | `boolean` | none | no | `in-call` (text, retained) | `InCallChanged` |
-| `incomingCall` | `boolean` | none | no | `incoming-call` (text, retained) | `IncomingCallChanged` |
-| `incomingCallCaller` | `object or null` | `mqtt.incomingCallCaller.enabled` | yes | `incoming-call/caller` (JSON, not retained) | `IncomingCallCallerChanged` |
-| `cameraEnabled` | `boolean` | none | no | `camera` (text, retained) | `CameraChanged` |
-| `microphoneState` | `string`: `speaking` or `silent` or `muted` or `off` or `unknown` | none | no | `microphone` (text, retained) | `MicrophoneChanged` |
-| `microphoneControlState` | `string`: `muted` or `unmuted` or `off` or `unknown` | none | no | `microphone/control` (text, retained) | `MicrophoneControlChanged` |
-| `screenSharing` | `boolean` | none | no | `screen-sharing` (text, retained) | `ScreenSharingChanged` |
-| `meetingStarted` | `boolean` | `mqtt.meetingStartDetection.enabled` | no | `meeting-started` (text, retained) | `MeetingStartedChanged` |
-| `callParticipants` | `array or null` | `dbusControl.callParticipants` | yes | none | `CallParticipantsChanged` |
+| Field | Meaning | Type and values | Gate | Personal data | MQTT topic | D-Bus signal |
+|-------|---------|-----------------|------|---------------|------------|--------------|
+| `presenceStatus` | Your Teams presence as a stable name; unknown until Teams reports it. | `string`: `unknown` or `available` or `busy` or `do_not_disturb` or `away` or `be_right_back` | none | no | `status` (JSON, retained) | `PresenceChanged` |
+| `presenceStatusCode` | The numeric presence code Teams reported, -1 while unknown. | `integer`: `-1` or `1` or `2` or `3` or `4` or `5` | none | no | `status` (JSON, retained) | `PresenceChanged` |
+| `inCall` | Whether a call is connected. | `boolean` | none | no | `in-call` (text, retained) | `InCallChanged` |
+| `incomingCall` | Whether a call is ringing. | `boolean` | none | no | `incoming-call` (text, retained) | `IncomingCallChanged` |
+| `incomingCallCaller` | Who is calling while a call rings: scenario, number, name, queue, contact and callId, each present only when Teams supplies it. The option governs both transports. | `object or null` | `mqtt.incomingCallCaller.enabled` | yes | `incoming-call/caller` (JSON, not retained) | `IncomingCallCallerChanged` |
+| `cameraEnabled` | Whether your camera is on in the call. | `boolean` | none | no | `camera` (text, retained) | `CameraChanged` |
+| `microphoneState` | The microphone as observed: speaking or silent while unmuted, muted, off outside a call, unknown when not observed. | `string`: `speaking` or `silent` or `muted` or `off` or `unknown` | none | no | `microphone` (text, retained) | `MicrophoneChanged` |
+| `microphoneControlState` | The microphone reduced to what a mute toggle needs: muted, unmuted (speaking or silent), off or unknown. | `string`: `muted` or `unmuted` or `off` or `unknown` | none | no | `microphone/control` (text, retained) | `MicrophoneControlChanged` |
+| `screenSharing` | Whether you are sharing your screen. | `boolean` | none | no | `screen-sharing` (text, retained) | `ScreenSharingChanged` |
+| `meetingStarted` | A pulse that is true when a scheduled meeting is detected as started, and returns to false when you join or the reset delay passes. | `boolean` | `mqtt.meetingStartDetection.enabled` | no | `meeting-started` (text, retained) | `MeetingStartedChanged` |
+| `callParticipants` | The remote participants on the call stage, each with a name and whether they are speaking; null outside a call. Experimental, read from Teams markup. | `array or null` | `dbusControl.callParticipants` | yes | none | `CallParticipantsChanged` |
 
 ## Commands
 
@@ -66,8 +66,8 @@ Every topic is published under `mqtt.topicPrefix` (default `teams`). The subtopi
 | `<topicPrefix>/incoming-call` | `mqtt.mediaTopics.incomingCall` (default `incoming-call`) | text: `true` or `false` | yes | none | `incomingCall` |
 | `<topicPrefix>/meeting-started` | `mqtt.mediaTopics.meetingStarted` (default `meeting-started`) | text: `true` or `false` | yes | `mqtt.meetingStartDetection.enabled` | `meetingStarted` |
 | `<topicPrefix>/camera` | `mqtt.mediaTopics.camera` (default `camera`) | text: `true` or `false` | yes | none | `cameraEnabled` |
-| `<topicPrefix>/microphone` | `mqtt.mediaTopics.microphone` (default `microphone`) | text: `speaking` or `silent` or `muted` or `off` or `unknown` | yes | none | `microphoneState` |
-| `<topicPrefix>/microphone/control` | `mqtt.mediaTopics.microphoneControl` (default `microphone/control`; `<microphone>/control` when the option is unset) | text: `muted` or `unmuted` or `off` or `unknown` | yes | none | `microphoneControlState` |
+| `<topicPrefix>/microphone` | `mqtt.mediaTopics.microphone` (default `microphone`) | text: `speaking` or `silent` or `muted` or `off` | yes | none | `microphoneState` |
+| `<topicPrefix>/microphone/control` | `mqtt.mediaTopics.microphoneControl` (default `microphone/control`) | text: `muted` or `unmuted` or `off` | yes | none | `microphoneControlState` |
 | `<topicPrefix>/screen-sharing` | `mqtt.mediaTopics.screenSharing` (default `screen-sharing`) | text: `true` or `false` | yes | none | `screenSharing` |
 | `<topicPrefix>/incoming-call/caller` | `mqtt.mediaTopics.incomingCallCaller` (default `incoming-call/caller`; `<incomingCall>/caller` when the option is unset) | JSON object with `scenario`, `number`, `name`, `queue`, `contact`, `callId`, `timestamp`, `clientId` | no | `mqtt.incomingCallCaller.enabled` | `incomingCallCaller` |
 | `<topicPrefix>/calendar` | fixed `calendar` | JSON object with `success`, `data` | no | `graphApi.enabled`, `mqtt.commandTopic` | command `getCalendar` |

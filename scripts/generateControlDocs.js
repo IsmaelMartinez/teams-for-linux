@@ -220,12 +220,12 @@ function mqttStateCell(field) {
 }
 
 function renderStateTable() {
-  let md = `| Field | Type and values | Gate | Personal data | MQTT topic | D-Bus signal |
-|-------|-----------------|------|---------------|------------|--------------|
+  let md = `| Field | Meaning | Type and values | Gate | Personal data | MQTT topic | D-Bus signal |
+|-------|---------|-----------------|------|---------------|------------|--------------|
 `;
   for (const entry of shared.state) {
     const signals = signalsCarrying(entry.field).map(code);
-    md += `| ${code(entry.field)} | ${typeCell(entry)} | ${entry.gate ? code(entry.gate) : "none"} | ${entry.personalData ? "yes" : "no"} | ${mqttStateCell(entry.field)} | ${orNone(signals)} |\n`;
+    md += `| ${code(entry.field)} | ${prose(entry.description)} | ${typeCell(entry)} | ${entry.gate ? code(entry.gate) : "none"} | ${entry.personalData ? "yes" : "no"} | ${mqttStateCell(entry.field)} | ${orNone(signals)} |\n`;
   }
   return md;
 }
@@ -357,7 +357,7 @@ The MQTT side is also available as an AsyncAPI 3.0 document, [mqtt-asyncapi.json
 
 ## Observed state
 
-Values are what the app observed, not state confirmed by Teams. D-Bus reports the selected profile, while MQTT publishes what any profile reports. The gate column names the option that must be on for the field to carry anything, and the personal data column marks fields that describe other people.
+Values are what the app observed, not state confirmed by Teams. D-Bus reports the selected profile, while MQTT publishes what any profile reports. The gate column names the option that must be on for the field to carry anything, and the personal data column marks fields that describe other people. The MQTT microphone topics never carry \`unknown\`: that value only appears in the D-Bus snapshot, before a microphone state has been observed.
 
 ${renderStateTable()}
 ## Commands

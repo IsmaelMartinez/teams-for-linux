@@ -31,6 +31,12 @@ const PRESENCE_NAMES = PRESENCE_OBSERVED.map(([, name]) => name);
 const MICROPHONE_STATES = ['speaking', 'silent', 'muted', 'off', 'unknown'];
 const MICROPHONE_CONTROL_STATES = ['muted', 'unmuted', 'off', 'unknown'];
 
+// What the MQTT microphone topics can carry. The renderer only ever reports
+// these four states (app/browser/tools/speakingIndicator.js), so `unknown`,
+// which the D-Bus snapshot starts at, is never published there.
+const MICROPHONE_PUBLISHED = MICROPHONE_STATES.filter((state) => state !== 'unknown');
+const MICROPHONE_CONTROL_PUBLISHED = MICROPHONE_CONTROL_STATES.filter((state) => state !== 'unknown');
+
 const CALLER_FIELDS = [
 	{ name: 'scenario', type: 'string', description: 'Teams scenario name of the ringing call, for example a call queue.' },
 	{ name: 'number', type: 'string', description: 'Caller phone number as Teams formats it, when the caller has one.' },
@@ -220,12 +226,12 @@ const mqtt = {
 		},
 		{
 			id: 'microphone', option: 'mqtt.mediaTopics.microphone', retained: true, gate: null, state: ['microphoneState'],
-			description: 'The observed microphone state.', payload: { format: 'text', values: MICROPHONE_STATES },
+			description: 'The observed microphone state.', payload: { format: 'text', values: MICROPHONE_PUBLISHED },
 		},
 		{
-			id: 'microphoneControl', option: 'mqtt.mediaTopics.microphoneControl', derivedDefault: '<microphone>/control',
+			id: 'microphoneControl', option: 'mqtt.mediaTopics.microphoneControl',
 			retained: true, gate: null, state: ['microphoneControlState'],
-			description: 'The microphone reduced to muted, unmuted, off or unknown.', payload: { format: 'text', values: MICROPHONE_CONTROL_STATES },
+			description: 'The microphone reduced to muted, unmuted or off.', payload: { format: 'text', values: MICROPHONE_CONTROL_PUBLISHED },
 		},
 		{
 			id: 'screenSharing', option: 'mqtt.mediaTopics.screenSharing', retained: true, gate: null, state: ['screenSharing'],

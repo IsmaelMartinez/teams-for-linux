@@ -128,7 +128,7 @@
     },
     "microphoneControl": {
       "address": "{topicPrefix}/microphone/control",
-      "description": "The microphone reduced to muted, unmuted, off or unknown. The subtopic is configurable: mqtt.mediaTopics.microphoneControl renames it (default microphone/control, or <microphone>/control when unset). Retained.",
+      "description": "The microphone reduced to muted, unmuted or off. The subtopic is configurable: mqtt.mediaTopics.microphoneControl renames it (default microphone/control). Retained.",
       "parameters": {
         "topicPrefix": {
           "$ref": "#/components/parameters/topicPrefix"
@@ -535,8 +535,7 @@
             "speaking",
             "silent",
             "muted",
-            "off",
-            "unknown"
+            "off"
           ]
         }
       },
@@ -548,8 +547,7 @@
           "enum": [
             "muted",
             "unmuted",
-            "off",
-            "unknown"
+            "off"
           ]
         }
       },

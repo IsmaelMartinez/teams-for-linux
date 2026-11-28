@@ -16,6 +16,7 @@ const contract = require('../../app/control/contract');
 const options = require('../../app/config/options');
 const generator = require('../../scripts/generateControlDocs');
 const { getMediaTopics } = require('../../app/mqtt/mediaTopics');
+const { applyObjectDefaults } = require('../../app/config/mergeDefaults');
 const { MQTTClient } = require('../../app/mqtt');
 const MQTTMediaStatusService = require('../../app/mqtt/mediaStatusService');
 const TeamsControlService = require('../../app/control/teamsControlService');
@@ -162,8 +163,6 @@ describe('MQTT binding', () => {
 		for (const key of [mqtt.topicPrefixOption, mqtt.commandTopicOption, mqtt.client.clientIdOption]) {
 			assert.ok(generator.resolveOption(key).exists, key);
 		}
-		const derived = mqtt.topics.filter((topic) => topic.derivedDefault).map((topic) => topic.id).sort();
-		assert.deepEqual(derived, ['incomingCallCaller', 'microphoneControl']);
 	});
 
 	it('resolves the subtopic defaults the contract documents', () => {
@@ -177,12 +176,17 @@ describe('MQTT binding', () => {
 		assert.equal(generator.defaultSubtopic(mqtt.topics.find((topic) => topic.id === 'status')), options.mqtt.default.statusTopic);
 	});
 
-	it('derives the documented fallbacks from the topic they follow', () => {
-		const custom = getMediaTopics({ mediaTopics: { microphone: 'mic', incomingCall: 'ring' } });
-		for (const topic of mqtt.topics.filter((entry) => entry.derivedDefault)) {
-			const expected = topic.derivedDefault.replace(/<(\w+)>/g, (_, name) => custom[name]);
-			assert.equal(custom[topic.id], expected, topic.id);
-		}
+	it('derives only the incoming-call caller topic from the topic it follows', () => {
+		assert.deepEqual(mqtt.topics.filter((topic) => topic.derivedDefault).map((topic) => topic.id), ['incomingCallCaller']);
+	});
+
+	it('follows a renamed incoming-call topic but not a renamed microphone topic, once the config defaults are merged', () => {
+		const config = { mqtt: { mediaTopics: { microphone: 'mic', incomingCall: 'ring' } } };
+		applyObjectDefaults(config, options);
+		const topics = getMediaTopics(config.mqtt);
+		assert.equal(topics.incomingCallCaller, 'ring/caller');
+		assert.equal(topics.microphoneControl, 'microphone/control');
+		assert.equal(topics.microphone, 'mic');
 	});
 
 	it('publishes every topic with the retain flag the contract declares', async () => {

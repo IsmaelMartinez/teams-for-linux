@@ -5,13 +5,13 @@
  * @returns {{ inCall: string, incomingCall: string, incomingCallCaller: string, meetingStarted: string, camera: string, microphone: string, microphoneControl: string, screenSharing: string }}
  */
 function getMediaTopics(mqttConfig) {
-	// microphoneControl defaults to "<microphone>/control" so that customising
-	// `microphone` alone keeps the control topic in sync (e.g. microphone "mic"
-	// → control "mic/control"). Set microphoneControl explicitly to decouple it.
-	// incomingCallCaller follows incomingCall the same way. It has no entry in
-	// the mqtt option's defaults on purpose: config loading deep-merges those
-	// defaults into the user's mediaTopics, and a literal default there would
-	// always win over this fallback.
+	// The fallbacks here only apply when `mediaTopics` is used without the
+	// config defaults. Config loading deep-merges the mqtt option's defaults
+	// into the user's mediaTopics, and a literal default there always wins over
+	// a fallback. microphoneControl has one ("microphone/control"), so it does
+	// NOT follow a renamed `microphone`: rename both to move both.
+	// incomingCallCaller has no entry in the option's defaults on purpose, so it
+	// does follow `incomingCall` ("<incomingCall>/caller").
 	const microphone = mqttConfig.mediaTopics?.microphone || 'microphone';
 	const incomingCall = mqttConfig.mediaTopics?.incomingCall || 'incoming-call';
 	return {
