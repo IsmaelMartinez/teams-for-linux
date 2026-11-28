@@ -32,8 +32,8 @@ function createCalendarCommandHandler({ getGraphApiClient, mqttClient, config })
 	return async function handleGetCalendarCommand({ startDate, endDate } = {}) {
 		console.info('[MQTT] get-calendar command received');
 
-		if (config.mqtt?.calendarExport?.enabled === false) {
-			console.warn('[MQTT] get-calendar refused: mqtt.calendarExport.enabled is off');
+		if (config.mqtt?.calendarExport?.enabled !== true) {
+			console.warn('[MQTT] get-calendar refused: set mqtt.calendarExport.enabled to true to allow it');
 			return;
 		}
 

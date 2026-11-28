@@ -1043,7 +1043,7 @@ module.exports = {
             enabled: false,
           },
           calendarExport: {
-            enabled: true,
+            enabled: false,
           },
           meetingStartDetection: {
             enabled: false,
@@ -1051,7 +1051,7 @@ module.exports = {
             resetSeconds: 10,
           },
         },
-        describe: "MQTT configuration for publishing Teams status and call state and receiving action commands. The get-calendar command publishes your calendar events when graphApi.enabled is on and a command topic is set.",
+        describe: "MQTT configuration for publishing Teams status and call state and receiving action commands. The get-calendar command publishes your calendar events once mqtt.calendarExport.enabled and graphApi.enabled are on and a command topic is set.",
         type: "object",
         fields: {
           "enabled": {
@@ -1116,7 +1116,7 @@ module.exports = {
           "calendarExport.enabled": {
             type: "boolean",
             describe:
-              "Let the get-calendar command publish your calendar events to the broker. Needs graphApi.enabled and a command topic; when off, get-calendar commands are refused.",
+              "Let the get-calendar command publish your calendar events to the broker. Off by default, so get-calendar commands are refused until you turn it on; also needs graphApi.enabled and a command topic.",
           },
           "meetingStartDetection.enabled": {
             type: "boolean",

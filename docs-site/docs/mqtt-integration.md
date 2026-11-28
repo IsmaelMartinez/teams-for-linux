@@ -107,7 +107,7 @@ Add these options under the `mqtt` key in your `config.json`:
 | `commandTopic` | `string` | `""` | Topic name for receiving commands (inbound). Leave empty or omit to disable command reception (status publishing only). Set to `"command"` to enable. |
 | `statusCheckInterval` | `number` | `10000` | Polling fallback interval in milliseconds |
 | `mediaTopics` | `object` | see [Media Topics](#media-topics) | Custom topic names for media state topics |
-| `calendarExport.enabled` | `boolean` | `true` | Let the `get-calendar` command publish your calendar events to the broker. Needs `graphApi.enabled` and a command topic; set it to `false` and `get-calendar` commands are refused (see [Calendar Data Export](#calendar-data-export)) |
+| `calendarExport.enabled` | `boolean` | `false` | Let the `get-calendar` command publish your calendar events to the broker. Off by default, so `get-calendar` commands are refused until you set it to `true`; also needs `graphApi.enabled` and a command topic (see [Calendar Data Export](#calendar-data-export)) |
 
 ### Topic Structure
 
@@ -284,13 +284,13 @@ Commands are validated with multiple security measures:
 - **Localhost Recommended**: For maximum security, use a localhost MQTT broker
 
 :::warning Security Notice
-Most commands trigger Teams keyboard shortcuts, but `get-calendar` publishes your calendar events to the broker (see [Calendar Data Export](#calendar-data-export)) whenever `graphApi.enabled` is on and a command topic is set. Anything that can publish to the command topic can send every command; there is no per-command authentication. Only use trusted MQTT brokers and protect your broker credentials. For maximum security, use `mqtt://localhost:1883` with no external network access, and see [What you expose and how to limit it](#what-you-expose-and-how-to-limit-it).
+Most commands trigger Teams keyboard shortcuts, but `get-calendar` publishes your calendar events to the broker (see [Calendar Data Export](#calendar-data-export)) once you have turned on `mqtt.calendarExport.enabled`, with `graphApi.enabled` on and a command topic set. Anything that can publish to the command topic can send every command; there is no per-command authentication. Only use trusted MQTT brokers and protect your broker credentials. For maximum security, use `mqtt://localhost:1883` with no external network access, and see [What you expose and how to limit it](#what-you-expose-and-how-to-limit-it).
 :::
 
 ## Calendar Data Export
 
 :::info Prerequisites
-Calendar export requires **Graph API** to be enabled in your configuration, and a command topic to be set. It is on by default; set `mqtt.calendarExport.enabled` to `false` to refuse `get-calendar` commands. See [Configuration Options](#configuration-options) for MQTT setup.
+Calendar export is off by default. Set `mqtt.calendarExport.enabled` to `true` to allow `get-calendar` commands; it also requires **Graph API** to be enabled in your configuration and a command topic to be set. See [Configuration Options](#configuration-options) for MQTT setup.
 :::
 
 :::warning Your calendar goes to the broker
