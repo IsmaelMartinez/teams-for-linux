@@ -919,7 +919,7 @@ For separately launched profiles, set a different `busName` in each profile's `c
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `graphApi.enabled` | `boolean` | `false` | Enable the Microsoft Graph API integration, used by Quick Chat and by the MQTT `get-calendar` command, which publishes your calendar events to the broker |
+| `graphApi.enabled` | `boolean` | `false` | Enable the Microsoft Graph API integration, used by Quick Chat and by the MQTT `get-calendar` command, which publishes your calendar events to the broker once `mqtt.calendarExport.enabled` is on |
 
 ```json title="Example Configuration"
 {

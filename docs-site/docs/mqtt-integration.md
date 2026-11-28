@@ -383,7 +383,10 @@ See [Microsoft Graph Calendar API documentation](https://learn.microsoft.com/en-
     "enabled": true,
     "brokerUrl": "mqtt://localhost:1883",
     "topicPrefix": "teams",
-    "commandTopic": "command"
+    "commandTopic": "command",
+    "calendarExport": {
+      "enabled": true
+    }
   }
 }
 ```
@@ -443,7 +446,7 @@ When MQTT is enabled, Teams for Linux publishes to the following topics. The gen
 | `{topicPrefix}/microphone` | `"speaking"`, `"silent"`, `"muted"`, or `"off"` | Microphone state from WebRTC speaking-indicator monitoring |
 | `{topicPrefix}/microphone/control` | `"muted"`, `"unmuted"`, or `"off"` | Simplified mute state derived from the microphone state; drives the [`mute`/`unmute` command guard](#state-aware-mute-and-unmute) |
 | `{topicPrefix}/screen-sharing` | `"true"` or `"false"` | Screen sharing active state |
-| `{topicPrefix}/calendar` | JSON object | Calendar events, only in answer to a [`get-calendar` command](#calendar-data-export); not retained, requires `graphApi.enabled` and a command topic |
+| `{topicPrefix}/calendar` | JSON object | Calendar events, only in answer to a [`get-calendar` command](#calendar-data-export); not retained, requires `mqtt.calendarExport.enabled`, `graphApi.enabled` and a command topic |
 
 The media topic names after the prefix (`in-call`, `incoming-call`, `incoming-call/caller`, `meeting-started`, `camera`, `microphone`, `microphone/control`, `screen-sharing`) are defaults and can be customized via [`mqtt.mediaTopics`](#media-topics).
 
@@ -766,7 +769,7 @@ What the broker's users can see and do depends on what you configure:
 | `mqtt.enabled` | Your presence and call state: in call, ringing, camera, microphone and screen sharing, and the meeting-started pulse when it is enabled |
 | `mqtt.commandTopic` | Anyone who can publish there can send every command: toggle or set the microphone, toggle the camera and hand raise, and leave the call |
 | `mqtt.incomingCallCaller.enabled` | The names and phone numbers of people who call you |
-| A command topic plus `graphApi.enabled` | Your calendar events, on request, through `get-calendar` |
+| A command topic plus `graphApi.enabled` and `mqtt.calendarExport.enabled` | Your calendar events, on request, through `get-calendar` |
 
 To limit it, keep the broker on localhost or use `mqtts://` with a certificate your system trusts, require a broker login, and use the broker's access control so each account can do only what it needs. The app's account only needs to publish under its prefix and read its command topic. Your automation's account only needs to read the prefix and publish to the command topic. There is no per-command authentication, so the account that can publish to the command topic can send all of them.
 
