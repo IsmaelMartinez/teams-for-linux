@@ -213,6 +213,12 @@ export const APP_PAGE_URL = pathToFileURL(
   join(process.cwd(), 'app', 'profileSwitcher', 'switcher.html')
 ).href;
 
+// Every other channel accepts only the app's pages and trusted web pages, read
+// from the sender frame. A real renderer message always carries that frame; an
+// event a test fabricates in the main process has to pose as the Teams page
+// that would have sent it, or the sender check refuses it.
+export const TEAMS_PAGE_URL = 'https://teams.microsoft.com/v2/';
+
 /**
  * Best-effort shutdown of the electronApp + temp userData dir. Mirrors
  * the cleanup pattern used by `tests/e2e/smoke.spec.js`: graceful close

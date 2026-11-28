@@ -8,6 +8,7 @@ import {
   getContentViewChildBounds,
   invokeHandler,
   APP_PAGE_URL,
+  TEAMS_PAGE_URL,
   closeAndCleanup,
   PROFILE_IPC_CHANNELS,
   SWITCHER_EVENT_CHANNELS,
@@ -234,16 +235,16 @@ test('switching to a profile view fills the window and keeps the pill topmost', 
 // the real pipeline — set-badge-count from that profile's view → aggregator →
 // ProfileViewManager → profile-switcher-unread → pill DOM.
 function setBackgroundBadge(electronApp, count) {
-  return electronApp.evaluate(async ({ BrowserWindow, ipcMain }, count) => {
+  return electronApp.evaluate(async ({ BrowserWindow, ipcMain }, { count, senderUrl }) => {
     const win = BrowserWindow.getAllWindows().find(
       (w) => w.contentView.children.length === 3
     );
     const background = win?.contentView.children.find((c) => !c.getVisible());
     const handler = ipcMain._invokeHandlers?.get?.('set-badge-count');
     if (!background || !handler) return { error: 'missing view or handler' };
-    await handler({ sender: background.webContents }, count);
+    await handler({ sender: background.webContents, senderFrame: { url: senderUrl } }, count);
     return { ok: true };
-  }, count);
+  }, { count, senderUrl: TEAMS_PAGE_URL });
 }
 
 function readPill(electronApp) {
@@ -537,13 +538,16 @@ test('a notification click switches to the profile that raised it', async () => 
     expect(await activeId()).toBe(notAProfileA);
 
     // A user click, as the preload reports it, switches to profile A.
-    await ctx.electronApp.evaluate(({ BrowserWindow, ipcMain }) => {
+    await ctx.electronApp.evaluate(({ BrowserWindow, ipcMain }, senderUrl) => {
       const win = BrowserWindow.getAllWindows().find(
         (w) => w.contentView.children.length === 3
       );
       const background = win.contentView.children.find((c) => !c.getVisible());
-      ipcMain.emit('notification-web-clicked', { sender: background.webContents });
-    });
+      ipcMain.emit('notification-web-clicked', {
+        sender: background.webContents,
+        senderFrame: { url: senderUrl },
+      });
+    }, TEAMS_PAGE_URL);
     await expect.poll(activeId).toBe(a.result.id);
   } finally {
     await closeAndCleanup(ctx);
